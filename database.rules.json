@@ -157,6 +157,13 @@
       ".write": "auth != null && auth.uid === $uid && (!newData.exists() || newData.val() === true)"
      }
     }
+   },
+   "faces": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    "$id": {
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
+     ".validate": "newData.isString() && newData.val().length < 80000"
+    }
    }
   }
  }
