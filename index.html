@@ -146,8 +146,8 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="shared/avatar.js"></script>
-<script src="shared/world.js"></script>
+<script src="shared/avatar.js?v=5"></script>
+<script src="shared/world.js?v=5"></script>
 <script>
 const $=s=>document.querySelector(s);
 const GAMES=[
@@ -172,13 +172,14 @@ function renderGames(){
 }
 const IS_ADMIN=()=>{const s=World.session();return s&&s.key===World.ADMIN_KEY};
 const clone=o=>JSON.parse(JSON.stringify(o||{}));
-function fixAv(av){av=Object.assign({base:'cat',fur:'cream',pat:'none',eye:'black',acc:{}},clone(av));av.acc=av.acc||{};return av}
+function fixAv(av){av=Object.assign({base:'cat',fur:'cream',pat:'none',eye:'black',acc:{}},clone(av));av.acc=av.acc||{};if(IS_ADMIN())av.base='mingnyu';else if(av.base==='mingnyu')av.base='cat';return av}
 /* 내 캐릭터 그림: 계속 숨 쉬고 귀가 쫑긋 */
 const AC=$('#avatar'),actx=AC.getContext('2d');
 (function loop(ts){const t=ts/1000;actx.clearRect(0,0,240,220);actx.save();actx.translate(122,200);actx.scale(2.2,2.2);
   const av=TRY||AV;if(av)Avatar.draw(actx,0,0,t,1,false,0,av);actx.restore();requestAnimationFrame(loop)})(0);
 function setMe(p){if(!p)return;ME=p;ME.owned=ME.owned||{};AV=fixAv(p.av);$('#credits').textContent=(p.credits||0).toLocaleString('ko-KR');if(!$('#shop').hidden)renderItems()}
-const TABS=[['base','캐릭터'],['fur','털색'],['pat','무늬'],['eye','눈'],['acc','꾸미기']];
+const TABS0=[['base','캐릭터'],['fur','털색'],['pat','무늬'],['eye','눈'],['acc','꾸미기']];
+const tabsFor=()=>IS_ADMIN()?[['acc','꾸미기']]:TABS0;
 function list(tab){
   if(tab==='base')return Object.entries(Avatar.BASES).map(([k,v])=>({id:'base:'+k,v:k,name:v[0],price:v[1]}));
   if(tab==='fur')return Object.entries(Avatar.FURS).map(([k,v])=>({id:'fur:'+k,v:k,name:v[0],price:v[2]}));
@@ -186,12 +187,12 @@ function list(tab){
   if(tab==='eye')return Object.entries(Avatar.EYES).map(([k,v])=>({id:'eye:'+k,v:k,name:v[0],price:v[2]}));
   return Object.entries(Avatar.ACCS).map(([k,v])=>({id:'acc:'+k,v:k,name:v[0],price:v[2],slot:v[1]}));
 }
-function applied(av,it){av=fixAv(av);const[k]=it.id.split(':');
+function applied(av,it){av=fixAv(av);const[k]=it.id.split(':');if(IS_ADMIN()&&k!=='acc')return av;
   if(k==='base')av.base=it.v;else if(k==='acc'){if(av.acc[it.slot]===it.v)delete av.acc[it.slot];else av.acc[it.slot]=it.v}
   else{av[k]=it.v;av.base='cat'}return av}
-function isOwned(it){if(it.id==='base:mingnyu')return IS_ADMIN();return it.price===0||!!(ME&&ME.owned[it.id])}
+function isOwned(it){if(it.id.startsWith('base:')&&IS_ADMIN())return it.id==='base:mingnyu';if(it.id==='base:mingnyu')return IS_ADMIN();return it.price===0||!!(ME&&ME.owned[it.id])}
 function isWorn(it){const[k]=it.id.split(':');if(!AV)return false;if(k==='base')return AV.base===it.v;if(k==='acc')return AV.acc[it.slot]===it.v;return AV.base==='cat'&&AV[k]===it.v}
-function renderTabs(){$('#stabs').innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${k===TAB?'on':''}">${n}</button>`).join('')}
+function renderTabs(){if(IS_ADMIN())TAB='acc';$('#stabs').innerHTML=tabsFor().map(([k,n])=>`<button data-t="${k}" class="${k===TAB?'on':''}">${n}</button>`).join('')}
 function renderItems(){
   const L=list(TAB);
   $('#items').innerHTML=L.map(it=>{const own=isOwned(it),lock=it.id==='base:mingnyu'&&!own;
@@ -203,7 +204,7 @@ function renderItems(){
   updateBar();
 }
 function updateBar(){const b=$('#buyBtn');$('#undo').hidden=!TRY;
-  if(!SEL){$('#what').textContent=TAB==='fur'||TAB==='pat'||TAB==='eye'?'털색, 무늬, 눈은 냥이 캐릭터만 바꿀 수 있어요.':'';b.hidden=true;return}
+  if(!SEL){$('#what').textContent=IS_ADMIN()?'숲지기는 언제나 밍뉴예요. 꾸미기만 바꿀 수 있어요.':TAB==='fur'||TAB==='pat'||TAB==='eye'?'털색, 무늬, 눈은 냥이 캐릭터만 바꿀 수 있어요.':'';b.hidden=true;return}
   const own=isOwned(SEL);$('#what').textContent=SEL.name;b.hidden=false;
   if(SEL.id==='base:mingnyu'&&!own){b.disabled=true;b.textContent='숲지기만 쓸 수 있어요';return}
   b.disabled=false;b.textContent=own?(TRY?'이걸로 입기':'입는 중'):`${SEL.price} 크레딧으로 사기`;if(own&&!TRY)b.disabled=true}

@@ -146,6 +146,8 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 .stamp small{font-size:10px;color:var(--mute)}
 .meta b{color:var(--berry-deep);font-weight:400;font-family:var(--f-display)}
 .brand{cursor:pointer}
+.exitb{cursor:pointer;color:var(--ink);padding:0 11px 0 9px}
+@media (max-width:440px){.exitb span{display:none}.exitb{padding:0 8px!important}}
 @media (max-width:440px){.top{gap:5px}.top .chip{padding:0 9px 0 6px;font-size:14px;gap:4px;height:34px}.brand{font-size:16px!important;padding:0 10px!important}}
 #runHud{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 56px);z-index:8;background:#FFD23F;border:2.5px solid var(--ink);border-radius:999px;padding:8px 18px;font-family:var(--f-display);font-size:18px;box-shadow:0 3px 0 rgba(36,54,59,.3);white-space:nowrap;font-variant-numeric:tabular-nums}
 .news h4:not(:first-child){margin-top:10px}
@@ -176,6 +178,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
   <div class="chip" id="crChip" hidden title="크레딧 (NNN 월드 상점에서 써요)"><i class="crc"></i><span id="credits">0</span></div>
   <div class="spacer"></div>
   <div class="chip" id="clock"><span class="sunmoon" id="sunmoon"></span><span id="clockText"></span></div>
+  <button class="chip exitb" id="exitBtn" aria-label="나가기" title="NNN 월드로 나가기"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>나가기</span></button>
 </div>
 
 <div id="toasts"></div>
@@ -197,8 +200,8 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="../shared/avatar.js"></script>
-<script src="../shared/world.js"></script>
+<script src="../shared/avatar.js?v=5"></script>
+<script src="../shared/world.js?v=5"></script>
 <div id="emoBar" hidden></div>
 <button id="emoBtn" hidden aria-label="인사하기">인사</button>
 <script>
@@ -696,7 +699,7 @@ function drawAcc(c,id){const A=ANCH[id];if(!A||!S.wear)return;['neck','eyes','co
 function drawUmbrella(c){c.lineWidth=2;c.strokeStyle=BK;c.beginPath();c.moveTo(4,-14);c.lineTo(4,-70);c.stroke();
   for(let i=0;i<4;i++){c.beginPath();c.moveTo(4,-72);c.arc(4,-58,28,Math.PI+i*Math.PI/4,Math.PI+(i+1)*Math.PI/4);c.closePath();c.fillStyle=i%2?'#FFC94A':'#E2557A';c.fill();c.stroke()}}
 let RAINING=false,PORTRAIT=false,AVATAR=null,OWNED={},CREDITS=0;
-function myAv(){if(AVATAR){AVATAR.acc=S.wear||{};return AVATAR}return{base:S.char||'mingnyu',fur:'cream',pat:'none',eye:'black',acc:S.wear||{}}}
+function myAv(){if(AVATAR){AVATAR.acc=S.wear||{};if(IS_ADMIN)AVATAR.base='mingnyu';else if(AVATAR.base==='mingnyu')AVATAR.base='cat';return AVATAR}if(SESS&&SESS.key===World.ADMIN_KEY)return{base:'mingnyu',acc:S.wear||{}};return{base:S.char||'mingnyu',fur:'cream',pat:'none',eye:'black',acc:S.wear||{}}}
 function drawPlayer(c,x,y,t,face,moving,joy=0){
   if(window.Avatar)return Avatar.draw(c,x,y,t,face,moving,joy,myAv(),{raining:RAINING&&!SIL,portrait:PORTRAIT});
   const id=S.char||'mingnyu';
@@ -781,7 +784,7 @@ function drawItem(c,id,cx,cy,s,t=0){
 }
 function paintIcons(root){root.querySelectorAll('canvas[data-item]').forEach(cn=>{const g=cn.getContext('2d');g.clearRect(0,0,cn.width,cn.height);drawItem(g,cn.dataset.item,cn.width/2,cn.height/2,cn.width*0.8)})}
 function paintPortrait(cn,id,o={}){const g=cn.getContext('2d');g.clearRect(0,0,cn.width,cn.height);const sc=cn.width/96*(o.sc||1.05);drawCritter(g,id,cn.width*(SPEC[id].kind==='lizard'?0.56:0.48),cn.height*0.9,sc,o.t||0.7,1,o)}
-function paintPortraits(root){root.querySelectorAll('canvas[data-sp]').forEach(cn=>paintPortrait(cn,cn.dataset.sp,{sil:cn.dataset.sil==='1',sc:+(cn.dataset.sc||1.05)}))}
+function paintPortraits(root){root.querySelectorAll('canvas[data-npc]').forEach(paintNpcCanvas);root.querySelectorAll('canvas[data-other]').forEach(paintOther);root.querySelectorAll('canvas[data-sp]').forEach(cn=>paintPortrait(cn,cn.dataset.sp,{sil:cn.dataset.sil==='1',sc:+(cn.dataset.sc||1.05)}))}
 
 /* ---------- static world: ground & tile objects ---------- */
 function pick2(a,x,y){return a[Math.floor(h2(x,y,11)*a.length)]}
@@ -1062,6 +1065,7 @@ function gather(px,py,rad){
   if(!RUN)add(4,13.5*T,32.5*T,'운동장 별 모으기',startRun);
   S.garden.forEach(g=>{const st=gStage(g);if(st===2)add(3,(g.x+.5)*T,(g.y+.5)*T,'꽃 따기',()=>harvestPlant(g),g);else if(Date.now()-(g.w||0)>20*60e3)add(6,(g.x+.5)*T,(g.y+.5)*T,'물 주기',()=>waterPlant(g),g)});
   GHOSTS.forEach(g=>{if(g.poof<=0)add(1,g.x,g.y-T*.5,'트릭 오어 트릿!',()=>trickOrTreat(g),g)});
+  NPCS.forEach(n=>{if(!n.hidden)add(1,n.x,n.y-T*.4,J.rang(n.d.name)+' 이야기하기',()=>openNPC(n),n)});
   if(PUMPKINS.length){const got=pumpGot();PUMPKINS.forEach((q,i)=>{if(!got.includes(i))add(3,(q[0]+.5)*T,(q[1]+.5)*T,'호박 줍기',()=>getPumpkin(i))})}
   add(5,(HOUSE.x+2)*T,(HOUSE.y+2.3)*T,'집에 들어가기',openHouse);
   add(5,49.5*T,30.5*T,'지웰시티몰 가기',()=>openShop('buy'));
@@ -1496,6 +1500,8 @@ function openTown(){
    ${HALLOWEEN?`<div class="label">핼러윈 사탕 ${S.candy||0}개 · 귀신 분장 ${S.wear.costume==='ghost'?'하는 중':'안 함'}</div><p class="sub">분장을 하고 동네를 떠도는 유령에게 다가가면 사탕을 받아요. 사탕은 지웰시티몰에서 잭오랜턴, 유령 풍선으로 바꿀 수 있어요.</p>`:''}
    ${PUMPKINS.length?`<div class="label">핼러윈 호박 찾기 ${pumpGot().length}/${PUMPKINS.length}</div><div class="prog"><i style="width:${pumpGot().length/PUMPKINS.length*100}%;background:#F28A2E"></i></div><p class="sub" style="margin-top:4px">밤에는 호박이 빛나서 찾기 쉬워요. 다 찾으면 마녀 모자!</p>`:''}
    <div class="label">운동장 달리기 최고 기록 · 별 ${S.runBest||0}개 &nbsp;|&nbsp; 별조각 ${S.stars||0}개</div>
+   <div class="label">우리 동네 이웃</div>
+   <div class="list">${NPCS.map(n=>{const st=npcSt(n.d.id),r=npcReq(n);return `<div class="li" style="cursor:default"><canvas data-npc="${n.d.id}" width="144" height="116" style="width:72px;height:58px;flex:none${st.photo?';background:#FFF6D8;border:4px solid #C9955A;border-radius:4px':''}"></canvas><div class="grow"><div class="nm">${n.d.name} <small style="color:var(--mute)">${n.d.tl} · "${esc(npcCp(n))}"</small></div><div class="meta">${r?`부탁: ${SNACKS[r.item].name} ${r.k}개`:st.photo?'제일 친한 친구 · 사진을 받았어요':'좋아하는 간식을 선물해 봐요'}</div>${npcHearts(n)}</div></div>`}).join('')}</div>
    <div class="label">3단지 고양이 밥 주기 ${fedN}/${NCATS.length}</div>
    <div class="list">${NCATS.map(n=>{const st=S.cats[n.id],c=CATS.find(q=>q.id===n.id);const fed=st.fed===today;return `<div class="li" style="cursor:default">${por(n.look,{w:144,h:116,sil:!st.met&&!st.name})}<div class="grow"><div class="nm">${st.name||(st.met?'이름 없음':'???')}</div><div class="meta">${fed?'오늘 밥 먹었어요 · 배불러요':`어디 있을까? 오늘은 <b>${c?c.tag:'3단지'}</b> 쪽에 있대요`}</div>${heartsHTML(5,Math.ceil(st.bond/2),true)}</div></div>`}).join('')}</div>`);
   drawMinimap($('#mm'));$('#sheetB').onclick=null;
@@ -1576,7 +1582,7 @@ async function joinRoom(code,quiet){
   const onP=(snap,added)=>{const k=snap.key,p=snap.val();if(k===SESS.key||!p)return;let o=NET.others.get(k);
     if(!o){o={rx:p.x,ry:p.y,emo:null};NET.others.set(k,o);if(added){toast(k===ADMIN_KEY?`숲지기 <b>${esc(p.n)}</b>${jong(p.n||'')?'이':'가'} 있어요!`:`<b>${esc(p.n)}</b> 친구가 왔어요!`);sfx.find()}}
     if(p.e&&p.e.id!==o.eid){if(o.eid!==undefined||!added){o.emo={k:p.e.k,t:3.2};sfx.pop()}o.eid=p.e.id}
-    Object.assign(o,{k,x:p.x,y:p.y,f:p.f||1,m:!!p.m,ch:p.ch||'mingnyu',w:p.w||{},n:p.n||'친구',j:!!p.j,seen:now});updateFriendChip()};
+    Object.assign(o,{k,x:p.x,y:p.y,f:p.f||1,m:!!p.m,ch:p.ch||'cat',w:p.w||{},av:p.av||null,n:p.n||'친구',j:!!p.j,seen:now});updateFriendChip()};
   NET.ref.on('child_added',sn=>onP(sn,true));
   NET.ref.on('child_changed',sn=>onP(sn,false));
   NET.ref.on('child_removed',sn=>{if(sn.key===SESS.key&&NET.code&&!IS_ADMIN){toast('숲지기가 방을 정리했어요. 다시 놀려면 초대코드를 요청해요');leaveRoom(true);return}
@@ -1602,7 +1608,9 @@ function netTick(dt){
   NET.others.forEach(o=>{const a=Math.min(1,dt*8);o.rx+=(o.x-o.rx)*a;o.ry+=(o.y-o.ry)*a;if(o.emo){o.emo.t-=dt;if(o.emo.t<=0)o.emo=null}});
   if(NET.myEmo){NET.myEmo.t-=dt;if(NET.myEmo.t<=0)NET.myEmo=null}
 }
-function drawPlayerAs(c,o){if(window.Avatar&&o.av){const a=o.av;Avatar.draw(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0,{base:a.b,fur:a.f,pat:a.p,eye:a.e,acc:o.w||{}},{raining:RAINING});return}const sc=S.char,sw=S.wear;S.char=o.ch;S.wear=o.w||{};try{drawPlayer(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0)}finally{S.char=sc;S.wear=sw}}
+function otherAv(o){const a=o.av||{};let b=a.b||o.ch||'cat';if(o.k===ADMIN_KEY)b='mingnyu';else if(b==='mingnyu')b='cat';return{base:b,fur:a.f||'cream',pat:a.p||'none',eye:a.e||'black',acc:o.w||{}}}
+function paintOther(cn){const o=NET.others.get(cn.dataset.other)||{k:cn.dataset.other,ch:cn.dataset.ch};const g=cn.getContext('2d'),w=cn.width,h=cn.height;g.clearRect(0,0,w,h);g.save();const av=cn.dataset.av?JSON.parse(cn.dataset.av):otherAv(o);g.translate(w/2,h*.93);const z=(av.base==='kid'?2:1.62)*h/160;g.scale(z,z);Avatar.draw(g,0,0,now,1,false,0,av,{portrait:true});g.restore()}
+function drawPlayerAs(c,o){if(window.Avatar){Avatar.draw(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0,otherAv(o),{raining:RAINING});return}const sc=S.char,sw=S.wear;S.char=o.ch;S.wear=o.w||{};try{drawPlayer(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0)}finally{S.char=sc;S.wear=sw}}
 function emoBubble(c,x,y,k){
   c.save();c.font='15px Jua, sans-serif';const txt=k==='heart'?'':EMO_TXT[k]||'';const w=k==='heart'?30:c.measureText(txt).width+20,h=28;
   c.beginPath();c.roundRect(x-w/2,y-h,w,h,12);c.moveTo(x-5,y);c.lineTo(x,y+7);c.lineTo(x+5,y);c.fillStyle='#fff';c.fill();c.lineWidth=2;c.strokeStyle=OUT;c.stroke();
@@ -1628,7 +1636,7 @@ async function approve(k){const r=NET.reqs[k];if(!r)return;try{const code=NET.co
 async function deny(k){try{await World.ref('requests/'+k).update({status:'no'});toast('다음에 같이 놀자고 전했어요')}catch(e){}}
 async function kick(k){try{await World.ref('rooms/'+NET.code+'/allowed/'+k).remove();await World.ref('rooms/'+NET.code+'/players/'+k).remove();await World.ref('requests/'+k).remove();toast('방에서 내보냈어요')}catch(e){toast('내보내지 못했어요')}}
 /* 친구(요청자) */
-async function sendRequest(){try{await World.ref('requests/'+SESS.key).set({nick:SESS.nick,char:S.char||'mingnyu',status:'wait',t:World.serverTime()});toast('숲지기에게 초대코드를 요청했어요!');sfx.pop()}catch(e){toast('요청을 보내지 못했어요. 인터넷을 확인해 주세요')}}
+async function sendRequest(){try{await World.ref('requests/'+SESS.key).set({nick:SESS.nick,char:myAv().base,av:avPack(),status:'wait',t:World.serverTime()});toast('숲지기에게 초대코드를 요청했어요!');sfx.pop()}catch(e){toast('요청을 보내지 못했어요. 인터넷을 확인해 주세요')}}
 function openFriends(){
   if(!SESS){
     openModal(`<h3>친구와 같이 놀기</h3><p class="lead">친구와 놀려면 NNN 월드에서 별명을 만들어야 해요. 별명과 비밀번호 숫자 4개면 끝이에요.</p>
@@ -1639,13 +1647,13 @@ function openFriends(){
   const emoRow=`<div class="label">인사 보내기</div><div class="row" id="fEmo">${EMOTES.map(([k,t])=>`<button class="btn soft sm" data-emo="${k}" style="flex:0 0 auto">${t}</button>`).join('')}</div>`;
   const members=()=>`<div class="label">지금 같이 있는 친구 ${others.length+1}명</div>
     <div class="flist"><div class="fli"><canvas data-hero="me" width="120" height="100" style="width:48px;height:40px"></canvas><b>${esc(SESS.nick)}</b><small>${IS_ADMIN?'숲지기 · 나':'나'}</small></div>
-    ${others.map(o=>`<div class="fli"><img src="../shared/img/${esc(o.ch)}.png" alt=""><b>${esc(o.n)}</b>${IS_ADMIN&&o.k!==ADMIN_KEY?`<button class="btn soft sm" data-kick="${esc(o.k)}" style="margin-left:auto;flex:none">내보내기</button>`:`<small>${o.k===ADMIN_KEY?'숲지기':'같이 노는 중'}</small>`}</div>`).join('')}</div>`;
+    ${others.map(o=>`<div class="fli"><canvas data-other="${esc(o.k)}" width="120" height="100" style="width:48px;height:40px;flex:none"></canvas><b>${esc(o.n)}</b>${IS_ADMIN&&o.k!==ADMIN_KEY?`<button class="btn soft sm" data-kick="${esc(o.k)}" style="margin-left:auto;flex:none">내보내기</button>`:`<small>${o.k===ADMIN_KEY?'숲지기':'같이 노는 중'}</small>`}</div>`).join('')}</div>`;
   if(IS_ADMIN){
     const pend=pendingReqs(),okd=Object.entries(NET.reqs||{}).filter(([k,r])=>r&&r.status==='ok');
     openModal(`<h3>숲지기 방</h3><p class="sub">친구가 초대코드를 요청하면 여기에 떠요. 허락한 친구만 들어올 수 있어요.</p>
       <div class="fcode">${NET.code||'······'}</div>
       <div class="label">초대 요청 ${pend.length}명</div>
-      ${pend.length?`<div class="flist">${pend.map(([k,r])=>`<div class="fli"><img src="../shared/img/${esc(r.char||'mingnyu')}.png" alt=""><b>${esc(r.nick)}</b><span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm" data-ok="${esc(k)}" style="flex:none">허락</button><button class="btn soft sm" data-no="${esc(k)}" style="flex:none">거절</button></span></div>`).join('')}</div>`:'<p class="sub">아직 요청이 없어요.</p>'}
+      ${pend.length?`<div class="flist">${pend.map(([k,r])=>`<div class="fli"><canvas data-other="${esc(k)}" data-av='${esc(JSON.stringify(r.av?{base:r.av.b==='mingnyu'?'cat':r.av.b,fur:r.av.f,pat:r.av.p,eye:r.av.e,acc:{}}:{base:r.char==='kid'||r.char==='samsaek'?r.char:'cat',acc:{}}))}' width="120" height="100" style="width:48px;height:40px;flex:none"></canvas><b>${esc(r.nick)}</b><span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm" data-ok="${esc(k)}" style="flex:none">허락</button><button class="btn soft sm" data-no="${esc(k)}" style="flex:none">거절</button></span></div>`).join('')}</div>`:'<p class="sub">아직 요청이 없어요.</p>'}
       ${members()}
       ${okd.length?`<p class="sub" style="margin-top:8px">허락한 친구: ${okd.map(([k,r])=>esc(r.nick)).join(', ')}</p>`:''}
       ${NET.code?emoRow:''}
@@ -1751,7 +1759,7 @@ function update(dt){
   if(RUN){RUN.t-=dt;RUN.stars.forEach((s,i)=>{if(Math.hypot(s.x-P.x,s.y-P.y)<T*.8){RUN.score++;sfx.coin();for(let k=0;k<8;k++)parts.push({wx:s.x,wy:s.y-T*.4,vx:rnd(-60,60),vy:rnd(-90,-30),c:'#FFE38A',life:.7,t:0,star:1});RUN.stars[i]=fieldSpot()}});
     $('#runHud').textContent=`남은 시간 ${Math.ceil(Math.max(0,RUN.t))}초 · 별 ${RUN.score}개`;if(RUN.t<=0)endRun()}
   if(phase()==='night'&&!uiOpen()){shootTm-=dt;if(shootTm<=0&&!shoot){shoot={x:VW*rnd(.55,1.05),y:VH*rnd(.05,.3),vx:-rnd(200,280),vy:rnd(90,150),t:0,caught:false};shootTm=rnd(20,45)}}
-  updateGhosts(dt);netTick(dt);
+  updateGhosts(dt);updateNPCs(dt);netTick(dt);
   if(shoot){shoot.t+=dt;shoot.x+=shoot.vx*dt;shoot.y+=shoot.vy*dt;if(shoot.t>(shoot.caught?0.6:2.4))shoot=null}
   if(!uiOpen()){
     let vx=0,vy=0;
@@ -1860,6 +1868,10 @@ function render(){
   S.garden.forEach(g=>{const y=(g.y+.85)*T;if(vis((g.x+.5)*T,y))E.push({y,f:()=>drawPlant(ctx,g)})});
   if(PUMPKINS.length){const got=pumpGot();PUMPKINS.forEach((q,i)=>{if(got.includes(i))return;const x=(q[0]+.5)*T,y=(q[1]+.8)*T;if(vis(x,y))E.push({y,f:()=>drawPumpkin(ctx,x,y,night)})})}
   GHOSTS.forEach(g=>{if(vis(g.x,g.y))E.push({y:g.y,f:()=>drawGhost(ctx,g,night)})});
+  NPCS.forEach(n=>{if(!vis(n.x,n.y))return;E.push({y:n.y,f:()=>{if(n.hidden){drawHideTuft(ctx,n);return}
+    drawVillager(ctx,n,n.x,n.y,n.t,n.face,{mv:n.state==='walk',act:n.state==='act'?n.d.act:null,wave:n.wave});
+    const near=Math.hypot(n.x-P.x,n.y-P.y)<T*3.2;if(near)nameTag(ctx,n.d.name,n.x,n.y+14);
+    if(!uiOpen()&&npcSt(n.d.id).req&&npcReq(n)){const bx=n.x,by=n.y-T*1.45+Math.sin(now*4)*2;ctx.beginPath();ctx.arc(bx,by,9,0,7);ctx.fillStyle='#FFD23F';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=OUT;ctx.stroke();ctx.fillStyle=OUT;ctx.font='15px Jua, sans-serif';ctx.textAlign='center';ctx.fillText('!',bx,by+5);ctx.textAlign='start'}}})});
   if(RUN)RUN.stars.forEach(s=>E.push({y:s.y,f:()=>{const b=Math.sin(now*5+s.x)*4;star(ctx,s.x,s.y-T*.45+b,15,OUT);star(ctx,s.x,s.y-T*.45+b,12,'#FFD23F')}}));
   if(RAINING)for(let y=ty0;y<=ty1;y++)for(let x=tx0;x<=tx1;x++){const t=tileAt(x,y);if((t===SW||t===RD||t===PZ||t===PK)&&h2(x,y,13)<0.12){const ph=(now*0.8+h2(x,y,14)*3)%1;ctx.beginPath();ctx.ellipse((x+.5)*T,(y+.5)*T,4+ph*16,2+ph*6,0,0,7);ctx.strokeStyle=`rgba(255,255,255,${.5*(1-ph)})`;ctx.lineWidth=1.5;ctx.stroke()}}
   NET.others.forEach(o=>{if(vis(o.rx,o.ry))E.push({y:o.ry,f:()=>{drawPlayerAs(ctx,o);tagFor(ctx,o.k,o.n,o.rx,o.ry+14);if(o.emo)emoBubble(ctx,o.rx,o.ry-T*1.55,o.emo.k)}})});
@@ -1945,7 +1957,243 @@ S.pets.forEach(p=>{if(!inYard(Math.floor(p.x/T),Math.floor(p.y/T))){const s=yard
 paintIcons(document);hud();clockTick();
 for(let i=0;i<5;i++)spawnWild();
 if(!S.pets.length&&!wild.some(w=>w.sp==='cheese')){const s=SPOTS.grass.slice().sort((a,b)=>Math.hypot(a[0]-START.x,a[1]-START.y)-Math.hypot(b[0]-START.x,b[1]-START.y)).slice(0,6);if(s.length)spawnWild('cheese',pick(s))}
-if(!S.intro||S.newTown)intro(0);else if(!S.charPicked)openChars(true);else if(!S.v3)openNews();else if(HALLOWEEN&&!S.v4)openHalloween();
+if(!S.intro||S.newTown)intro(0);else if(!S.charPicked)openChars(true);else if(!S.v3)openNews();else if(HALLOWEEN&&!S.v4)openHalloween();else if(!S.v5)openNeighborsNews();
+/* ---------- 동네 이웃 (동물의 숲 주민 성격 8가지 중 6가지를 참고) ---------- */
+const NPCDEF=[
+ {id:'mungchi',name:'뭉치',sp:'bear',type:'cranky',tl:'무뚝뚝',cp:'흠흠',fur:'#B07A4F',fur2:'#E9CDA8',shirt:'#5B7DB1',home:'swan',fav:'apple',likes:['fish','berry'],act:'grumble',
+  intro:'백조놀이터 벤치가 자기 자리라는 곰. 처음엔 퉁명스럽지만 친해지면 제일 다정해요.'},
+ {id:'harang',name:'하랑',sp:'hippo',type:'uchi',tl:'든든한 언니',cp:'있잖아',fur:'#B9A6D6',fur2:'#F4D6E6',shirt:'#F2A65A',home:'hippo',fav:'berry',likes:['apple','carrot'],act:'sing',
+  intro:'하마놀이터의 하마 언니. 노래를 좋아하고 동생들을 잘 챙겨요.'},
+ {id:'kkang',name:'깡총이',sp:'bunny',type:'peppy',tl:'발랄',cp:'깡총!',fur:'#FFF6F2',fur2:'#FFC9D8',shirt:'#FF7FA8',home:'panda',fav:'carrot',likes:['berry','apple'],act:'dance',
+  intro:'판다놀이터에서 춤 연습하는 토끼. 꿈은 아이돌! 숨바꼭질 대장이에요.'},
+ {id:'tori',name:'토리',sp:'squirrel',type:'normal',tl:'다정',cp:'토리토리',fur:'#C98A4B',fur2:'#F6E0C2',shirt:'#7FC8A9',home:'plaza',fav:'seed',likes:['apple','berry'],act:'sweep',
+  intro:'광장을 늘 깨끗하게 쓸어 주는 다람쥐. 요리와 청소를 좋아해요.'},
+ {id:'bungae',name:'번개',sp:'dog',type:'jock',tl:'운동광',cp:'으랏차!',fur:'#F0D29C',fur2:'#FFF6E6',shirt:'#E2504A',home:'field',fav:'fish',likes:['carrot','apple'],act:'exercise',
+  intro:'학교 운동장을 하루 종일 달리는 강아지. 달리기 시합을 걸어 와요.'},
+ {id:'gaegul',name:'개굴',sp:'frog',type:'lazy',tl:'느긋',cp:'개굴~',fur:'#8FD16A',fur2:'#E6F7C8',shirt:'#F4C842',home:'river',fav:'cricket',likes:['seed','berry'],act:'nap',
+  intro:'곡교천 물가에서 낮잠 자는 개구리. 먹는 얘기를 제일 좋아해요.'}
+];
+const NPCL={
+ cranky:[["뭐야, 처음 보는 얼굴이군. {cp}.","난 시끄러운 게 싫어. …근데 넌 괜찮은 것 같다. {cp}.","백조놀이터 벤치는 내 자리야. 앉고 싶으면 말해. {cp}."],
+  ["{n}, 또 왔냐. 딱히 기다린 건 아니야. {cp}.","{o} 녀석 또 시끄럽게 굴더라. 그래도 미워할 순 없지. {cp}.","어릴 땐 나도 미끄럼틀 엄청 탔다. 비밀이다. {cp}."],
+  ["{n}! 너 오면 이상하게 기분이 좋아. {cp}.","너한테만 말하는 건데, 난 사실 꽃을 좋아해. {cp}.","누가 {n} 괴롭히면 나한테 말해. {cp}."]],
+ uchi:[["안녕! 난 하랑이야. 하마 입은 내가 제일 잘 올라가. {cp}~","배고프면 말해. 언니가 간식 챙겨 줄게! {cp}~","넘어지면 툭툭 털고 일어나는 거야. 알았지? {cp}~"],
+  ["{n}, 오늘도 씩씩하네! {cp}~","{o}가 요즘 기운이 없더라. 같이 놀아 줘. {cp}~","노래 들려줄까? 라~ 라라~ {cp}~"],
+  ["{n}은 내 동생 같아. 무슨 일 있으면 언니 불러! {cp}~","너랑 노니까 하루가 금방 가. {cp}~","우리 나중에 같이 콘서트 하자! {cp}~"]],
+ peppy:[["꺄! 새 친구다! 난 깡총이야! {cp}","나 나중에 아이돌이 될 거야! {cp}","판다놀이터에서 춤 연습 중이야! {cp}"],
+  ["{n}~! 오늘 모습 진짜 귀엽다! {cp}","{o}한테 들었는데 밤에 별똥별이 떨어진대! {cp}","숨바꼭질 하자! 나 진짜 잘 숨는다? {cp}"],
+  ["{n}은 내 베프야! 영원히! {cp}","너 생각하면서 새 춤을 만들었어! {cp}","우리 사진 찍자! 하나 둘 셋, {cp}"]],
+ normal:[["안녕, 난 토리야. 광장 청소는 내 담당! {cp}.","도토리 쿠키를 구워 봤는데 맛있었어. {cp}.","깨끗한 광장에서 놀면 기분 좋지? {cp}."],
+  ["{n}, 점심은 먹었어? {cp}.","{o}가 그러는데 3단지 고양이들이 너를 좋아한대. {cp}.","도토리는 나무를 흔들면 떨어져. 알지? {cp}."],
+  ["{n}이 와서 오늘 최고의 날이야! {cp}.","너한테 줄 쿠키 굽고 있어. {cp}.","우리 동네는 {n} 덕분에 더 좋아졌어. {cp}."]],
+ jock:[["으쌰! 난 번개! 운동장 열 바퀴째야! {cp}","근육은 배신하지 않아! {cp}","아침 체조 같이 할래? 하나, 둘! {cp}"],
+  ["{n}! 오늘도 뛰자! {cp}","{o}는 너무 안 움직여. 같이 끌고 나가자! {cp}","나랑 달리기 시합 할래? 질 생각은 없어! {cp}"],
+  ["{n}, 넌 진짜 내 운동 파트너야! {cp}","너 덕분에 오늘 기록 깼어! {cp}","언젠가 같이 마라톤 나가자! {cp}"]],
+ lazy:[["어… 안녕… 난 개굴… 낮잠 자는 중… {cp}","오늘 점심 뭐 먹지… 귀뚜라미 튀김… {cp}","서두르면 배고파져… {cp}"],
+  ["{n}… 왔어? 반가워… {cp}","{o}는 맨날 뛰어다녀… 난 구경할래… {cp}","곡교천 물소리 들으면 잠이 솔솔… {cp}"],
+  ["{n}… 너랑 있으면 편해… {cp}","간식 생기면 반 나눠 줄게… 진짜야… {cp}","같이 구름 구경하자… 저건 고양이 모양… {cp}"]]
+};
+const NPC_GHOST={cranky:'으악! …아, 너였냐. 놀란 거 아니다. {cp}.',uchi:'어머, 귀신인 줄! 분장 진짜 잘했다~ {cp}~',peppy:'꺄아아! 귀신이다! …{n}이었어? 너무 귀여워! {cp}',
+ normal:'깜짝이야! 핼러윈 분장이구나. 잘 어울려! {cp}.',jock:'귀신이든 뭐든 나랑 달리기 하자! {cp}',lazy:'어… 귀신이… 나 잡아먹지 마… 맛없어… {cp}'};
+const NPC_NIGHT={cranky:'밤에는 일찍 자야 키 큰다. {cp}.',uchi:'밤하늘 별 봤어? 진짜 예쁘다~ {cp}~',peppy:'밤에도 춤출 거야! 반짝반짝! {cp}',normal:'밤엔 가로등 아래가 제일 밝아. {cp}.',jock:'밤에는 스트레칭으로 마무리! {cp}',lazy:'밤이다… 이제 진짜 잘 시간… {cp}'};
+const NPC_GIFT={fav:{cranky:'이건… 내가 제일 좋아하는 거잖아. 고, 고맙다. {cp}.',uchi:'우와! 이거 완전 내 취향! 최고야! {cp}~',peppy:'꺄! 내가 제일 좋아하는 거! 사랑해! {cp}',normal:'세상에, 이걸 어떻게 알았어? 정말 고마워! {cp}.',jock:'이거면 힘이 펄펄! 고마워! {cp}',lazy:'헉… 이거 제일 좋아해… 행복해… {cp}'},
+ like:'고마워! 잘 먹을게. {cp}',meh:'음… 고마워. 마음만 받을게. {cp}'};
+const NPC_ACT={grumble:['흠…','쯧','에휴'],sing:['♪','라라~','♫'],dance:['랄라~','짠!','♪'],sweep:['쓱싹','반짝!','쓱쓱'],exercise:['하나!','둘!','으쌰!'],nap:['Z','z z','쿨…']};
+const CP_PRESET=['냥냥','뀨','헤헷','룰루','뿅뿅','몽글','야옹','짱짱'];
+function npcHome(d){
+  if(d.home==='river'){let best=null;GH_CAND.forEach(([x,y])=>{if(tileAt(x+1,y)===WA||tileAt(x-1,y)===WA||tileAt(x,y+1)===WA||tileAt(x,y-1)===WA){const s=h2(x,y,9);if(!best||s<best.s)best={x,y,s}}});return best?{x:best.x+.5,y:best.y+.5}:{x:PLAZA.x+3,y:PLAZA.y}}
+  if(d.home==='field')return{x:13.5,y:32.5};if(d.home==='plaza')return{x:PLAZA.x,y:PLAZA.y};
+  const p=PLAYS.find(q=>q.id===d.home);return{x:p.x/T,y:p.y/T};
+}
+const NPCS=NPCDEF.map((d,i)=>{const h=npcHome(d);const spots=GH_CAND.filter(([x,y])=>{const r=Math.hypot(x+.5-h.x,y+.5-h.y);return r>=1.2&&r<=4.2});
+  const s0=spots.length?spots[i%spots.length]:[Math.floor(h.x),Math.floor(h.y)];
+  return{d,spots:spots.length?spots:[s0],x:(s0[0]+.5)*T,y:(s0[1]+.7)*T,tx:null,ty:null,state:'idle',tm:rnd(1,3),t:rnd(0,9),face:1,fl:rnd(2,5),greet:0,wave:0,hidden:false}});
+function npcSt(id){S.npc=S.npc||{};return S.npc[id]||(S.npc[id]={f:0,talk:'',gift:'',cp:null,cpAsk:false,photo:false,req:null,hide:'',race:''})}
+const npcCp=n=>npcSt(n.d.id).cp||n.d.cp;
+const npcTier=n=>{const f=npcSt(n.d.id).f;return f>=7?2:f>=3?1:0};
+function npcFill(n,s){const o=pick(NPCS.filter(q=>q!==n)).d.name;return s.replace(/\{cp\}/g,npcCp(n)).replace(/\{n\}/g,PN()).replace(/\{o\}/g,o)}
+function npcReq(n){const st=npcSt(n.d.id),today=dateKey();
+  if(!st.req||st.req.date!==today){const r=h2(n.d.id.length*7,today.length+new Date().getDate(),NPCDEF.indexOf(n.d));
+    st.req=r<0.6?{date:today,item:pick(['apple','berry','carrot','seed','fish','cricket']),k:rint(1,3),done:false}:{date:today,none:true};touch()}
+  return st.req.none||st.req.done?null:st.req}
+function npcLine(n){
+  if(S.wear&&S.wear.costume==='ghost'&&Math.random()<0.6)return npcFill(n,NPC_GHOST[n.d.type]);
+  if(phase()==='night'&&Math.random()<0.35)return npcFill(n,NPC_NIGHT[n.d.type]);
+  if(RAINING&&Math.random()<0.3)return npcFill(n,'비 오는 날엔 우산 꼭 챙겨! {cp}');
+  return npcFill(n,pick(NPCL[n.d.type][npcTier(n)]));
+}
+function npcFriend(n,add){const st=npcSt(n.d.id),b=st.f;st.f=Math.min(10,st.f+add);touch();
+  if(b<3&&st.f>=3)setTimeout(()=>toast(`<b>${n.d.name}</b>${jong(n.d.name)?'이랑':'랑'} 친구가 됐어요!`),500);
+  if(b<7&&st.f>=7)setTimeout(()=>toast(`<b>${n.d.name}</b>${jong(n.d.name)?'이랑':'랑'} 단짝이 됐어요!`),500);
+  if(b<10&&st.f>=10&&!st.photo){st.photo=true;setTimeout(()=>{celebrateNpcPhoto(n)},900)}}
+function celebrateNpcPhoto(n){earn(10,'이웃 사진');sfx.fan();confetti();
+  openModal(`<p class="sub center">제일 친한 친구</p><div class="big">${J.ig(n.d.name)} 사진을 줬어요!</div><canvas data-npc="${n.d.id}" width="280" height="240" style="display:block;margin:8px auto;width:140px;height:120px;background:#FFF6D8;border:6px solid #C9955A;border-radius:6px"></canvas>
+   <p class="lead center">"${npcFill(n,'{n}, 우리 계속 친하게 지내자! {cp}')}"<br>우리 동네 화면 이웃 목록에서 언제든 볼 수 있어요.</p><div class="row"><button class="btn" id="ok">고마워!</button></div>`);$('#ok').onclick=closeModal}
+function npcHearts(n){return heartsHTML(5,Math.round(npcSt(n.d.id).f/2),true)}
+function openNPC(n,say){
+  $('#modal').onclick=null;const st=npcSt(n.d.id),today=dateKey();n.state='idle';n.tm=6;n.face=P.x>n.x?1:-1;n.wave=1.2;
+  let first=false;if(st.talk!==today){st.talk=today;first=true}
+  if(st.f>=4&&!st.cpAsk){st.cpAsk=true;touch();return openNpcCp(n)}
+  const req=npcReq(n),line=say||npcLine(n);
+  const btns=[];
+  if(st.gift!==today)btns.push('<button class="btn" id="nGift">선물 주기</button>');
+  if(req){const have=S.snacks[req.item]||0;btns.push(`<button class="btn leaf" id="nReq" ${have>=req.k?'':'disabled'}>${SNACKS[req.item].name} ${req.k}개 주기 (${have}개 있음)</button>`)}
+  if(n.d.id==='kkang'&&st.hide!==today&&!HIDE&&!RACE)btns.push('<button class="btn" id="nHide">숨바꼭질 하자!</button>');
+  if(n.d.id==='bungae'&&st.race!==today&&!RACE&&!HIDE)btns.push('<button class="btn" id="nRace">달리기 시합!</button>');
+  openModal(`<div class="mhead"><canvas class="por-lg" data-npc="${n.d.id}" width="256" height="208"></canvas><div><h3>${n.d.name}</h3><p class="sub">${n.d.tl} 이웃 · 말버릇 "${npcCp(n)}"</p>${npcHearts(n)}</div></div>
+   <div class="say" id="say">${esc(line)}</div>${req?`<p class="sub">부탁이 있대요: <b>${SNACKS[req.item].name} ${req.k}개</b>만 가져다줄 수 있어? 보상은 도토리와 크레딧!</p>`:''}
+   <div class="row" style="flex-wrap:wrap">${btns.join('')}<button class="btn soft" id="nX">또 봐!</button></div>`);
+  if(first){npcFriend(n,1)}sfx.pop();
+  $('#nX').onclick=closeModal;
+  if($('#nGift'))$('#nGift').onclick=()=>openNpcGift(n);
+  if($('#nReq'))$('#nReq').onclick=()=>{if((S.snacks[req.item]||0)<req.k)return;S.snacks[req.item]-=req.k;req.done=true;touch();addAcorns(15,n.x,n.y-T);earn(2,'이웃 부탁');npcFriend(n,2);sfx.fan();n.wave=2;
+    openNPC(n,npcFill(n,pick(['우와, 정말 가져다줬구나! 고마워! {cp}','{n} 최고! 이거 받아, 도토리 15개야! {cp}','부탁 들어줘서 고마워. 넌 좋은 이웃이야. {cp}'])))};
+  if($('#nHide'))$('#nHide').onclick=()=>{closeModal();startHide(n)};
+  if($('#nRace'))$('#nRace').onclick=()=>{closeModal();startRace(n)};
+}
+function openNpcGift(n){
+  const ks=Object.keys(SNACKS).filter(k=>k!=='kibble'&&k!=='churu'||S.snacks[k]);
+  openModal(`<div class="mhead"><canvas class="por-lg" data-npc="${n.d.id}" width="256" height="208"></canvas><div><h3>${J.ege(n.d.name)} 선물</h3><p class="sub">하루에 한 번 줄 수 있어요. 좋아하는 걸 주면 훨씬 기뻐해요.</p></div></div>
+   <div class="snacks" style="margin-top:12px">${ks.map(k=>`<button class="snack${S.snacks[k]?'':' empty'}" data-g="${k}">${ico(k,60)}<span>${SNACKS[k].name}</span><b>${S.snacks[k]||0}</b></button>`).join('')}</div>
+   <div class="row"><button class="btn soft" id="nBack">돌아가기</button></div>`);
+  $('#nBack').onclick=()=>openNPC(n);
+  $('#modal').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const k=b.dataset.g;if(!(S.snacks[k]>0))return;$('#modal').onclick=null;
+    S.snacks[k]--;const st=npcSt(n.d.id);st.gift=dateKey();const fav=k===n.d.fav,like=n.d.likes.includes(k);npcFriend(n,fav?3:like?2:1);if(fav)earn(1,'좋아하는 선물');
+    n.wave=2;sfx[fav?'fan':'pop']();floater(n.x,n.y-T*1.6,fav?'최고야!':'고마워!','#FFE38A');
+    openNPC(n,npcFill(n,fav?NPC_GIFT.fav[n.d.type]:like?NPC_GIFT.like:NPC_GIFT.meh))};
+}
+function openNpcCp(n){
+  openModal(`<div class="mhead"><canvas class="por-lg" data-npc="${n.d.id}" width="256" height="208"></canvas><div><h3>${n.d.name}</h3>${npcHearts(n)}</div></div>
+   <div class="say">"${esc(npcFill(n,'있잖아 {n}, 우리 많이 친해졌지? 나 새 말버릇을 갖고 싶어. 네가 골라 줄래?'))}"</div>
+   <div class="snacks">${CP_PRESET.map(c=>`<button class="snack" data-cp="${c}"><span style="font-family:var(--f-display);font-size:17px">${c}</span></button>`).join('')}<button class="snack" data-cp=""><span>지금 그대로</span><b>${esc(n.d.cp)}</b></button></div>`);
+  $('#modal').onclick=e=>{const b=e.target.closest('[data-cp]');if(!b)return;$('#modal').onclick=null;const c=b.dataset.cp;const st=npcSt(n.d.id);st.cp=c||null;touch();sfx.fan();
+    openNPC(n,npcFill(n,c?'{cp}! {cp}! 마음에 쏙 들어! 앞으로 이렇게 말할래, {cp}!':'역시 원래 말버릇이 제일이지? {cp}!'))};
+}
+/* 숨바꼭질: 깡총이와 이웃 둘이 숨어요. 풀숲이 바스락거리는 곳을 찾아가요 */
+let HIDE=null,RACE=null;
+function startHide(n){
+  npcSt('kkang').hide=dateKey();touch();
+  const pool=NPCS.filter(q=>q!==n);const ids=[n,...pool.sort(()=>Math.random()-.5).slice(0,2)];
+  const near=GH_CAND.filter(([x,y])=>{const d=Math.hypot((x+.5)*T-P.x,(y+.5)*T-P.y);return d>T*4&&d<T*11});
+  ids.forEach(q=>{const c=pick(near.length?near:GH_CAND);q.home0={x:q.x,y:q.y};q.x=(c[0]+.5)*T;q.y=(c[1]+.7)*T;q.hidden=true;q.state='idle';q.tm=999});
+  HIDE={t:100,list:ids,found:0};$('#runHud').hidden=false;sfx.whee();
+  toast(`숨바꼭질 시작! <b>${ids.map(q=>q.d.name).join(', ')}</b>${jong(ids[2].d.name)?'이':'가'} 숨었어요. 바스락거리는 풀숲을 찾아봐요`);
+}
+function endHide(win){const H=HIDE;HIDE=null;$('#runHud').hidden=true;
+  H.list.forEach(q=>{if(q.home0){q.x=q.home0.x;q.y=q.home0.y}q.hidden=false;q.state='idle';q.tm=2});
+  if(win){addAcorns(20,P.x,P.y-T);earn(3,'숨바꼭질 성공');H.list.forEach(q=>npcFriend(q,1));confetti();toast('다 찾았어요! 숨바꼭질 성공! 도토리 20개')}
+  else toast(`앗, 시간이 다 됐어요. ${H.found}명 찾았어요! 내일 또 해요`)}
+function startRace(n){
+  npcSt('bungae').race=dateKey();touch();
+  const far=PLAYS.map(p=>({p,d:Math.hypot(p.x-P.x,p.y-P.y)})).filter(o=>o.d>T*7).sort((a,b)=>a.d-b.d)[0]||{p:PLAYS[4],d:T*10};
+  const lim=Math.max(20,Math.ceil(far.d/T/3.2)+8);
+  n.home0={x:n.x,y:n.y};n.x=far.p.x+T*.9;n.y=far.p.y+T*.6;n.state='idle';n.tm=999;
+  RACE={t:lim,goal:far.p,n};$('#runHud').hidden=false;sfx.whee();
+  toast(`번개: "<b>${far.p.name}</b>까지 ${lim}초 안에 오면 네가 이긴 걸로! 난 먼저 가 있을게! ${npcCp(n)}"`);
+}
+function endRace(win){const R=RACE;RACE=null;$('#runHud').hidden=true;const n=R.n;n.state='idle';n.tm=3;n.wave=2;
+  if(win){addAcorns(15,P.x,P.y-T);earn(2,'달리기 시합');npcFriend(n,2);confetti();floater(n.x,n.y-T*1.6,'졌다! 대단해!','#FFE38A');toast(`번개를 이겼어요! "다음엔 안 질 거야! ${npcCp(n)}"`)}
+  else{floater(n.x,n.y-T*1.6,'내가 이겼다!','#fff');toast(`아깝다! 번개: "내일 또 붙자! ${npcCp(n)}"`)}
+  setTimeout(()=>{if(n.home0&&!RACE){n.x=n.home0.x;n.y=n.home0.y}},6000)}
+function updateNPCs(dt){
+  if(HIDE){HIDE.t-=dt;HIDE.list.forEach(q=>{if(q.hidden&&Math.hypot(q.x-P.x,q.y-P.y)<T*1.7){q.hidden=false;HIDE.found++;q.wave=2;sfx.find();floater(q.x,q.y-T*1.6,'들켰다!','#FFE38A');
+      for(let i=0;i<10;i++)parts.push({wx:q.x,wy:q.y-T*.6,vx:rnd(-60,60),vy:rnd(-90,-30),c:pick(['#FFE38A','#fff','#7FD1B9']),life:1,t:0,star:1})}});
+    $('#runHud').textContent=`숨바꼭질 · 남은 시간 ${Math.ceil(Math.max(0,HIDE.t))}초 · 찾은 친구 ${HIDE.found}/${HIDE.list.length}`;
+    if(HIDE.found>=HIDE.list.length)setTimeout(()=>{if(HIDE)endHide(true)},700);else if(HIDE.t<=0)endHide(false)}
+  if(RACE){RACE.t-=dt;$('#runHud').textContent=`달리기 시합 · ${RACE.goal.name}까지 · 남은 시간 ${Math.ceil(Math.max(0,RACE.t))}초`;
+    if(Math.hypot(RACE.goal.x-P.x,RACE.goal.y-P.y)<T*2.2)endRace(true);else if(RACE.t<=0)endRace(false)}
+  NPCS.forEach(n=>{n.t+=dt;n.wave=Math.max(0,n.wave-dt);n.greet=Math.max(0,n.greet-dt);
+    if(n.hidden)return;
+    const busy=(HIDE&&HIDE.list.includes(n))||(RACE&&RACE.n===n);
+    if(n.state==='walk'&&!busy){const dx=n.tx-n.x,dy=n.ty-n.y,m=Math.hypot(dx,dy);
+      if(m<3){n.state=Math.random()<0.55?'act':'idle';n.tm=n.state==='act'?rnd(5,9):rnd(2,4)}
+      else{const sp=Math.min(m,T*1.25*dt),nx=n.x+dx/m*sp,ny=n.y+dy/m*sp;
+        if(solidAt(Math.floor(nx/T),Math.floor((ny-4)/T))){n.state='idle';n.tm=rnd(.5,1.5)}else{n.x=nx;n.y=ny;if(Math.abs(dx)>1)n.face=dx>0?1:-1}}}
+    else{n.tm-=dt;if(n.tm<=0&&!busy){const c=pick(n.spots);n.tx=(c[0]+.5)*T;n.ty=(c[1]+.7)*T;n.state='walk'}}
+    if(n.state==='act'&&!uiOpen()){n.fl-=dt;if(n.fl<=0){n.fl=n.d.act==='nap'?1.4:n.d.act==='grumble'?rnd(4,7):rnd(1.2,2.2);if(Math.hypot(n.x-P.x,n.y-P.y)<T*10)floater(n.x+rnd(-8,8),n.y-T*1.5,pick(NPC_ACT[n.d.act]),'#fff')}}
+    const d=Math.hypot(n.x-P.x,n.y-P.y);
+    if(d<T*2.6&&n.greet<=0&&!uiOpen()&&!busy){n.greet=45;n.wave=1.5;if(n.state!=='walk'){n.state='idle';n.tm=3}n.face=P.x>n.x?1:-1;
+      const tier=npcTier(n);floater(n.x,n.y-T*1.7,tier===0?`안녕! ${npcCp(n)}`:tier===1?`${PN()}! ${npcCp(n)}`:`${PN()} 왔다! ${npcCp(n)}`,'#FFE38A')}
+  });
+}
+/* 두 발로 서는 동물 이웃 그리기 */
+function drawVillager(c,n,x,y,t,face,o={}){
+  const d=n.d,F1=d.fur,F2=d.fur2,mv=o.mv,act=o.act,sp=d.sp;
+  c.save();c.translate(x,y);
+  if(!o.por){c.beginPath();c.ellipse(0,-1,16,5,0,0,7);c.fillStyle='rgba(30,45,30,.25)';c.fill()}
+  let bob=mv?Math.abs(Math.sin(t*10))*2.5:Math.sin(t*2)*0.6,rot=0;
+  if(act==='exercise')bob=Math.abs(Math.sin(t*5))*9;if(act==='dance'){rot=Math.sin(t*5)*0.14;bob=Math.abs(Math.sin(t*5))*4}
+  const nap=act==='nap';if(nap)bob=-3;
+  c.translate(0,-bob);c.rotate(rot);c.scale(face,1);
+  const st=mv?Math.sin(t*10):0;
+  if(sp==='squirrel'){c.beginPath();c.moveTo(-8,-10);c.bezierCurveTo(-26,-10,-30,-36,-18,-46);c.bezierCurveTo(-10,-52,-6,-42,-12,-38);c.bezierCurveTo(-20,-30,-14,-18,-6,-16);c.closePath();shape(c,F1);
+    c.beginPath();c.moveTo(-14,-40);c.bezierCurveTo(-22,-34,-20,-22,-12,-18);c.lineWidth=2;c.strokeStyle=F2;c.stroke()}
+  if(sp==='dog'){c.save();c.translate(-11,-15);c.rotate(-0.6+Math.sin(t*14)*0.35);ell(c,0,-5,3.2,7,F1);c.restore()}
+  if(sp==='bunny')ell(c,-11,-12,4.6,4.6,'#fff');
+  if(sp==='bear'||sp==='hippo')ell(c,-11,-12,3,3,F1);
+  ell(c,-5,-4+(nap?0:st*1.5),4.6,3.6,F1);ell(c,5,-4-(nap?0:st*1.5),4.6,3.6,F1);
+  rr(c,-11,-25,22,20,8,d.shirt);
+  if(!SIL){if(sp==='squirrel'){c.beginPath();c.roundRect(-7,-20,14,13,4);c.fillStyle='#fff';c.fill()}
+    if(sp==='dog'){c.fillStyle='#fff';c.fillRect(-10,-17,20,3)}
+    if(sp==='hippo'){c.fillStyle='rgba(255,255,255,.7)';[[-5,-19],[4,-13],[-3,-10]].forEach(([a,b])=>{c.beginPath();c.arc(a,b,1.6,0,7);c.fill()})}}
+  let aL=0,aR=0;
+  if(act==='exercise'){const u=Math.sin(t*5)>0;aL=u?-12:0;aR=u?-12:0}else if(act==='dance'){aL=Math.sin(t*5)*-6-4;aR=Math.sin(t*5+3)*-6-4}else if(o.wave>0)aR=-12+Math.sin(t*16)*3;
+  else{aL=st;aR=-st}
+  if(act==='sweep'){c.save();c.translate(13,-14);c.rotate(0.35+Math.sin(t*5)*0.3);c.fillStyle='#A0743F';c.fillRect(-1.2,-4,2.4,20);c.beginPath();c.moveTo(-5,16);c.lineTo(5,16);c.lineTo(3,10);c.lineTo(-3,10);c.closePath();shape(c,'#E8C46A',true,1.6);c.restore()}
+  ell(c,-12,-17+aL,3.6,5.4,d.shirt);ell(c,12,-17+aR,3.6,5.4,d.shirt);
+  ell(c,-12,-12+aL,2.8,2.6,F1);ell(c,12,-12+aR,2.8,2.6,F1);
+  if(HALLOWEEN&&!o.por&&!act){ell(c,-14,-8,5,4.5,'#F28A2E');if(!SIL){c.fillStyle='#5A2A10';c.fillRect(-16,-9,4,1.4)}}
+  const hy=-40;
+  if(sp==='bear'){ell(c,-10,hy-11,5.5,5.5,F1);ell(c,10,hy-11,5.5,5.5,F1);if(!SIL){ell(c,-10,hy-11,2.8,2.8,F2,false);ell(c,10,hy-11,2.8,2.8,F2,false)}}
+  if(sp==='hippo'){ell(c,-10,hy-11,3.6,3.2,F1);ell(c,10,hy-11,3.6,3.2,F1)}
+  if(sp==='bunny'){const w=Math.sin(t*3)*0.08;ell(c,-6,hy-21,4.6,11,F1,true,-0.18+w);ell(c,6,hy-21,4.6,11,F1,true,0.18-w);if(!SIL){ell(c,-6,hy-20,2.2,7,'#FFB6C6',false,-0.18+w);ell(c,6,hy-20,2.2,7,'#FFB6C6',false,0.18-w)}}
+  if(sp==='squirrel'){tri(c,[-13,hy-6],[-11,hy-20],[-4,hy-11],F1);tri(c,[4,hy-11],[11,hy-20],[13,hy-6],F1);if(!SIL){c.fillStyle=F2;c.beginPath();c.arc(-11,hy-20,2,0,7);c.arc(11,hy-20,2,0,7);c.fill()}}
+  if(sp==='frog'){ell(c,-7,hy-11,6.5,6.5,F1);ell(c,7,hy-11,6.5,6.5,F1)}
+  ell(c,0,hy,sp==='hippo'?17:16,14,F1);
+  if(!SIL){c.fillStyle='rgba(255,255,255,.22)';c.beginPath();c.ellipse(-5,hy-8,7,3,-0.3,0,7);c.fill()}
+  if(SIL){c.restore();return}
+  const blink=nap||((t+n.d.id.length)%3.6)<0.13;
+  const EY=sp==='frog'?[[-7,hy-11],[7,hy-11]]:[[-6,hy-2],[6,hy-2]];
+  EY.forEach(([ex,ey],i)=>{
+    if(sp==='frog'&&!blink){ell(c,ex,ey,4,4,'#fff',false)}
+    if(blink){c.beginPath();c.arc(ex,ey-0.5,2.6,0.2,Math.PI-0.2);c.lineWidth=1.8;c.strokeStyle=BK;c.stroke();return}
+    if(d.type==='lazy'){c.fillStyle=BK;c.beginPath();c.ellipse(ex,ey+0.6,2.3,2,0,0,7);c.fill();c.strokeStyle=BK;c.lineWidth=1.6;c.beginPath();c.moveTo(ex-3.5,ey-1);c.lineTo(ex+3.5,ey-1);c.stroke();return}
+    const r=d.type==='peppy'?3.2:2.5;c.fillStyle=BK;c.beginPath();c.ellipse(ex,ey,r*0.85,r,0,0,7);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(ex+0.9,ey-1.2,r*0.36,0,7);c.fill();
+    if(d.type==='peppy'){c.beginPath();c.arc(ex-1,ey+1.2,0.7,0,7);c.fill()}
+    if(d.type==='cranky'){c.strokeStyle=BK;c.lineWidth=2;c.beginPath();const s=i?-1:1;c.moveTo(ex-4*s,ey-5.5);c.lineTo(ex+2.5*s,ey-3.6);c.stroke()}
+    if(d.type==='jock'){c.strokeStyle=BK;c.lineWidth=1.8;c.beginPath();c.moveTo(ex-3,ey-5);c.lineTo(ex+3,ey-6);c.stroke()}
+  });
+  if(sp==='bear'){ell(c,0,hy+5,7,5,F2,false);ell(c,0,hy+3,2.6,1.9,'#3B2C2A',false);c.beginPath();c.moveTo(0,hy+5);c.lineTo(0,hy+7);c.lineWidth=1.3;c.strokeStyle=OUT;c.stroke()}
+  if(sp==='hippo'){ell(c,0,hy+6,11,7,F2);c.fillStyle='#7C5E8F';c.beginPath();c.ellipse(-3.5,hy+3.5,1.3,1.8,0,0,7);c.ellipse(3.5,hy+3.5,1.3,1.8,0,0,7);c.fill()}
+  if(sp==='dog'){ell(c,0,hy+5,6.5,4.6,F2,false);ell(c,0,hy+2.6,2.8,2,BK,false);mouth(c,0,hy+6)}
+  if(sp==='bunny'){tri(c,[-1.8,hy+2],[1.8,hy+2],[0,hy+4],'#F28AA0',false);mouth(c,0,hy+5)}
+  if(sp==='squirrel'){ell(c,0,hy+5,5.5,4,F2,false);ell(c,0,hy+3,2,1.5,'#3B2C2A',false);mouth(c,0,hy+6)}
+  if(sp==='frog'){c.beginPath();c.moveTo(-8,hy+3);c.quadraticCurveTo(0,hy+9,8,hy+3);c.lineWidth=1.6;c.strokeStyle=OUT;c.stroke()}
+  blush(c,-10,hy+4);blush(c,10,hy+4);
+  if(sp==='dog'){ell(c,-14,hy-1,4.6,8.5,'#C9A06A',true,0.35);ell(c,14,hy-1,4.6,8.5,'#C9A06A',true,-0.35);c.beginPath();c.roundRect(-15,hy-10,30,4,2);c.fillStyle='#E2504A';c.fill()}
+  if(sp==='hippo'){for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ell(c,10+Math.cos(a)*3,hy-12+Math.sin(a)*3,2.3,2.3,'#FFE38A',false)}ell(c,10,hy-12,1.8,1.8,'#E2557A',false)}
+  if(sp==='bunny'){tri(c,[-6,hy-12],[-12,hy-16],[-12,hy-8],'#FF7FA8');tri(c,[-6,hy-12],[0,hy-16],[0,hy-8],'#FF7FA8');ell(c,-6,hy-12,2,2,'#E2557A')}
+  if(sp==='squirrel'){c.save();c.translate(9,hy-11);c.rotate(0.5);ell(c,0,0,4,2,'#6FBF5A');c.restore()}
+  if(sp==='bear'){c.beginPath();c.ellipse(0,hy-12,10,4.5,0,Math.PI,0);c.closePath();shape(c,'#4F8A5B');ell(c,0,hy-17,2.8,2.8,'#FFE38A')}
+  c.restore();
+}
+function paintNpcCanvas(cn){const n=NPCS.find(q=>q.d.id===cn.dataset.npc);if(!n)return;const g=cn.getContext('2d'),w=cn.width,h=cn.height;g.clearRect(0,0,w,h);g.save();g.translate(w/2,h*0.95);const z=h/76;g.scale(z,z);drawVillager(g,n,0,0,now,1,{por:true});g.restore()}
+function drawHideTuft(c,n){const s=now*12+n.t,wob=Math.sin(s)*2.4*(Math.sin(now*1.7+n.t)>0.2?1:0.2);
+  tri(c,[n.x-11+wob,n.y],[n.x-6,n.y-17],[n.x-1+wob,n.y],'#5FA34C');tri(c,[n.x-2+wob,n.y],[n.x+3,n.y-21],[n.x+8+wob,n.y],PAL.grass2);tri(c,[n.x+5+wob,n.y],[n.x+10,n.y-14],[n.x+13+wob,n.y],'#5FA34C')}
+function openNeighborsNews(){
+  S.v5=true;touch();
+  openModal(`<p class="sub center">새 소식</p><div class="big">동네에 이웃 6명이 이사 왔어요!</div>
+   <div class="list" style="margin-top:10px">${NPCS.map(n=>`<div class="li" style="cursor:default"><canvas data-npc="${n.d.id}" width="144" height="116" style="width:72px;height:58px;flex:none"></canvas><div class="grow"><div class="nm">${n.d.name} <small style="color:var(--mute)">${n.d.tl}</small></div><div class="meta">${n.d.intro}</div></div></div>`).join('')}</div>
+   <div class="news" style="margin-top:10px"><h4>이웃이랑 친해지는 법</h4>매일 말을 걸고, 좋아하는 간식을 선물하고, 부탁을 들어주면 하트가 올라요. 하트가 차면 이웃이 말버릇을 정해 달라고 하고, 제일 친해지면 사진을 줘요. 깡총이는 숨바꼭질, 번개는 달리기 시합을 하자고 해요!</div>
+   <div class="row"><button class="btn" id="ok">만나러 가자!</button></div>`);$('#ok').onclick=closeModal}
+
+/* ---------- 나가기 ---------- */
+$('#exitBtn').onclick=()=>{if(RUN||HIDE||RACE){if(!confirm('하던 놀이가 끝나요. 나갈까요?'))return}
+  openModal(`<h3>밍뉴의숲에서 나갈까요?</h3><p class="sub">지금까지 한 건 다 저장돼요. 다음에 오면 이어서 놀 수 있어요.</p><div class="row"><button class="btn soft" id="exN">더 놀래</button><button class="btn" id="exY">나가기</button></div>`);
+  $('#exN').onclick=closeModal;$('#exY').onclick=async()=>{$('#exY').disabled=true;try{save()}catch(e){}
+    try{leaveRoom(true)}catch(e){}
+    if(SESS){try{flushCredits()}catch(e){}try{await Promise.race([World.saveGame('forest',JSON.stringify(S)),new Promise(r=>setTimeout(r,2500))])}catch(e){}}
+    location.href=SESS?'../':'../'}};
 /* ---------- NNN 월드 아바타와 크레딧 ---------- */
 function avPack(){const a=myAv();return{b:a.base,f:a.fur||'cream',p:a.pat||'none',e:a.eye||'black'}}
 let wearT=null;
