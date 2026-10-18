@@ -500,6 +500,7 @@ body.tvmode .app{max-width:none;padding:0}
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:8px">
     <h3 style="font-size:20px">보낸 기록 <span class="small num" id="logCnt"></span></h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><a class="btn sm red" style="text-align:center;text-decoration:none" href="sms:" id="openSmsApp">문자 앱 열기</a><a class="btn sm gold" style="text-align:center;text-decoration:none" href="kakaotalk://" id="openKakaoApp">카톡 열기</a></div>
     <p class="small" style="margin:0">문자·카톡 버튼을 누른 기록이에요. 실제 전송 여부는 휴대폰 문자·카톡 앱에서 확인돼요. 눌러서 보낸 내용을 볼 수 있어요.</p>
     <div class="chips" id="logFilt"></div>
     <div class="field"><input id="logQ" placeholder="이름·안내 이름 검색"></div>
@@ -1469,6 +1470,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     ${m.mem&&m.mem.pt&&m.mem.pt.left>0?'<button class="btn ghost" id="admPt">PT 1회 차감 (남은 '+m.mem.pt.left+'회)</button>':''}
     ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div>${holdPolicy(m.mem)&&!m.mem.hold?'<button class="btn sm ghost" id="admHold">정지 처리</button>':''}</div>`:''}
     <button class="btn" id="admSend">안내 보내기 (문자·카톡)</button>
+    ${m.phone?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="sms:${String(m.phone).replace(/[^\d]/g,'')}">문자 대화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="tel:${String(m.phone).replace(/[^\d]/g,'')}">전화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a></div>`:''}
     ${(m.sentLog||[]).length?`<div class="qrow" style="flex-direction:column;align-items:stretch"><div class="label">보낸 기록</div>${(m.sentLog||[]).slice(-5).reverse().map(x=>`<div class="small num">${new Date(x.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} · ${esc(x.name||'')} · ${CH_NAME[x.ch]||x.ch}</div>`).join('')}</div>`:''}
     <button class="btn ghost" id="admVcf">이 회원 연락처 저장(.vcf)</button>
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
@@ -2343,8 +2345,9 @@ async function renderSendLog(){
   $('#logFilt').innerHTML=[['all','전체'],['sms','문자'],['kakao','카톡'],['manual','완료 처리']].map(([k,n])=>`<button class="chip ${f===k?'on':''}" data-lf="${k}">${n}</button>`).join('');
   $$('#logFilt [data-lf]').forEach(b=>b.onclick=()=>{window.LOGF=b.dataset.lf;renderSendLog()});
   const show=rows.slice(0,40);
-  box.innerHTML=show.length?show.map((r,i)=>`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-li="${i}"><div class="grow"><b>${esc(r.m.name)}</b> <span class="small">${esc(r.name||kindName(r.kind))}</span><div class="small num">${new Date(r.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div><span class="pill" style="background:${r.ch==='sms'?'#D9343A':r.ch==='kakao'?'#E9A91F':'#8A94A6'};color:#fff">${CH_NAME[r.ch]||r.ch}</span></button>`).join(''):'<div class="small" style="padding:6px 0">아직 보낸 기록이 없어요.</div>';
-  box.querySelectorAll('[data-li]').forEach(b=>b.onclick=()=>{const r=show[+b.dataset.li];sheet(`<h2>${esc(r.m.name)} · ${esc(r.name||kindName(r.kind))}</h2><div class="small">${new Date(r.at).toLocaleString('ko-KR')} · ${CH_NAME[r.ch]||r.ch} · ${esc(r.m.phone||'')}</div><div class="terms" style="max-height:none">${esc(r.text||'(내용 기록 없음)')}</div><button class="btn ghost" id="lgAgain">같은 내용 다시 보내기</button><button class="btn" data-close>닫기</button>`,(el,close)=>{el.querySelector('#lgAgain').onclick=()=>{close();openSendSheet(r.m,r.kind,null,r.text)}})});
+  const smsOnly=m=>`sms:${String(m.phone||'').replace(/[^\d]/g,'')}`;
+  box.innerHTML=show.length?show.map((r,i)=>`<div class="payrow" style="border-bottom:1px solid var(--mat)"><button style="flex:1;min-width:0;background:none;border:0;text-align:left;padding:0" data-li="${i}"><b>${esc(r.m.name)}</b> <span class="small">${esc(r.name||kindName(r.kind))}</span><div class="small num">${new Date(r.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})} · <span style="color:${r.ch==='sms'?'#D9343A':r.ch==='kakao'?'#B07A08':'#8A94A6'}">${CH_NAME[r.ch]||r.ch}</span></div></button>${r.m.phone?`<a class="btn sm ghost" style="text-decoration:none;white-space:nowrap" href="${smsOnly(r.m)}" aria-label="${esc(r.m.name)} 문자 대화 열기">문자 대화</a>`:''}</div>`).join(''):'<div class="small" style="padding:6px 0">아직 보낸 기록이 없어요.</div>';
+  box.querySelectorAll('[data-li]').forEach(b=>b.onclick=()=>{const r=show[+b.dataset.li];sheet(`<h2>${esc(r.m.name)} · ${esc(r.name||kindName(r.kind))}</h2><div class="small">${new Date(r.at).toLocaleString('ko-KR')} · ${CH_NAME[r.ch]||r.ch} · ${esc(r.m.phone||'')}</div><div class="terms" style="max-height:none">${esc(r.text||'(내용 기록 없음)')}</div>${r.m.phone?`<a class="btn red" style="text-align:center;text-decoration:none" href="sms:${String(r.m.phone).replace(/[^\d]/g,'')}">${esc(r.m.name)} 님 문자 대화 열기</a>`:''}<a class="btn gold" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a><button class="btn ghost" id="lgAgain">같은 내용 다시 보내기</button><button class="btn" data-close>닫기</button>`,(el,close)=>{el.querySelector('#lgAgain').onclick=()=>{close();openSendSheet(r.m,r.kind,null,r.text)}})});
 }
 
 /* ================= 보낼 안내 목록 (관장) ================= */
