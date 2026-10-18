@@ -1,0 +1,55 @@
+{
+  "rules": {
+    "pins": {
+      "$k": { ".read": false, ".write": "auth != null && !data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/) && $k.length >= 2 && $k.length <= 8" }
+    },
+    "devices": {
+      "$k": { "$uid": { ".read": false, ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('pins').child($k).val()" } }
+    },
+    "profiles": {
+      ".read": "auth != null",
+      "$k": {
+        ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['nick'])",
+        "nick": { ".validate": "newData.isString() && newData.val().length <= 8" }
+      }
+    },
+    "saves": {
+      "$k": {
+        ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+        "$game": {
+          ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+          "data": { ".validate": "newData.isString() && newData.val().length < 200000" }
+        }
+      }
+    },
+    "meta": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()"
+    },
+    "requests": {
+      ".read": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()",
+      "$k": {
+        ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+        ".write": "auth != null && (root.child('devices').child($k).child(auth.uid).exists() || root.child('devices').child('밍뉴').child(auth.uid).exists())"
+      }
+    },
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        "host": { ".write": "auth != null && !data.exists() && root.child('devices').child('밍뉴').child(auth.uid).exists()" },
+        "game": { ".write": "auth != null && !data.exists() && newData.isString()" },
+        "created": { ".write": "auth != null && !data.exists()" },
+        "allowed": {
+          "$k": { ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()" }
+        },
+        "players": {
+          "$k": {
+            ".write": "auth != null && (root.child('devices').child('밍뉴').child(auth.uid).exists() || (root.child('devices').child($k).child(auth.uid).exists() && (!newData.exists() || root.child('rooms').child($code).child('allowed').child($k).exists() || root.child('rooms').child($code).child('host').val() === $k)))",
+            "n": { ".validate": "newData.isString() && newData.val().length <= 8" }
+          }
+        }
+      }
+    }
+  }
+}
