@@ -97,6 +97,11 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .kv:last-child{border-bottom:0}
 .kv .k{width:64px;color:var(--muted);font-size:13px;flex:0 0 auto}
 .kv .v{flex:1;min-width:0;font-variant-numeric:tabular-nums;word-break:break-all}
+.snsrow{display:flex;gap:8px;flex-wrap:wrap}
+.sns{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:7px 14px 7px 7px;color:var(--ink);text-decoration:none;font-size:14px}
+.sns i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}
+.refban{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--red);border-radius:10px;padding:10px 12px}
+.refban canvas{width:48px;height:48px;flex:0 0 auto}
 .payrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--mat)}
 .ev{display:flex;gap:10px;align-items:center;background:#2A1B33;color:#FFD9A8;border-radius:14px;padding:10px 14px;font-size:14px}
 .ev b{font-family:var(--display);font-weight:400;color:#FF9A3C}
@@ -215,9 +220,11 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
     <canvas id="parade" width="720" height="240"></canvas>
   </div>
   <div class="ev" id="hwBanner" hidden><b>할로윈 이벤트</b><span>11월 7일까지 한정 캐릭터 · 맵에서 사탕 줍기</span></div>
+  <div class="refban" id="refBanner" hidden><canvas width="96" height="96"></canvas><div class="grow"><b id="refWho"></b><div class="small">지금 가입하면 초대 선물 100 크레딧을 더 받아요</div></div></div>
   <button class="btn red" id="goJoin">처음 왔어요 · 가입 신청</button>
   <button class="btn" id="goLogin">회원번호로 입장</button>
   <div class="quick"><button id="qTT"><b>수업 시간표</b><span id="qTTsub">오늘 수업 보기</span></button><button id="qPay"><b>결제 · 카운터</b><span>아산페이 · 온누리 · 계좌이체</span></button></div>
+  <div data-sns></div>
   <div class="row" style="justify-content:space-between">
     <button class="link" id="goPad">출석패드 모드</button>
     <button class="link" id="goAdmin">관장 메뉴</button>
@@ -242,6 +249,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
     <div class="field"><label for="jNote">부상·건강 참고사항 <span class="small">(코치만 확인)</span></label><textarea id="jNote" rows="2" placeholder="예: 오른쪽 어깨 수술 이력"></textarea></div>
     <div class="field"><span>내 첫 캐릭터</span>
       <div class="grid" id="starter"></div></div>
+    <div class="field"><label for="jRef">추천인 회원번호 <span class="small">(있으면)</span></label><input id="jRef" inputmode="numeric" placeholder="예: 1001"></div>
     <div>
       <div class="label">약관 동의</div>
       <details><summary class="small">이용약관 · 개인정보 내용 보기</summary><div class="terms" id="termsText"></div></details>
@@ -276,6 +284,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
     <h3 style="font-size:20px">체육관 번호 저장</h3>
     <div class="row"><span class="grow num" id="gymPhoneTxt"></span><button class="btn sm ghost" id="saveGymVcf">연락처 파일 받기</button></div>
   </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">NNN 복싱 소식</h3><div data-sns></div></div>
   <button class="btn" id="doneGo">내 체육관 월드 입장</button>
 </section>
 
@@ -349,8 +358,10 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
       <div class="row"><span class="grow">총 출석</span><b class="num" id="mAtt"></b></div>
       <div class="row"><span class="grow">가입일</span><b class="num" id="mJoin"></b></div>
       <div class="row"><span class="grow">다음 레벨</span><b class="num small" id="mNext" style="color:var(--ink)"></b></div>
-      <button class="btn ghost sm" id="lvBtn">레벨표 보기</button>
+      <div class="row"><button class="btn ghost sm grow" id="lvBtn">레벨표 보기</button><button class="btn gold sm grow" id="bragBtn">내 복서 자랑하기</button></div>
     </div>
+    <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"><div class="label">친구 초대</div><div id="inviteBox" style="display:flex;flex-direction:column;gap:10px"></div></div>
+    <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"><div class="label">NNN 복싱 소식</div><div data-sns></div></div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
       <div class="quick"><button id="mTT"><b>수업 시간표</b><span>요일별 수업</span></button><button id="mPay"><b>결제</b><span>회원권 · PT</span></button></div>
       <a class="btn gold sm" id="kakaoBtn2" style="text-align:center;text-decoration:none" target="_blank" rel="noopener">카카오톡 채널 추가</a>
@@ -413,6 +424,8 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
     <div class="field"><label for="sAcct">계좌번호</label><input id="sAcct" inputmode="numeric"></div>
     <div class="field"><label for="sAsan">아산페이 QR 이미지 바꾸기</label><input id="sAsan" type="file" accept="image/*"></div>
     <div class="field"><label for="sOnnuri">온누리상품권 QR 이미지</label><input id="sOnnuri" type="file" accept="image/*"><span class="small" id="onnuriState"></span></div>
+    <div class="field"><label for="sBlog">네이버 블로그 주소</label><input id="sBlog" placeholder="https://m.blog.naver.com/nnnboxing"></div>
+    <div class="field"><label for="sInsta">인스타그램 (아이디 또는 주소)</label><input id="sInsta" placeholder="@nnnboxing"></div>
     <div class="field"><label for="sOnNote">온누리상품권 안내 문구</label><input id="sOnNote" placeholder="지류 상품권은 카운터에서 받아요"></div>
     <div class="field"><label for="sPin">관장 PIN (4자리)</label><input id="sPin" inputmode="numeric" maxlength="4"></div>
     <div class="field" hidden><label for="sFb">Firebase 실시간 DB 주소 <span class="small">(비우면 이 기기에만 저장)</span></label><input id="sFb" placeholder="https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app"></div>
@@ -475,7 +488,7 @@ function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return localStorage.getItem(k)!==null}catch(e){return false}}
 function storageOK(){try{localStorage.setItem('nnn_t','1');const ok=localStorage.getItem('nnn_t')==='1';localStorage.removeItem('nnn_t');return ok}catch(e){return false}}
 let local=lsGet(LS)||{meta:{},members:{}};
-local.meta=Object.assign({pay:null,nextId:1001,notice:'탕정 엔엔엔복싱 회원 월드에 오신 걸 환영합니다!\n출석패드에 회원번호를 입력하면 크레딧이 쌓여요.\n할로윈 이벤트: 11월 7일까지 한정 캐릭터 판매 중.',kakao:'',gymPhone:'',pin:'0000',terms:DEFAULT_TERMS,appUrl:DEFAULT_APP_URL},local.meta);
+local.meta=Object.assign({blog:'https://m.blog.naver.com/nnnboxing',insta:'',pay:null,nextId:1001,notice:'탕정 엔엔엔복싱 회원 월드에 오신 걸 환영합니다!\n출석패드에 회원번호를 입력하면 크레딧이 쌓여요.\n할로윈 이벤트: 11월 7일까지 한정 캐릭터 판매 중.',kakao:'',gymPhone:'',pin:'0000',terms:DEFAULT_TERMS,appUrl:DEFAULT_APP_URL},local.meta);
 local.meta.pay=Object.assign({bank:'',acct:'',holder:'',asanQR:ASAN_QR,onnuriQR:'',onnuriNote:'',products:[{n:'1개월 회원권',p:''},{n:'3개월 회원권',p:''},{n:'6개월 회원권',p:''},{n:'1:1 PT 10회',p:''},{n:'초등부 1개월',p:''}]},local.meta.pay||{});
 local.pays=local.pays||{};
 let fdb=null,fuid=null;
@@ -564,6 +577,8 @@ const ITEMS=[
   {id:'t_pumpkin',slot:'trunks',name:'호박 트렁크',col:['#F08A24','#2B2234'],price:300,r:'r',ev:'hw'},
   {id:'t_champ',slot:'trunks',name:'NNN 챔피언 트렁크',col:['#1D2433','#E9A91F'],price:900,r:'e'},
 
+  {id:'g_buddy',slot:'glove',name:'버디 글러브',col:['#2B9B66','#F2D27A'],price:-1,r:'e',note:'친구 1명이 등록하면 받는 한정 글러브'},
+  {id:'b_buddy',slot:'belt',name:'버디 벨트',col:['#C9CED6','#2B9B66'],price:-1,r:'e',note:'친구 3명이 등록하면 받는 한정 벨트'},
   {id:'b_champ',slot:'belt',name:'챔피언 벨트',col:['#E9B92F','#B3122B'],price:-1,r:'l',note:'출석 100회 달성 보상'}
 ];
 ITEMS.forEach(i=>{if(i.slot==='char')i.name=CHARS[i.ch].name});
@@ -606,6 +621,8 @@ const BADGES=[
   {id:'legend',name:'전설의 장비',desc:'전설 아이템 보유',test:m=>m.owned.some(i=>IT[i]&&IT[i].r==='l')},
   {id:'spar1',name:'첫 스파링 승리',desc:'스파링에서 첫 승리',test:m=>(m.sparWins||0)>=1},
   {id:'boss',name:'관장님 격파',desc:'스파링에서 관장님을 이기기',test:m=>!!m.bossWin},
+  {id:'inv1',name:'첫 친구 초대',desc:'초대한 친구가 첫 출석',test:m=>(m.invites||0)>=1},
+  {id:'inv3',name:'추천왕',desc:'초대한 친구 3명 등록',test:m=>(m.invitesReg||0)>=3},
   {id:'candy',name:'사탕 사냥꾼',desc:'할로윈 사탕 50개',test:m=>(m.candy||0)>=50}
 ];
 
@@ -842,7 +859,8 @@ $('#joinForm').onsubmit=async e=>{
     for(let i=0;i<4&&!id;i++){const cand=await DB.newId();if(await DB.claim(cand,last4))id=cand}
     if(!id||!(await DB.loginMember(id,last4))){toast('가입 중 문제가 생겼어요. 인터넷 연결을 확인하고 다시 눌러 주세요',3500);return}
     const m=blankMember({name,phone,birth:$('#jBirth').value,gender:$('#jGender').value,goal:$$('#jGoal .chip.on').map(c=>c.textContent),exp:$('#jExp').value,path:$('#jPath').value,note:$('#jNote').value.trim(),mkt:$('#ag3').checked,char:starterPick},id);
-    await DB.save(m);await DB.savePriv(m);ME=m;lsSet(LS_SESSION,id);
+    const rf=($('#jRef').value||'').trim();if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
+    await DB.save(m);await DB.savePriv(m);ME=m;try{localStorage.removeItem('nnn_ref')}catch(e){}lsSet(LS_SESSION,id);
     showDone();
   }finally{$('#joinBtn').disabled=false}
 };
@@ -850,7 +868,7 @@ function kakaoLink(a,missing){const k=(local.meta.kakao||'').trim().replace(/\/+
 function showDone(){
   $('#doneName').textContent=ME.name+' 님';$('#doneId').textContent=ME.id;
   avatarTo($('#doneAv'),ME.equip,{pose:'guard',h:46});
-  kakaoLink($('#kakaoBtn'),$('#kakaoMissing'));
+  kakaoLink($('#kakaoBtn'),$('#kakaoMissing'));renderSNS();
   $('#gymPhoneTxt').textContent=local.meta.gymPhone||'체육관 번호 미등록';
   show('v-done');
 }
@@ -1003,7 +1021,7 @@ function interact(tg){
 }
 
 /* --- 시트들 --- */
-function openNotice(){sheet(`<h2>체육관 공지</h2><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div><button class="btn" data-close>닫기</button>`)}
+function openNotice(){sheet(`<h2>체육관 공지</h2><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>${snsHTML()}<button class="btn" data-close>닫기</button>`)}
 function openPadInfo(){sheet(`<h2>출석패드</h2><p style="margin:0">체육관 입구 출석패드에 회원번호 <b class="num">${esc(ME.id)}</b>를 입력하면 출석 완료!</p>
   <div class="qrow"><div class="grow">기본 출석</div><b class="num">+50</b></div><div class="qrow"><div class="grow">연속 출석 보너스 (하루마다)</div><b class="num">+10 · 최대 +50</b></div><div class="qrow"><div class="grow">출석 룰렛</div><b>최대 +100 · 깜짝 장비</b></div>
   <p class="small" style="margin:0">오늘 출석: ${ME.last===TODAY()?'완료':'아직'}</p><button class="btn" data-close>확인</button>`)}
@@ -1185,7 +1203,7 @@ function shopTap(it,own,pv){
     <button class="btn red" id="buyGo" ${ME.credits<it.price?'disabled':''}>구매하고 착용</button><button class="btn ghost" data-close>다음에</button>`,(el,close)=>{
     const cv=el.querySelector('#buyAv');let raf;const loop=()=>{avatarTo(cv,pv,{h:46,pose:Math.floor(performance.now()/600)%2?'guard':'jab',t:performance.now()/1000});raf=requestAnimationFrame(loop);if(!document.body.contains(cv))cancelAnimationFrame(raf)};loop();
     el.querySelector('#buyGo').onclick=()=>{if(ME.credits<it.price)return;ME.credits-=it.price;ME.owned.push(it.id);if(it.slot==='char')ME.equip.char=it.ch;else ME.equip[it.slot]=it.id;
-      checkBadges(ME).forEach(b=>toast('배지 획득: '+b.name+' (+30)',2800));sfx('win');toast(it.r==='l'?'전설 장비 획득!':'구매 완료!');saveMe();refreshTop();renderShop();close()}});
+      checkBadges(ME).forEach(b=>toast('배지 획득: '+b.name+' (+30)',2800));sfx('win');toast(it.r==='l'?'전설 장비 획득!':'구매 완료!');if(it.r==='l')setTimeout(()=>openBrag(`전설 장비 획득!\n${it.name}`),400);saveMe();refreshTop();renderShop();close()}});
 }
 
 /* ================= 도감 ================= */
@@ -1215,8 +1233,8 @@ async function renderRank(){
 }
 
 /* ================= 내 정보 ================= */
-function renderMore(){{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=local.meta.notice;$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
-$('#lvBtn').onclick=openLevels;
+function renderMore(){renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=local.meta.notice;$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
+$('#lvBtn').onclick=openLevels;$('#bragBtn').onclick=()=>openBrag('NNN 복싱\n운동 중!');
 $('#termsBtn').onclick=()=>sheet(`<h2>이용약관</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}</div><button class="btn" data-close>닫기</button>`);
 $('#logoutBtn').onclick=()=>{ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
 
@@ -1253,6 +1271,7 @@ async function doAttend(){
   else if(roll<.13)bonus=100;else if(roll<.28)bonus=50;else if(roll<.58)bonus=20;else bonus=10;
   if(bonus){earn(m,bonus,'attend');txt=txt||'룰렛 보너스 +'+bonus}
   if(HW&&Math.random()<.5){m.candy=(m.candy||0)+3;txt+=' · 할로윈 사탕 +3'}
+  const rnotes=await referralOnAttend(m);if(rnotes.length)txt+=' · '+rnotes.join(' · ');
   const bs=checkBadges(m);const lvAfter=levelOf(m);if(lvAfter.lv>lvBefore)txt+=` · 레벨 업! Lv.${lvAfter.lv} ${lvAfter.title}`;
   await DB.save(m);if(ME&&ME.id===m.id)ME=m;
   $('#padMsg').textContent=m.name+' 님 출석 완료!';
@@ -1269,7 +1288,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
   await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();
-  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
+  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=FB_ON()||storageOK();drawQR();show('v-admin');renderAdmRows();
 }
@@ -1303,7 +1322,7 @@ $('#saveSet').onclick=async()=>{
   const pin=$('#sPin').value.trim();if((pin||!FB_ON())&&!/^\d{4}$/.test(pin)){toast('PIN은 숫자 4자리로 적어 주세요');return}
   if(pin&&FB_ON()&&!(await DB.setAdminPin(pin))){toast('PIN을 바꾸지 못했어요');return}
   Object.assign(local.meta.pay,{bank:$('#sBank').value.trim(),acct:$('#sAcct').value.trim(),holder:$('#sHolder').value.trim(),onnuriNote:$('#sOnNote').value.trim(),products:$('#sProd').value.split('\n').map(l=>l.split('|')).filter(a=>a[0].trim()).map(a=>({n:a[0].trim(),p:(a[1]||'').replace(/\D/g,'')}))});
-  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
+  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
   const saved=await DB.saveMeta();if(!saved){toast('이 화면에서는 저장이 안 돼요. GitHub 주소에서 열거나 서버를 연결해 주세요',4500);return}toast(FB_ON()?'설정을 저장했어요 · 모든 기기에 반영':'설정을 저장했어요')};
 
 /* ================= 로고 ================= */
@@ -1449,7 +1468,7 @@ async function renderPays(){
   $$('#payRows [data-no]').forEach(b=>b.onclick=()=>setPay(b.dataset.no,'cancel'));
 }
 async function setPay(id,st){const x=local.pays[id];if(!x)return;x.status=st;x.doneAt=new Date().toISOString();await DB.addPay(x);
-  if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧')}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
+  if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500)}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
   renderPays()}
 function readImg(input,cb){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(f)}
 $('#sAsan').onchange=e=>readImg(e.target,d=>{local.meta.pay.asanQR=d;toast('아산페이 QR을 바꿨어요. 설정 저장을 눌러 주세요')});
@@ -1469,7 +1488,7 @@ function levelUpSheet(L){
   sheet(`<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px"><div class="label">LEVEL UP</div><canvas id="luAv" width="240" height="280" style="width:120px;height:140px"></canvas>
     <div style="font-family:var(--display);font-size:40px;line-height:1">Lv.${L.lv}</div><h2>${esc(L.title)}</h2>
     <p class="small" style="margin:0">${L.next?`다음 레벨까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨 달성! 진짜 NNN 레전드예요.'}</p></div>
-    <button class="btn red" data-close>계속 운동하기</button>`,el=>{avatarTo(el.querySelector('#luAv'),ME.equip,{pose:'upR',h:50})});
+    <button class="btn gold" id="luBrag">자랑하기</button><button class="btn red" data-close>계속 운동하기</button>`,(el,close)=>{avatarTo(el.querySelector('#luAv'),ME.equip,{pose:'upR',h:50});el.querySelector('#luBrag').onclick=()=>{close();openBrag(`레벨 업!\nLv.${L.lv} ${L.title}`)}});
 }
 
 /* ================= 링 메뉴 ================= */
@@ -1636,14 +1655,110 @@ function sparEnd(res){
     ${unlock?`<div class="pill fire" style="align-self:center">${esc(unlock)}</div>`:''}
     ${bs.map(b=>`<div class="pill" style="align-self:center">배지 획득: ${esc(b.name)} +30</div>`).join('')}
     ${!win?`<div class="small">${S.taken>S.dealt?'신호 색을 보고 가드·더킹을 먼저 연습해 보세요.':'끊어치기와 카운터를 노려 보세요!'}</div>`:''}
-    <div class="row"><button class="btn ghost grow" id="sq">맵으로</button><button class="btn red grow" id="sa">다시 붙기</button></div></div>`;
-  $('#sq').onclick=closeSpar;$('#sa').onclick=()=>openSpar(o);
+    <div class="row"><button class="btn ghost grow" id="sq">맵으로</button><button class="btn red grow" id="sa">다시 붙기</button></div>${win&&(o.boss||o.idx>=3)?'<button class="btn gold" id="sb">승리 자랑하기</button>':''}</div>`;
+  $('#sq').onclick=closeSpar;{const sb=$('#sb');if(sb)sb.onclick=()=>{closeSpar();openBrag(o.boss?'관장님을\n이겼다!':`${o.name}\n격파!`)}}$('#sa').onclick=()=>openSpar(o);
 }
 function closeSpar(){if(S)S.over=true;S=null;$('#gameRoot').innerHTML='';startWorld()}
 
+/* ================= SNS 링크 ================= */
+function snsUrls(){const M=local.meta;const ig=(M.insta||'').trim();const igUrl=!ig?'':/^https?:/.test(ig)?ig:'https://www.instagram.com/'+ig.replace(/^@/,'')+'/';
+  return{blog:(M.blog||'').trim(),insta:igUrl,kakao:(M.kakao||'').trim()}}
+function snsHTML(){const u=snsUrls();const it=[];
+  if(u.blog)it.push(`<a class="sns" href="${esc(u.blog)}" target="_blank" rel="noopener"><i style="background:#03C75A">b</i>블로그</a>`);
+  if(u.insta)it.push(`<a class="sns" href="${esc(u.insta)}" target="_blank" rel="noopener"><i style="background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)">◎</i>인스타그램</a>`);
+  if(u.kakao)it.push(`<a class="sns" href="${esc(u.kakao)}" target="_blank" rel="noopener"><i style="background:#FEE500;color:#3A1D1D">톡</i>카카오 채널</a>`);
+  return it.length?`<div class="snsrow">${it.join('')}</div>`:''}
+function renderSNS(){$$('[data-sns]').forEach(el=>el.innerHTML=snsHTML())}
+
+/* ================= 친구 초대 ================= */
+const REF_BONUS_JOIN=100,REF_BONUS_ATT=200,REF_BONUS_REG=500,BUDDY_BONUS=30;
+const appBase=()=>((local.meta.appUrl||'').trim()||location.href.split(/[?#]/)[0]);
+const inviteLink=id=>appBase()+'?ref='+encodeURIComponent(id);
+function getRef(){try{const q=new URLSearchParams(location.search).get('ref');if(q){localStorage.setItem('nnn_ref',q);return q}return localStorage.getItem('nnn_ref')||''}catch(e){return ''}}
+async function showInviteBanner(){
+  const r=getRef();const b=$('#refBanner');if(!r||!b||ME){if(b)b.hidden=true;return}
+  const inv=await DB.get(r);if(!inv){b.hidden=true;return}
+  b.hidden=false;b.querySelector('#refWho').textContent=maskName(inv.name)+' 님이 초대했어요';
+  const c=b.querySelector('canvas');if(c)avatarTo(c,inv.equip,{h:44,pose:'guard',noFx:true});
+  const j=$('#jRef');if(j&&!j.value)j.value=r;
+}
+async function shareLink(text,url){
+  try{if(navigator.share){await navigator.share({title:'탕정 엔엔엔복싱',text,url});return}}catch(e){if(e&&e.name==='AbortError')return}
+  copyText(text+' '+url,'초대 링크를');
+}
+async function renderInvite(){
+  const box=$('#inviteBox');if(!box||!ME)return;
+  const all=await DB.all();const mine=all.filter(m=>m.ref===ME.id);
+  const st=m=>m.refPaid2?['등록 완료','#2B9B66']:m.attend.length?['출석함','#2E5AAC']:['가입','#8A94A6'];
+  box.innerHTML=`<div class="row"><div class="grow"><div class="label">내 초대 코드</div><div style="font-family:var(--display);font-size:30px;line-height:1.1" class="num">${esc(ME.id)}</div></div>
+    <button class="btn red sm" id="invShare">친구 초대하기</button></div>
+    <div class="small">친구가 내 링크로 가입하면 친구에게 +${REF_BONUS_JOIN}, 친구가 처음 출석하면 나에게 +${REF_BONUS_ATT}, 친구가 등록하면 나에게 +${REF_BONUS_REG}과 한정 <b>버디 글러브</b>. 3명 등록이면 <b>버디 벨트</b>! 같이 운동한 날은 둘 다 +${BUDDY_BONUS}.</div>
+    ${mine.length?`<div>${mine.map(m=>{const[s,c]=st(m);return`<div class="payrow"><canvas width="64" height="64" data-av="${esc(m.id)}" style="width:32px;height:32px"></canvas><span class="grow">${esc(maskName(m.name))}</span><span class="pill" style="background:${c};color:#fff">${s}</span></div>`}).join('')}</div>`:'<div class="small">아직 초대한 친구가 없어요. 같이 운동할 친구 한 명이면 충분해요.</div>'}`;
+  mine.forEach(m=>{const cv=box.querySelector(`[data-av="${m.id}"]`);if(cv)avatarTo(cv,m.equip,{h:44,noFx:true})});
+  box.querySelector('#invShare').onclick=()=>shareLink(`${ME.name}이(가) 다니는 탕정 엔엔엔복싱! 내 링크로 가입하면 ${REF_BONUS_JOIN} 크레딧 더 줘요. 같이 운동해요 🥊`,inviteLink(ME.id));
+}
+/* 출석 시 추천 보상 (출석패드 = 관장 권한 기기에서 실행) */
+async function referralOnAttend(m){
+  const notes=[];
+  try{
+    if(m.ref&&m.attend.length===1&&!m.refPaid1){const r=await DB.get(m.ref);if(r){r.credits+=REF_BONUS_ATT;r.earned+=REF_BONUS_ATT;r.invites=(r.invites||0)+1;checkBadges(r);await DB.save(r);m.refPaid1=true;notes.push(`초대한 ${maskName(r.name)} 님에게 +${REF_BONUS_ATT} 선물`)}}
+    const buddies=[m.ref].filter(Boolean);
+    const all=await DB.all();all.filter(x=>x.ref===m.id).forEach(x=>buddies.push(x.id));
+    if(m.buddyDay!==TODAY()){for(const bid of buddies){const b=bid===m.ref?await DB.get(bid):all.find(x=>x.id===bid);if(b&&b.last===TODAY()){m.credits+=BUDDY_BONUS;m.earned+=BUDDY_BONUS;m.buddyDay=TODAY();if(b.buddyDay!==TODAY()){b.credits+=BUDDY_BONUS;b.earned+=BUDDY_BONUS;b.buddyDay=TODAY();await DB.save(b)}notes.push(`${maskName(b.name)} 님과 같이 운동! 둘 다 +${BUDDY_BONUS}`);break}}}
+  }catch(e){}
+  return notes;
+}
+/* 결제 확인 시 추천 보상 (관장 기기) */
+async function referralOnPay(m){
+  if(!m.ref||m.refPaid2)return '';
+  const r=await DB.get(m.ref);if(!r)return '';
+  m.refPaid2=true;await DB.save(m);
+  r.credits+=REF_BONUS_REG;r.earned+=REF_BONUS_REG;r.invitesReg=(r.invitesReg||0)+1;
+  if(!r.owned.includes('g_buddy'))r.owned.push('g_buddy');
+  if(r.invitesReg>=3&&!r.owned.includes('b_buddy'))r.owned.push('b_buddy');
+  checkBadges(r);await DB.save(r);
+  return ` · 추천인 ${r.name} 님 +${REF_BONUS_REG}`;
+}
+
+/* ================= 자랑 카드 ================= */
+function bragCanvas(head){
+  const W2=1080,H2=1350,cv=document.createElement('canvas');cv.width=W2;cv.height=H2;const c=cv.getContext('2d');
+  const L=levelOf(ME);
+  c.fillStyle='#F4F4F2';c.fillRect(0,0,W2,H2);
+  c.strokeStyle='#2F2F2F';c.lineWidth=18;c.beginPath();c.moveTo(560,1300);c.lineTo(60,1300);c.lineTo(60,60);c.lineTo(1020,60);c.lineTo(1020,700);c.stroke();
+  drawLogo(c,96,96,150,'#2F2F2F');
+  c.fillStyle='#2F2F2F';c.font='500 34px Jost,"Century Gothic",sans-serif';c.textBaseline='middle';c.fillText('NNNBOXING · 탕정',270,140);
+  c.fillStyle='#D9343A';c.font='64px "Black Han Sans",sans-serif';c.textBaseline='alphabetic';
+  const lines=String(head).split('\n');lines.forEach((ln,i)=>c.fillText(ln,96,300+i*76));
+  const g=c.createRadialGradient(610,880,40,610,880,320);g.addColorStop(0,'#FFFFFF');g.addColorStop(1,'#E2E4E8');c.fillStyle=g;c.beginPath();c.arc(610,880,300,0,Math.PI*2);c.fill();
+  drawChar(c,610,1120,12,ME.equip,{t:1.2,pose:'guard'});
+  c.fillStyle='#2F2F2F';c.font='54px "Black Han Sans",sans-serif';c.textAlign='left';c.fillText(ME.name,96,480);
+  c.font='40px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';
+  c.fillText(`Lv.${L.lv} ${L.title}`,96,560);c.fillText(`출석 ${ME.attend.length}회 · 연속 ${ME.streak||0}일`,96,616);
+  // 초대 QR
+  const link=inviteLink(ME.id);const tmp=document.createElement('div');let qr=null;
+  try{new QRCode(tmp,{text:link,width:200,height:200,colorDark:'#2F2F2F',colorLight:'#ffffff'});qr=tmp.querySelector('canvas')}catch(e){}
+  c.fillStyle='#fff';c.fillRect(800,1080,220,220);if(qr)c.drawImage(qr,810,1090,200,200);
+  c.fillStyle='#2F2F2F';c.textAlign='right';c.font='34px "Black Han Sans",sans-serif';c.fillText('같이 운동해요',780,1210);
+  c.font='30px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(`초대코드 ${ME.id} · 가입 시 +${REF_BONUS_JOIN}`,780,1260);c.textAlign='left';
+  return cv;
+}
+function openBrag(head){
+  const cv=bragCanvas(head);const url=cv.toDataURL('image/png');
+  sheet(`<h2>자랑하기</h2><img src="${url}" alt="내 복서 자랑 카드" style="width:100%;border-radius:8px;border:1px solid var(--line)">
+    <p class="small" style="margin:0">카드 아래 QR로 친구가 바로 가입할 수 있어요. 공유가 안 되면 이미지를 길게 눌러 저장해서 인스타 스토리나 카톡에 올려 주세요.</p>
+    <button class="btn red" id="bragShare">공유하기</button><button class="btn ghost" data-close>닫기</button>`,(el)=>{
+    el.querySelector('#bragShare').onclick=async()=>{
+      try{const blob=await new Promise(r=>cv.toBlob(r,'image/png'));const file=new File([blob],'nnn-boxing.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:`탕정 엔엔엔복싱 ${inviteLink(ME.id)}`});return}}catch(e){if(e&&e.name==='AbortError')return}
+      shareLink(`탕정 엔엔엔복싱에서 운동 중! 내 링크로 가입하면 ${REF_BONUS_JOIN} 크레딧 더 줘요`,inviteLink(ME.id));
+    };
+  });
+}
+
 /* ================= 시작 ================= */
 (async()=>{
-  show('v-home');const fbok=await fbInit();if(fbok)await DB.meta();
+  show('v-home');renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();showInviteBanner();
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
   if(hashv==='pad'){pinSheet('출석패드 모드 시작',openPad);show('v-home');return}
   if(sid){const m=await DB.get(sid);if(m){ME=m;enterWorld();return}}
