@@ -146,7 +146,7 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="shared/avatar.js?v=5"></script>
+<script src="shared/avatar.js?v=6"></script>
 <script src="shared/world.js?v=5"></script>
 <script>
 const $=s=>document.querySelector(s);
@@ -178,29 +178,31 @@ const AC=$('#avatar'),actx=AC.getContext('2d');
 (function loop(ts){const t=ts/1000;actx.clearRect(0,0,240,220);actx.save();actx.translate(122,200);actx.scale(2.2,2.2);
   const av=TRY||AV;if(av)Avatar.draw(actx,0,0,t,1,false,0,av);actx.restore();requestAnimationFrame(loop)})(0);
 function setMe(p){if(!p)return;ME=p;ME.owned=ME.owned||{};AV=fixAv(p.av);$('#credits').textContent=(p.credits||0).toLocaleString('ko-KR');if(!$('#shop').hidden)renderItems()}
-const TABS0=[['base','캐릭터'],['fur','털색'],['pat','무늬'],['eye','눈'],['acc','꾸미기']];
-const tabsFor=()=>IS_ADMIN()?[['acc','꾸미기']]:TABS0;
+const ACCT=[['head','모자·머리'],['eyes','얼굴'],['neck','목걸이'],['back','등·날개'],['costume','분장']];
+const TABS0=[['base','캐릭터'],['fur','털색'],['pat','무늬'],['eye','눈'],...ACCT];
+const tabsFor=()=>IS_ADMIN()?ACCT:TABS0;
+const isAccTab=t=>ACCT.some(a=>a[0]===t);
 function list(tab){
   if(tab==='base')return Object.entries(Avatar.BASES).map(([k,v])=>({id:'base:'+k,v:k,name:v[0],price:v[1]}));
   if(tab==='fur')return Object.entries(Avatar.FURS).map(([k,v])=>({id:'fur:'+k,v:k,name:v[0],price:v[2]}));
   if(tab==='pat')return Object.entries(Avatar.PATS).map(([k,v])=>({id:'pat:'+k,v:k,name:v[0],price:v[1]}));
   if(tab==='eye')return Object.entries(Avatar.EYES).map(([k,v])=>({id:'eye:'+k,v:k,name:v[0],price:v[2]}));
-  return Object.entries(Avatar.ACCS).map(([k,v])=>({id:'acc:'+k,v:k,name:v[0],price:v[2],slot:v[1]}));
+  return Object.entries(Avatar.ACCS).filter(([k,v])=>tab==='acc'||v[1]===tab).map(([k,v])=>({id:'acc:'+k,v:k,name:v[0],price:v[2],slot:v[1]})).sort((a,b)=>a.price-b.price);
 }
 function applied(av,it){av=fixAv(av);const[k]=it.id.split(':');if(IS_ADMIN()&&k!=='acc')return av;
   if(k==='base')av.base=it.v;else if(k==='acc'){if(av.acc[it.slot]===it.v)delete av.acc[it.slot];else av.acc[it.slot]=it.v}
   else{av[k]=it.v;av.base='cat'}return av}
 function isOwned(it){if(it.id.startsWith('base:')&&IS_ADMIN())return it.id==='base:mingnyu';if(it.id==='base:mingnyu')return IS_ADMIN();return it.price===0||!!(ME&&ME.owned[it.id])}
 function isWorn(it){const[k]=it.id.split(':');if(!AV)return false;if(k==='base')return AV.base===it.v;if(k==='acc')return AV.acc[it.slot]===it.v;return AV.base==='cat'&&AV[k]===it.v}
-function renderTabs(){if(IS_ADMIN())TAB='acc';$('#stabs').innerHTML=tabsFor().map(([k,n])=>`<button data-t="${k}" class="${k===TAB?'on':''}">${n}</button>`).join('')}
+function renderTabs(){if(IS_ADMIN()&&!isAccTab(TAB))TAB='head';$('#stabs').innerHTML=tabsFor().map(([k,n])=>`<button data-t="${k}" class="${k===TAB?'on':''}">${n}</button>`).join('')}
 function renderItems(){
   const L=list(TAB);
   $('#items').innerHTML=L.map(it=>{const own=isOwned(it),lock=it.id==='base:mingnyu'&&!own;
     const pr=lock?'<span class="pr lock">숲지기 전용</span>':own?'<span class="pr own">가지고 있어요</span>':`<span class="pr">${it.price} 크레딧</span>`;
     return `<button class="item${SEL&&SEL.id===it.id?' on':''}${isWorn(it)?' wear':''}${lock?' dim':''}" data-id="${it.id}"><canvas width="168" height="140"></canvas>${it.name}${pr}</button>`}).join('');
   [...$('#items').children].forEach((b,i)=>{const it=L[i],c=b.querySelector('canvas').getContext('2d');let av;
-    if(TAB==='acc'){av={base:'cat',fur:'cream',pat:'none',eye:'black',acc:{[it.slot]:it.v}}}else{av=applied(AV||{},it);if(TAB!=='base')av.acc={}}
-    c.save();c.translate(86,TAB==='acc'?126:122);const z=it.v==='kid'?2:1.55;c.scale(z,z);Avatar.draw(c,0,0,0.3,1,false,0,av);c.restore()});
+    if(isAccTab(TAB)){av={base:'cat',fur:'cream',pat:'none',eye:'black',acc:{[it.slot]:it.v}}}else{av=applied(AV||{},it);if(TAB!=='base')av.acc={}}
+    c.save();c.translate(86,TAB==='back'?134:isAccTab(TAB)?126:122);const z=it.v==='kid'?2:TAB==='back'?1.25:1.55;c.scale(z,z);Avatar.draw(c,0,0,0.3,1,false,0,av);c.restore()});
   updateBar();
 }
 function updateBar(){const b=$('#buyBtn');$('#undo').hidden=!TRY;

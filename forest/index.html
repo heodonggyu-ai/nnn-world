@@ -200,7 +200,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="../shared/avatar.js?v=5"></script>
+<script src="../shared/avatar.js?v=6"></script>
 <script src="../shared/world.js?v=5"></script>
 <div id="emoBar" hidden></div>
 <button id="emoBtn" hidden aria-label="인사하기">인사</button>
@@ -2209,7 +2209,7 @@ function flushCredits(){if(!SESS||PEND<=0)return;const n=PEND;World.addCredits(n
 function earn(n,why){if(!SESS)return;PEND+=n;try{localStorage.setItem('nnnw_pend:'+SESS.key,PEND)}catch(e){}showCredits();
   floater(P.x,P.y-T*1.9,'+'+n+' 크레딧','#FFD23F');if(n>=3)toast(`크레딧 <b>+${n}</b> · ${why}`);flushCredits()}
 function openWardrobe(){
-  const slots={head:'머리',eyes:'눈',neck:'목',costume:'분장'};
+  const slots={head:'머리',eyes:'얼굴',neck:'목',back:'등',costume:'분장'};
   const own=Object.keys(Avatar.ACCS).filter(k=>OWNED['acc:'+k]);
   openModal(`<h3>내 캐릭터와 옷장</h3><p class="sub">가진 꾸미기를 눌러 입고 벗어요. 새 옷과 캐릭터는 NNN 월드 상점에서 크레딧으로 사요.</p>
    <div style="display:flex;align-items:center;gap:12px;margin:10px 0"><canvas data-hero="me" width="200" height="160" style="width:120px;height:96px;background:#EAF6FB;border-radius:16px"></canvas><div><b style="font-family:var(--f-display);font-size:20px">${esc(SESS.nick)}</b><div class="sub">크레딧 ${(CREDITS+PEND).toLocaleString('ko-KR')}개</div></div></div>
