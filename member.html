@@ -382,6 +382,7 @@ body.tvmode .app{max-width:none;padding:0}
   </div>
 
   <div class="tab" id="t-map">
+    <div data-face style="margin-bottom:10px"></div>
     <div data-mem style="margin-bottom:10px"></div>
     <div class="bring" data-bring hidden style="margin-bottom:10px"></div>
     <div class="questbar" id="qbar"></div>
@@ -425,6 +426,7 @@ body.tvmode .app{max-width:none;padding:0}
 
   <div class="tab" id="t-more" hidden>
     <div class="card"><div class="label">공지</div><div id="noticeTxt" style="white-space:pre-wrap;margin-top:6px"></div></div>
+    <div data-face style="margin-top:12px"></div>
     <div data-mem="full" style="margin-top:12px"></div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
       <div class="label">내 정보</div>
@@ -511,6 +513,12 @@ body.tvmode .app{max-width:none;padding:0}
     <p class="small" style="margin:0">체육관 TV에 이달 출석왕·추천왕, 오늘 출석한 회원 캐릭터, 다음 수업을 띄워요. 30초마다 새로 고쳐져요.</p>
     <button class="btn" id="tvBtn">TV 화면 열기</button>
     <div class="small">TV 브라우저 주소: <span class="num" id="tvUrl"></span></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px">
+    <div class="row"><h3 style="font-size:20px" class="grow">자동 문자</h3><span id="autoState"></span></div>
+    <label class="check" style="padding:0"><input type="checkbox" id="sAuto"><span>가입 승인 · 등록 완료 · 정지 처리 때 문자를 자동으로 보내기 (설정 저장 필요)</span></label>
+    <div class="row"><div class="field grow"><input id="sTestTo" inputmode="tel" placeholder="시험 문자 받을 번호"></div><button class="btn sm" id="testSms">시험 발송</button></div>
+    <div class="label">최근 발송</div><div id="outRows"></div>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:4px">
     <h3 style="font-size:20px">블로그 후기 카드</h3>
@@ -1013,7 +1021,7 @@ let meOff=null;
 function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id))return;const id=ME.id;
   const r1=gref('members/'+id),r2=gref('private/'+id);
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
-  const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];renderMemCard()};
+  const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
 async function enterWorld(){fixDay(ME);await DB.meta();show('v-world');setTab('map');refreshTop();watchMe()}
 function refreshTop(){
@@ -1021,7 +1029,7 @@ function refreshTop(){
   $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
   avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});
-  renderBring();renderMemCard();$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`;
+  renderBring();renderMemCard();renderFaceCard();$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`;
   renderQbar();
 }
 function questState(){const qs=todaysQuests(ME.id);const d=fixDay(ME);return qs.map(q=>({...q,cur:Math.min(q.n,d.prog[q.k]||0),claimed:d.claimed.includes(q.k)}))}
@@ -1359,7 +1367,7 @@ async function renderRank(){
 }
 
 /* ================= 내 정보 ================= */
-function renderMore(){renderMemCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=local.meta.notice;$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
+function renderMore(){renderFaceCard();renderMemCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=local.meta.notice;$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
 $('#lvBtn').onclick=openLevels;$('#bragBtn').onclick=()=>openBrag('NNN 복싱\n운동 중!');
 $('#termsBtn').onclick=()=>sheet(`<h2>이용약관</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>닫기</button>`);
 $('#logoutBtn').onclick=()=>{if(meOff){meOff();meOff=null}ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
@@ -1427,7 +1435,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
   await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();
-  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
+  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();$('#sAuto').checked=!!M.autoSms;$('#sTestTo').value=M.gymPhone||'';renderOutbox();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
 }
@@ -1444,6 +1452,7 @@ $('#admSearch').oninput=renderAdmRows;
 async function admDetail(id){const m=await DB.get(id);if(!m)return;
   sheet(`<div class="row" style="align-items:center"><div id="admFace" style="width:84px;height:84px;border-radius:10px;background:var(--mat);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:var(--muted)">${m.hasFace?'불러오는 중':'사진 없음'}</div><div class="grow"><h2>${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>${m.approvedAt?`<span class="pill">승인 ${esc(md(m.approvedAt))}</span>`:'<span class="pill fire">승인 대기</span>'}</div></div>
     ${m.approvedAt?'':'<button class="btn red" id="admApprove">가입 승인하고 약관·이용수칙 보내기</button>'}
+    <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden></div>
     <div class="qrow"><div class="grow small">연락처 ${esc(m.phone)}<br>생년월일 ${esc(m.birth||'-')} · ${esc(m.gender||'-')}<br>목적 ${esc(m.goal.join(', ')||'-')} · 경력 ${esc(m.exp)}<br>유입 ${esc(m.path||'-')} · 마케팅 수신 ${m.agreeMkt?'동의':'미동의'}<br>참고사항 ${esc(m.note||'-')}</div></div>
     <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
     <button class="btn" id="admAtt" ${m.last===TODAY()?'disabled':''}>오늘 출석 처리</button>
@@ -1460,6 +1469,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     {const pb=el.querySelector('#admPt');if(pb)pb.onclick=async()=>{m.mem.pt.left--;await DB.savePriv(m);toast(`PT 차감 · 남은 ${m.mem.pt.left}회`);close();renderAdmRows()}}
     if(m.hasFace)FDB.get(m.id).then(src=>{const b=el.querySelector('#admFace');if(b)b.innerHTML=src?`<img src="${src}" alt="${esc(m.name)} 얼굴" style="width:100%;height:100%;object-fit:cover">`:'사진 없음'});
     {const a=el.querySelector('#admApprove');if(a)a.onclick=()=>{close();approveMember(m)}}
+    el.querySelector('#admFaceIn').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const d=await faceFromFile(f);if(await FDB.save(m.id,d)){m.hasFace=true;await DB.savePriv(m);el.querySelector('#admFace').innerHTML=`<img src="${d}" alt="" style="width:100%;height:100%;object-fit:cover">`;toast('얼굴 사진을 등록했어요')}else toast('저장하지 못했어요')}catch(err){toast('사진을 열지 못했어요')}};
     {const h=el.querySelector('#admHold');if(h)h.onclick=()=>{close();openHoldSheet(m,()=>renderAdmRows())}}
     el.querySelector('#admSendW').onclick=()=>{close();openSendSheet(m,'welcome')};
     {const sp=el.querySelector('#admSendP');if(sp)sp.onclick=()=>{close();openSendSheet(m,'pay')}}
@@ -1475,7 +1485,7 @@ $('#saveSet').onclick=async()=>{
   const pin=$('#sPin').value.trim();if((pin||!FB_ON())&&!/^\d{4}$/.test(pin)){toast('PIN은 숫자 4자리로 적어 주세요');return}
   if(pin&&FB_ON()&&!(await DB.setAdminPin(pin))){toast('PIN을 바꾸지 못했어요');return}
   Object.assign(local.meta.pay,{bank:$('#sBank').value.trim(),acct:$('#sAcct').value.trim(),holder:$('#sHolder').value.trim(),onnuriNote:$('#sOnNote').value.trim(),products:$('#sProd').value.split('\n').map(l=>l.split('|')).filter(a=>a[0].trim()).map(a=>({n:a[0].trim(),p:(a[1]||'').replace(/\D/g,'')}))});
-  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),bringDays:$('#sBring').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,rules:$('#sRules').value.trim(),...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
+  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),bringDays:$('#sBring').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,rules:$('#sRules').value.trim(),autoSms:$('#sAuto').checked,...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
   const saved=await DB.saveMeta();if(!saved){toast('이 화면에서는 저장이 안 돼요. GitHub 주소에서 열거나 서버를 연결해 주세요',4500);return}if(FB_ON()){try{const chk=(await gref('meta').get()).val();toast(chk&&chk.notice===local.meta.notice?'서버에 저장 확인됨 · 모든 기기에 반영':'저장했지만 확인이 안 돼요. 새로 고침 후 다시 확인해 주세요',3500)}catch(e){toast('저장 확인 실패')}}else toast('이 기기에만 저장했어요 (서버 미연결)',3500)};
 
 /* ================= 로고 ================= */
@@ -1627,7 +1637,7 @@ async function renderPays(){
   $$('#payRows [data-no]').forEach(b=>b.onclick=()=>setPay(b.dataset.no,'cancel'));
 }
 async function setPay(id,st){const x=local.pays[id];if(!x)return;x.status=st;x.doneAt=new Date().toISOString();await DB.addPay(x);
-  if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY(),days:x.days||[]},m2=>{renderAdmRows();if(!m2.approvedAt)m2.approvedAt=TODAY();openSendSheet(m2,'pay',x)})}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
+  if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY(),days:x.days||[]},m2=>{renderAdmRows();if(!m2.approvedAt)m2.approvedAt=TODAY();sendAuto(m2,'pay',x)})}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
   renderPays()}
 function readImg(input,cb){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(f)}
 $('#sAsan').onchange=e=>readImg(e.target,d=>{local.meta.pay.asanQR=d;toast('아산페이 QR을 바꿨어요. 설정 저장을 눌러 주세요')});
@@ -2227,7 +2237,7 @@ function openHoldSheet(m,onDone){
     el.querySelector('#hdSave').onclick=async()=>{const n=+d.value||0;
       if(s.value<tmr){toast('정지는 내일부터 시작할 수 있어요');return}if(n<1||n>p.max){toast(`정지는 1~${p.max}일만 가능해요`);return}
       mem.hold={start:s.value,days:n,end:dAdd(s.value,n-1),at:TODAY()};mem.end=dAdd(mem.end,n);await DB.savePriv(m);toast('정지 처리했어요');close();
-      openSendSheet(m,'hold');onDone&&onDone(m)};
+      sendAuto(m,'hold');onDone&&onDone(m)};
   });
 }
 
@@ -2270,7 +2280,7 @@ const FDB={
 let JOIN_FACE='';
 async function faceFromFile(f){const im=await loadImg(f);const S=320,cv=document.createElement('canvas');cv.width=S;cv.height=S;const c=cv.getContext('2d');
   const k=Math.max(S/im.width,S/im.height),w=im.width*k,h=im.height*k;c.drawImage(im,(S-w)/2,(S-h)/2,w,h);return cv.toDataURL('image/jpeg',.72)}
-async function approveMember(m){m.approvedAt=TODAY();await DB.savePriv(m);toast(m.name+' 님 가입 승인');renderAdmRows();openSendSheet(m,'welcome')}
+async function approveMember(m){m.approvedAt=TODAY();await DB.savePriv(m);toast(m.name+' 님 가입 승인');renderAdmRows();sendAuto(m,'welcome')}
 async function deleteMember(m){
   if(FB_ON()){try{await gref('members/'+m.id).set(null);await gref('private/'+m.id).set(null);await FDB.del(m.id);await gref('mpin/'+m.id).set(null)}catch(e){toast('삭제하지 못했어요');return false}}
   else{delete local.members[m.id];persist()}
@@ -2278,6 +2288,53 @@ async function deleteMember(m){
 
 $('#jFace').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{JOIN_FACE=await faceFromFile(f);$('#faceBox').innerHTML=`<img src="${JOIN_FACE}" alt="내 얼굴 사진" style="width:100%;height:100%;object-fit:cover">`;$('#faceBox').style.borderStyle='solid'}catch(err){toast('사진을 열지 못했어요')}};
 $('#rulesLink').onclick=e=>{e.preventDefault();openRules()};
+/* ================= 자동 문자 (발송함 → 구글 앱스 스크립트 → 솔라피) ================= */
+const lmsBytes=t=>[...String(t)].reduce((n,ch)=>n+(ch.charCodeAt(0)>127?2:1),0);
+function fitLMS(text){
+  const MAX=1990;if(lmsBytes(text)<=MAX)return text;
+  const cut=text.indexOf('[이용수칙]');const head=cut>=0?text.slice(0,cut):text;
+  const tail=`[이용수칙 전문] ${appBase()}?terms=1`;
+  let rules=(cut>=0?text.slice(cut).split('\n'):[]),out=head+tail;
+  for(let i=rules.length;i>0;i--){const t=head+rules.slice(0,i).join('\n')+'\n…\n'+tail;if(lmsBytes(t)<=MAX){out=t;break}}
+  return lmsBytes(out)<=MAX?out:out.slice(0,900);
+}
+const autoOn=()=>FB_ON()&&!!local.meta.autoSms;
+async function queueMsg(m,kind,pay,textOverride){
+  const to=String(m.phone||'').replace(/\D/g,'');if(!to){toast('연락처가 없어 보낼 수 없어요');return false}
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const job={to,text:fitLMS(textOverride||msgText(m,kind,pay)),kind,mid:m.id||'',name:m.name||'',at:Date.now(),status:'pending'};
+  try{await gref('outbox/'+id).set(job);m.sent=m.sent||{};m.sent[kind]=TODAY();if(m.id)await DB.savePriv(m);return true}catch(e){return false}
+}
+async function sendAuto(m,kind,pay){
+  if(!autoOn()){openSendSheet(m,kind,pay);return}
+  if(await queueMsg(m,kind,pay))toast(`${m.name} 님에게 ${({welcome:'가입 안내',pay:'등록 안내',hold:'정지 안내'})[kind]} 문자를 자동 발송해요 (1분 안)`,3500);
+  else{toast('자동 발송 등록에 실패해서 직접 보내기 창을 열게요',3000);openSendSheet(m,kind,pay)}
+}
+const OUT_ST={pending:['대기','#8A94A6'],sending:['보내는 중','#2E5AAC'],sent:['발송됨','#2B9B66'],failed:['실패','#D9343A']};
+async function renderOutbox(){
+  const box=$('#outRows');if(!box)return;
+  let seen=0;if(FB_ON()){try{seen=(await gref('sender/seen').get()).val()||0}catch(e){}}
+  $('#autoState').innerHTML=local.meta.autoSms?(seen&&Date.now()-seen<5*60e3?'<span class="pill" style="background:#2B9B66;color:#fff">발송기 작동 중</span>':'<span class="pill fire">발송기 응답 없음 · 설정 확인</span>'):'<span class="pill">꺼짐 (직접 보내기)</span>';
+  if(!FB_ON()){box.innerHTML='<div class="small">서버 연결 시 사용할 수 있어요.</div>';return}
+  let o={};try{o=(await gref('outbox').get()).val()||{}}catch(e){}
+  const list=Object.keys(o).map(k=>({...o[k],id:k})).sort((a,b)=>b.at-a.at).slice(0,15);
+  box.innerHTML=list.length?list.map(x=>{const[s,c]=OUT_ST[x.status]||[x.status,'#8A94A6'];return`<div class="payrow"><div class="grow"><b>${esc(x.name||x.to)}</b> <span class="small">${esc(({welcome:'가입 안내',pay:'등록 안내',hold:'정지 안내',test:'시험'})[x.kind]||x.kind)}</span><div class="small num">${new Date(x.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}${x.error?' · '+esc(x.error):''}</div></div><span class="pill" style="background:${c};color:#fff">${s}</span>${x.status==='failed'?`<button class="btn sm ghost" data-retry="${esc(x.id)}">다시</button>`:''}</div>`}).join(''):'<div class="small" style="padding:6px 0">아직 보낸 문자가 없어요.</div>';
+  box.querySelectorAll('[data-retry]').forEach(b=>b.onclick=async()=>{try{await gref('outbox/'+b.dataset.retry+'/status').set('pending');await gref('outbox/'+b.dataset.retry+'/error').set(null);toast('다시 보낼게요');renderOutbox()}catch(e){toast('실패했어요')}});
+}
+async function testAutoSms(){
+  const to=($('#sTestTo').value||'').replace(/\D/g,'');if(to.length<10){toast('시험 문자를 받을 번호를 적어 주세요');return}
+  const ok=await queueMsg({phone:to,name:'시험',id:''},'test',null,`[탕정 엔엔엔복싱] 자동 문자 시험입니다. ${new Date().toLocaleTimeString('ko-KR')}`);
+  toast(ok?'시험 문자를 발송함에 넣었어요. 1분 안에 도착해요':'발송함에 넣지 못했어요');setTimeout(renderOutbox,800);
+}
+
+/* ================= 나중에 셀카 등록 ================= */
+function faceCardHTML(){return`<div class="memc" style="border-color:var(--red)"><div class="row"><div class="grow"><div class="label">본인 확인 사진</div><b style="font-family:var(--display);font-weight:400;font-size:20px">셀카를 등록해 주세요</b><div class="small">관장님이 얼굴을 기억하기 위한 용도예요. 관장님만 볼 수 있어요.</div></div><label class="btn red sm" for="lateFace">셀카 찍기</label></div><input id="lateFace" type="file" accept="image/*" capture="user" hidden></div>`}
+function renderFaceCard(){
+  $$('[data-face]').forEach(el=>{el.innerHTML=ME&&!ME.hasFace&&!ME.demo?faceCardHTML():'';const inp=el.querySelector('#lateFace');if(inp)inp.onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+    try{const data=await faceFromFile(f);if(!(await FDB.save(ME.id,data))){toast('저장하지 못했어요. 다시 해 주세요');return}ME.hasFace=true;await DB.savePriv(ME);toast('셀카를 등록했어요. 고마워요!');renderFaceCard()}catch(err){toast('사진을 열지 못했어요')}}});
+}
+
+$('#testSms').onclick=testAutoSms;
 /* ================= 시작 ================= */
 (async()=>{
   show('v-home');renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();renderBring();showInviteBanner();

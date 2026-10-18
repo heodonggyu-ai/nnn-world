@@ -164,6 +164,18 @@
      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
      ".validate": "newData.isString() && newData.val().length < 80000"
     }
+   },
+   "outbox": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    ".indexOn": [
+     "status"
+    ],
+    "$jid": {
+     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+    }
+   },
+   "sender": {
+    ".read": "auth != null"
    }
   }
  }
