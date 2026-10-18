@@ -1678,11 +1678,15 @@ function openFriends(){
   else if(r&&r.status==='wait')body=`<p class="lead">숲지기에게 요청했어요. 허락하면 이 화면으로 초대코드가 와요. 놀고 있으면 알려 줄게요!</p><div class="row"><button class="btn soft" id="fCancel">요청 취소하기</button></div>`;
   else body=`${r&&r.status==='no'?'<p class="lead">숲지기가 지금은 어렵대요. 다음에 다시 요청해 봐요.</p>':'<p class="lead">밍뉴의숲 숲지기에게 초대코드를 요청하면, 숲지기가 허락할 때 코드가 와요.</p>'}<div class="row"><button class="btn" id="fReq">초대코드 요청하기</button></div>`;
   openModal(`<h3>친구와 같이 놀기</h3><p class="sub">${esc(SESS.nick)}(으)로 들어와 있어요</p>${body}
+    <div class="label">숲지기에게 받은 초대코드가 있어요?</div>
+    <div class="row" style="flex-wrap:nowrap"><input id="fCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456" aria-label="초대코드 숫자 6개" style="flex:1;min-width:0;height:46px;border:2.5px solid var(--ink);border-radius:14px;padding:0 12px;font-family:var(--f-display);font-size:20px;letter-spacing:.2em;text-align:center;background:#fff;color:var(--ink)"><button class="btn leaf" id="fJoin" style="flex:none">들어가기</button></div>
+    <p class="sub" id="fMsg" style="min-height:18px;color:var(--berry-deep)"></p>
     <div class="row"><a class="btn soft sm" href="../" style="display:flex;align-items:center;justify-content:center;text-decoration:none">NNN 월드로</a><button class="btn soft sm" id="fx">닫기</button></div>`);
   $('#fx').onclick=closeModal;
   if($('#fReq'))$('#fReq').onclick=async()=>{await sendRequest();openFriends()};
   if($('#fCancel'))$('#fCancel').onclick=async()=>{try{await World.ref('requests/'+SESS.key).remove()}catch(e){}openFriends()};
   if($('#fGo'))$('#fGo').onclick=async()=>{closeModal();await joinRoom(r.code)};
+  $('#fJoin').onclick=async()=>{const c=$('#fCode').value.trim();if(!/^[0-9]{6}$/.test(c)){$('#fMsg').textContent='초대코드는 숫자 6개예요.';return}closeModal();await joinRoom(c)};
 }
 $('#bFriends').onclick=openFriends;
 addEventListener('pagehide',()=>{if(NET.code)try{NET.myRef.remove()}catch(e){}});

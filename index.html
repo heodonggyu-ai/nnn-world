@@ -51,6 +51,7 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 .chars button{background:#fff;border:2.5px solid var(--line);border-radius:18px;padding:6px 4px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer;font-family:var(--f-display);font-size:15px;color:var(--ink)}
 .chars button.on{border-color:var(--berry);background:#FFF0F4}
 .chars img{width:100%;max-width:110px;aspect-ratio:6/5;object-fit:contain}
+#msg2:empty{display:none}
 .msg{min-height:22px;margin-top:10px;color:var(--berry-deep);font-family:var(--f-display);font-size:16px}
 .note{margin-top:14px;font-size:13px;color:var(--mute);line-height:1.5}
 .hello{display:flex;align-items:center;gap:14px}
@@ -72,6 +73,7 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 .game .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
 .game h3{font-size:24px}
 .game p{margin:0;font-size:15px;line-height:1.5;color:var(--mute);flex:1}
+.game p.gnote{flex:none;font-size:13px;color:var(--leaf-deep);background:#F1FAF3;border-radius:12px;padding:8px 10px}
 .tags{display:flex;gap:6px;flex-wrap:wrap}
 .tags i{font-style:normal;font-size:12px;background:#EAF6FB;border-radius:999px;padding:3px 9px;color:var(--ink)}
 .combo{background:repeating-linear-gradient(-45deg,#E2504A 0 22px,#D2433E 22px 44px)}
@@ -124,8 +126,6 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
     <div class="card">
       <div class="me"><canvas id="avatar" width="240" height="220" aria-label="내 캐릭터"></canvas><div class="grow"><p class="sub">반가워요</p><h2 id="hiName">친구</h2>
         <div class="coin" title="크레딧"><i></i><span id="credits">0</span></div><div><button class="btn sm" id="shopBtn" style="margin-top:8px">상점에서 꾸미기</button></div></div></div>
-      <label for="code">숲지기에게 받은 초대코드</label>
-      <div class="join"><input id="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456"><button class="btn leaf" id="joinBtn">들어가기</button></div>
       <div class="msg" id="msg2" role="status"></div>
     </div>
     <section class="card shop" id="shop" hidden style="margin-top:16px">
@@ -151,7 +151,7 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 <script>
 const $=s=>document.querySelector(s);
 const GAMES=[
-  {id:'forest',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 초대코드로 친구와 같은 동네에서 놀아요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','핼러윈 이벤트']},
+  {id:'forest',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 초대코드로 친구와 같은 동네에서 놀아요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','핼러윈 이벤트'],note:'친구와 같이 놀려면 게임 안 <b>친구</b> 버튼에서 숲지기에게 초대코드를 받아요.'},
   {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',art:'NNN<br>콤보 러시',cls:'combo',tags:['복싱','랭킹']},
   {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']}
 ];
@@ -167,7 +167,7 @@ function renderGames(){
   $('#gameCount').textContent=`${GAMES.filter(g=>!g.soon).length}개`;
   $('#games').innerHTML=GAMES.map(g=>`<article class="game${g.soon?' soon':''}">
     <div class="cover ${g.cls||''}">${g.img?`<img src="${g.img}" alt="${g.name} 게임 화면">`:`<div class="art">${g.art}</div>`}${g.soon?'<span class="badge">곧 들어와요</span>':g.id==='forest'?'<span class="badge">친구와 같이</span>':''}</div>
-    <div class="body"><h3>${g.name}</h3><p>${g.desc}</p><div class="tags">${g.tags.map(t=>`<i>${t}</i>`).join('')}</div>
+    <div class="body"><h3>${g.name}</h3><p>${g.desc}</p>${g.note?`<p class="gnote">${g.note}</p>`:''}<div class="tags">${g.tags.map(t=>`<i>${t}</i>`).join('')}</div>
     ${g.soon?'<button class="btn soft" disabled>준비 중</button>':`<a class="btn" href="${g.href}">플레이</a>`}</div></article>`).join('');
 }
 const IS_ADMIN=()=>{const s=World.session();return s&&s.key===World.ADMIN_KEY};
@@ -237,14 +237,7 @@ function showHome(s){
 }
 function showAuth(){if(unMe){unMe();unMe=null}$('#home').hidden=true;$('#shop').hidden=true;$('#auth').hidden=false;$('#logout').hidden=true;setMode('new')}
 $('#logout').onclick=()=>{World.logout();showAuth();toast('나갔어요. 다음에 또 와요!')};
-$('#joinBtn').onclick=async()=>{const code=$('#code').value.trim();$('#msg2').textContent='';
-  if(!/^[0-9]{6}$/.test(code)){$('#msg2').textContent='초대코드는 숫자 6개예요.';return}
-  $('#joinBtn').disabled=true;
-  try{const g=await World.roomGame(code);const game=GAMES.find(x=>x.id===g);if(!game){$('#msg2').textContent='그런 초대코드가 없어요. 다시 확인해 볼까요?';return}
-    location.href=game.href+'?room='+code}
-  catch(err){$('#msg2').textContent='인터넷 연결을 확인해 주세요.'}
-  finally{$('#joinBtn').disabled=false}};
-const qs=new URLSearchParams(location.search);if(qs.get('code'))$('#code').value=qs.get('code');
+const qs=new URLSearchParams(location.search);if(/^[0-9]{6}$/.test(qs.get('code')||'')&&World.session())location.replace('forest/?room='+qs.get('code'));
 const s=World.session();if(s)showHome(s);else showAuth();
 </script>
 </body>
