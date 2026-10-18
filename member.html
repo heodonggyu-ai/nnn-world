@@ -97,6 +97,21 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .kv:last-child{border-bottom:0}
 .kv .k{width:64px;color:var(--muted);font-size:13px;flex:0 0 auto}
 .kv .v{flex:1;min-width:0;font-variant-numeric:tabular-nums;word-break:break-all}
+.owc{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.owbar{position:relative;height:10px;background:var(--mat);border-radius:9px;margin:6px 0 22px}
+.owbar i{position:absolute;left:0;top:0;bottom:0;background:var(--red);border-radius:9px}
+.owbar span{position:absolute;top:-5px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--line);font-size:10px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.owbar span.on{background:var(--red);border-color:var(--red);color:#fff}
+.owbar span small{position:absolute;top:22px;font-size:10px;color:var(--muted);white-space:nowrap}
+.shotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.shot{border:0;padding:0;background:var(--ink);border-radius:6px;overflow:hidden;position:relative;aspect-ratio:4/5}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot span{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:11px;padding:10px 6px 4px;text-align:left}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stat{background:var(--mat);border-radius:8px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat b{font-family:var(--display);font-weight:400;font-size:24px;line-height:1;color:#2B9B66}
+.stat span{font-size:11px;color:var(--muted);text-align:center}
+.stat.warn b{color:#B07A08}.stat.bad b{color:var(--red)}.stat.mute b{color:var(--muted)}
 .memc{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .memc.soon{border-color:var(--gold)}.memc.expired{border-color:var(--red)}.memc.none{border-style:dashed;border-color:var(--line)}
 .mtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -170,7 +185,7 @@ body.tvmode .app{max-width:none;padding:0}
 
 /* bottom nav */
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--ink);padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
-.nav .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.nav .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:2px}
 .nav button{background:none;border:0;color:#9AA6BF;font-size:12px;padding:6px 0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
 .nav button svg{width:22px;height:22px}
 .nav button.on{color:#fff;background:#2C3549}
@@ -385,6 +400,11 @@ body.tvmode .app{max-width:none;padding:0}
     <p class="small">전설 아이템: 위닝 글러브 · 위닝 헤드기어 · 미즈노 복싱화. 챔피언 벨트는 100회 출석으로만 얻어요.</p>
   </div>
 
+  <div class="tab" id="t-feed" hidden>
+    <div class="owc" id="owanCard"></div>
+    <div class="card" style="margin-top:12px"><div class="label">이달 오운완 TOP</div><div id="owanTop"></div></div>
+    <div style="margin-top:12px" id="feedBox"></div>
+  </div>
   <div class="tab" id="t-dex" hidden>
     <div class="card"><h3 style="font-size:20px">체육관 동물 친구 <span class="small num" id="dexCnt"></span></h3>
       <p class="small" style="margin:2px 0 10px">맵을 돌아다니는 동물을 눌러 간식을 주면 친구가 돼요.</p>
@@ -469,6 +489,8 @@ body.tvmode .app{max-width:none;padding:0}
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
     <div class="row"><h3 style="font-size:20px" class="grow">회원 <span class="small num" id="admCnt"></span></h3>
       <button class="btn sm ghost" id="expVcf">연락처(.vcf)</button><button class="btn sm ghost" id="expCsv">엑셀(.csv)</button></div>
+    <div class="stats" id="admStats"></div>
+    <div class="chips" id="admFilt"></div>
     <div class="field"><input id="admSearch" placeholder="이름·번호 검색"></div>
     <div class="memtable"><table><thead><tr><th>번호</th><th>이름</th><th>등록</th><th>연락처</th><th>출석</th><th>크레딧</th><th>가입</th><th></th></tr></thead><tbody id="admRows"></tbody></table></div>
   </div>
@@ -519,6 +541,7 @@ body.tvmode .app{max-width:none;padding:0}
 <nav class="nav" id="nav" hidden><div class="in">
   <button data-tab="map" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/></svg>체육관</button>
   <button data-tab="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4h7a5 5 0 015 5v3a5 5 0 01-5 5H9l-2 3V4z"/><path d="M7 11h6"/></svg>꾸미기</button>
+  <button data-tab="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>인증</button>
   <button data-tab="dex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="5"/><path d="M8.5 13l-2 8 5.5-3 5.5 3-2-8"/></svg>도감</button>
   <button data-tab="rank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V12h4v8M10 20V6h4v14M16 20v-5h4v5"/></svg>랭킹</button>
   <button data-tab="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>내 정보</button>
@@ -542,6 +565,7 @@ const DEFAULT_TERMS = `[NNN 복싱 이용약관 요약]
 3. 스파링은 코치의 허락과 보호장비 착용 후에만 진행합니다.
 4. 환불·휴회 규정은 데스크에 안내된 기준을 따릅니다.
 5. 다른 회원을 배려하고, 사용한 장비는 제자리에 정리해 주세요.
+6. 주2회·주3회 등 주 횟수 이용권은 등록할 때 정한 요일에만 출석할 수 있으며, 빠진 날을 다른 요일로 옮겨 출석할 수 없습니다. (관장 승인 보강 제외)
 
 [개인정보 수집·이용]
 · 수집 항목: 이름, 연락처, 생년월일, 성별, 운동 목적, 건강 참고사항
@@ -644,6 +668,7 @@ const ITEMS=[
   {id:'h_blue',slot:'head',name:'헤드기어 블루',col:['#2F6FD6','#fff'],price:150,r:'n'},
   {id:'h_black',slot:'head',name:'헤드기어 블랙',col:['#23262E','#E9A91F'],price:200,r:'r'},
   {id:'h_witch',slot:'head',name:'마녀 모자',col:['#5B2C83','#F08A24'],price:400,r:'r',ev:'hw',hat:1},
+  {id:'h_owan',slot:'head',name:'오운완 헤드밴드',col:['#2F2F2F','#E9A91F'],price:-1,r:'e',note:'한 달에 오운완 인증 12일 달성 보상'},
   {id:'h_gold',slot:'head',name:'골드 헤드기어',col:['#E9B92F','#7A5200'],price:700,r:'e'},
   {id:'h_winning',slot:'head',name:'위닝 헤드기어',col:['#B3122B','#F2D27A'],price:3000,r:'l',fx:'star'},
 
@@ -706,13 +731,14 @@ const BADGES=[
   {id:'boss',name:'관장님 격파',desc:'스파링에서 관장님을 이기기',test:m=>!!m.bossWin},
   {id:'inv1',name:'첫 친구 초대',desc:'초대한 친구가 첫 출석',test:m=>(m.invites||0)>=1},
   {id:'inv3',name:'추천왕',desc:'초대한 친구 3명 등록',test:m=>(m.invitesReg||0)>=3},
+  {id:'owan',name:'오운완 마스터',desc:'한 달에 인증샷 12일',test:m=>Object.values(m.owan||{}).some(v=>v>=12)},
   {id:'candy',name:'사탕 사냥꾼',desc:'할로윈 사탕 50개',test:m=>(m.candy||0)>=50}
 ];
 
 const QPOOL=[
   {k:'bag',txt:'샌드백 한 판',n:1},{k:'rope',txt:'줄넘기 30개',n:30},{k:'shadow',txt:'링 쉐도우 한 판',n:1},
   {k:'pet',txt:'동물 친구에게 간식',n:1},{k:'coin',txt:'바닥 코인 5개',n:5},{k:'rest',txt:'휴식 구역에서 물 마시기',n:1},
-  {k:'bag2',txt:'샌드백 300점 넘기',n:1},{k:'spar',txt:'스파링 한 판',n:1},{k:'shadow2',txt:'"두개!" 콜 성공',n:1}
+  {k:'bag2',txt:'샌드백 300점 넘기',n:1},{k:'spar',txt:'스파링 한 판',n:1},{k:'shot',txt:'오운완 인증샷',n:1},{k:'shadow2',txt:'"두개!" 콜 성공',n:1}
 ];
 function hash(s){let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0}
 function todaysQuests(id){const h=hash(TODAY()+id);const pool=[...QPOOL];const out=[];let x=h;while(out.length<3){out.push(pool.splice(x%pool.length,1)[0]);x=Math.floor(x/7)+13}return out}
@@ -994,7 +1020,7 @@ function renderQbar(){const qs=questState();$('#qbar').innerHTML=qs.map(q=>`<but
 $$('#nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 function setTab(t){$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$$('.tab').forEach(x=>x.hidden=x.id!=='t-'+t);
   if(t==='map')startWorld();else stopWorld();
-  if(t==='shop')renderShop();if(t==='dex')renderDex();if(t==='rank')renderRank();if(t==='more')renderMore()}
+  if(t==='shop')renderShop();if(t==='dex')renderDex();if(t==='feed')renderFeed();if(t==='rank')renderRank();if(t==='more')renderMore()}
 
 /* --- 맵 --- */
 const MW=360,MH=540;
@@ -1005,6 +1031,7 @@ const ST=[
   {id:'rest',x:298,y:452,label:'휴식',r:30,ly:394},
   {id:'notice',x:35,y:30,label:'공지',r:22,ly:56,go:62},
   {id:'tt',x:84,y:30,label:'시간표',r:22,ly:56,go:62},
+  {id:'mirror',x:309,y:30,label:'거울 셀카',r:26,ly:56,go:62},
   {id:'counter',x:58,y:458,label:'카운터 · 결제',r:32,ly:418,go:490},
   {id:'pad',x:180,y:492,label:'출석패드',r:26,ly:452}
 ];
@@ -1104,7 +1131,7 @@ $('#map').addEventListener('click',e=>{
 });
 function go(x,y,tg){W.p.tx=clamp(x,12,348);W.p.ty=clamp(y,54,526);W.target=tg}
 function interact(tg){
-  if(tg.type==='st'){({ring:openRing,bag:()=>openGame('bag'),rope:()=>openGame('rope'),rest:openRest,notice:openNotice,pad:openPadInfo,tt:openTimetable,counter:openPay})[tg.id]()}
+  if(tg.type==='st'){({ring:openRing,bag:()=>openGame('bag'),rope:()=>openGame('rope'),rest:openRest,notice:openNotice,pad:openPadInfo,tt:openTimetable,counter:openPay,mirror:openShotUpload})[tg.id]()}
   if(tg.type==='coach')openCoach();
   if(tg.type==='animal')openAnimal(tg.a);
 }
@@ -1343,6 +1370,7 @@ function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9',
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
 function updPad(){$('#kdisp').textContent=padBuf||' '}
 document.addEventListener('keydown',e=>{if($('#v-pad').hidden||$('#sheetRoot').innerHTML)return;if(/^\d$/.test(e.key)&&padBuf.length<6){padBuf+=e.key;updPad()}if(e.key==='Backspace'){padBuf=padBuf.slice(0,-1);updPad()}if(e.key==='Enter')doAttend()});
+let padForce=false;
 async function doAttend(){
   if(!padBuf)return;const id=padBuf;padBuf='';updPad();
   const m=await DB.get(id);
@@ -1352,6 +1380,13 @@ async function doAttend(){
   if(!m){$('#padMsg').textContent='없는 회원번호예요';$('#padSub').textContent=id+' 번을 찾을 수 없어요. 다시 입력해 주세요.';padTimer=setTimeout(resetPad,2500);return}
   fixDay(m);
   if(m.last===TODAY()){avatarTo(cv,m.equip,{h:46,pose:'guard'});$('#padMsg').textContent=m.name+' 님, 오늘은 이미 출석!';$('#padSub').textContent='좋은 운동 되세요';padTimer=setTimeout(resetPad,3000);return}
+  {const dow=new Date().getDay(),ms=memStatus(m);
+  if(!padForce&&m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='expired'&&ms.state!=='none'){
+    avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='오늘은 수강 요일이 아니에요';$('#padSub').textContent=`${m.name} 님 등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)`;
+    const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
+    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
+    padTimer=setTimeout(resetPad,9000);return}}
+  const makeup=padForce;padForce=false;if(makeup)m.makeup=(m.makeup||[]).concat([TODAY()]);
   m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());
   const lvBefore=levelOf(m).lv;m.xp+=ATT_XP;const base=50+Math.min(m.streak-1,5)*10;earn(m,base,'attend');
   // 룰렛
@@ -1360,6 +1395,7 @@ async function doAttend(){
   else if(roll<.13)bonus=100;else if(roll<.28)bonus=50;else if(roll<.58)bonus=20;else bonus=10;
   if(bonus){earn(m,bonus,'attend');txt=txt||'룰렛 보너스 +'+bonus}
   if(HW&&Math.random()<.5){m.candy=(m.candy||0)+3;txt+=' · 할로윈 사탕 +3'}
+  if(makeup)txt+=' · 보강 출석(관장 승인)';
   const rnotes=await referralOnAttend(m);if(rnotes.length)txt+=' · '+rnotes.join(' · ');
   const bs=checkBadges(m);const lvAfter=levelOf(m);if(lvAfter.lv>lvBefore)txt+=` · 레벨 업! Lv.${lvAfter.lv} ${lvAfter.title}`;
   await DB.save(m);if(ME&&ME.id===m.id)ME=m;
@@ -1386,7 +1422,7 @@ function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').valu
 $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){
   const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
-  const list=all.filter(m=>!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').includes(q));
+  renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&(!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').includes(q)));
   $('#admCnt').textContent=all.length+'명';
   $('#admRows').innerHTML=list.map(m=>`<tr><td class="num">${esc(m.id)}</td><td>${esc(m.name)}${m.joined===TODAY()?' <span class="pill fire">신규</span>':''}</td><td>${memShort(m)}</td><td class="num">${esc(m.phone)}</td><td class="num">${m.attend.length}${m.last===TODAY()?' ✓':''}</td><td class="num">${m.credits}</td><td class="num">${esc(m.joined.slice(5))}</td><td><button class="btn sm ghost" data-d="${esc(m.id)}">상세</button></td></tr>`).join('')||'<tr><td colspan="8" class="small">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</td></tr>';
   $$('#admRows [data-d]').forEach(b=>b.onclick=()=>admDetail(b.dataset.d));
@@ -1510,6 +1546,7 @@ function openPay(){
   sheet(`<div class="tthead"><span id="payLogo" style="width:54px;display:block"></span><div><div class="eng">COUNTER</div><h2>카운터 · 결제</h2></div></div>
     <div class="label">1. 결제 항목</div><div class="chips" id="pItems"></div>
     <div class="field"><label for="pAmt">금액 (원)</label><input id="pAmt" inputmode="numeric" placeholder="금액을 입력하거나 위에서 고르세요"></div>
+    <div class="card" id="pWeekly" hidden style="display:flex;flex-direction:column;gap:8px;border-color:var(--red)"></div>
     <div class="label">2. 결제 방법</div><div class="paytabs" id="pTabs"></div>
     <div class="card" id="pBody" style="display:flex;flex-direction:column;gap:10px"></div>
     ${ME?'':`<div class="field"><label for="pName">결제하시는 분 이름</label><input id="pName" placeholder="홍길동"></div>`}
@@ -1519,7 +1556,11 @@ function openPay(){
     el.querySelector('#payLogo').innerHTML=logoSVG('#2F2F2F',false);
     const amtIn=el.querySelector('#pAmt');
     const items=()=>{el.querySelector('#pItems').innerHTML=P.products.map((x,i)=>`<button class="chip ${item===i?'on':''}" data-i="${i}">${esc(x.n)}${x.p?' · '+won(x.p):''}</button>`).join('');
-      el.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{item=+b.dataset.i;const pr=P.products[item].p;if(pr)amtIn.value=(+pr).toLocaleString();items();body()})};
+      el.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{item=+b.dataset.i;const pr=P.products[item].p;if(pr)amtIn.value=(+pr).toLocaleString();pdays=[];items();body();weekly()})};
+    let pdays=[];const wk=()=>item!=null?parsePlan(P.products[item].n).weekly:0;
+    const weekly=()=>{const box=el.querySelector('#pWeekly'),n=wk();box.hidden=!n;if(!n)return;
+      box.innerHTML=`<b style="font-family:var(--display);font-weight:400;font-size:18px">주${n}회권 · 운동 요일 ${n}개 고르기</b><div class="chips">${WDAYS.map(d=>`<button type="button" class="chip ${pdays.includes(d)?'on':''}" data-pd="${d}">${DAYN[d]}</button>`).join('')}</div><div class="mhint warn">${esc(WEEKLY_RULE(n))}</div><label class="check" style="padding:0"><input type="checkbox" id="pRule"><span>위 내용을 확인했어요. 정한 요일에만 출석할게요.</span></label>`;
+      box.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>{const d=+b.dataset.pd;if(pdays.includes(d))pdays=pdays.filter(x=>x!==d);else{if(pdays.length>=n)pdays.shift();pdays.push(d)}pdays.sort();const ck=box.querySelector('#pRule').checked;weekly();box.querySelector('#pRule').checked=ck})};
     const tabs=()=>{el.querySelector('#pTabs').innerHTML=Object.entries(PAYM).map(([k,n])=>`<button class="${k===method?'on':''}" data-m="${k}">${{asan:'아산페이',onnuri:'온누리<br>상품권',bank:'계좌이체',card:'카드<br>현장'}[k]}</button>`).join('');
       el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{method=b.dataset.m;tabs();body()})};
     const amt=()=>+(amtIn.value.replace(/\D/g,''))||0;
@@ -1544,7 +1585,8 @@ function openPay(){
     el.querySelector('#pDone').onclick=async()=>{
       const nm=ME?ME.name:(el.querySelector('#pName').value.trim());
       if(!nm){toast('이름을 적어 주세요');return}
-      const rec={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),mid:ME?ME.id:'',name:nm,item:item!=null?P.products[item].n:'직접 입력',amount:amt(),method,at:new Date().toISOString(),status:'pending'};
+      if(wk()){if(pdays.length!==wk()){toast(`운동 요일을 ${wk()}개 골라 주세요`);return}if(!el.querySelector('#pRule').checked){toast('요일 고정 안내를 확인하고 체크해 주세요');return}}
+      const rec={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),mid:ME?ME.id:'',name:nm,item:item!=null?P.products[item].n:'직접 입력',amount:amt(),method,at:new Date().toISOString(),status:'pending',...(wk()?{days:pdays.slice()}:{})};
       await DB.addPay(rec);sfx('win');close();
       sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><span style="width:70px;display:block">${logoSVG('#2F2F2F',false)}</span><h2>결제 알림을 보냈어요</h2>
         <div class="small">${esc(rec.item)} · ${rec.amount?won(rec.amount):'금액 미입력'} · ${PAYM[method]}</div><p style="margin:0">관장님이 확인하면 등록이 마무리돼요. 감사합니다!</p></div><button class="btn" data-close>확인</button>`);
@@ -1557,12 +1599,12 @@ async function renderPays(){
   const list=(await DB.pays()).sort((a,b)=>b.at.localeCompare(a.at));const pend=list.filter(x=>x.status==='pending');
   $('#payCnt').textContent=pend.length?`확인 대기 ${pend.length}건`:'';
   const rows=[...pend,...list.filter(x=>x.status!=='pending').slice(0,15)];
-  $('#payRows').innerHTML=rows.map(x=>`<div class="payrow"><div class="grow"><b>${esc(x.name)}</b> <span class="small num">${esc(x.mid)}</span><div class="small num">${esc(x.item)} · ${x.amount?won(x.amount):'금액 미입력'} · ${PAYM[x.method]} · ${x.at.slice(5,10).replace('-','/')} ${new Date(x.at).toTimeString().slice(0,5)}</div></div>${x.status==='pending'?`<button class="btn sm red" data-ok="${x.id}">확인</button><button class="btn sm ghost" data-no="${x.id}">취소</button>`:`<span class="pill">${x.status==='done'?'확인됨':'취소'}</span>`}</div>`).join('')||'<div class="small" style="padding:8px 0">아직 결제 알림이 없어요.</div>';
+  $('#payRows').innerHTML=rows.map(x=>`<div class="payrow"><div class="grow"><b>${esc(x.name)}</b> <span class="small num">${esc(x.mid)}</span><div class="small num">${esc(x.item)} · ${x.amount?won(x.amount):'금액 미입력'} · ${PAYM[x.method]}${x.days&&x.days.length?' · 요일 '+daysTxt(x.days):''} · ${x.at.slice(5,10).replace('-','/')} ${new Date(x.at).toTimeString().slice(0,5)}</div></div>${x.status==='pending'?`<button class="btn sm red" data-ok="${x.id}">확인</button><button class="btn sm ghost" data-no="${x.id}">취소</button>`:`<span class="pill">${x.status==='done'?'확인됨':'취소'}</span>`}</div>`).join('')||'<div class="small" style="padding:8px 0">아직 결제 알림이 없어요.</div>';
   $$('#payRows [data-ok]').forEach(b=>b.onclick=()=>setPay(b.dataset.ok,'done'));
   $$('#payRows [data-no]').forEach(b=>b.onclick=()=>setPay(b.dataset.no,'cancel'));
 }
 async function setPay(id,st){const x=local.pays[id];if(!x)return;x.status=st;x.doneAt=new Date().toISOString();await DB.addPay(x);
-  if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY()},()=>renderAdmRows())}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
+  if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY(),days:x.days||[]},()=>renderAdmRows())}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
   renderPays()}
 function readImg(input,cb){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(f)}
 $('#sAsan').onchange=e=>readImg(e.target,d=>{local.meta.pay.asanQR=d;toast('아산페이 QR을 바꿨어요. 설정 저장을 눌러 주세요')});
@@ -1948,6 +1990,7 @@ function todayHint(m){
   if(m.last===TODAY())return['오늘 출석 완료! 수고했어요','ok'];
   if(w.quota&&w.cnt>=w.quota)return[`이번 주 ${w.quota}회 모두 채웠어요`,'ok'];
   if(w.quota&&m.mem.days&&m.mem.days.includes(dow))return['오늘은 운동하는 날!','go'];
+  if(w.quota&&m.mem.days&&m.mem.days.length&&dow!==0)return[`오늘은 수강 요일이 아니에요 · ${daysTxt(m.mem.days)}에 만나요`,'info'];
   if(dow===0)return['일요일은 1:1 PT만 운영해요','info'];
   return[w.quota?`이번 주 ${w.cnt}/${w.quota}회`:'오늘도 한 라운드 어때요?','info'];
 }
@@ -1963,7 +2006,7 @@ function memCardHTML(m,full){
     ${week}${ptLeft}
     <div class="mhint ${hk}">${esc(hint)}${w.quota&&st.state!=='expired'?` <span class="num">· 이번 주 ${w.cnt}/${w.quota}</span>`:''}</div>
     ${st.state==='soon'||st.state==='expired'?`<button class="btn red sm" data-pay>${st.state==='expired'?'재등록하기':'미리 재등록하기'}</button>`:''}
-    ${full&&mem.days&&mem.days.length?`<div class="small">운동 요일: ${mem.days.map(d=>DAYN[d]).join(' · ')}</div>`:''}
+    ${full&&mem.days&&mem.days.length?`<div class="small">운동 요일: ${mem.days.map(d=>DAYN[d]).join(' · ')}</div><div class="small" style="color:var(--red)">${esc(WEEKLY_RULE(mem.weekly))}</div>`:''}
     ${full&&mem.item?`<div class="small">등록 상품: ${esc(mem.item)}${mem.paidAt?' · 결제 확인 '+esc(md(mem.paidAt)):''}</div>`:''}
   </div>`;
 }
@@ -1974,13 +2017,13 @@ function renderMemCard(){
 function openMemEditor(m,pre={},onDone){
   const cur=m.mem||{};const base=parsePlan(pre.item||cur.item);
   const startDef=cur.end&&cur.end>=TODAY()&&pre.renew!==false?dAdd(cur.end,1):TODAY();
-  let st={item:pre.item||cur.item||'',months:pre.item?base.months:(cur.months||base.months||1),weekly:pre.item?base.weekly:(cur.weekly||0),pt:pre.item?base.pt:((cur.pt&&cur.pt.total)||0),ptLeft:pre.item?base.pt:((cur.pt&&cur.pt.left)||0),start:pre.item?startDef:(cur.start||TODAY()),end:pre.item?'':(cur.end||''),days:pre.item?(cur.days||[]):(cur.days||[])};
+  let st={item:pre.item||cur.item||'',months:pre.item?base.months:(cur.months||base.months||1),weekly:pre.item?base.weekly:(cur.weekly||0),pt:pre.item?base.pt:((cur.pt&&cur.pt.total)||0),ptLeft:pre.item?base.pt:((cur.pt&&cur.pt.left)||0),start:pre.item?startDef:(cur.start||TODAY()),end:pre.item?'':(cur.end||''),days:(pre.days&&pre.days.length?pre.days.slice():(cur.days||[]))};
   sheet(`<h2>등록 정보 · ${esc(m.name)}</h2>
     <div class="field"><label for="meItem">상품</label><input id="meItem" value="${esc(st.item)}"></div>
     <div class="field"><span>기간</span><div class="chips" id="meMo">${[0,1,3,6,12].map(n=>`<button type="button" class="chip" data-mo="${n}">${n?n+'개월':'없음(PT만)'}</button>`).join('')}</div></div>
     <div class="row"><div class="field grow"><label for="meStart">시작일</label><input id="meStart" type="date" value="${st.start}"></div><div class="field grow"><label for="meEnd">종료일</label><input id="meEnd" type="date"></div></div>
     <div class="field"><span>이용 방식</span><div class="chips" id="meWk">${[0,2,3,4,5].map(n=>`<button type="button" class="chip" data-wk="${n}">${n?'주'+n+'회':'자유이용'}</button>`).join('')}</div></div>
-    <div class="field" id="meDaysF"><span>운동 요일 <span class="small" id="meDaysN"></span></span><div class="chips" id="meDays">${WDAYS.map(d=>`<button type="button" class="chip" data-d="${d}">${DAYN[d]}</button>`).join('')}</div></div>
+    <div class="field" id="meDaysF"><span>운동 요일 <span class="small" id="meDaysN"></span></span><div class="chips" id="meDays">${WDAYS.map(d=>`<button type="button" class="chip" data-d="${d}">${DAYN[d]}</button>`).join('')}</div><div class="small" style="color:var(--red)">선택한 요일에만 출석할 수 있어요. 빠진 날을 다른 요일로 옮길 수 없어요 (보강은 관장 승인).</div>${pre.days&&pre.days.length?'<div class="small">회원이 결제할 때 고른 요일이 미리 선택돼 있어요.</div>':''}</div>
     <div class="row"><div class="field grow"><label for="mePt">PT 총 횟수</label><input id="mePt" type="number" min="0" value="${st.pt}"></div><div class="field grow"><label for="mePtL">PT 남은 횟수</label><input id="mePtL" type="number" min="0" value="${st.ptLeft}"></div></div>
     <button class="btn red" id="meSave">등록 정보 저장</button>${cur.end||cur.pt?'<button class="btn ghost" id="meClear">등록 정보 지우기</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const endIn=el.querySelector('#meEnd'),startIn=el.querySelector('#meStart');
@@ -2016,6 +2059,114 @@ function padMemLine(m){const st=memStatus(m);if(st.state==='none')return{t:'등�
   const w=weekInfo(m);const dow=new Date().getDay();let t=st.state==='pt'?`PT ${m.mem.pt.left}회 남음`:`등록 D-${st.left} · ${md(m.mem.end)}까지`;let warn=st.state==='soon';
   if(w.quota){t+=` · 이번 주 ${w.cnt}/${w.quota}회`;if(w.cnt>w.quota){t+=' (주 횟수 초과)';warn=true}else if(m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow))t+=' · 정해진 요일 아님'}
   return{t,warn}}
+
+/* ================= 오운완 인증샷 ================= */
+const SHOT_CREDIT=20,OWAN_GOAL=12,OWAN_MILES=[[4,40],[8,80],[12,150]];
+const monKey=()=>TODAY().slice(0,7);
+let localShots={},localShotImg={},localLikes={};
+const SDB={
+  async list(n=36){if(!FB_ON())return Object.values(localShots).sort((a,b)=>b.at-a.at).slice(0,n);
+    try{let q=gref('shots');if(q.orderByChild)q=q.orderByChild('at').limitToLast(n);const v=(await q.get()).val()||{};return Object.keys(v).map(k=>({...v[k],id:k})).sort((a,b)=>b.at-a.at)}catch(e){return[]}},
+  async add(meta,img){if(!FB_ON()){localShots[meta.id]=meta;localShotImg[meta.id]=img;return true}
+    try{await gref('shotimg/'+meta.id).set({mid:meta.mid,img});await gref('shots/'+meta.id).set(meta);return true}catch(e){console.warn(e);return false}},
+  async img(id){if(!FB_ON())return localShotImg[id]||'';try{const v=(await gref('shotimg/'+id).get()).val();return v&&v.img||''}catch(e){return ''}},
+  async del(id){if(!FB_ON()){delete localShots[id];delete localShotImg[id];return true}try{await gref('shots/'+id).set(null);await gref('shotimg/'+id).set(null);return true}catch(e){return false}},
+  async likes(id){if(!FB_ON())return localLikes[id]||{};try{return(await gref('likes/'+id).get()).val()||{}}catch(e){return{}}},
+  async like(id,on){const me=FB_ON()?fuid:'me';if(!FB_ON()){localLikes[id]=localLikes[id]||{};if(on)localLikes[id][me]=true;else delete localLikes[id][me];return}try{await gref('likes/'+id+'/'+fuid).set(on?true:null)}catch(e){}}
+};
+const myLikeKey=()=>FB_ON()?fuid:'me';
+function owanCount(m){return((m.owan||{})[monKey()]||0)}
+function loadImg(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
+function stampShot(im,counted){
+  const W3=720,H3=900,cv=document.createElement('canvas');cv.width=W3;cv.height=H3;const c=cv.getContext('2d');
+  const k=Math.max(W3/im.width,H3/im.height),w=im.width*k,h=im.height*k;c.drawImage(im,(W3-w)/2,(H3-h)/2,w,h);
+  const g=c.createLinearGradient(0,H3-300,0,H3);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.78)');c.fillStyle=g;c.fillRect(0,H3-300,W3,300);
+  c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,W3,92);drawLogo(c,24,20,62,'#fff');
+  c.fillStyle='#fff';c.font='500 26px Jost,"Century Gothic",sans-serif';c.textBaseline='middle';c.fillText('NNNBOXING',100,46);
+  const now=new Date();c.textAlign='right';c.font='24px "Gowun Dodum",sans-serif';c.fillText(`${now.getFullYear()}.${pad2(now.getMonth()+1)}.${pad2(now.getDate())} (${DAYN[now.getDay()]}) ${pad2(now.getHours())}:${pad2(now.getMinutes())}`,W3-24,46);
+  c.textAlign='left';c.textBaseline='alphabetic';c.fillStyle='#fff';c.font='96px "Black Han Sans",sans-serif';c.fillText('오운완',30,H3-92);
+  c.font='30px "Gowun Dodum",sans-serif';c.fillStyle='#FFD98A';
+  c.fillText(counted?`${Number(monKey().slice(5))}월 챌린지 DAY ${owanCount(ME)+1}`:'오늘도 한 라운드',34,H3-44);
+  c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.arc(W3-96,H3-110,78,0,Math.PI*2);c.fill();
+  drawChar(c,W3-96,H3-48,3.1,ME.equip,{t:1,pose:'upR',noFx:true});
+  const thumb=document.createElement('canvas');thumb.width=240;thumb.height=300;thumb.getContext('2d').drawImage(cv,0,0,240,300);
+  return{img:cv.toDataURL('image/jpeg',.72),thumb:thumb.toDataURL('image/jpeg',.6),cv};
+}
+function openShotUpload(){
+  if(!ME){toast('로그인 후 올릴 수 있어요');return}
+  const counted=ME.last===TODAY()&&ME.shotDay!==TODAY();
+  sheet(`<h2>오운완 인증샷</h2>
+    <div class="mhint ${counted?'go':ME.shotDay===TODAY()?'ok':'warn'}">${counted?`오늘 출석 확인! 올리면 +${SHOT_CREDIT} 크레딧 · 챌린지 DAY ${owanCount(ME)+1}`:ME.shotDay===TODAY()?'오늘 인증은 이미 인정됐어요. 더 올려도 크레딧은 하루 한 번이에요':'출석한 날 올려야 크레딧과 챌린지가 인정돼요. 사진은 올릴 수 있어요'}</div>
+    <label class="btn red" style="text-align:center" for="shotFile">사진 찍기 · 고르기</label><input id="shotFile" type="file" accept="image/*" capture="environment" hidden>
+    <div id="shotPrev"></div>
+    <p class="small" style="margin:0">올린 사진은 체육관 회원들에게 공개돼요. 다른 사람 얼굴이 나오면 동의를 받고 올려 주세요.</p>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#shotFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+      let im;try{im=await loadImg(f)}catch(err){toast('사진을 열지 못했어요');return}
+      const out=stampShot(im,counted);
+      el.querySelector('#shotPrev').innerHTML=`<img src="${out.img}" alt="오운완 인증샷 미리보기" style="width:100%;border-radius:8px"><button class="btn gold" id="shotGo" style="width:100%;margin-top:8px">인증샷 올리기</button>`;
+      el.querySelector('#shotGo').onclick=async ev=>{ev.target.disabled=true;
+        if(out.img.length>290000){toast('사진이 너무 커요. 다른 사진으로 해 주세요');ev.target.disabled=false;return}
+        const meta={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:ME.id,nick:maskName(ME.name),at:Date.now(),date:TODAY(),mon:monKey(),thumb:out.thumb,counted:!!counted,eq:clean(ME.equip)};
+        if(!(await SDB.add(meta,out.img))){toast('올리지 못했어요. 인터넷을 확인해 주세요');ev.target.disabled=false;return}
+        let msg='인증샷을 올렸어요!';
+        if(counted){ME.shotDay=TODAY();ME.owan=ME.owan||{};ME.owan[monKey()]=owanCount(ME)+1;ME.credits+=SHOT_CREDIT;ME.earned+=SHOT_CREDIT;appXp(ME,SHOT_CREDIT);prog(ME,'shot');
+          msg=`오운완! +${SHOT_CREDIT} 크레딧 · 이달 ${owanCount(ME)}일째`;
+          const cl=(ME.owanClaimed=ME.owanClaimed||{})[monKey()]=(ME.owanClaimed[monKey()]||[]);
+          OWAN_MILES.forEach(([n,cr])=>{if(owanCount(ME)>=n&&!cl.includes(n)){cl.push(n);ME.credits+=cr;ME.earned+=cr;msg+=` · ${n}일 달성 보너스 +${cr}`;if(n===OWAN_GOAL&&!ME.owned.includes('h_owan')){ME.owned.push('h_owan');msg+=' · 오운완 헤드밴드 획득!'}}});
+          checkBadges(ME).forEach(b=>msg+=` · 배지 ${b.name}`)}
+        sfx('win');saveMe();refreshTop();toast(msg,4000);close();if(!$('#t-feed').hidden)renderFeed();
+        if(navigator.canShare){setTimeout(()=>sheet(`<h2>인스타에도 올려 볼까요?</h2><img src="${out.img}" alt="" style="width:100%;border-radius:8px"><button class="btn red" id="shShare">공유하기</button><button class="btn ghost" data-close>괜찮아요</button>`,(el2,close2)=>{el2.querySelector('#shShare').onclick=async()=>{try{const blob=await new Promise(r=>out.cv.toBlob(r,'image/jpeg',.9));const file=new File([blob],'owan.jpg',{type:'image/jpeg'});if(navigator.canShare({files:[file]}))await navigator.share({files:[file],text:'#오운완 #탕정복싱 #엔엔엔복싱 '+inviteLink(ME.id)})}catch(e){}close2()}}),300)}
+      };
+    };
+  });
+}
+async function renderFeed(){
+  if(!ME)return;const box=$('#feedBox');const n=owanCount(ME);const mon=Number(monKey().slice(5));
+  const cl=((ME.owanClaimed||{})[monKey()])||[];
+  $('#owanCard').innerHTML=`<div class="mtop"><div class="label">${mon}월 오운완 챌린지</div><span class="pill">${n}/${OWAN_GOAL}일</span></div>
+    <div class="owbar"><i style="width:${Math.min(100,n/OWAN_GOAL*100)}%"></i>${OWAN_MILES.map(([k,cr])=>`<span style="left:${k/OWAN_GOAL*100}%" class="${n>=k?'on':''}">${k}<small>+${cr}</small></span>`).join('')}</div>
+    <div class="small">출석한 날 인증샷을 올리면 하루 +${SHOT_CREDIT}. ${OWAN_GOAL}일 채우면 한정 <b>오운완 헤드밴드</b>${cl.includes(OWAN_GOAL)?' (획득 완료)':''}.</div>
+    <button class="btn red" id="owanGo">${ME.shotDay===TODAY()?'오늘 인증 완료 · 한 장 더':'오늘 인증샷 올리기'}</button>`;
+  $('#owanGo').onclick=openShotUpload;
+  box.innerHTML='<div class="small">불러오는 중…</div>';
+  const list=await SDB.list(36);
+  const cnt={};list.filter(s=>s.mon===monKey()&&s.counted).forEach(s=>{cnt[s.mid]=cnt[s.mid]||{n:0,nick:s.nick,eq:s.eq};cnt[s.mid].n++});
+  const top=Object.entries(cnt).sort((a,b)=>b[1].n-a[1].n).slice(0,3);
+  $('#owanTop').innerHTML=top.length?top.map(([id,v],i)=>`<div class="payrow"><span class="tvno" style="font-size:20px;color:${['#D49A00','#8A94A6','#B0693A'][i]}">${i+1}</span><canvas width="64" height="64" data-ow="${esc(id)}" style="width:32px;height:32px"></canvas><span class="grow">${esc(id===ME.id?ME.name:v.nick)}</span><b class="num">${v.n}일</b></div>`).join(''):'<div class="small">이달 첫 오운완의 주인공이 되어 보세요!</div>';
+  top.forEach(([id,v])=>{const cv=$(`[data-ow="${id}"]`);if(cv&&v.eq)avatarTo(cv,v.eq,{h:44,noFx:true})});
+  box.innerHTML=list.length?`<div class="shotgrid">${list.map(s=>`<button class="shot" data-s="${esc(s.id)}"><img src="${s.thumb}" alt="${esc(s.nick)}의 인증샷" loading="lazy"><span>${esc(s.mid===ME.id?'나':s.nick)} · ${esc(s.date.slice(5).replace('-','/'))}</span></button>`).join('')}</div>`:'<div class="small">아직 인증샷이 없어요. 첫 번째로 올려 보세요!</div>';
+  box.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>openShot(list.find(x=>x.id===b.dataset.s)));
+}
+async function openShot(s){
+  if(!s)return;
+  sheet(`<div id="shotFull"><img src="${s.thumb}" alt="" style="width:100%;border-radius:8px;filter:blur(2px)"></div>
+    <div class="row"><div class="grow"><b>${esc(s.mid===ME.id?ME.name:s.nick)}</b><div class="small">${esc(s.date)}${s.counted?' · 오운완 인정':''}</div></div><button class="btn sm ghost" id="likeBtn">♡</button></div>
+    ${s.mid===ME.id||IS_ADMIN?'<button class="btn ghost sm" id="shotDel">이 사진 삭제</button>':''}
+    <button class="btn" data-close>닫기</button>`,async(el,close)=>{
+    SDB.img(s.id).then(src=>{if(src&&document.body.contains(el))el.querySelector('#shotFull').innerHTML=`<img src="${src}" alt="${esc(s.nick)}의 인증샷" style="width:100%;border-radius:8px">`});
+    let likes=await SDB.likes(s.id);const lb=el.querySelector('#likeBtn');
+    const draw=()=>{const n=Object.keys(likes).length,on=!!likes[myLikeKey()];lb.textContent=(on?'♥ ':'♡ ')+n;lb.style.color=on?'var(--red)':''};draw();
+    lb.onclick=async()=>{const on=!likes[myLikeKey()];if(on)likes[myLikeKey()]=true;else delete likes[myLikeKey()];draw();await SDB.like(s.id,on)};
+    const d=el.querySelector('#shotDel');if(d)d.onclick=async()=>{if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='한 번 더 누르면 삭제돼요';return}if(await SDB.del(s.id)){toast('삭제했어요');close();renderFeed()}else toast('삭제하지 못했어요')};
+  });
+}
+
+/* ================= 관장: 회원 상태 필터 ================= */
+let admFilter='all';
+function memGroup(m){const st=memStatus(m);if(st.state==='none')return 'none';if(st.state==='pt')return m.mem.pt.left>0?'active':'expired';if(st.state==='expired')return 'expired';if(st.state==='soon')return 'soon';return 'active'}
+function renderAdmFilter(all){
+  const g={all:all.length,active:0,soon:0,expired:0,none:0};all.forEach(m=>{const k=memGroup(m);g[k]++});
+  const valid=g.active+g.soon;
+  $('#admStats').innerHTML=`<div class="stat"><b class="num">${valid}</b><span>유효 회원</span></div><div class="stat warn"><b class="num">${g.soon}</b><span>7일 내 만료</span></div><div class="stat bad"><b class="num">${g.expired}</b><span>기간 만료</span></div><div class="stat mute"><b class="num">${g.none}</b><span>미등록</span></div>`;
+  $('#admFilt').innerHTML=[['all','전체',g.all],['valid','유효',valid],['soon','만료 임박',g.soon],['expired','만료',g.expired],['none','미등록',g.none]].map(([k,n,c])=>`<button class="chip ${admFilter===k?'on':''}" data-f="${k}">${n} ${c}</button>`).join('');
+  $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=b.dataset.f;renderAdmRows()});
+}
+function admPass(m){if(admFilter==='all')return true;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
+
+/* ================= 주N회 요일 고정 ================= */
+const WEEKLY_RULE=n=>`주${n}회권은 등록할 때 정한 요일에만 출석할 수 있어요. 못 온 날을 다른 요일로 옮겨 출석할 수 없어요. (관장님이 승인한 보강만 예외)`;
+function daysTxt(d){return(d||[]).map(x=>DAYN[x]).join('·')}
 
 /* ================= 시작 ================= */
 (async()=>{
