@@ -161,6 +161,15 @@ body.tvmode .app{max-width:none;padding:0}
 .sns i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}
 .refban{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--red);border-radius:10px;padding:10px 12px}
 .refban canvas{width:48px;height:48px;flex:0 0 auto}
+.salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.kpi span{font-size:13px;color:var(--muted)}.kpi b{font-size:18px}.kpi small{font-size:12px;color:var(--muted)}
+.kpi.big{grid-column:1/-1;background:var(--ink);color:#fff;border-color:var(--ink)}.kpi.big span,.kpi.big small{color:#C9CACF}.kpi.big b{font-size:30px;font-family:var(--display);font-weight:400}
+.bkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.bk{padding:6px 0;border-bottom:1px solid var(--mat)}.bkh{display:flex;justify-content:space-between;gap:8px}
+.bkbar{height:8px;background:var(--mat);border-radius:4px;margin:4px 0 2px;overflow:hidden}.bkbar i{display:block;height:100%;background:var(--ink);border-radius:0 4px 4px 0}
+#svRange input{border:2px solid var(--line);border-radius:12px;padding:8px}
 .payrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--mat)}
 .ev{display:flex;gap:10px;align-items:center;background:#2A1B33;color:#FFD9A8;border-radius:14px;padding:10px 14px;font-size:14px}
 .ev b{font-family:var(--display);font-weight:400;color:#FF9A3C}
@@ -489,9 +498,28 @@ body.tvmode .app{max-width:none;padding:0}
 </section>
 
 <!-- 관장 메뉴 -->
+<section class="view" id="v-sales" hidden>
+  <div class="row" style="justify-content:space-between"><button class="link" id="svBack">← 관장 메뉴</button><button class="btn sm ghost" id="svCsv">엑셀(.csv)</button></div>
+  <h2 style="font-size:28px">매출 · 통계</h2>
+  <div class="chips" id="svModes"></div>
+  <div class="row" id="svNav" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="svPrev" aria-label="이전 기간">‹</button><b id="svLabel" style="font-family:var(--display);font-weight:400;font-size:20px"></b><button class="btn sm ghost" id="svNext" aria-label="다음 기간">›</button></div>
+  <div class="row" id="svRange" hidden><input type="date" id="svFrom" class="grow"><span>~</span><input type="date" id="svTo" class="grow"></div>
+  <div class="kpis" id="svKpi"></div>
+  <div class="card" id="svChartBox"><h3 style="font-size:18px">기간별 매출</h3><div id="svChart"></div><div class="small" id="svTip" style="margin-top:4px"></div></div>
+  <button class="btn red" id="svAdd">+ 매출 직접 입력 (현금·현장결제·환불)</button>
+  <div class="bkgrid">
+    <div class="card"><h3 style="font-size:18px">결제 방식별</h3><div id="bkMethod"></div></div>
+    <div class="card"><h3 style="font-size:18px">등록 개월수별</h3><div id="bkMonths"></div></div>
+    <div class="card"><h3 style="font-size:18px">상품별</h3><div id="bkItem"></div></div>
+    <div class="card"><h3 style="font-size:18px">이용 방식별</h3><div id="bkUsage"></div></div>
+    <div class="card"><h3 style="font-size:18px">신규 · 재등록 · 환불</h3><div id="bkKind"></div></div>
+  </div>
+  <div class="card"><h3 style="font-size:18px">매출 내역 <span class="small num" id="svCnt"></span></h3><p class="small" style="margin:0 0 4px">누르면 고치거나 지울 수 있어요. 앱 결제는 '결제 확인'을 누른 날 매출로 잡혀요.</p><div id="svList"></div></div>
+</section>
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
   <h2 style="font-size:28px">관장 메뉴</h2>
+  <button class="card salesbtn" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
   <div class="bring" id="dueBanner" hidden></div>
   <div class="card" style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--ink)">
     <div class="row"><h3 style="font-size:20px" class="grow">보낼 안내 <span class="small num" id="dueCnt"></span></h3><button class="btn sm ghost" id="tplBtn">안내 문구 설정</button></div>
@@ -1435,7 +1463,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -1639,12 +1667,140 @@ async function renderPays(){
   $$('#payRows [data-ok]').forEach(b=>b.onclick=()=>setPay(b.dataset.ok,'done'));
   $$('#payRows [data-no]').forEach(b=>b.onclick=()=>setPay(b.dataset.no,'cancel'));
 }
-async function setPay(id,st){const x=local.pays[id];if(!x)return;x.status=st;x.doneAt=new Date().toISOString();await DB.addPay(x);
+async function setPay(id,st){const x=local.pays[id];if(!x)return;x.status=st;x.doneAt=new Date().toISOString();
+  if(st==='done'){x.saleDate=TODAY();const pl=parsePlan(x.item);x.months=pl.months;x.weekly=pl.weekly;x.pt=pl.pt;let pm=null;if(x.mid){try{pm=await DB.get(x.mid)}catch(e){}}x.kind=pm&&(pm.mem||(pm.memHist&&pm.memHist.length))?'renew':'new'}
+  await DB.addPay(x);
   if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY(),days:x.days||[]},m2=>{renderAdmRows();if(!m2.approvedAt)m2.approvedAt=TODAY();sendAuto(m2,'pay',x)})}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
   renderPays()}
 function readImg(input,cb){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(f)}
 $('#sAsan').onchange=e=>readImg(e.target,d=>{local.meta.pay.asanQR=d;toast('아산페이 QR을 바꿨어요. 설정 저장을 눌러 주세요')});
 $('#sOnnuri').onchange=e=>readImg(e.target,d=>{local.meta.pay.onnuriQR=d;$('#onnuriState').textContent='등록됨 (저장 필요)';toast('온누리 QR을 등록했어요. 설정 저장을 눌러 주세요')});
+
+/* ================= 매출 · 통계 (관장) ================= */
+const SALEM={card:'카드',cash:'현금',bank:'계좌이체',asan:'아산페이',onnuri:'온누리상품권',etc:'기타'};
+const KIND_NAME={new:'신규',renew:'재등록',refund:'환불',etc:'기타'};
+let SALES=[],SV={mode:'month',anchor:TODAY(),from:'',to:'',sel:null};
+function normSale(x){
+  const p=parsePlan(x.item||'');const amt=+x.amount||0;
+  const date=x.saleDate||String(x.doneAt||x.at||'').slice(0,10);
+  const kind=x.kind||(amt<0?'refund':'new');
+  return{...x,date,amount:amt,months:x.months!=null?x.months:p.months,weekly:x.weekly!=null?x.weekly:p.weekly,pt:x.pt!=null?x.pt:p.pt,kind,method:x.method||'etc'}}
+async function loadSales(){const all=await DB.pays();SALES=all.filter(x=>x&&x.status==='done').map(normSale);return SALES}
+const mondayOf=d=>{const x=new Date(d+'T00:00:00');const w=x.getDay()||7;return dAdd(d,1-w)};
+const monthEnd=d=>{const x=new Date(d.slice(0,7)+'-01T00:00:00');return dstr(new Date(x.getFullYear(),x.getMonth()+1,0))};
+function periodOf(){const a=SV.anchor;
+  if(SV.mode==='day')return{from:a,to:a,label:`${md(a)} (${DAYN[new Date(a+'T00:00:00').getDay()]})`};
+  if(SV.mode==='week'){const f=mondayOf(a);return{from:f,to:dAdd(f,6),label:`${md(f)} ~ ${md(dAdd(f,6))}`}}
+  if(SV.mode==='month'){const f=a.slice(0,7)+'-01';return{from:f,to:monthEnd(f),label:`${a.slice(0,4)}년 ${+a.slice(5,7)}월`}}
+  if(SV.mode==='year'){const y=a.slice(0,4);return{from:y+'-01-01',to:y+'-12-31',label:`${y}년`}}
+  return{from:SV.from||TODAY(),to:SV.to||TODAY(),label:`${md(SV.from||TODAY())} ~ ${md(SV.to||TODAY())}`}}
+function prevPeriod(p){const n=dDiff(p.to,p.from)+1;
+  if(SV.mode==='month'){const x=new Date(p.from+'T00:00:00');x.setMonth(x.getMonth()-1);const f=dstr(x);return{from:f,to:monthEnd(f)}}
+  if(SV.mode==='year'){const y=+p.from.slice(0,4)-1;return{from:y+'-01-01',to:y+'-12-31'}}
+  return{from:dAdd(p.from,-n),to:dAdd(p.from,-1)}}
+function shiftPeriod(dir){const a=SV.anchor;
+  if(SV.mode==='day')SV.anchor=dAdd(a,dir);
+  else if(SV.mode==='week')SV.anchor=dAdd(a,7*dir);
+  else if(SV.mode==='month'){const x=new Date(a.slice(0,7)+'-01T00:00:00');x.setMonth(x.getMonth()+dir);SV.anchor=dstr(x)}
+  else if(SV.mode==='year'){SV.anchor=(+a.slice(0,4)+dir)+a.slice(4)}
+  SV.sel=null;renderSales()}
+const inP=(x,p)=>x.date>=p.from&&x.date<=p.to;
+function kpis(list){const pos=list.filter(x=>x.amount>0),ref=list.filter(x=>x.amount<0);
+  const net=list.reduce((s,x)=>s+x.amount,0),gross=pos.reduce((s,x)=>s+x.amount,0);
+  return{net,gross,cnt:pos.length,avg:pos.length?Math.round(gross/pos.length):0,refund:-ref.reduce((s,x)=>s+x.amount,0),refundCnt:ref.length,
+    neu:pos.filter(x=>x.kind==='new').length,renew:pos.filter(x=>x.kind==='renew').length}}
+const wonS=n=>(n<0?'-':'')+Math.abs(Math.round(n)).toLocaleString()+'원';
+const manS=n=>{const v=n/10000;return(Math.abs(v)>=100?Math.round(v):Math.round(v*10)/10).toLocaleString()+'만'};
+function bucketsFor(p,list){
+  const days=dDiff(p.to,p.from)+1;
+  if(SV.mode==='year'||days>62){const out=[];const y0=+p.from.slice(0,4),m0=+p.from.slice(5,7);const yE=+p.to.slice(0,4),mE=+p.to.slice(5,7);
+    for(let y=y0,m=m0;y<yE||(y===yE&&m<=mE);m++){if(m>12){m=1;y++;if(y>yE||(y===yE&&m>mE))break}const k=`${y}-${pad2(m)}`;out.push({k,label:`${m}월`,full:`${y}년 ${m}월`,v:0,n:0})}
+    list.forEach(x=>{const b=out.find(o=>x.date.startsWith(o.k));if(b){b.v+=x.amount;if(x.amount>0)b.n++}});return out}
+  if(days===1)return null;
+  const out=[];for(let i=0;i<days;i++){const d=dAdd(p.from,i);out.push({k:d,label:SV.mode==='week'?DAYN[new Date(d+'T00:00:00').getDay()]:String(+d.slice(8)),full:`${md(d)} (${DAYN[new Date(d+'T00:00:00').getDay()]})`,v:0,n:0})}
+  list.forEach(x=>{const b=out.find(o=>o.k===x.date);if(b){b.v+=x.amount;if(x.amount>0)b.n++}});return out}
+function barChart(bs){
+  const W=340,H=170,L=34,R=6,T=10,B=22,iw=W-L-R,ih=H-T-B;
+  const max=Math.max(1,...bs.map(b=>b.v));const nice=(()=>{const e=Math.pow(10,Math.floor(Math.log10(max)));const f=max/e;return(f<=1?1:f<=2?2:f<=5?5:10)*e})();
+  const bw=iw/bs.length,barW=Math.max(2,bw-2);const y=v=>T+ih-(Math.max(0,v)/nice)*ih;
+  const grid=[0,.5,1].map(t=>`<line x1="${L}" x2="${W-R}" y1="${T+ih-t*ih}" y2="${T+ih-t*ih}" stroke="var(--line)" stroke-width="1"/><text x="${L-4}" y="${T+ih-t*ih+3}" text-anchor="end" font-size="9" fill="var(--muted)">${t?manS(nice*t):'0'}</text>`).join('');
+  const step=Math.ceil(bs.length/12);
+  const bars=bs.map((b,i)=>{const x=L+i*bw+(bw-barW)/2,yy=y(b.v),h=T+ih-yy,r=Math.min(4,barW/2,h);const sel=SV.sel===i;
+    const path=h>0?`M${x},${T+ih}V${yy+r}Q${x},${yy} ${x+r},${yy}H${x+barW-r}Q${x+barW},${yy} ${x+barW},${yy+r}V${T+ih}Z`:'';
+    return`<g data-bi="${i}" style="cursor:pointer"><rect x="${L+i*bw}" y="${T}" width="${bw}" height="${ih}" fill="transparent"/>${path?`<path d="${path}" fill="${sel?'var(--red)':'var(--ink)'}"/>`:''}${i%step===0?`<text x="${L+i*bw+bw/2}" y="${H-8}" text-anchor="middle" font-size="9" fill="var(--muted)">${b.label}</text>`:''}<title>${b.full} · ${wonS(b.v)} · ${b.n}건</title></g>`}).join('');
+  return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="기간별 매출 막대그래프">${grid}${bars}</svg>`}
+function breakdown(list,keyFn,labelFn,order){
+  const m={};list.forEach(x=>{const k=keyFn(x);m[k]=m[k]||{v:0,n:0};m[k].v+=x.amount;m[k].n++});
+  let ks=Object.keys(m);ks.sort(order||((a,b)=>m[b].v-m[a].v));const tot=list.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0)||1;const max=Math.max(1,...ks.map(k=>Math.abs(m[k].v)));
+  return ks.length?ks.map(k=>`<div class="bk"><div class="bkh"><span>${esc(labelFn(k))}</span><b class="num">${wonS(m[k].v)}</b></div><div class="bkbar"><i style="width:${Math.abs(m[k].v)/max*100}%;${m[k].v<0?'background:var(--red)':''}"></i></div><div class="small num">${m[k].n}건${m[k].v>0?` · ${Math.round(m[k].v/tot*100)}%`:''}</div></div>`).join(''):'<div class="small">해당 기간 기록이 없어요.</div>'}
+const monthsLabel=x=>x.pt&&!x.months?'PT만':x.months?`${x.months}개월`:'기타';
+const usageLabel=x=>x.pt&&!x.months?'PT':x.weekly?`주${x.weekly}회`:x.months?'자유이용':'기타';
+async function openSales(){show('v-sales');await loadSales();renderSales()}
+function renderSales(){
+  const p=periodOf();const list=SALES.filter(x=>inP(x,p));const k=kpis(list);
+  const pp=prevPeriod(p);const kp=kpis(SALES.filter(x=>inP(x,pp)));
+  const diff=kp.net?Math.round((k.net-kp.net)/Math.abs(kp.net)*100):null;
+  const prevName={day:'전날',week:'지난주',month:'지난달',year:'작년',range:'이전 같은 기간'}[SV.mode];
+  $('#svModes').innerHTML=[['day','일별'],['week','주별'],['month','월별'],['year','연도별'],['range','기간']].map(([m,n])=>`<button class="chip ${SV.mode===m?'on':''}" data-sm="${m}">${n}</button>`).join('');
+  $$('#svModes [data-sm]').forEach(b=>b.onclick=()=>{SV.mode=b.dataset.sm;SV.sel=null;SV.anchor=TODAY();if(SV.mode==='range'&&!SV.from){SV.from=dAdd(TODAY(),-29);SV.to=TODAY()}renderSales()});
+  $('#svRange').hidden=SV.mode!=='range';$('#svNav').hidden=SV.mode==='range';$('#svFrom').value=SV.from;$('#svTo').value=SV.to;
+  $('#svLabel').textContent=p.label;
+  $('#svKpi').innerHTML=`<div class="kpi big"><span>순매출</span><b class="num">${wonS(k.net)}</b><small>${diff==null?`${prevName} 기록 없음`:`${prevName} 대비 ${diff>=0?'▲':'▼'} ${Math.abs(diff)}%`}</small></div>
+    <div class="kpi"><span>결제 건수</span><b class="num">${k.cnt}건</b></div><div class="kpi"><span>객단가</span><b class="num">${wonS(k.avg)}</b></div>
+    <div class="kpi"><span>신규 / 재등록</span><b class="num">${k.neu} / ${k.renew}</b></div><div class="kpi"><span>환불</span><b class="num" style="${k.refund?'color:var(--red)':''}">${wonS(k.refund)}</b></div>`;
+  const bs=bucketsFor(p,list);$('#svChartBox').hidden=!bs;
+  if(bs){$('#svChart').innerHTML=barChart(bs);
+    $$('#svChart [data-bi]').forEach(g=>g.addEventListener('click',()=>{SV.sel=SV.sel===+g.dataset.bi?null:+g.dataset.bi;renderSales()}));
+    const s=SV.sel!=null?bs[SV.sel]:null;$('#svTip').textContent=s?`${s.full} · ${wonS(s.v)} · ${s.n}건`:`막대를 누르면 금액이 보여요 · 최고 ${(()=>{const b=bs.reduce((a,c)=>c.v>a.v?c:a,bs[0]);return b.v>0?`${b.full} ${wonS(b.v)}`:'-'})()}`}
+  $('#bkMethod').innerHTML=breakdown(list,x=>x.method,k=>SALEM[k]||k);
+  $('#bkItem').innerHTML=breakdown(list,x=>x.item||'직접 입력',k=>k);
+  $('#bkMonths').innerHTML=breakdown(list.filter(x=>x.amount>0),monthsLabel,k=>k,(a,b)=>(parseInt(a)||99)-(parseInt(b)||99));
+  $('#bkUsage').innerHTML=breakdown(list.filter(x=>x.amount>0),usageLabel,k=>k);
+  $('#bkKind').innerHTML=breakdown(list,x=>x.kind,k=>KIND_NAME[k]||k);
+  const rows=list.slice().sort((a,b)=>b.date.localeCompare(a.date)||(b.at||'').localeCompare(a.at||''));
+  $('#svList').innerHTML=rows.length?rows.map((x,i)=>`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-sx="${i}"><div class="grow"><b>${esc(x.name||'-')}</b> <span class="small">${esc(x.item||'')}</span><div class="small num">${x.date.slice(5).replace('-','/')} · ${SALEM[x.method]||x.method} · ${KIND_NAME[x.kind]||''}${x.source==='manual'?' · 직접 입력':''}</div></div><b class="num" style="${x.amount<0?'color:var(--red)':''}">${wonS(x.amount)}</b></button>`).join(''):'<div class="small" style="padding:8px 0">이 기간 매출이 없어요.</div>';
+  $$('#svList [data-sx]').forEach(b=>b.onclick=()=>openSaleEditor(rows[+b.dataset.sx]));
+  $('#svCnt').textContent=rows.length?rows.length+'건':'';
+}
+async function openSaleEditor(rec){
+  const isNew=!rec;const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>a.name.localeCompare(b.name));
+  const r=rec||{saleDate:TODAY(),method:'card',kind:'new',amount:0,item:'',mid:'',name:''};
+  const prods=local.meta.pay.products||[];
+  sheet(`<h2>${isNew?'매출 직접 입력':'매출 수정'}</h2>
+    <div class="row"><div class="field grow"><label for="seDate">날짜</label><input id="seDate" type="date" value="${esc(r.saleDate||r.date||TODAY())}"></div><div class="field grow"><label for="seKind">구분</label><select id="seKind">${Object.entries(KIND_NAME).map(([k,n])=>`<option value="${k}" ${r.kind===k?'selected':''}>${n}</option>`).join('')}</select></div></div>
+    <div class="field"><label for="seMem">회원</label><select id="seMem"><option value="">회원 아님 · 직접 입력</option>${all.map(m=>`<option value="${esc(m.id)}" ${r.mid===m.id?'selected':''}>${esc(m.name)} (${esc(m.id)})</option>`).join('')}</select></div>
+    <div class="field"><label for="seName">이름</label><input id="seName" value="${esc(r.name||'')}"></div>
+    <div class="field"><label for="seItem">상품</label><input id="seItem" list="seItems" value="${esc(r.item||'')}"><datalist id="seItems">${prods.map(p=>`<option value="${esc(p.n)}">`).join('')}</datalist></div>
+    <div class="row"><div class="field grow"><label for="seAmt">금액 (원)</label><input id="seAmt" inputmode="numeric" value="${Math.abs(+r.amount||0).toLocaleString()}"></div><div class="field grow"><label for="seMethod">결제 방식</label><select id="seMethod">${Object.entries(SALEM).map(([k,n])=>`<option value="${k}" ${r.method===k?'selected':''}>${n}</option>`).join('')}</select></div></div>
+    <div class="field"><label for="seMemo">메모</label><input id="seMemo" value="${esc(r.memo||'')}"></div>
+    <p class="small" style="margin:0">구분을 '환불'로 고르면 금액이 매출에서 빠져요.</p>
+    <button class="btn red" id="seSave">저장</button>${isNew?'':'<button class="btn ghost" id="seDel" style="color:var(--red)">이 매출 삭제</button>'}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const ms=el.querySelector('#seMem'),nm=el.querySelector('#seName'),it=el.querySelector('#seItem'),am=el.querySelector('#seAmt');
+    ms.onchange=()=>{const m=all.find(x=>x.id===ms.value);if(m){nm.value=m.name;if(!it.value&&m.mem)it.value=m.mem.item||''}};
+    it.onchange=()=>{const p=prods.find(x=>x.n===it.value);if(p&&p.p&&!(+am.value.replace(/\D/g,'')))am.value=(+String(p.p).replace(/\D/g,'')).toLocaleString()};
+    am.oninput=()=>{const v=+am.value.replace(/\D/g,'')||0;am.value=v?v.toLocaleString():''};
+    el.querySelector('#seSave').onclick=async()=>{
+      const kind=el.querySelector('#seKind').value;let amt=+am.value.replace(/\D/g,'')||0;if(!amt){toast('금액을 적어 주세요');return}if(kind==='refund')amt=-amt;
+      const pl=parsePlan(it.value);
+      const out={...(rec||{}),id:(rec&&rec.id)||('s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)),status:'done',source:(rec&&rec.source)||'manual',
+        saleDate:el.querySelector('#seDate').value||TODAY(),kind,amount:amt,method:el.querySelector('#seMethod').value,item:it.value.trim(),mid:ms.value,name:nm.value.trim()||'-',
+        months:pl.months,weekly:pl.weekly,pt:pl.pt,memo:el.querySelector('#seMemo').value.trim(),at:(rec&&rec.at)||new Date().toISOString(),doneAt:(rec&&rec.doneAt)||new Date().toISOString()};
+      ['date'].forEach(k=>delete out[k]);
+      await DB.addPay(clean(out));toast('저장했어요');close();if(SV.mode!=='range')SV.anchor=out.saleDate;await loadSales();renderSales()};
+    const d=el.querySelector('#seDel');if(d)d.onclick=async()=>{if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='한 번 더 누르면 삭제돼요';return}
+      if(FB_ON()){try{await gref('pays/'+rec.id).set(null)}catch(e){toast('삭제하지 못했어요');return}}else{delete local.pays[rec.id];persist()}
+      toast('삭제했어요');close();await loadSales();renderSales()};
+  });
+}
+function exportSales(){const p=periodOf();const list=SALES.filter(x=>inP(x,p)).sort((a,b)=>a.date.localeCompare(b.date));
+  const rows=[['날짜','이름','회원번호','상품','등록개월','이용방식','구분','결제방식','금액','메모']].concat(list.map(x=>[x.date,x.name,x.mid,x.item,monthsLabel(x),usageLabel(x),KIND_NAME[x.kind]||x.kind,SALEM[x.method]||x.method,x.amount,x.memo||'']));
+  download(`NNN_매출_${p.from}_${p.to}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')}
+
+$('#salesBtn').onclick=openSales;$('#svBack').onclick=()=>{show('v-admin');renderSalesToday()};
+$('#svPrev').onclick=()=>shiftPeriod(-1);$('#svNext').onclick=()=>shiftPeriod(1);
+$('#svFrom').onchange=e=>{SV.from=e.target.value;renderSales()};$('#svTo').onchange=e=>{SV.to=e.target.value;renderSales()};
+$('#svAdd').onclick=()=>openSaleEditor(null);$('#svCsv').onclick=exportSales;
+async function renderSalesToday(){try{await loadSales();const k=kpis(SALES.filter(x=>x.date===TODAY()));$('#salesToday').textContent=k.cnt||k.refund?'오늘 '+wonS(k.net):''}catch(e){}}
 
 /* ================= 레벨 안내 ================= */
 const LV_MONTH=['시작','약 2주','약 1개월','약 2~3개월','약 5개월','약 8개월','약 1년 2개월','약 1년 8개월','약 2년 3개월','약 3년'];
