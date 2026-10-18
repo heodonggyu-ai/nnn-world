@@ -149,6 +149,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 .brand{cursor:pointer}
 .exitb{cursor:pointer;color:var(--ink);padding:0 11px 0 9px}
 @media (max-width:440px){.exitb span{display:none}.exitb{padding:0 8px!important}}
+@media (max-width:400px){#clockText{display:none}#clock{padding:0 7px!important}.top{gap:4px!important}}
 @media (max-width:440px){.top{gap:5px}.top .chip{padding:0 9px 0 6px;font-size:14px;gap:4px;height:34px}.brand{font-size:16px!important;padding:0 10px!important}}
 #runHud{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 56px);z-index:8;background:#FFD23F;border:2.5px solid var(--ink);border-radius:999px;padding:8px 18px;font-family:var(--f-display);font-size:18px;box-shadow:0 3px 0 rgba(36,54,59,.3);white-space:nowrap;font-variant-numeric:tabular-nums}
 .news h4:not(:first-child){margin-top:10px}
@@ -179,6 +180,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
   <button class="chip" id="crChip" hidden title="크레딧 · 눌러서 꾸미기 상점 열기" aria-label="크레딧, 꾸미기 상점 열기" style="cursor:pointer;color:var(--ink)"><i class="crc"></i><span id="credits">0</span></button>
   <div class="spacer"></div>
   <div class="chip" id="clock"><span class="sunmoon" id="sunmoon"></span><span id="clockText"></span></div>
+  <button class="chip exitb" id="sndBtn" aria-label="소리"></button>
   <button class="chip exitb" id="exitBtn" aria-label="나가기" title="NNN 월드로 나가기"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>나가기</span></button>
 </div>
 
@@ -1157,8 +1159,8 @@ let now=0, spawnTm=2, saveTm=0;
 
 /* ---------- audio ---------- */
 let AC=null;
-function unlockAudio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume().catch(()=>{})}
-function tone(f,d,type='sine',vol=.1,delay=0,slide=0){if(!AC||!S.sound)return;try{const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,t+d);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+0.05)}catch(e){}}
+function unlockAudio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume().catch(()=>{});if(AC){audioGraph();if(S.sound)iosUnmute()}}
+function tone(f,d,type='sine',vol=.1,delay=0,slide=0){if(!AC||!S.sound)return;try{const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,t+d);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(SFXB||AC.destination);o.start(t);o.stop(t+d+0.05)}catch(e){}}
 const sfx={pop:()=>tone(520,.12,'sine',.12,0,1.6),coin:()=>{tone(880,.1,'triangle',.09);tone(1320,.16,'triangle',.09,.08)},heart:()=>{tone(660,.12,'sine',.1);tone(990,.18,'sine',.1,.1)},
   fan:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,'triangle',.1,i*.1))},miss:()=>tone(330,.2,'sine',.07,0,.7),splash:()=>tone(240,.22,'triangle',.08,0,.45),find:()=>{tone(784,.1,'sine',.1);tone(1175,.22,'sine',.09,.09)},rustle:()=>tone(1400,.06,'square',.02,0,.6),
   meow:()=>{tone(700,.18,'sine',.09,0,1.3);tone(900,.22,'sine',.07,.15,.7)},whee:()=>tone(400,.5,'sine',.1,0,2.5)};
@@ -1603,7 +1605,7 @@ function openHouse(){
   $('#hC').onclick=()=>openChars(false);if($('#hIn'))$('#hIn').onclick=enterHome;
   const sleep=(v)=>{S.timeOverride=v;touch();closeModal();fade=1.4;wild=wild.filter(w=>w.revealed&&eligible(SPEC[w.sp]));setTimeout(()=>toast(v==='night'?'밤이 되었어요. 아파트 창문에 불이 켜졌어요':v==='day'?'잘 잤다! 상쾌한 아침이에요':'진짜 시계로 돌아왔어요'),700)};
   $('#hN').onclick=()=>sleep('night');$('#hD').onclick=()=>sleep('day');$('#hR').onclick=()=>sleep(null);
-  $('#hS').onclick=()=>{S.sound=!S.sound;touch();$('#hS').textContent='소리 '+(S.sound?'끄기':'켜기')};
+  $('#hS').onclick=()=>{setSoundMode(S.sound?2:0);unlockAudio();$('#hS').textContent='소리 '+(S.sound?'끄기':'켜기')};
   $('#hX').onclick=closeModal;
 }
 function likedBy(type){const n=SPECIES.filter(s=>s.decor.includes(type));const g={cat:'고양이',lizard:'도마뱀',fox:'여우',chame:'카멜레온',turtle:'거북',duck:'오리',frog:'개구리',bunny:'토끼',hamster:'햄스터',hog:'고슴도치',owl:'부엉이'};return [...new Set(n.map(s=>g[s.kind]))].slice(0,4).join(', ')}
@@ -1961,7 +1963,7 @@ function update(dt){
   if(RUN){RUN.t-=dt;RUN.stars.forEach((s,i)=>{if(Math.hypot(s.x-P.x,s.y-P.y)<T*.8){RUN.score++;sfx.coin();for(let k=0;k<8;k++)parts.push({wx:s.x,wy:s.y-T*.4,vx:rnd(-60,60),vy:rnd(-90,-30),c:'#FFE38A',life:.7,t:0,star:1});RUN.stars[i]=fieldSpot()}});
     $('#runHud').textContent=`남은 시간 ${Math.ceil(Math.max(0,RUN.t))}초 · 별 ${RUN.score}개`;if(RUN.t<=0)endRun()}
   if(phase()==='night'&&!uiOpen()&&!inIndoor()){shootTm-=dt;if(shootTm<=0&&!shoot){shoot={x:VW*rnd(.55,1.05),y:VH*rnd(.05,.3),vx:-rnd(200,280),vy:rnd(90,150),t:0,caught:false};shootTm=rnd(20,45)}}
-  updateGhosts(dt);updateNPCs(dt);schoolTick(dt);homeTick(dt);netTick(dt);
+  updateGhosts(dt);updateNPCs(dt);schoolTick(dt);homeTick(dt);ambientTick(dt);netTick(dt);
   if(shoot){shoot.t+=dt;shoot.x+=shoot.vx*dt;shoot.y+=shoot.vy*dt;if(shoot.t>(shoot.caught?0.6:2.4))shoot=null}
   if(!uiOpen()){
     let vx=0,vy=0;
@@ -2897,6 +2899,97 @@ function drawHomeHint(){const q=homeHintTarget();if(!q)return;
     ctx.font='14px Jua, sans-serif';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#24363B';ctx.strokeText(q.n,0,30);ctx.fillStyle='#fff';ctx.fillText(q.n,0,30)}
   ctx.restore()}
 
+/* ---------- 소리: 배경음악(직접 만든 잔잔한 곡, 장소·시간마다 다름), 환경음, 발소리 ---------- */
+let MASTER=null,SFXB=null,MUSB=null,THEMEG=null,NOISE=null,RAINN=null,RAING=null,MUSIC_T=null;
+const MUSIC={theme:null,want:null,next:0,step:0,fadeT:0};
+function audioGraph(){if(MASTER||!AC)return;
+  MASTER=AC.createGain();MASTER.gain.value=0.9;const comp=AC.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=3;MASTER.connect(comp).connect(AC.destination);
+  SFXB=AC.createGain();SFXB.gain.value=1.0;SFXB.connect(MASTER);
+  MUSB=AC.createGain();MUSB.gain.value=S.music===false?0:1.0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3200;
+  const dl=AC.createDelay(1);dl.delayTime.value=0.31;const fb=AC.createGain();fb.gain.value=0.24;const wet=AC.createGain();wet.gain.value=0.2;
+  THEMEG=AC.createGain();THEMEG.gain.value=1;THEMEG.connect(lp);lp.connect(MUSB);lp.connect(dl);dl.connect(fb).connect(dl);dl.connect(wet).connect(MUSB);MUSB.connect(MASTER);
+  const len=AC.sampleRate;NOISE=AC.createBuffer(1,len,AC.sampleRate);const d=NOISE.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  if(navigator.audioSession){try{navigator.audioSession.type='playback'}catch(e){}}
+  MUSIC_T=setInterval(musicTick,60);
+}
+/* 아이폰 무음 모드에서도 소리가 나도록 아주 작은 무음 오디오를 같이 틀어 둬요 */
+let SILENT_EL=null;
+function iosUnmute(){if(SILENT_EL)return;try{SILENT_EL=new Audio('data:audio/wav;base64,UklGRsQPAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YaAPAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA');SILENT_EL.loop=true;SILENT_EL.volume=0.01;SILENT_EL.setAttribute('playsinline','');SILENT_EL.play().catch(()=>{SILENT_EL=null})}catch(e){SILENT_EL=null}}
+const N2F=n=>440*Math.pow(2,(n-69)/12);
+function vKeys(f,t,d,v){const o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain(),g2=AC.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*3.01;
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+d);g2.gain.setValueAtTime(v*0.18,t);g2.gain.exponentialRampToValueAtTime(0.0001,t+d*0.3);
+  o.connect(g);o2.connect(g2);g.connect(THEMEG);g2.connect(THEMEG);o.start(t);o2.start(t);o.stop(t+d+0.05);o2.stop(t+d+0.05)}
+function vPad(f,t,d,v){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;o.detune.value=(Math.random()-.5)*8;
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+d*0.35);g.gain.linearRampToValueAtTime(0.0001,t+d);o.connect(g).connect(THEMEG);o.start(t);o.stop(t+d+0.05)}
+function vBass(f,t,d,v){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(THEMEG);o.start(t);o.stop(t+d+0.05)}
+function vBell(f,t,d,v){vKeys(f*2,t,d*1.6,v*0.7)}
+function vTick(t,v,hi){if(!NOISE)return;const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NOISE;f.type='highpass';f.frequency.value=hi||6000;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);s.connect(f).connect(g).connect(THEMEG);s.start(t,Math.random()*0.5,0.08)}
+/* 곡: [템포, 조(밑음 MIDI), 화음 진행(도수), 음계, 멜로디 악기, 분위기] — 모두 직접 만든 진행 */
+const MAJ=[0,2,4,5,7,9,11],MIN=[0,2,3,5,7,8,10],PENT=[0,2,4,7,9];
+const THEMES={
+  day:{bpm:96,key:60,prog:[0,5,3,4,0,5,1,4],sc:MAJ,mel:'keys',dens:.62,bass:2,pad:1},
+  evening:{bpm:84,key:65,prog:[0,2,3,0,5,3,1,4],sc:MAJ,mel:'keys',dens:.5,bass:2,pad:1},
+  night:{bpm:68,key:57,prog:[0,5,3,6,0,3,4,0],sc:MIN,mel:'bell',dens:.32,bass:1,pad:1},
+  rain:{bpm:76,key:62,prog:[0,3,5,4,0,3,1,4],sc:MAJ,mel:'keys',dens:.38,bass:1,pad:1},
+  school:{bpm:112,key:67,prog:[0,3,4,0,5,1,4,0],sc:MAJ,mel:'keys',dens:.7,bass:4,pad:0,tick:1},
+  home:{bpm:86,key:65,prog:[0,5,1,4,0,5,3,4],sc:MAJ,mel:'keys',dens:.55,bass:2,pad:1},
+  mission:{bpm:126,key:62,prog:[0,0,3,4,0,0,5,4],sc:MAJ,mel:'keys',dens:.75,bass:4,pad:0,tick:2},
+  boil:{bpm:148,key:57,prog:[0,0,5,4,0,0,5,4],sc:MIN,mel:'keys',dens:.85,bass:4,pad:0,tick:2},
+  monster:{bpm:150,key:45,prog:[0,1,0,1,0,6,5,4],sc:[0,1,3,5,6,8,10],mel:'bass',dens:.9,bass:4,pad:0,tick:2},
+  angel:{bpm:72,key:63,prog:[0,3,4,0,5,3,1,4],sc:MAJ,mel:'bell',dens:.8,bass:1,pad:1,arp:1}
+};
+function chordOf(th,deg){const sc=th.sc,r=sc[deg%7]+12*Math.floor(deg/7);return[0,2,4].map(i=>{const k=deg+i;return sc[k%7]+12*Math.floor(k/7)})}
+function seeded(n){const s=Math.sin(n*12.9898)*43758.5453;return s-Math.floor(s)}
+function playStep(th,step,t){
+  const spb=60/th.bpm,e=spb/2,bar=Math.floor(step/8)%th.prog.length,pos=step%8,deg=th.prog[bar],ch=chordOf(th,deg),root=th.key;
+  if(pos===0&&th.pad)ch.forEach(n=>vPad(N2F(root+n),t,e*8.4,0.045));
+  if(th.bass===4||(th.bass===2&&(pos===0||pos===4))||(th.bass===1&&pos===0))vBass(N2F(root-12+ch[0]+(pos===4&&th.bass>1?7:0)),t,e*(th.bass===4?1.6:3.2),th.mel==='bass'?0.2:0.14);
+  if(th.tick&&(pos%2===1||th.tick===2))vTick(t,th.tick===2&&pos%2===0?0.05:0.03);
+  if(th.arp){const n=ch[pos%3]+12*(pos>3?1:0);vKeys(N2F(root+12+n),t,e*3,0.05)}
+  const r=seeded(step%(th.prog.length*8)+th.key*7.3+th.bpm);
+  const strong=pos===0||pos===4;if(r<th.dens*(strong?1.25:0.75)){
+    let n;if(strong||r<0.3)n=ch[Math.floor(seeded(step*3.1+1)*3)];else{const sc=th.sc===MAJ?PENT:th.sc;n=sc[Math.floor(seeded(step*5.7+2)*sc.length)]}
+    const oct=th.mel==='bass'?0:12,dur=e*(seeded(step+9)<0.3?3:1.6);
+    if(th.mel==='bell')vBell(N2F(root+oct+n),t,dur*1.4,0.07);else if(th.mel==='bass')vBass(N2F(root+12+n),t,dur,0.16);else vKeys(N2F(root+oct+n),t,dur*1.3,0.09)}
+}
+function pickTheme(){
+  if(typeof inHome==='function'&&inHome()){if(MOM.mode==='monster')return'monster';if(MOM.mode==='angel')return'angel';if(MIS)return momMood()==='boil'?'boil':'mission';return'home'}
+  if(typeof inSchool==='function'&&inSchool())return'school';
+  if(HIDE||RACE||RUN)return'mission';
+  const ph=phase();if(ph==='night')return'night';if(RAINING)return'rain';if(ph==='evening')return'evening';return'day'}
+function musicTick(){if(!AC||AC.state!=='running'||!THEMEG)return;
+  const want=pickTheme();const now2=AC.currentTime;
+  if(MUSIC.theme!==want){if(!MUSIC.fadeT){MUSIC.fadeT=now2+0.6;THEMEG.gain.cancelScheduledValues(now2);THEMEG.gain.setValueAtTime(THEMEG.gain.value,now2);THEMEG.gain.linearRampToValueAtTime(0.0001,now2+0.6)}
+    if(now2>=MUSIC.fadeT){MUSIC.theme=want;MUSIC.step=0;MUSIC.next=now2+0.05;MUSIC.fadeT=0;THEMEG.gain.cancelScheduledValues(now2);THEMEG.gain.setValueAtTime(0.0001,now2);THEMEG.gain.linearRampToValueAtTime(1,now2+0.8)}else return}
+  if(S.music===false)return;
+  const th=THEMES[MUSIC.theme];if(!th)return;if(MUSIC.next<now2)MUSIC.next=now2+0.02;
+  while(MUSIC.next<now2+0.3){playStep(th,MUSIC.step,MUSIC.next);MUSIC.step++;MUSIC.next+=30/th.bpm}
+}
+/* 환경음: 낮 새소리, 밤 귀뚜라미, 비, 개울, 발소리 */
+let ambT=2,stepT=0;
+function chirp(t,v){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';const f=rnd(2600,3800);o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*rnd(1.2,1.5),t+0.06);o.frequency.exponentialRampToValueAtTime(f*0.9,t+0.12);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);o.connect(g).connect(SFXB);o.start(t);o.stop(t+0.15)}
+function cricket(t,v){for(let i=0;i<6;i++){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=4600;const s=t+i*0.045;g.gain.setValueAtTime(0.0001,s);g.gain.exponentialRampToValueAtTime(v,s+0.008);g.gain.exponentialRampToValueAtTime(0.0001,s+0.035);o.connect(g).connect(SFXB);o.start(s);o.stop(s+0.04)}}
+function footstep(kind){if(!AC||!S.sound||!NOISE)return;const t=AC.currentTime,s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NOISE;f.type=kind==='floor'?'bandpass':'lowpass';f.frequency.value=kind==='floor'?1800:kind==='hard'?1300:700;
+  g.gain.setValueAtTime(kind==='floor'?0.05:0.04,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.07);s.connect(f).connect(g).connect(SFXB);s.start(t,Math.random()*0.8,0.08)}
+function ambientTick(dt){if(!AC||AC.state!=='running'||!SFXB||!S.sound)return;
+  const indoor=inIndoor(),ph=phase();
+  if(!RAINN&&NOISE){RAINN=AC.createBufferSource();RAINN.buffer=NOISE;RAINN.loop=true;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=1600;RAING=AC.createGain();RAING.gain.value=0;RAINN.connect(f).connect(RAING).connect(SFXB);RAINN.start()}
+  const nearWater=!indoor&&P.y<10*T;const rainV=(RAINING&&!indoor?0.05:0)+(nearWater?0.022:0)+(RAINING&&indoor?0.012:0);
+  if(RAING)RAING.gain.setTargetAtTime(rainV,AC.currentTime,0.6);
+  ambT-=dt;if(ambT<=0){ambT=rnd(3,8);if(!indoor&&!RAINING){if(ph==='night')cricket(AC.currentTime,0.012);else{chirp(AC.currentTime,0.025);if(Math.random()<0.6)chirp(AC.currentTime+0.18,0.02)}}}
+  if(P.moving){stepT-=dt;if(stepT<=0){stepT=0.3;const t=tileAt(Math.floor(P.x/T),Math.floor((P.y-4)/T));footstep(indoor?'floor':(t===SW||t===RD||t===PZ||t===PK)?'hard':'grass')}}else stepT=0.05;
+}
+function setSoundMode(m){/* 0: 음악+효과, 1: 효과만, 2: 끄기 */S.sound=m<2;S.music=m===0;touch();if(MUSB)MUSB.gain.setTargetAtTime(S.music?1.0:0,AC.currentTime,0.2);updateSoundBtn()}
+function soundMode(){return !S.sound?2:S.music===false?1:0}
+function updateSoundBtn(){const b=$('#sndBtn');if(!b)return;const m=soundMode();b.innerHTML=['<svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="18" r="2.6" fill="currentColor"/><circle cx="17" cy="16" r="2.6" fill="currentColor"/></svg>','<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>','<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'][m];
+  b.setAttribute('aria-label',['소리: 음악과 효과음','소리: 효과음만','소리: 꺼짐'][m])}
+document.addEventListener('visibilitychange',()=>{if(!AC)return;if(document.hidden){AC.suspend().catch(()=>{});if(SILENT_EL)SILENT_EL.pause()}else{AC.resume().catch(()=>{});if(SILENT_EL)SILENT_EL.play().catch(()=>{})}});
+/* 버튼 누를 때 톡 소리 */
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.id==='act')return;if(AC&&S.sound&&SFXB)tone(760,.06,'sine',.035,0,1.3)},true);
+
+$('#sndBtn').onclick=()=>{unlockAudio();const m=(soundMode()+1)%3;setSoundMode(m);if(m<2)iosUnmute();toast(['배경음악과 효과음을 켰어요','효과음만 들려요','소리를 껐어요'][m])};
+updateSoundBtn();document.addEventListener('pointerdown',()=>unlockAudio(),true);
 /* ---------- 나가기 ---------- */
 $('#exitBtn').onclick=()=>{if(RUN||HIDE||RACE){if(!confirm('하던 놀이가 끝나요. 나갈까요?'))return}
   openModal(`<h3>밍뉴의숲에서 나갈까요?</h3><p class="sub">지금까지 한 건 다 저장돼요. 다음에 오면 이어서 놀 수 있어요.</p><div class="row"><button class="btn soft" id="exN">더 놀래</button><button class="btn" id="exY">나가기</button></div>`);
