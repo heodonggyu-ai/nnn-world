@@ -1,12 +1,13 @@
 /**
- * 탕정 엔엔엔복싱 · 자동 문자 발송기 (Google Apps Script)
- * 회원 월드가 Firebase의 gym/outbox 에 넣은 문자를 1분마다 확인해서 솔라피로 보냅니다.
+ * 탕정 엔엔엔복싱 · 자동 발송기 (카톡 알림톡 우선, 문자 선택) — Google Apps Script
+ * 회원 월드가 Firebase의 gym/outbox 에 넣은 안내를 1분마다 확인해서 솔라피로 보냅니다.
  *
- * 처음 한 번:
- *  1) 프로젝트 설정 → 스크립트 속성에 아래 5개를 넣어요
- *     SOLAPI_KEY, SOLAPI_SECRET, FROM_NUMBER, DB_URL, DB_SECRET
- *  2) 위쪽 함수 선택에서 setup 을 고르고 실행 → 권한 허용
- *  3) 함수 선택에서 testSend 를 실행하면 FROM_NUMBER 로 시험 문자가 가요
+ * 스크립트 속성 (프로젝트 설정 → 스크립트 속성)
+ *   필수: SOLAPI_KEY, SOLAPI_SECRET, DB_URL, DB_SECRET
+ *   알림톡: KAKAO_PFID, TPL_WELCOME, TPL_PAY, TPL_HOLD  (솔라피 채널 ID와 승인된 템플릿 ID)
+ *   문자(선택): FROM_NUMBER  — 넣으면 템플릿이 없는 안내는 문자로 보내요
+ *
+ * 처음 한 번: 함수 선택 → setup → 실행 → 권한 허용
  */
 const PROPS = PropertiesService.getScriptProperties();
 
@@ -14,11 +15,13 @@ function cfg_() {
   const c = {
     key: PROPS.getProperty('SOLAPI_KEY'),
     secret: PROPS.getProperty('SOLAPI_SECRET'),
-    from: String(PROPS.getProperty('FROM_NUMBER') || '').replace(/\D/g, ''),
     db: String(PROPS.getProperty('DB_URL') || '').replace(/\/+$/, ''),
     dbSecret: PROPS.getProperty('DB_SECRET')
   };
   const miss = Object.keys(c).filter(k => !c[k]);
+  c.from = String(PROPS.getProperty('FROM_NUMBER') || '').replace(/\D/g, '');
+  c.pfId = PROPS.getProperty('KAKAO_PFID') || '';
+  c.tpl = { welcome: PROPS.getProperty('TPL_WELCOME') || '', pay: PROPS.getProperty('TPL_PAY') || '', hold: PROPS.getProperty('TPL_HOLD') || '' };
   if (miss.length) throw new Error('스크립트 속성이 비어 있어요: ' + miss.join(', '));
   return c;
 }
@@ -40,9 +43,21 @@ function bytes_(t) {
   return n;
 }
 
-function sendSms_(c, to, text) {
-  const msg = { to: String(to).replace(/\D/g, ''), from: c.from, text: text };
-  if (bytes_(text) > 90) msg.subject = '탕정 엔엔엔복싱';
+function buildMsg_(c, job) {
+  const to = String(job.to).replace(/\D/g, '');
+  const tpl = c.tpl[job.kind];
+  if (c.pfId && tpl && job.vars) {
+    const m = { to: to, type: 'ATA', kakaoOptions: { pfId: c.pfId, templateId: tpl, variables: job.vars, disableSms: !c.from } };
+    if (c.from) { m.from = c.from; m.text = job.text; }
+    return m;
+  }
+  if (!c.from) throw new Error('이 안내(' + job.kind + ')의 알림톡 템플릿 ID가 없어요. 스크립트 속성 TPL_' + String(job.kind).toUpperCase() + ' 를 넣어 주세요');
+  const m = { to: to, from: c.from, text: job.text };
+  if (bytes_(job.text) > 90) m.subject = '탕정 엔엔엔복싱';
+  return m;
+}
+
+function sendMsg_(c, msg) {
   const res = UrlFetchApp.fetch('https://api.solapi.com/messages/v4/send-many/detail', {
     method: 'post',
     contentType: 'application/json',
@@ -82,7 +97,7 @@ function processOutbox() {
       const j = jobs[id];
       db_(c, '/gym/outbox/' + id + '.json', 'patch', { status: 'sending' });
       try {
-        const gid = sendSms_(c, j.to, j.text);
+        const gid = sendMsg_(c, buildMsg_(c, j));
         db_(c, '/gym/outbox/' + id + '.json', 'patch', { status: 'sent', sentAt: Date.now(), groupId: gid, error: null });
       } catch (e) {
         db_(c, '/gym/outbox/' + id + '.json', 'patch', { status: 'failed', error: String(e.message || e).slice(0, 200) });
@@ -102,9 +117,12 @@ function setup() {
   Logger.log('설정 완료: 1분마다 발송함을 확인해요.');
 }
 
-/** 시험: FROM_NUMBER(발신번호)로 짧은 문자를 바로 보내요 */
+/** 시험: TEST_TO 번호로 가입 안내 알림톡을 바로 보내요 (스크립트 속성 TEST_TO 필요) */
 function testSend() {
   const c = cfg_();
-  const gid = sendSms_(c, c.from, '[탕정 엔엔엔복싱] 자동 문자 발송기 시험입니다.');
+  const to = PROPS.getProperty('TEST_TO');
+  if (!to) throw new Error('스크립트 속성 TEST_TO 에 받을 휴대폰 번호를 넣어 주세요');
+  const job = { to: to, kind: 'welcome', text: '[탕정 엔엔엔복싱] 발송기 시험입니다.', vars: { '#{이름}': '시험', '#{회원번호}': '0000' } };
+  const gid = sendMsg_(c, buildMsg_(c, job));
   Logger.log('발송 성공 ' + gid);
 }

@@ -515,9 +515,9 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="small">TV 브라우저 주소: <span class="num" id="tvUrl"></span></div>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:8px">
-    <div class="row"><h3 style="font-size:20px" class="grow">자동 문자</h3><span id="autoState"></span></div>
-    <label class="check" style="padding:0"><input type="checkbox" id="sAuto"><span>가입 승인 · 등록 완료 · 정지 처리 때 문자를 자동으로 보내기 (설정 저장 필요)</span></label>
-    <div class="row"><div class="field grow"><input id="sTestTo" inputmode="tel" placeholder="시험 문자 받을 번호"></div><button class="btn sm" id="testSms">시험 발송</button></div>
+    <div class="row"><h3 style="font-size:20px" class="grow">자동 발송 (카톡 알림톡)</h3><span id="autoState"></span></div>
+    <label class="check" style="padding:0"><input type="checkbox" id="sAuto"><span>가입 승인 · 등록 완료 · 정지 처리 때 카톡 알림톡을 자동으로 보내기 (설정 저장 필요)</span></label>
+    <div class="row"><div class="field grow"><input id="sTestTo" inputmode="tel" placeholder="시험 알림톡 받을 번호"></div><button class="btn sm" id="testSms">시험 발송</button></div>
     <div class="label">최근 발송</div><div id="outRows"></div>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:4px">
@@ -2299,22 +2299,30 @@ function fitLMS(text){
   return lmsBytes(out)<=MAX?out:out.slice(0,900);
 }
 const autoOn=()=>FB_ON()&&!!local.meta.autoSms;
+function kakaoVars(m,kind,pay){const mem=m.mem||{};const v={'#{이름}':m.name||''};
+  if(kind==='welcome'){v['#{회원번호}']=String(m.id||'')}
+  if(kind==='pay'){v['#{상품}']=mem.item||planLabel(mem)||'회원권';v['#{기간}']=mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-');
+    v['#{요일}']=mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용 (요일 제한 없음)';
+    v['#{정지규정}']=mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음';
+    v['#{결제}']=pay?`${pay.amount?won(pay.amount):'-'} / ${PAYM[pay.method]||''} / ${String(pay.at||'').slice(0,10)}`:'카운터 결제'}
+  if(kind==='hold'&&mem.hold){v['#{정지기간}']=`${mem.hold.start} ~ ${mem.hold.end} (${mem.hold.days}일)`;v['#{종료일}']=mem.end}
+  return v}
 async function queueMsg(m,kind,pay,textOverride){
   const to=String(m.phone||'').replace(/\D/g,'');if(!to){toast('연락처가 없어 보낼 수 없어요');return false}
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  const job={to,text:fitLMS(textOverride||msgText(m,kind,pay)),kind,mid:m.id||'',name:m.name||'',at:Date.now(),status:'pending'};
+  const job={to,text:fitLMS(textOverride||msgText(m,kind,pay)),kind,vars:kind==='test'?null:kakaoVars(m,kind,pay),mid:m.id||'',name:m.name||'',at:Date.now(),status:'pending'};
   try{await gref('outbox/'+id).set(job);m.sent=m.sent||{};m.sent[kind]=TODAY();if(m.id)await DB.savePriv(m);return true}catch(e){return false}
 }
 async function sendAuto(m,kind,pay){
   if(!autoOn()){openSendSheet(m,kind,pay);return}
-  if(await queueMsg(m,kind,pay))toast(`${m.name} 님에게 ${({welcome:'가입 안내',pay:'등록 안내',hold:'정지 안내'})[kind]} 문자를 자동 발송해요 (1분 안)`,3500);
+  if(await queueMsg(m,kind,pay))toast(`${m.name} 님에게 ${({welcome:'가입 안내',pay:'등록 안내',hold:'정지 안내'})[kind]} 카톡을 자동 발송해요 (1분 안)`,3500);
   else{toast('자동 발송 등록에 실패해서 직접 보내기 창을 열게요',3000);openSendSheet(m,kind,pay)}
 }
 const OUT_ST={pending:['대기','#8A94A6'],sending:['보내는 중','#2E5AAC'],sent:['발송됨','#2B9B66'],failed:['실패','#D9343A']};
 async function renderOutbox(){
   const box=$('#outRows');if(!box)return;
   let seen=0;if(FB_ON()){try{seen=(await gref('sender/seen').get()).val()||0}catch(e){}}
-  $('#autoState').innerHTML=local.meta.autoSms?(seen&&Date.now()-seen<5*60e3?'<span class="pill" style="background:#2B9B66;color:#fff">발송기 작동 중</span>':'<span class="pill fire">발송기 응답 없음 · 설정 확인</span>'):'<span class="pill">꺼짐 (직접 보내기)</span>';
+  $('#autoState').innerHTML=local.meta.autoSms?(seen&&Date.now()-seen<5*60e3?'<span class="pill" style="background:#2B9B66;color:#fff">발송기 작동 중</span>':'<span class="pill fire">발송기 응답 없음</span>'):'<span class="pill">꺼짐 (직접 보내기)</span>';
   if(!FB_ON()){box.innerHTML='<div class="small">서버 연결 시 사용할 수 있어요.</div>';return}
   let o={};try{o=(await gref('outbox').get()).val()||{}}catch(e){}
   const list=Object.keys(o).map(k=>({...o[k],id:k})).sort((a,b)=>b.at-a.at).slice(0,15);
@@ -2323,8 +2331,8 @@ async function renderOutbox(){
 }
 async function testAutoSms(){
   const to=($('#sTestTo').value||'').replace(/\D/g,'');if(to.length<10){toast('시험 문자를 받을 번호를 적어 주세요');return}
-  const ok=await queueMsg({phone:to,name:'시험',id:''},'test',null,`[탕정 엔엔엔복싱] 자동 문자 시험입니다. ${new Date().toLocaleTimeString('ko-KR')}`);
-  toast(ok?'시험 문자를 발송함에 넣었어요. 1분 안에 도착해요':'발송함에 넣지 못했어요');setTimeout(renderOutbox,800);
+  const ok=await queueMsg({phone:to,name:'시험',id:'0000',mem:null},'welcome',null);
+  toast(ok?'시험 가입 안내(회원번호 0000)를 발송함에 넣었어요. 1분 안에 도착해요':'발송함에 넣지 못했어요');setTimeout(renderOutbox,800);
 }
 
 /* ================= 나중에 셀카 등록 ================= */
