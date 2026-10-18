@@ -1,19 +1,35 @@
 {
   "rules": {
     "pins": {
-      "$k": { ".read": false, ".write": "auth != null && !data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/) && $k.length >= 2 && $k.length <= 8" }
+      "$k": {
+        ".read": false,
+        ".write": "auth != null && !data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/) && $k.length >= 2 && $k.length <= 8"
+      }
     },
     "devices": {
-      "$k": { "$uid": { ".read": false, ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('pins').child($k).val()" } }
+      "$k": {
+        "$uid": {
+          ".read": false,
+          ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('pins').child($k).val()"
+        }
+      }
     },
     "profiles": {
       ".read": "auth != null",
       "$k": {
         ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
         ".validate": "newData.hasChildren(['nick'])",
-        "nick": { ".validate": "newData.isString() && newData.val().length <= 8" },
-        "credits": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999" },
-        "av": { "base": { ".validate": "newData.isString() && (newData.val() !== 'mingnyu' || $k === '밍뉴')" } }
+        "nick": {
+          ".validate": "newData.isString() && newData.val().length <= 8"
+        },
+        "credits": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999"
+        },
+        "av": {
+          "base": {
+            ".validate": "newData.isString() && (newData.val() !== 'mingnyu' || $k === '밍뉴')"
+          }
+        }
       }
     },
     "saves": {
@@ -21,7 +37,9 @@
         ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
         "$game": {
           ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
-          "data": { ".validate": "newData.isString() && newData.val().length < 200000" }
+          "data": {
+            ".validate": "newData.isString() && newData.val().length < 200000"
+          }
         }
       }
     },
@@ -39,17 +57,80 @@
     "rooms": {
       "$code": {
         ".read": "auth != null",
-        "host": { ".write": "auth != null && !data.exists() && root.child('devices').child('밍뉴').child(auth.uid).exists()" },
-        "game": { ".write": "auth != null && !data.exists() && newData.isString()" },
-        "created": { ".write": "auth != null && !data.exists()" },
+        "host": {
+          ".write": "auth != null && !data.exists() && root.child('devices').child('밍뉴').child(auth.uid).exists()"
+        },
+        "game": {
+          ".write": "auth != null && !data.exists() && newData.isString()"
+        },
+        "created": {
+          ".write": "auth != null && !data.exists()"
+        },
         "allowed": {
-          "$k": { ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()" }
+          "$k": {
+            ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()"
+          }
         },
         "players": {
           "$k": {
             ".write": "auth != null && (root.child('devices').child('밍뉴').child(auth.uid).exists() || (root.child('devices').child($k).child(auth.uid).exists() && (!newData.exists() || root.child('rooms').child($code).child('allowed').child($k).exists() || root.child('rooms').child($code).child('host').val() === $k)))",
-            "n": { ".validate": "newData.isString() && newData.val().length <= 8" }
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            }
           }
+        }
+      }
+    },
+    "gym": {
+      "adminPin": {
+        ".read": false,
+        ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists()) && newData.isString() && newData.val().matches(/^[0-9]{4}$/)"
+      },
+      "admins": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('gym/adminPin').val()"
+        }
+      },
+      "meta": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+      },
+      "nextId": {
+        ".read": "auth != null",
+        ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() > 1000) || newData.val() === data.val() + 1)"
+      },
+      "mpin": {
+        "$id": {
+          ".read": false,
+          ".write": "auth != null && ((!data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/)) || root.child('gym/admins').child(auth.uid).exists())"
+        }
+      },
+      "mdev": {
+        "$id": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('gym/mpin').child($id).val()"
+          }
+        }
+      },
+      "members": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())"
+        }
+      },
+      "private": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$id": {
+          ".read": "auth != null && root.child('gym/mdev').child($id).child(auth.uid).exists()",
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())"
+        }
+      },
+      "pays": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$pid": {
+          ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists())"
         }
       }
     }
