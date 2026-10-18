@@ -11,7 +11,9 @@
       "$k": {
         ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
         ".validate": "newData.hasChildren(['nick'])",
-        "nick": { ".validate": "newData.isString() && newData.val().length <= 8" }
+        "nick": { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "credits": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999" },
+        "av": { "base": { ".validate": "newData.isString() && (newData.val() !== 'mingnyu' || $k === '밍뉴')" } }
       }
     },
     "saves": {

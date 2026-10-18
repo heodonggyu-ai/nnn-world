@@ -78,6 +78,24 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 .crash{background:repeating-linear-gradient(90deg,#4F7FC1 0 26px,#456FAD 26px 52px)}
 .soon{filter:saturate(.75)}
 footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-height:1.6}
+.me{display:flex;align-items:center;gap:14px}
+.me canvas{width:120px;height:110px;background:#EAF6FB;border-radius:20px;border:2px solid var(--line);flex:none}
+.me .grow{flex:1;min-width:0}.me h2{font-size:26px;overflow-wrap:anywhere}
+.coin{display:inline-flex;align-items:center;gap:6px;background:#FFF4C4;border:2px solid var(--ink);border-radius:999px;padding:3px 12px 2px;font-family:var(--f-display);font-size:18px;margin-top:6px}
+.coin i{width:18px;height:18px;border-radius:50%;background:var(--sun);border:2px solid #B8860B;display:inline-block}
+.shop .stabs{display:flex;gap:6px;overflow-x:auto;margin:12px -4px 12px;padding:0 4px 4px;scrollbar-width:none}
+.shop .stabs button{flex:none;height:40px;padding:0 14px;border-radius:12px;border:2.5px solid var(--ink);background:#fff;font-family:var(--f-display);font-size:16px;color:var(--ink);cursor:pointer}
+.shop .stabs button.on{background:var(--ink);color:#fff}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
+.item{position:relative;background:#fff;border:2.5px solid var(--line);border-radius:16px;padding:4px 4px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer;font-family:var(--f-display);font-size:14px;color:var(--ink);gap:2px}
+.item canvas{width:84px;height:70px}
+.item.on{border-color:var(--berry);background:#FFF0F4}
+.item.wear::after{content:'입는 중';position:absolute;top:4px;left:4px;font-size:11px;background:var(--leaf);color:#fff;border-radius:999px;padding:2px 7px}
+.item .pr{font-size:13px;color:var(--mute)}.item .pr.own{color:var(--leaf)}.item .pr.lock{color:var(--berry-deep)}
+.item.dim{opacity:.45}
+.buybar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.buybar .what{flex:1;min-width:140px;font-family:var(--f-display);font-size:17px}
+.earn{margin-top:14px;background:#F1FAF3;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.7;color:var(--leaf-deep)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 14px);background:var(--ink);color:#fff;font-family:var(--f-display);padding:10px 16px;border-radius:14px;z-index:9;max-width:calc(100% - 32px);text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -95,12 +113,7 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
       <input id="nick" maxlength="8" placeholder="예: 밍뉴" autocapitalize="off">
       <label for="pin">비밀번호 (숫자 4개)</label>
       <input id="pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••">
-      <div id="charBox"><label>내 캐릭터</label>
-        <div class="chars" id="chars">
-          <button type="button" data-ch="mingnyu" class="on"><img src="shared/img/mingnyu.png" alt="">밍뉴</button>
-          <button type="button" data-ch="samsaek"><img src="shared/img/samsaek.png" alt="">삼색이</button>
-          <button type="button" data-ch="kid"><img src="shared/img/kid.png" alt="">모자 쓴 아이</button>
-        </div></div>
+      <p class="sub" id="charBox" style="margin-top:12px">처음 오면 나만의 냥이 캐릭터를 하나 받아요. 게임에서 모은 크레딧으로 상점에서 꾸밀 수 있어요.</p>
       <button class="btn full" id="go" type="submit">시작하기</button>
       <div class="msg" id="msg" role="status"></div>
     </form>
@@ -109,16 +122,21 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 
   <section id="home" hidden>
     <div class="card">
-      <div class="hello"><img id="avatar" src="shared/img/mingnyu.png" alt=""><div class="grow"><p class="sub">반가워요</p><h2 id="hiName">친구</h2><button class="btn soft sm" id="chChange" style="margin-top:6px">캐릭터 바꾸기</button></div></div>
-      <div class="chars" id="chars2" hidden style="margin-top:12px">
-        <button type="button" data-ch="mingnyu"><img src="shared/img/mingnyu.png" alt="">밍뉴</button>
-        <button type="button" data-ch="samsaek"><img src="shared/img/samsaek.png" alt="">삼색이</button>
-        <button type="button" data-ch="kid"><img src="shared/img/kid.png" alt="">모자 쓴 아이</button>
-      </div>
+      <div class="me"><canvas id="avatar" width="240" height="220" aria-label="내 캐릭터"></canvas><div class="grow"><p class="sub">반가워요</p><h2 id="hiName">친구</h2>
+        <div class="coin" title="크레딧"><i></i><span id="credits">0</span></div><div><button class="btn sm" id="shopBtn" style="margin-top:8px">상점에서 꾸미기</button></div></div></div>
       <label for="code">숲지기에게 받은 초대코드</label>
       <div class="join"><input id="code" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456"><button class="btn leaf" id="joinBtn">들어가기</button></div>
       <div class="msg" id="msg2" role="status"></div>
     </div>
+    <section class="card shop" id="shop" hidden style="margin-top:16px">
+      <div style="display:flex;align-items:center;gap:8px"><h2 style="flex:1">꾸미기 상점</h2><button class="btn soft sm" id="shopClose">닫기</button></div>
+      <p class="sub">눌러 보면 위 캐릭터가 먼저 입어 봐요. 마음에 들면 사서 입어요.</p>
+      <div class="stabs" id="stabs"></div>
+      <div class="items" id="items"></div>
+      <div class="buybar"><div class="what" id="what"></div><button class="btn soft sm" id="undo" hidden>원래대로</button><button class="btn leaf" id="buyBtn" hidden>입기</button></div>
+      <div class="msg" id="msg3" role="status"></div>
+      <div class="earn"><b>크레딧 모으는 법</b> (밍뉴의숲)<br>할 일 끝내기 +3 · 새 동물 친구 +5 · 마당 잔치 +5 · 도장 +1 · 3단지 고양이 밥 +1 · 3분 놀 때마다 +1</div>
+    </section>
     <div class="sec">게임 고르기 <span id="gameCount"></span></div>
     <div class="games" id="games"></div>
     <footer>NNN 월드 · 아빠가 만든 게임들이 모이는 곳<br>게임은 계속 늘어나요</footer>
@@ -128,6 +146,7 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="shared/avatar.js"></script>
 <script src="shared/world.js"></script>
 <script>
 const $=s=>document.querySelector(s);
@@ -136,13 +155,12 @@ const GAMES=[
   {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',art:'NNN<br>콤보 러시',cls:'combo',tags:['복싱','랭킹']},
   {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']}
 ];
-let mode='new',pickCh='mingnyu';
+let mode='new',ME=null,AV=null,TRY=null,TAB='base',SEL=null;
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 function setMode(m){mode=m;$('#tNew').classList.toggle('on',m==='new');$('#tOld').classList.toggle('on',m==='old');$('#charBox').hidden=m!=='new';$('#go').textContent=m==='new'?'시작하기':'들어가기';$('#msg').textContent=''}
 $('#tNew').onclick=()=>setMode('new');$('#tOld').onclick=()=>setMode('old');
-$('#chars').onclick=e=>{const b=e.target.closest('[data-ch]');if(!b)return;pickCh=b.dataset.ch;document.querySelectorAll('#chars button').forEach(x=>x.classList.toggle('on',x===b))};
 $('#form').onsubmit=async e=>{e.preventDefault();const nick=$('#nick').value.trim(),pin=$('#pin').value.trim();$('#go').disabled=true;$('#msg').textContent='잠깐만요…';
-  try{const s=mode==='new'?await World.signup(nick,pin,pickCh):await World.login(nick,pin);$('#msg').textContent='';showHome(s);toast(mode==='new'?`${s.nick}, NNN 월드에 온 걸 환영해요!`:`${s.nick}, 다시 왔구나!`)}
+  try{const s=mode==='new'?await World.signup(nick,pin):await World.login(nick,pin);$('#msg').textContent='';showHome(s);toast(mode==='new'?`${s.nick}, NNN 월드에 온 걸 환영해요!`:`${s.nick}, 다시 왔구나!`)}
   catch(err){$('#msg').textContent=(err&&err.msg)||'잠시 후 다시 해 주세요.'}
   finally{$('#go').disabled=false}};
 function renderGames(){
@@ -152,17 +170,71 @@ function renderGames(){
     <div class="body"><h3>${g.name}</h3><p>${g.desc}</p><div class="tags">${g.tags.map(t=>`<i>${t}</i>`).join('')}</div>
     ${g.soon?'<button class="btn soft" disabled>준비 중</button>':`<a class="btn" href="${g.href}">플레이</a>`}</div></article>`).join('');
 }
+const IS_ADMIN=()=>{const s=World.session();return s&&s.key===World.ADMIN_KEY};
+const clone=o=>JSON.parse(JSON.stringify(o||{}));
+function fixAv(av){av=Object.assign({base:'cat',fur:'cream',pat:'none',eye:'black',acc:{}},clone(av));av.acc=av.acc||{};return av}
+/* 내 캐릭터 그림: 계속 숨 쉬고 귀가 쫑긋 */
+const AC=$('#avatar'),actx=AC.getContext('2d');
+(function loop(ts){const t=ts/1000;actx.clearRect(0,0,240,220);actx.save();actx.translate(122,200);actx.scale(2.2,2.2);
+  const av=TRY||AV;if(av)Avatar.draw(actx,0,0,t,1,false,0,av);actx.restore();requestAnimationFrame(loop)})(0);
+function setMe(p){if(!p)return;ME=p;ME.owned=ME.owned||{};AV=fixAv(p.av);$('#credits').textContent=(p.credits||0).toLocaleString('ko-KR');if(!$('#shop').hidden)renderItems()}
+const TABS=[['base','캐릭터'],['fur','털색'],['pat','무늬'],['eye','눈'],['acc','꾸미기']];
+function list(tab){
+  if(tab==='base')return Object.entries(Avatar.BASES).map(([k,v])=>({id:'base:'+k,v:k,name:v[0],price:v[1]}));
+  if(tab==='fur')return Object.entries(Avatar.FURS).map(([k,v])=>({id:'fur:'+k,v:k,name:v[0],price:v[2]}));
+  if(tab==='pat')return Object.entries(Avatar.PATS).map(([k,v])=>({id:'pat:'+k,v:k,name:v[0],price:v[1]}));
+  if(tab==='eye')return Object.entries(Avatar.EYES).map(([k,v])=>({id:'eye:'+k,v:k,name:v[0],price:v[2]}));
+  return Object.entries(Avatar.ACCS).map(([k,v])=>({id:'acc:'+k,v:k,name:v[0],price:v[2],slot:v[1]}));
+}
+function applied(av,it){av=fixAv(av);const[k]=it.id.split(':');
+  if(k==='base')av.base=it.v;else if(k==='acc'){if(av.acc[it.slot]===it.v)delete av.acc[it.slot];else av.acc[it.slot]=it.v}
+  else{av[k]=it.v;av.base='cat'}return av}
+function isOwned(it){if(it.id==='base:mingnyu')return IS_ADMIN();return it.price===0||!!(ME&&ME.owned[it.id])}
+function isWorn(it){const[k]=it.id.split(':');if(!AV)return false;if(k==='base')return AV.base===it.v;if(k==='acc')return AV.acc[it.slot]===it.v;return AV.base==='cat'&&AV[k]===it.v}
+function renderTabs(){$('#stabs').innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${k===TAB?'on':''}">${n}</button>`).join('')}
+function renderItems(){
+  const L=list(TAB);
+  $('#items').innerHTML=L.map(it=>{const own=isOwned(it),lock=it.id==='base:mingnyu'&&!own;
+    const pr=lock?'<span class="pr lock">숲지기 전용</span>':own?'<span class="pr own">가지고 있어요</span>':`<span class="pr">${it.price} 크레딧</span>`;
+    return `<button class="item${SEL&&SEL.id===it.id?' on':''}${isWorn(it)?' wear':''}${lock?' dim':''}" data-id="${it.id}"><canvas width="168" height="140"></canvas>${it.name}${pr}</button>`}).join('');
+  [...$('#items').children].forEach((b,i)=>{const it=L[i],c=b.querySelector('canvas').getContext('2d');let av;
+    if(TAB==='acc'){av={base:'cat',fur:'cream',pat:'none',eye:'black',acc:{[it.slot]:it.v}}}else{av=applied(AV||{},it);if(TAB!=='base')av.acc={}}
+    c.save();c.translate(86,TAB==='acc'?126:122);const z=it.v==='kid'?2:1.55;c.scale(z,z);Avatar.draw(c,0,0,0.3,1,false,0,av);c.restore()});
+  updateBar();
+}
+function updateBar(){const b=$('#buyBtn');$('#undo').hidden=!TRY;
+  if(!SEL){$('#what').textContent=TAB==='fur'||TAB==='pat'||TAB==='eye'?'털색, 무늬, 눈은 냥이 캐릭터만 바꿀 수 있어요.':'';b.hidden=true;return}
+  const own=isOwned(SEL);$('#what').textContent=SEL.name;b.hidden=false;
+  if(SEL.id==='base:mingnyu'&&!own){b.disabled=true;b.textContent='숲지기만 쓸 수 있어요';return}
+  b.disabled=false;b.textContent=own?(TRY?'이걸로 입기':'입는 중'):`${SEL.price} 크레딧으로 사기`;if(own&&!TRY)b.disabled=true}
+$('#stabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;TAB=b.dataset.t;SEL=null;TRY=null;renderTabs();renderItems()};
+$('#items').onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;const it=list(TAB).find(x=>x.id===b.dataset.id);SEL=it;
+  const nx=applied(TRY||AV,it);TRY=JSON.stringify(nx)===JSON.stringify(AV)?null:nx;$('#msg3').textContent='';renderItems();
+  AC.scrollIntoView({block:'nearest',behavior:'smooth'})};
+$('#undo').onclick=()=>{TRY=null;SEL=null;renderItems()};
+$('#buyBtn').onclick=async()=>{if(!SEL)return;const b=$('#buyBtn');b.disabled=true;$('#msg3').textContent='';
+  try{
+    if(!isOwned(SEL)){const p=await World.buy(SEL.id,SEL.price);setMe(p);toast(`${SEL.name}을(를) 샀어요!`)}
+    const want=TRY||applied(AV,SEL);
+    /* 아직 안 산 물건이 섞여 있으면 빼고 입어요 */
+    const items=[...list('base'),...list('fur'),...list('pat'),...list('eye'),...list('acc')];
+    const ok=k=>{const it=items.find(x=>x.id===k);return !it||isOwned(it)};
+    if(!ok('base:'+want.base))want.base=AV.base;['fur','pat','eye'].forEach(k=>{if(!ok(k+':'+want[k]))want[k]=AV[k]});
+    Object.keys(want.acc).forEach(sl=>{if(!ok('acc:'+want.acc[sl]))delete want.acc[sl]});
+    await World.saveAvatar(want);AV=fixAv(want);TRY=null;renderItems();toast('새 모습으로 바꿨어요')}
+  catch(err){$('#msg3').textContent=(err&&err.msg)||'인터넷 연결을 확인해 주세요.'}
+  finally{updateBar()}};
+$('#shopBtn').onclick=()=>{const sh=$('#shop');sh.hidden=!sh.hidden;if(!sh.hidden){renderTabs();renderItems();sh.scrollIntoView({behavior:'smooth',block:'start'})}else{TRY=null;SEL=null}};
+$('#shopClose').onclick=()=>{$('#shop').hidden=true;TRY=null;SEL=null};
+let unMe=null;
 function showHome(s){
   $('#auth').hidden=true;$('#home').hidden=false;$('#logout').hidden=false;
-  $('#hiName').textContent=s.key===World.ADMIN_KEY?s.nick+' (밍뉴의숲 숲지기)':s.nick;$('#avatar').src=`shared/img/${s.char||'mingnyu'}.png`;
-  document.querySelectorAll('#chars2 button').forEach(x=>x.classList.toggle('on',x.dataset.ch===(s.char||'mingnyu')));
+  $('#hiName').textContent=s.key===World.ADMIN_KEY?s.nick+' (밍뉴의숲 숲지기)':s.nick;
+  AV=fixAv(s.av||{base:s.key===World.ADMIN_KEY?'mingnyu':(s.char==='samsaek'||s.char==='kid')?s.char:'cat'});
   renderGames();
-  World.ready().catch(()=>{$('#msg2').textContent='인터넷 연결이 약해요. 혼자 놀기는 그대로 돼요.'});
+  World.getMe().then(p=>{setMe(p);if(unMe)unMe();unMe=World.onMe(v=>{if(v&&v.av)setMe(v)})}).catch(()=>{$('#msg2').textContent='인터넷 연결이 약해요. 혼자 놀기는 그대로 돼요.'});
 }
-function showAuth(){$('#home').hidden=true;$('#auth').hidden=false;$('#logout').hidden=true;setMode('new')}
-$('#chChange').onclick=()=>{$('#chars2').hidden=!$('#chars2').hidden};
-$('#chars2').onclick=async e=>{const b=e.target.closest('[data-ch]');if(!b)return;const ch=b.dataset.ch;document.querySelectorAll('#chars2 button').forEach(x=>x.classList.toggle('on',x===b));$('#avatar').src=`shared/img/${ch}.png`;
-  try{await World.updateProfile({char:ch});toast('캐릭터를 바꿨어요')}catch(err){toast('지금은 바꿀 수 없어요. 인터넷을 확인해 주세요')}};
+function showAuth(){if(unMe){unMe();unMe=null}$('#home').hidden=true;$('#shop').hidden=true;$('#auth').hidden=false;$('#logout').hidden=true;setMode('new')}
 $('#logout').onclick=()=>{World.logout();showAuth();toast('나갔어요. 다음에 또 와요!')};
 $('#joinBtn').onclick=async()=>{const code=$('#code').value.trim();$('#msg2').textContent='';
   if(!/^[0-9]{6}$/.test(code)){$('#msg2').textContent='초대코드는 숫자 6개예요.';return}

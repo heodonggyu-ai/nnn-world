@@ -32,6 +32,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 .brand{background:var(--leaf);color:#fff;padding:0 14px;font-size:19px;letter-spacing:.02em}
 .spacer{flex:1}
 .chip canvas{width:22px;height:22px}
+.crc{width:16px;height:16px;border-radius:50%;background:#FFD23F;border:2px solid #B8860B;display:inline-block;box-sizing:border-box}
 .sunmoon{width:16px;height:16px;border-radius:50%;background:var(--sun);border:2px solid var(--ink);box-sizing:border-box}
 .sunmoon.night{background:#F6F1C9;box-shadow:inset -5px -2px 0 #9FA6D6}
 .sunmoon.evening{background:#FF9A5A}
@@ -145,6 +146,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 .stamp small{font-size:10px;color:var(--mute)}
 .meta b{color:var(--berry-deep);font-weight:400;font-family:var(--f-display)}
 .brand{cursor:pointer}
+@media (max-width:440px){.top{gap:5px}.top .chip{padding:0 9px 0 6px;font-size:14px;gap:4px;height:34px}.brand{font-size:16px!important;padding:0 10px!important}}
 #runHud{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 56px);z-index:8;background:#FFD23F;border:2.5px solid var(--ink);border-radius:999px;padding:8px 18px;font-family:var(--f-display);font-size:18px;box-shadow:0 3px 0 rgba(36,54,59,.3);white-space:nowrap;font-variant-numeric:tabular-nums}
 .news h4:not(:first-child){margin-top:10px}
 .chars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
@@ -171,6 +173,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 <div class="top">
   <button class="chip brand" id="brandBtn" aria-label="캐릭터 바꾸기">밍뉴의숲</button>
   <div class="chip" title="도토리"><canvas data-item="acorn" width="44" height="44"></canvas><span id="acorns">0</span></div>
+  <div class="chip" id="crChip" hidden title="크레딧 (NNN 월드 상점에서 써요)"><i class="crc"></i><span id="credits">0</span></div>
   <div class="spacer"></div>
   <div class="chip" id="clock"><span class="sunmoon" id="sunmoon"></span><span id="clockText"></span></div>
 </div>
@@ -194,6 +197,7 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="../shared/avatar.js"></script>
 <script src="../shared/world.js"></script>
 <div id="emoBar" hidden></div>
 <button id="emoBtn" hidden aria-label="인사하기">인사</button>
@@ -591,7 +595,7 @@ const CHARS={
  samsaek:{name:'삼색이',desc:'별 무늬 귀를 가진 삼색 고양이'},
  kid:{name:'모자 쓴 아이',desc:'고양이 귀 모자를 쓴 아이',kid:true}
 };
-const PN=()=>(CHARS[S.char]||CHARS.mingnyu).name;
+const PN=()=>SESS?SESS.nick:(CHARS[S.char]||CHARS.mingnyu).name;
 const ANCH={
  samsaek:{top:[-8,-41],eyes:[[-17,-25],[-4,-26]],neck:[-6,-15],sheet:[-38,30,-44],ears:1},
  mingnyu:{top:[-9,-48],eyes:[[-18,-30],[-1,-30]],neck:[-6,-15],sheet:[-38,26,-51]},
@@ -691,8 +695,10 @@ function drawAccPart(c,type,A){
 function drawAcc(c,id){const A=ANCH[id];if(!A||!S.wear)return;['neck','eyes','costume','head'].forEach(sl=>{const k=S.wear[sl];if(k&&ACC[k])drawAccPart(c,k,A)})}
 function drawUmbrella(c){c.lineWidth=2;c.strokeStyle=BK;c.beginPath();c.moveTo(4,-14);c.lineTo(4,-70);c.stroke();
   for(let i=0;i<4;i++){c.beginPath();c.moveTo(4,-72);c.arc(4,-58,28,Math.PI+i*Math.PI/4,Math.PI+(i+1)*Math.PI/4);c.closePath();c.fillStyle=i%2?'#FFC94A':'#E2557A';c.fill();c.stroke()}}
-let RAINING=false,PORTRAIT=false;
+let RAINING=false,PORTRAIT=false,AVATAR=null,OWNED={},CREDITS=0;
+function myAv(){if(AVATAR){AVATAR.acc=S.wear||{};return AVATAR}return{base:S.char||'mingnyu',fur:'cream',pat:'none',eye:'black',acc:S.wear||{}}}
 function drawPlayer(c,x,y,t,face,moving,joy=0){
+  if(window.Avatar)return Avatar.draw(c,x,y,t,face,moving,joy,myAv(),{raining:RAINING&&!SIL,portrait:PORTRAIT});
   const id=S.char||'mingnyu';
   if(CHARS[id]&&CHARS[id].kid)return drawKid(c,x,y,t,face,moving,joy);
   c.save();c.translate(x,y);
@@ -1016,6 +1022,7 @@ function checkMiles(){
 }
 function confetti(n=120){for(let i=0;i<n;i++)conf.push({x:Math.random()*VW,y:-20-Math.random()*VH*0.5,vx:rnd(-40,40),vy:rnd(80,200),r:rnd(0,6),vr:rnd(-6,6),c:pick(['#E2557A','#FFC94A','#7FD1B9','#9AD7EA','#B9A4F2','#fff']),life:rnd(3,5)})}
 function celebrate(title,sub,rw){
+  earn(5,'잔치');
   S.acorns+=rw;hud();touch();sfx.fan();confetti();
   S.pets.forEach(p=>p.jump=2.5);
   setTimeout(()=>{openModal(`<p class="sub center">축하해요</p><div class="big">${title}</div><p class="lead center">${sub}<br>축하 선물로 도토리 <b>${rw}</b>개를 받았어요.</p><div class="row"><button class="btn" id="ok">고마워!</button></div>`);$('#ok').onclick=closeModal},400);
@@ -1076,7 +1083,7 @@ function doPlay(p){
   P.joy=1.1;sfx.whee();for(let i=0;i<12;i++)parts.push({wx:P.x,wy:P.y-T*.6,vx:rnd(-70,70),vy:rnd(-110,-40),c:pick(['#FFE38A','#fff','#F7A8C0','#7FD1B9']),life:1,t:0,star:1});
   floater(P.x,P.y-T*1.4,pick(['야호!','신난다!','와아~','최고!']),'#FFE38A');
   if(!S.stamps||S.stamps.date!==dateKey())S.stamps={date:dateKey(),done:[]};
-  if(!S.stamps.done.includes(p.id)){S.stamps.done.push(p.id);touch();ev('stamp');const n=S.stamps.done.length;
+  if(!S.stamps.done.includes(p.id)){S.stamps.done.push(p.id);touch();ev('stamp');earn(1,'도장');const n=S.stamps.done.length;
     setTimeout(()=>{sfx.coin();toast(`도장 쾅! <b>${p.name}</b> (${n}/${PLAYS.length})`)},500);
     if(n===PLAYS.length)setTimeout(()=>celebrate('오늘의 놀이터 도장 완성!','백조, 하마, 판다, 공원 놀이터와 광장까지 동네를 다 돌았어요.',30),1200)}
 }
@@ -1249,7 +1256,7 @@ function openCat(c){
   if(fed){$('#cPet').onclick=()=>{curCat.jump=0.6;sfx.meow();$('#say').textContent=pick([`${J.ig(st.name)} 눈을 지그시 감았어요.`,'골골골골…','앞발로 꾹꾹이를 해요!']);parts.push({wx:c.x,wy:c.y-T,vx:0,vy:-40,c:'#E2557A',life:1,t:0,star:1})};return}
   $('#cfood').onclick=e=>{const b=e.target.closest('[data-food]');if(!b)return;const k=b.dataset.food;
     if(!(S.snacks[k]>0)){$('#say').textContent=`가방에 ${J.ig(SNACKS[k].name)} 없어요. 지웰시티몰에 가 볼까요?`;return}
-    S.snacks[k]--;const fav=k===def.fav;if(fav)st.favKnown=true;const before=st.bond;st.bond=Math.min(10,st.bond+(fav?2:1));st.fed=today;c.revealed=true;c.jump=1.2;touch();ev('cat');sfx.meow();
+    S.snacks[k]--;const fav=k===def.fav;if(fav)st.favKnown=true;const before=st.bond;st.bond=Math.min(10,st.bond+(fav?2:1));st.fed=today;c.revealed=true;c.jump=1.2;touch();ev('cat');earn(1,'고양이 밥');sfx.meow();
     if(before<5&&st.bond>=5)setTimeout(()=>toast(`<b>${st.name}</b>${jong(st.name)?'이랑':'랑'} 단짝이 됐어요!`),600);
     if(before<10&&st.bond>=10)setTimeout(()=>toast(`<b>${st.name}</b>${jong(st.name)?'이':'가'} ${J.eul(PN())} 제일 좋아해요!`),600);
     const all=NCATS.every(n=>S.cats[n.id].fed===today);
@@ -1315,7 +1322,7 @@ function showAdopt(){
     const d=dex(sp.id);const isNew=!d.friend;d.friend=true;d.seen=true;
     wild=wild.filter(q=>q!==B.w);curBef=null;closeModal();ev('befriend');touch();
     toast(`<b>${name}</b>${jong(name)?'이':'가'} 밍뉴네 마당으로 이사 왔어요!`);
-    if(isNew)setTimeout(checkMiles,600);
+    if(isNew){setTimeout(checkMiles,600);earn(5,'새 동물 친구')}
   };
 }
 
@@ -1412,7 +1419,7 @@ function openShop(tab='buy'){
   const buy=Object.keys(DECOR).map(k=>`<div class="card" style="cursor:default">${icoSz(k,56)}<div class="nm">${DECOR[k].name}</div><div class="likes">${likedBy(k)?likedBy(k)+'가 좋아해요':'모두 좋아해요'}</div><div class="price">${DECOR[k].candy?`사탕 ${DECOR[k].candy}`:ico('acorn',32)+DECOR[k].price}</div><button class="btn sm" data-buy="${k}" ${!canBuyDecor(k)?'disabled':''}>사기</button></div>`).join('');
   const food=Object.keys(CATFOOD).map(k=>`<div class="card" style="cursor:default">${icoSz(k,48)}<div class="nm">${SNACKS[k].name}</div><div class="likes">가진 개수 ${S.snacks[k]||0}</div><div class="price">${ico('acorn',32)}${CATFOOD[k]}</div><button class="btn sm" data-food="${k}" ${S.acorns<CATFOOD[k]?'disabled':''}>사기</button></div>`).join('');
   const sell=Object.keys(SNACKS).filter(k=>!CATFOOD[k]).map(k=>`<div class="card" style="cursor:default">${icoSz(k,44)}<div class="nm">${SNACKS[k].name}</div><div class="likes">가진 개수 ${S.snacks[k]||0}</div><div class="price">${ico('acorn',32)}3</div><button class="btn sm leafb" data-sell="${k}" ${(S.snacks[k]||0)<1?'disabled':''}>팔기</button></div>`).join('');
-  const acc=Object.keys(ACC).map(k=>{const a=ACC[k],own=S.accOwn.includes(k),can=a.star?(S.stars||0)>=a.star:S.acorns>=a.price;return `<div class="card" style="cursor:default"><canvas data-acc="${k}" width="120" height="96" style="width:60px;height:48px"></canvas><div class="nm">${a.name}</div><div class="price">${a.star?`별조각 ${a.star}`:ico('acorn',32)+a.price}</div>${own?'<span class="tag f">가지고 있어요</span>':`<button class="btn sm" data-acc-buy="${k}" ${can?'':'disabled'}>사기</button>`}</div>`}).join('');
+  const acc=(SESS&&AVATAR)?`<div class="card" style="grid-column:1/-1;cursor:default"><div class="nm">꾸미기는 NNN 월드 상점으로 옮겼어요</div><div class="likes">게임하면서 모은 크레딧 ${CREDITS}개로 캐릭터, 털색, 무늬, 꾸미기를 살 수 있어요.</div><a class="btn sm" href="../" style="text-decoration:none">상점 가기</a></div>`:Object.keys(ACC).map(k=>{const a=ACC[k],own=S.accOwn.includes(k),can=a.star?(S.stars||0)>=a.star:S.acorns>=a.price;return `<div class="card" style="cursor:default"><canvas data-acc="${k}" width="120" height="96" style="width:60px;height:48px"></canvas><div class="nm">${a.name}</div><div class="price">${a.star?`별조각 ${a.star}`:ico('acorn',32)+a.price}</div>${own?'<span class="tag f">가지고 있어요</span>':`<button class="btn sm" data-acc-buy="${k}" ${can?'':'disabled'}>사기</button>`}</div>`}).join('');
   openSheet('지웰시티몰',`<div class="tabs"><button class="${tab==='buy'?'on':''}" data-tab="buy">가구</button><button class="${tab==='acc'?'on':''}" data-tab="acc">꾸미기</button><button class="${tab==='food'?'on':''}" data-tab="food">고양이 밥</button><button class="${tab==='sell'?'on':''}" data-tab="sell">간식 팔기</button></div>
     <div class="progtxt"><span>도토리 ${S.acorns}개</span><span>${HALLOWEEN?`사탕 ${S.candy||0}개 · `:''}별조각 ${S.stars||0}개</span></div><div class="grid3">${tab==='buy'?buy:tab==='acc'?acc:tab==='food'?food:sell}</div>
     ${tab==='buy'?'<p class="sub" style="margin-top:12px">산 가구는 가방에 들어가요. 마당에 놓으면 좋아하는 동물이 그 근처에서 놀아요.</p>':tab==='food'?'<p class="sub" style="margin-top:12px">3단지 고양이들 밥이에요. 고양이마다 좋아하는 게 달라요.</p>':tab==='acc'?'<p class="sub" style="margin-top:12px">산 꾸미기는 왼쪽 위 이름표를 눌러 옷장에서 입혀요. 별조각은 밤에 별똥별을 눌러서 모아요.</p>':''}`);
@@ -1464,7 +1471,7 @@ function openTasks(){
    <div class="news"><h4>오늘의 동네 소식 · ${SEASON_KO} ${{day:'낮',evening:'저녁',night:'밤'}[ph]}</h4>${ph==='night'?'밤이 되었어요. 아파트 창문에 불이 켜지고, 밤에만 깨어나는 친구들이 돌아다녀요.':ph==='evening'?'노을이 지는 저녁엔 낮 친구와 밤 친구를 모두 만날 수 있어요.':'햇살 좋은 낮이에요. 낮에 나오는 친구들이 산책 중이에요.'}
    ${avail.length?`<br>지금 만날 수 있는 새 친구: ${avail.map(s=>dex(s.id).seen?s.name:`???(${HAB[s.hab]})`).join(', ')}`:'<br>지금 시간에 만날 수 있는 친구는 모두 사귀었어요!'}
    <br>반짝이는 땅: ${S.dig.spots.filter(s=>!s.done).length}곳 남음</div>`);
-  $('#sheetB').onclick=e=>{const b=e.target.closest('[data-claim]');if(b){const t=S.tasks.list[+b.dataset.claim];if(t.p>=t.n&&!t.claimed){t.claimed=true;addAcorns(t.rw);toast(`도토리 <b>${t.rw}개</b>를 받았어요`);openTasks()}}};
+  $('#sheetB').onclick=e=>{const b=e.target.closest('[data-claim]');if(b){const t=S.tasks.list[+b.dataset.claim];if(t.p>=t.n&&!t.claimed){t.claimed=true;addAcorns(t.rw);earn(3,'할 일 끝!');toast(`도토리 <b>${t.rw}개</b>를 받았어요`);openTasks()}}};
 }
 const MMC={[G]:'#A8D27E',[TG]:'#6FAE52',[TR]:'#4E9452',[WA]:'#6EC2E2',[SA]:'#EEDCA6',[RO]:'#A9B1B4',[FL]:'#F5B7C8',[PA]:'#E6CF9C',[FE]:'#D9B97F',[YD]:'#C2E39A',[BU]:'#3E8545',[FA]:'#9B6B45',[RD]:'#7E848A',[SF]:'#FFD45E',[SW]:'#E4DED2',[PZ]:'#F0E2C2',[PG]:'#F6B98A',[FD]:'#DFC08E',[PK]:'#9AA0A6',[HE]:'#3F8A4A'};
 const SPRC={apt:'#F4F6F8',school:'#F2C9A0',kinder:'#F9C9D8',mall:'#C9D6E8',house:'#E2557A',car:'#8D98A3',bench:'#C98A44',guard:'#DCE6EE',parkplay:'#FFC94A',swan:'#FFFFFF',hippo:'#9C8FD9',swing:'#FFC94A',panda:'#3B3434'};
@@ -1498,9 +1505,11 @@ $('#bBag').onclick=()=>openBag();$('#bDex').onclick=openDex;$('#bPets').onclick=
 /* ---------- characters ---------- */
 function paintAccIcons(root){root.querySelectorAll('canvas[data-acc]').forEach(cn=>{const g=cn.getContext('2d');g.clearRect(0,0,cn.width,cn.height);const a=ACC[cn.dataset.acc];g.save();g.translate(cn.width/2,cn.height/2);g.scale(2.4,2.4);
   const ck=ACC[cn.dataset.acc].slot==='costume';if(ck)g.scale(0.55,0.55);const A=ck?{top:[0,-30],eyes:[[-8,-14],[8,-14]],neck:[-4,-6],sheet:[-22,22,-34]}:{top:[0,8],eyes:[[-7,0],[7,0]],neck:[0,0]};if(ck)g.translate(0,26);drawAccPart(g,cn.dataset.acc,A);g.restore()})}
-function heroPortrait(g,id,w,h,t){g.clearRect(0,0,w,h);g.save();PORTRAIT=true;if(CHARS[id].kid){g.translate(w/2,h*0.95);g.scale(2,2);drawKid(g,0,0,t,1,false)}else{g.translate(w*0.52,h*0.93);g.scale(-1.75,1.75);
+function heroPortrait(g,id,w,h,t){if(window.Avatar&&(id==='me'||AVATAR)){g.clearRect(0,0,w,h);g.save();const av=id==='me'?myAv():{base:id,acc:S.wear};const kid=av.base==='kid';g.translate(w*0.5,h*0.93);const z=kid?2:1.62;g.scale(z,z);Avatar.draw(g,0,0,t,1,false,0,av,{portrait:true});g.restore();return}
+  g.clearRect(0,0,w,h);g.save();PORTRAIT=true;if(CHARS[id].kid){g.translate(w/2,h*0.95);g.scale(2,2);drawKid(g,0,0,t,1,false)}else{g.translate(w*0.52,h*0.93);g.scale(-1.75,1.75);
   if(id==='samsaek')heroSam(g,t,0,((t+0.5)%3.4)<0.12,false);else heroMing(g,t,0,((t+0.5)%3.4)<0.12,false);drawAcc(g,id)}g.restore();PORTRAIT=false}
 function openChars(first){
+  if(SESS&&window.Avatar&&AVATAR)return openWardrobe();
   const slots={head:'머리',eyes:'눈',neck:'목'};
   const own=S.accOwn||[];
   openModal(`<h3>${first?'누구로 놀까요?':'캐릭터와 옷장'}</h3><p class="sub">${first?'함께 동네를 돌아다닐 캐릭터를 골라요. 나중에 왼쪽 위 이름표를 눌러 바꿀 수 있어요.':'캐릭터를 바꾸고 꾸미기를 입혀요.'}</p>
@@ -1518,14 +1527,15 @@ function openChars(first){
 function openHalloween(){
   S.v4=true;S.v3=true;touch();
   if(!S.accOwn.includes('ghost')){S.accOwn.push('ghost')}
+  if(SESS&&!OWNED['acc:ghost']){OWNED['acc:ghost']=true;World.buy('acc:ghost',0).catch(()=>{})}
   openModal(`<p class="sub center">10월 핼러윈 이벤트</p><div class="big">동네에 꼬마 유령들이 나타났어요!</div>
    <canvas id="hcv" class="intro-cv" width="640" height="260"></canvas>
    <div class="news" style="margin-top:10px"><h4>트릭 오어 트릿!</h4>귀신 분장을 하고 유령에게 다가가면 사탕을 줘요. 분장을 안 하면 사탕을 안 줘요! 첫 귀신 분장은 선물로 드려요. 이름표를 눌러 옷장에서 입어 보세요.
    <h4>사탕으로 꾸미기</h4>모은 사탕은 지웰시티몰에서 잭오랜턴과 유령 풍선으로 바꿀 수 있어요. 밤에는 유령이 더 많이 나와요.</div>
    <div class="row"><button class="btn soft" id="later">나중에</button><button class="btn" id="wear">지금 분장하기!</button></div>`,
    ()=>{const cn=$('#hcv');if(!cn)return;const g=cn.getContext('2d');g.clearRect(0,0,640,260);g.save();g.scale(2,2);drawGhost(g,{x:70,y:118,t:1,hat:'witch',poof:0,face:1},false);drawGhost(g,{x:250,y:118,t:3,hat:'bow',poof:0,face:-1},false);g.restore();
-     const w=S.wear.costume;S.wear.costume='ghost';g.save();g.translate(320,230);g.scale(-2.1,2.1);const id=S.char||'mingnyu';if(id==='samsaek')heroSam(g,now,0,false,false);else if(id==='mingnyu')heroMing(g,now,0,false,false);else{g.scale(-1,1);drawKid(g,0,0,now,1,false)}if(id!=='kid')drawAcc(g,id);g.restore();S.wear.costume=w});
-  $('#later').onclick=closeModal;$('#wear').onclick=()=>{S.wear.costume='ghost';touch();closeModal();P.joy=1;sfx.fan();toast('부우~ 귀신 분장 완성! 유령을 찾아가 보세요')};
+     const w=S.wear.costume;S.wear.costume='ghost';g.save();g.translate(320,230);if(window.Avatar){g.scale(2,2);Avatar.draw(g,0,0,now,1,false,0,Object.assign({},myAv(),{acc:Object.assign({},S.wear,{costume:'ghost'})}),{portrait:true})}else{g.scale(-2.1,2.1);const id=S.char||'mingnyu';if(id==='samsaek')heroSam(g,now,0,false,false);else if(id==='mingnyu')heroMing(g,now,0,false,false);else{g.scale(-1,1);drawKid(g,0,0,now,1,false)}if(id!=='kid')drawAcc(g,id)}g.restore();S.wear.costume=w});
+  $('#later').onclick=closeModal;$('#wear').onclick=()=>{S.wear.costume='ghost';touch();syncWear();closeModal();P.joy=1;sfx.fan();toast('부우~ 귀신 분장 완성! 유령을 찾아가 보세요')};
 }
 function openNews(){
   S.v3=true;touch();
@@ -1578,7 +1588,7 @@ function leaveRoom(silent){if(!NET.code)return;try{NET.ref.off();NET.myRef.onDis
   NET.code=null;NET.others.clear();try{history.replaceState(null,'',location.pathname)}catch(e){}updateFriendChip();if(!silent)toast('방에서 나왔어요')}
 function sendState(force){
   if(!NET.code||!NET.myRef)return;
-  const st={n:SESS.nick,x:Math.round(P.x),y:Math.round(P.y),f:P.face,m:P.moving?1:0,ch:S.char||'mingnyu',w:S.wear||{},j:P.joy>0?1:0};
+  const st={n:SESS.nick,x:Math.round(P.x),y:Math.round(P.y),f:P.face,m:P.moving?1:0,ch:myAv().base,w:S.wear||{},av:avPack(),j:P.joy>0?1:0};
   if(NET.emote)st.e=NET.emote;
   const js=JSON.stringify(st),t=performance.now(),changed=js!==NET.lastSent;
   if(!force&&!(changed&&t-NET.last>=200)&&!(t-NET.last>=6000))return;
@@ -1592,7 +1602,7 @@ function netTick(dt){
   NET.others.forEach(o=>{const a=Math.min(1,dt*8);o.rx+=(o.x-o.rx)*a;o.ry+=(o.y-o.ry)*a;if(o.emo){o.emo.t-=dt;if(o.emo.t<=0)o.emo=null}});
   if(NET.myEmo){NET.myEmo.t-=dt;if(NET.myEmo.t<=0)NET.myEmo=null}
 }
-function drawPlayerAs(c,o){const sc=S.char,sw=S.wear;S.char=o.ch;S.wear=o.w||{};try{drawPlayer(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0)}finally{S.char=sc;S.wear=sw}}
+function drawPlayerAs(c,o){if(window.Avatar&&o.av){const a=o.av;Avatar.draw(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0,{base:a.b,fur:a.f,pat:a.p,eye:a.e,acc:o.w||{}},{raining:RAINING});return}const sc=S.char,sw=S.wear;S.char=o.ch;S.wear=o.w||{};try{drawPlayer(c,o.rx,o.ry,now+o.rx*0.01,o.f,o.m,o.j?0.4:0)}finally{S.char=sc;S.wear=sw}}
 function emoBubble(c,x,y,k){
   c.save();c.font='15px Jua, sans-serif';const txt=k==='heart'?'':EMO_TXT[k]||'';const w=k==='heart'?30:c.measureText(txt).width+20,h=28;
   c.beginPath();c.roundRect(x-w/2,y-h,w,h,12);c.moveTo(x-5,y);c.lineTo(x,y+7);c.lineTo(x+5,y);c.fillStyle='#fff';c.fill();c.lineWidth=2;c.strokeStyle=OUT;c.stroke();
@@ -1628,7 +1638,7 @@ function openFriends(){
   const others=[...NET.others.values()];
   const emoRow=`<div class="label">인사 보내기</div><div class="row" id="fEmo">${EMOTES.map(([k,t])=>`<button class="btn soft sm" data-emo="${k}" style="flex:0 0 auto">${t}</button>`).join('')}</div>`;
   const members=()=>`<div class="label">지금 같이 있는 친구 ${others.length+1}명</div>
-    <div class="flist"><div class="fli"><img src="../shared/img/${esc(S.char||'mingnyu')}.png" alt=""><b>${esc(SESS.nick)}</b><small>${IS_ADMIN?'숲지기 · 나':'나'}</small></div>
+    <div class="flist"><div class="fli"><canvas data-hero="me" width="120" height="100" style="width:48px;height:40px"></canvas><b>${esc(SESS.nick)}</b><small>${IS_ADMIN?'숲지기 · 나':'나'}</small></div>
     ${others.map(o=>`<div class="fli"><img src="../shared/img/${esc(o.ch)}.png" alt=""><b>${esc(o.n)}</b>${IS_ADMIN&&o.k!==ADMIN_KEY?`<button class="btn soft sm" data-kick="${esc(o.k)}" style="margin-left:auto;flex:none">내보내기</button>`:`<small>${o.k===ADMIN_KEY?'숲지기':'같이 노는 중'}</small>`}</div>`).join('')}</div>`;
   if(IS_ADMIN){
     const pend=pendingReqs(),okd=Object.entries(NET.reqs||{}).filter(([k,r])=>r&&r.status==='ok');
@@ -1853,7 +1863,7 @@ function render(){
   if(RUN)RUN.stars.forEach(s=>E.push({y:s.y,f:()=>{const b=Math.sin(now*5+s.x)*4;star(ctx,s.x,s.y-T*.45+b,15,OUT);star(ctx,s.x,s.y-T*.45+b,12,'#FFD23F')}}));
   if(RAINING)for(let y=ty0;y<=ty1;y++)for(let x=tx0;x<=tx1;x++){const t=tileAt(x,y);if((t===SW||t===RD||t===PZ||t===PK)&&h2(x,y,13)<0.12){const ph=(now*0.8+h2(x,y,14)*3)%1;ctx.beginPath();ctx.ellipse((x+.5)*T,(y+.5)*T,4+ph*16,2+ph*6,0,0,7);ctx.strokeStyle=`rgba(255,255,255,${.5*(1-ph)})`;ctx.lineWidth=1.5;ctx.stroke()}}
   NET.others.forEach(o=>{if(vis(o.rx,o.ry))E.push({y:o.ry,f:()=>{drawPlayerAs(ctx,o);tagFor(ctx,o.k,o.n,o.rx,o.ry+14);if(o.emo)emoBubble(ctx,o.rx,o.ry-T*1.55,o.emo.k)}})});
-  E.push({y:P.y,f:()=>{drawPlayer(ctx,P.x,P.y,now,P.face,P.moving,P.joy);if(NET.code)tagFor(ctx,SESS.key,SESS.nick,P.x,P.y+14);if(NET.myEmo)emoBubble(ctx,P.x,P.y-T*1.55,NET.myEmo.k)}});
+  E.push({y:P.y,f:()=>{drawPlayer(ctx,P.x,P.y,now,P.face,P.moving,P.joy);if(SESS){ctx.save();ctx.globalAlpha=NET.code?1:0.82;tagFor(ctx,SESS.key,SESS.nick,P.x,P.y+14);ctx.restore()}if(NET.myEmo)emoBubble(ctx,P.x,P.y-T*1.55,NET.myEmo.k)}});
   E.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
   parts.forEach(p=>{const a=1-p.t/p.life;ctx.globalAlpha=a;if(p.star)star(ctx,p.wx,p.wy,4,p.c);else if(p.leaf){ctx.fillStyle=p.c;ctx.beginPath();ctx.ellipse(p.wx,p.wy,4,2.2,p.t*6,0,7);ctx.fill()}else{ctx.fillStyle=p.c;ctx.fillRect(p.wx-2,p.wy-2,4,4)}ctx.globalAlpha=1});
   ctx.font='17px Jua, sans-serif';ctx.textAlign='center';
@@ -1921,7 +1931,7 @@ function resize(){DPR=Math.min(2.5,window.devicePixelRatio||1);VW=innerWidth;VH=
 addEventListener('resize',resize);resize();
 let last=performance.now(),lastDt=0;
 function loop(t){const dt=Math.min(0.05,(t-last)/1000);last=t;lastDt=dt;try{update(dt);render()}catch(e){console.error(e)}requestAnimationFrame(loop)}
-function clockTick(){weatherTick();const d=new Date(),ph=phase();$('#sunmoon').className='sunmoon '+ph;$('#clockText').textContent=`${SEASON_KO} · ${S.timeOverride?{day:'꿈속 낮',night:'꿈속 밤'}[S.timeOverride]:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}${RAINING?(SEASON==='winter'?' · 눈':' · 비'):''}`}
+function clockTick(){weatherTick();const d=new Date(),ph=phase();$('#sunmoon').className='sunmoon '+ph;$('#clockText').textContent=`${innerWidth<440&&SESS?'':SEASON_KO+' · '}${S.timeOverride?{day:'꿈속 낮',night:'꿈속 밤'}[S.timeOverride]:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}${RAINING?(SEASON==='winter'?' · 눈':' · 비'):''}`}
 setInterval(clockTick,5000);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{chunks.clear();paintIcons(document)});
 addEventListener('visibilitychange',()=>{if(document.hidden&&dirty)save()});
@@ -1936,6 +1946,41 @@ paintIcons(document);hud();clockTick();
 for(let i=0;i<5;i++)spawnWild();
 if(!S.pets.length&&!wild.some(w=>w.sp==='cheese')){const s=SPOTS.grass.slice().sort((a,b)=>Math.hypot(a[0]-START.x,a[1]-START.y)-Math.hypot(b[0]-START.x,b[1]-START.y)).slice(0,6);if(s.length)spawnWild('cheese',pick(s))}
 if(!S.intro||S.newTown)intro(0);else if(!S.charPicked)openChars(true);else if(!S.v3)openNews();else if(HALLOWEEN&&!S.v4)openHalloween();
+/* ---------- NNN 월드 아바타와 크레딧 ---------- */
+function avPack(){const a=myAv();return{b:a.base,f:a.fur||'cream',p:a.pat||'none',e:a.eye||'black'}}
+let wearT=null;
+function syncWear(){if(!SESS||!AVATAR)return;clearTimeout(wearT);wearT=setTimeout(()=>{const acc={};Object.entries(S.wear||{}).forEach(([k,v])=>{if(v)acc[k]=v});
+  World.saveAvatar(Object.assign({},AVATAR,{acc})).catch(()=>{})},800)}
+let PEND=0;try{PEND=+(localStorage.getItem('nnnw_pend:'+(SESS&&SESS.key))||0)}catch(e){}
+function showCredits(){const e=$('#credits');if(e)e.textContent=(CREDITS+PEND).toLocaleString('ko-KR')}
+function flushCredits(){if(!SESS||PEND<=0)return;const n=PEND;World.addCredits(n).then(c=>{PEND-=n;if(c!=null)CREDITS=c;try{localStorage.setItem('nnnw_pend:'+SESS.key,PEND)}catch(e){}showCredits()}).catch(()=>{})}
+function earn(n,why){if(!SESS)return;PEND+=n;try{localStorage.setItem('nnnw_pend:'+SESS.key,PEND)}catch(e){}showCredits();
+  floater(P.x,P.y-T*1.9,'+'+n+' 크레딧','#FFD23F');if(n>=3)toast(`크레딧 <b>+${n}</b> · ${why}`);flushCredits()}
+function openWardrobe(){
+  const slots={head:'머리',eyes:'눈',neck:'목',costume:'분장'};
+  const own=Object.keys(Avatar.ACCS).filter(k=>OWNED['acc:'+k]);
+  openModal(`<h3>내 캐릭터와 옷장</h3><p class="sub">가진 꾸미기를 눌러 입고 벗어요. 새 옷과 캐릭터는 NNN 월드 상점에서 크레딧으로 사요.</p>
+   <div style="display:flex;align-items:center;gap:12px;margin:10px 0"><canvas data-hero="me" width="200" height="160" style="width:120px;height:96px;background:#EAF6FB;border-radius:16px"></canvas><div><b style="font-family:var(--f-display);font-size:20px">${esc(SESS.nick)}</b><div class="sub">크레딧 ${(CREDITS+PEND).toLocaleString('ko-KR')}개</div></div></div>
+   <div class="label">옷장</div>${own.length?`<div class="snacks">${own.map(k=>{const sl=Avatar.ACCS[k][1],on=S.wear[sl]===k;return `<button class="snack${on?' fav':''}" data-wear="${k}"><canvas data-acc="${k}" width="120" height="96" style="width:48px;height:38px"></canvas><span>${Avatar.ACCS[k][0]}</span><b>${on?'입는 중':slots[sl]}</b></button>`}).join('')}</div>`:'<p class="sub">아직 꾸미기가 없어요. 상점에서 첫 꾸미기를 골라 봐요!</p>'}
+   <div class="row"><button class="btn soft" id="chX">닫기</button><a class="btn" href="../" style="text-decoration:none">상점 가기</a></div>`,
+   ()=>{document.querySelectorAll('#modal canvas[data-hero]').forEach(cn=>heroPortrait(cn.getContext('2d'),'me',cn.width,cn.height,now))});
+  document.querySelectorAll('#modal canvas[data-acc]').forEach(cn=>{const g=cn.getContext('2d');g.clearRect(0,0,cn.width,cn.height);Avatar.accIcon(g,cn.dataset.acc,cn.width,cn.height)});
+  $('#chX').onclick=closeModal;
+  $('#modal').onclick=e=>{const w=e.target.closest('[data-wear]');if(!w)return;const k=w.dataset.wear,sl=Avatar.ACCS[k][1];S.wear[sl]=S.wear[sl]===k?null:k;touch();sfx.pop();syncWear();sendState&&NET.code&&sendState(true);openWardrobe()};
+}
+if(SESS&&window.Avatar){
+  $('#crChip').hidden=false;
+  if(SESS.av){AVATAR=JSON.parse(JSON.stringify(SESS.av));S.wear=Object.assign({},AVATAR.acc||{})}
+  showCredits();
+  World.getMe().then(p=>{if(!p)return;AVATAR=p.av;OWNED=p.owned||{};CREDITS=p.credits||0;
+    /* 숲에서 도토리로 샀던 꾸미기는 내 것으로 옮겨 줘요 */
+    const add={};(S.accOwn||[]).forEach(k=>{if(Avatar.ACCS[k]&&!OWNED['acc:'+k])add['acc:'+k]=true});
+    if(Object.keys(add).length){Object.assign(OWNED,add);Object.keys(add).forEach(id=>World.buy(id,0).catch(()=>{}))}
+    S.wear=Object.assign({},AVATAR.acc||{});touch();showCredits();flushCredits();
+    if(NET.code)sendState(true)}).catch(()=>{});
+  let played=0;setInterval(()=>{if(document.hidden||uiOpen())return;if(P.moving)played+=1;else played+=0.25;if(played>=180){played=0;earn(1,'3분 놀았어요')}},1000);
+  setInterval(flushCredits,20000);
+}
 requestAnimationFrame(loop);
 </script>
 
