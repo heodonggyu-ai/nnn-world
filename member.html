@@ -441,6 +441,7 @@ body.tvmode .app{max-width:none;padding:0}
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
   <h2 style="font-size:28px">관장 메뉴</h2>
+  <div class="ev" id="connWarn" hidden style="background:#5A1E22;color:#FFD9D9;flex-direction:column;align-items:flex-start"></div>
   <div class="ev" id="storeWarn" hidden style="background:#5A1E22;color:#FFD9D9"><b style="color:#fff">저장 안 됨</b><span>이 화면은 기기 저장소를 쓸 수 없어서 설정이 사라져요. GitHub 주소에서 열거나 서버를 연결해 주세요.</span></div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
     <div class="row"><h3 style="font-size:20px" class="grow">회원 <span class="small num" id="admCnt"></span></h3>
@@ -551,11 +552,12 @@ local.meta.pay=Object.assign({bank:'',acct:'',holder:'',asanQR:ASAN_QR,onnuriQR:
 local.pays=local.pays||{};
 let fdb=null,fuid=null;
 const FB_ON=()=>!!fdb;
+let FB_ERR='';
 async function fbInit(){
-  if(typeof firebase==='undefined')return false;
+  if(typeof firebase==='undefined'){FB_ERR=/claude\.ai|claudeusercontent/.test(location.href)||location.protocol==='file:'?'preview':'sdk';return false}
   try{if(!firebase.apps.length)firebase.initializeApp(FB_CONFIG);const auth=firebase.auth();
     const u=await new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('timeout')),12000);const un=auth.onAuthStateChanged(u=>{un();if(u){clearTimeout(t);res(u)}else auth.signInAnonymously().then(c=>{clearTimeout(t);res(c.user)}).catch(e=>{clearTimeout(t);rej(e)})})});
-    fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);return false}}
+    fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
 const PRIV=['name','phone','birth','gender','goal','exp','path','note','agreeMkt'];
@@ -1348,7 +1350,7 @@ async function openAdmin(){
   await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
-  $('#storeWarn').hidden=FB_ON()||storageOK();drawQR();show('v-admin');renderAdmRows();
+  $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
 }
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u,width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
@@ -1381,7 +1383,7 @@ $('#saveSet').onclick=async()=>{
   if(pin&&FB_ON()&&!(await DB.setAdminPin(pin))){toast('PIN을 바꾸지 못했어요');return}
   Object.assign(local.meta.pay,{bank:$('#sBank').value.trim(),acct:$('#sAcct').value.trim(),holder:$('#sHolder').value.trim(),onnuriNote:$('#sOnNote').value.trim(),products:$('#sProd').value.split('\n').map(l=>l.split('|')).filter(a=>a[0].trim()).map(a=>({n:a[0].trim(),p:(a[1]||'').replace(/\D/g,'')}))});
   Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),bringDays:$('#sBring').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
-  const saved=await DB.saveMeta();if(!saved){toast('이 화면에서는 저장이 안 돼요. GitHub 주소에서 열거나 서버를 연결해 주세요',4500);return}toast(FB_ON()?'설정을 저장했어요 · 모든 기기에 반영':'설정을 저장했어요')};
+  const saved=await DB.saveMeta();if(!saved){toast('이 화면에서는 저장이 안 돼요. GitHub 주소에서 열거나 서버를 연결해 주세요',4500);return}if(FB_ON()){try{const chk=(await gref('meta').get()).val();toast(chk&&chk.notice===local.meta.notice?'서버에 저장 확인됨 · 모든 기기에 반영':'저장했지만 확인이 안 돼요. 새로 고침 후 다시 확인해 주세요',3500)}catch(e){toast('저장 확인 실패')}}else toast('이 기기에만 저장했어요 (서버 미연결)',3500)};
 
 /* ================= 로고 ================= */
 let logoN=0;
