@@ -80,6 +80,7 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 .crash{background:repeating-linear-gradient(90deg,#4F7FC1 0 26px,#456FAD 26px 52px)}
 .soon{filter:saturate(.75)}
 footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-height:1.6}
+.hi{margin:2px 4px 0}.hi h2{font-size:28px;overflow-wrap:anywhere}
 .me{display:flex;align-items:center;gap:14px}
 .me canvas{width:120px;height:110px;background:#EAF6FB;border-radius:20px;border:2px solid var(--line);flex:none}
 .me .grow{flex:1;min-width:0}.me h2{font-size:26px;overflow-wrap:anywhere}
@@ -123,20 +124,8 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
   </section>
 
   <section id="home" hidden>
-    <div class="card">
-      <div class="me"><canvas id="avatar" width="240" height="220" aria-label="내 캐릭터"></canvas><div class="grow"><p class="sub">반가워요</p><h2 id="hiName">친구</h2>
-        <div class="coin" title="크레딧"><i></i><span id="credits">0</span></div><div><button class="btn sm" id="shopBtn" style="margin-top:8px">상점에서 꾸미기</button></div></div></div>
-      <div class="msg" id="msg2" role="status"></div>
-    </div>
-    <section class="card shop" id="shop" hidden style="margin-top:16px">
-      <div style="display:flex;align-items:center;gap:8px"><h2 style="flex:1">꾸미기 상점</h2><button class="btn soft sm" id="shopClose">닫기</button></div>
-      <p class="sub">눌러 보면 위 캐릭터가 먼저 입어 봐요. 마음에 들면 사서 입어요.</p>
-      <div class="stabs" id="stabs"></div>
-      <div class="items" id="items"></div>
-      <div class="buybar"><div class="what" id="what"></div><button class="btn soft sm" id="undo" hidden>원래대로</button><button class="btn leaf" id="buyBtn" hidden>입기</button></div>
-      <div class="msg" id="msg3" role="status"></div>
-      <div class="earn"><b>크레딧 모으는 법</b> (밍뉴의숲)<br>할 일 끝내기 +3 · 새 동물 친구 +5 · 마당 잔치 +5 · 도장 +1 · 3단지 고양이 밥 +1 · 3분 놀 때마다 +1</div>
-    </section>
+    <div class="hi"><p class="sub">반가워요</p><h2 id="hiName">친구</h2></div>
+    <div class="msg" id="msg2" role="status"></div>
     <div class="sec">게임 고르기 <span id="gameCount"></span></div>
     <div class="games" id="games"></div>
     <footer>NNN 월드 · 아빠가 만든 게임들이 모이는 곳<br>게임은 계속 늘어나요</footer>
@@ -146,12 +135,12 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="shared/avatar.js?v=6"></script>
-<script src="shared/world.js?v=5"></script>
+<script src="shared/avatar.js?v=7"></script>
+<script src="shared/world.js?v=7"></script>
 <script>
 const $=s=>document.querySelector(s);
 const GAMES=[
-  {id:'forest',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 초대코드로 친구와 같은 동네에서 놀아요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','핼러윈 이벤트'],note:'친구와 같이 놀려면 게임 안 <b>친구</b> 버튼에서 숲지기에게 초대코드를 받아요.'},
+  {id:'forest',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 초대코드로 친구와 같은 동네에서 놀아요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','핼러윈 이벤트'],note:'캐릭터 꾸미기 상점과 친구 초대코드는 밍뉴의숲 안에 있어요. 위쪽 노란 동전을 누르면 상점, 아래 <b>친구</b> 버튼을 누르면 초대코드!'},
   {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',art:'NNN<br>콤보 러시',cls:'combo',tags:['복싱','랭킹']},
   {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']}
 ];
@@ -173,71 +162,13 @@ function renderGames(){
 const IS_ADMIN=()=>{const s=World.session();return s&&s.key===World.ADMIN_KEY};
 const clone=o=>JSON.parse(JSON.stringify(o||{}));
 function fixAv(av){av=Object.assign({base:'cat',fur:'cream',pat:'none',eye:'black',acc:{}},clone(av));av.acc=av.acc||{};if(IS_ADMIN())av.base='mingnyu';else if(av.base==='mingnyu')av.base='cat';return av}
-/* 내 캐릭터 그림: 계속 숨 쉬고 귀가 쫑긋 */
-const AC=$('#avatar'),actx=AC.getContext('2d');
-(function loop(ts){const t=ts/1000;actx.clearRect(0,0,240,220);actx.save();actx.translate(122,200);actx.scale(2.2,2.2);
-  const av=TRY||AV;if(av)Avatar.draw(actx,0,0,t,1,false,0,av);actx.restore();requestAnimationFrame(loop)})(0);
-function setMe(p){if(!p)return;ME=p;ME.owned=ME.owned||{};AV=fixAv(p.av);$('#credits').textContent=(p.credits||0).toLocaleString('ko-KR');if(!$('#shop').hidden)renderItems()}
-const ACCT=[['head','모자·머리'],['eyes','얼굴'],['neck','목걸이'],['back','등·날개'],['costume','분장']];
-const TABS0=[['base','캐릭터'],['fur','털색'],['pat','무늬'],['eye','눈'],...ACCT];
-const tabsFor=()=>IS_ADMIN()?ACCT:TABS0;
-const isAccTab=t=>ACCT.some(a=>a[0]===t);
-function list(tab){
-  if(tab==='base')return Object.entries(Avatar.BASES).map(([k,v])=>({id:'base:'+k,v:k,name:v[0],price:v[1]}));
-  if(tab==='fur')return Object.entries(Avatar.FURS).map(([k,v])=>({id:'fur:'+k,v:k,name:v[0],price:v[2]}));
-  if(tab==='pat')return Object.entries(Avatar.PATS).map(([k,v])=>({id:'pat:'+k,v:k,name:v[0],price:v[1]}));
-  if(tab==='eye')return Object.entries(Avatar.EYES).map(([k,v])=>({id:'eye:'+k,v:k,name:v[0],price:v[2]}));
-  return Object.entries(Avatar.ACCS).filter(([k,v])=>tab==='acc'||v[1]===tab).map(([k,v])=>({id:'acc:'+k,v:k,name:v[0],price:v[2],slot:v[1]})).sort((a,b)=>a.price-b.price);
-}
-function applied(av,it){av=fixAv(av);const[k]=it.id.split(':');if(IS_ADMIN()&&k!=='acc')return av;
-  if(k==='base')av.base=it.v;else if(k==='acc'){if(av.acc[it.slot]===it.v)delete av.acc[it.slot];else av.acc[it.slot]=it.v}
-  else{av[k]=it.v;av.base='cat'}return av}
-function isOwned(it){if(it.id.startsWith('base:')&&IS_ADMIN())return it.id==='base:mingnyu';if(it.id==='base:mingnyu')return IS_ADMIN();return it.price===0||!!(ME&&ME.owned[it.id])}
-function isWorn(it){const[k]=it.id.split(':');if(!AV)return false;if(k==='base')return AV.base===it.v;if(k==='acc')return AV.acc[it.slot]===it.v;return AV.base==='cat'&&AV[k]===it.v}
-function renderTabs(){if(IS_ADMIN()&&!isAccTab(TAB))TAB='head';$('#stabs').innerHTML=tabsFor().map(([k,n])=>`<button data-t="${k}" class="${k===TAB?'on':''}">${n}</button>`).join('')}
-function renderItems(){
-  const L=list(TAB);
-  $('#items').innerHTML=L.map(it=>{const own=isOwned(it),lock=it.id==='base:mingnyu'&&!own;
-    const pr=lock?'<span class="pr lock">숲지기 전용</span>':own?'<span class="pr own">가지고 있어요</span>':`<span class="pr">${it.price} 크레딧</span>`;
-    return `<button class="item${SEL&&SEL.id===it.id?' on':''}${isWorn(it)?' wear':''}${lock?' dim':''}" data-id="${it.id}"><canvas width="168" height="140"></canvas>${it.name}${pr}</button>`}).join('');
-  [...$('#items').children].forEach((b,i)=>{const it=L[i],c=b.querySelector('canvas').getContext('2d');let av;
-    if(isAccTab(TAB)){av={base:'cat',fur:'cream',pat:'none',eye:'black',acc:{[it.slot]:it.v}}}else{av=applied(AV||{},it);if(TAB!=='base')av.acc={}}
-    c.save();c.translate(86,TAB==='back'?134:isAccTab(TAB)?126:122);const z=it.v==='kid'?2:TAB==='back'?1.25:1.55;c.scale(z,z);Avatar.draw(c,0,0,0.3,1,false,0,av);c.restore()});
-  updateBar();
-}
-function updateBar(){const b=$('#buyBtn');$('#undo').hidden=!TRY;
-  if(!SEL){$('#what').textContent=IS_ADMIN()?'숲지기는 언제나 밍뉴예요. 꾸미기만 바꿀 수 있어요.':TAB==='fur'||TAB==='pat'||TAB==='eye'?'털색, 무늬, 눈은 냥이 캐릭터만 바꿀 수 있어요.':'';b.hidden=true;return}
-  const own=isOwned(SEL);$('#what').textContent=SEL.name;b.hidden=false;
-  if(SEL.id==='base:mingnyu'&&!own){b.disabled=true;b.textContent='숲지기만 쓸 수 있어요';return}
-  b.disabled=false;b.textContent=own?(TRY?'이걸로 입기':'입는 중'):`${SEL.price} 크레딧으로 사기`;if(own&&!TRY)b.disabled=true}
-$('#stabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;TAB=b.dataset.t;SEL=null;TRY=null;renderTabs();renderItems()};
-$('#items').onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;const it=list(TAB).find(x=>x.id===b.dataset.id);SEL=it;
-  const nx=applied(TRY||AV,it);TRY=JSON.stringify(nx)===JSON.stringify(AV)?null:nx;$('#msg3').textContent='';renderItems();
-  AC.scrollIntoView({block:'nearest',behavior:'smooth'})};
-$('#undo').onclick=()=>{TRY=null;SEL=null;renderItems()};
-$('#buyBtn').onclick=async()=>{if(!SEL)return;const b=$('#buyBtn');b.disabled=true;$('#msg3').textContent='';
-  try{
-    if(!isOwned(SEL)){const p=await World.buy(SEL.id,SEL.price);setMe(p);toast(`${SEL.name}을(를) 샀어요!`)}
-    const want=TRY||applied(AV,SEL);
-    /* 아직 안 산 물건이 섞여 있으면 빼고 입어요 */
-    const items=[...list('base'),...list('fur'),...list('pat'),...list('eye'),...list('acc')];
-    const ok=k=>{const it=items.find(x=>x.id===k);return !it||isOwned(it)};
-    if(!ok('base:'+want.base))want.base=AV.base;['fur','pat','eye'].forEach(k=>{if(!ok(k+':'+want[k]))want[k]=AV[k]});
-    Object.keys(want.acc).forEach(sl=>{if(!ok('acc:'+want.acc[sl]))delete want.acc[sl]});
-    await World.saveAvatar(want);AV=fixAv(want);TRY=null;renderItems();toast('새 모습으로 바꿨어요')}
-  catch(err){$('#msg3').textContent=(err&&err.msg)||'인터넷 연결을 확인해 주세요.'}
-  finally{updateBar()}};
-$('#shopBtn').onclick=()=>{const sh=$('#shop');sh.hidden=!sh.hidden;if(!sh.hidden){renderTabs();renderItems();sh.scrollIntoView({behavior:'smooth',block:'start'})}else{TRY=null;SEL=null}};
-$('#shopClose').onclick=()=>{$('#shop').hidden=true;TRY=null;SEL=null};
-let unMe=null;
 function showHome(s){
   $('#auth').hidden=true;$('#home').hidden=false;$('#logout').hidden=false;
   $('#hiName').textContent=s.key===World.ADMIN_KEY?s.nick+' (밍뉴의숲 숲지기)':s.nick;
-  AV=fixAv(s.av||{base:s.key===World.ADMIN_KEY?'mingnyu':(s.char==='samsaek'||s.char==='kid')?s.char:'cat'});
   renderGames();
-  World.getMe().then(p=>{setMe(p);if(unMe)unMe();unMe=World.onMe(v=>{if(v&&v.av)setMe(v)})}).catch(()=>{$('#msg2').textContent='인터넷 연결이 약해요. 혼자 놀기는 그대로 돼요.'});
+  World.getMe().catch(()=>{$('#msg2').textContent='인터넷 연결이 약해요. 혼자 놀기는 그대로 돼요.'});
 }
-function showAuth(){if(unMe){unMe();unMe=null}$('#home').hidden=true;$('#shop').hidden=true;$('#auth').hidden=false;$('#logout').hidden=true;setMode('new')}
+function showAuth(){$('#home').hidden=true;$('#auth').hidden=false;$('#logout').hidden=true;setMode('new')}
 $('#logout').onclick=()=>{World.logout();showAuth();toast('나갔어요. 다음에 또 와요!')};
 const qs=new URLSearchParams(location.search);if(/^[0-9]{6}$/.test(qs.get('code')||'')&&World.session())location.replace('forest/?room='+qs.get('code'));
 const s=World.session();if(s)showHome(s);else showAuth();
