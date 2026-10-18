@@ -258,6 +258,14 @@ body.tvmode .app{max-width:none;padding:0}
 .gres .sc{font-family:var(--display);font-size:52px;line-height:1}
 
 /* kiosk */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:8px}
+.cface{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--mat);border-radius:10px;padding:8px 4px;border:0;font:inherit;color:inherit;cursor:pointer}
+.cimg{width:64px;height:64px;border-radius:10px;overflow:hidden;background:#fff;display:grid;place-items:center;font-size:11px;color:var(--muted);flex:0 0 auto}.cimg img{width:100%;height:100%;object-fit:cover}
+.ccal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:12px;text-align:center}.ccal span{padding:5px 0;border-radius:6px}.ccal .on{background:var(--ink);color:#fff}.ccal .hd{color:var(--muted)}
+.padgrid{display:grid;gap:14px}@media(min-width:700px){.padgrid{grid-template-columns:1.3fr 1fr;align-items:start}}
+.padqr{background:#fff;color:var(--ink);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.padqr b{font-family:var(--display);font-weight:400;font-size:22px}.padqr span{font-size:13px;color:var(--muted)}
+#padQR{min-height:168px}#padQR img,#padQR canvas{display:block}
+#padFeed{display:flex;flex-direction:column;gap:6px;width:100%}.pfeed{display:flex;align-items:center;gap:8px;background:#E8F6EE;border-radius:8px;padding:4px 8px;animation:pf .5s}.pfeed canvas{width:32px;height:32px}.pfeed b{white-space:nowrap;font-size:16px}.pfeed span{margin-left:auto;white-space:nowrap;font-size:13px;color:#1F7A4D!important}@keyframes pf{from{transform:scale(.8);opacity:0}}
 .kiosk{background:var(--ink);color:#fff;border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .kdisp{background:#0F141F;border-radius:16px;padding:14px;text-align:center;font-family:var(--display);font-size:46px;letter-spacing:.2em;min-height:76px}
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -296,6 +304,7 @@ body.tvmode .app{max-width:none;padding:0}
   <div data-sns></div>
   <div class="row" style="justify-content:space-between">
     <button class="link" id="goPad">출석패드 모드</button>
+    <button class="link" id="goCoach">코치</button>
     <button class="link" id="goAdmin">관장 메뉴</button>
   </div>
 </section>
@@ -467,10 +476,11 @@ body.tvmode .app{max-width:none;padding:0}
 <section class="view" id="v-pad" hidden>
   <div class="kiosk">
     <div class="row" style="justify-content:space-between"><div class="row"><span id="padLogo" style="width:44px;display:block"></span><div><h2 style="font-size:24px">출석패드</h2><div class="small" id="padNext" style="color:#C8C8CC"></div></div></div><span class="pill num" id="padCount" style="background:#2C3549;color:#fff"></span></div>
-    <div id="padInput">
-      <div class="small" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요</div>
+    <div id="padInput" class="padgrid">
+      <div><div class="small" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요</div>
       <div class="kdisp num" id="kdisp"></div>
-      <div class="keys" style="margin-top:12px" id="keys"></div>
+      <div class="keys" style="margin-top:12px" id="keys"></div></div>
+      <div class="padqr"><b>휴대폰으로 QR 출석</b><div id="padQR"></div><span>카메라로 찍으면 바로 출석돼요<br>QR은 30초마다 바뀌어요</span><div id="padFeed"></div></div>
     </div>
     <div class="kres" id="padRes" hidden>
       <canvas id="padAv" width="300" height="340"></canvas>
@@ -484,6 +494,14 @@ body.tvmode .app{max-width:none;padding:0}
   <div class="row" style="justify-content:flex-end"><button class="link" id="padExit">출석패드 종료 (관장 PIN)</button></div>
 </section>
 
+<section class="view" id="v-coach" hidden>
+  <div class="row" style="justify-content:space-between"><span class="pill" style="background:var(--ink);color:#fff">코치 모드</span><button class="link" id="coachOut">코치 로그아웃</button></div>
+  <h2 style="font-size:28px">출석 현황</h2>
+  <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="cPrev" aria-label="전날">‹</button><b id="cDay" style="font-family:var(--display);font-weight:400;font-size:20px"></b><button class="btn sm ghost" id="cNext" aria-label="다음날">›</button></div>
+  <div class="stats" id="cStats" style="grid-template-columns:repeat(3,1fr)"></div>
+  <div class="card"><h3 style="font-size:18px">이날 출석한 회원 <span class="small num" id="cCnt"></span></h3><div class="cgrid" id="cToday"></div></div>
+  <div class="card"><h3 style="font-size:18px">전체 회원</h3><div class="field"><input id="cSearch" placeholder="이름·회원번호 검색"></div><div id="cList"></div></div>
+</section>
 <!-- 체육관 TV -->
 <section class="view" id="v-tv" hidden>
   <div class="tv">
@@ -565,6 +583,12 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="field"><label for="sUrl">앱 주소</label><input id="sUrl"></div>
     <div><div id="qrbox"></div></div>
     <p class="small" style="margin:0">출력해서 데스크에 붙여 두세요. 휴대폰으로 찍으면 이 앱 첫 화면이 열려요.</p>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <h3 style="font-size:20px">코치 계정</h3>
+    <p class="small" style="margin:0">코치는 <b>출석 현황, 회원 이름·얼굴 사진·출석 기록만</b> 볼 수 있어요. 연락처·결제·등록 정보·건강 참고사항은 볼 수 없어요. 지우면 그 코치는 바로 못 들어와요.</p>
+    <div id="coachRows"></div>
+    <div class="row"><input id="coachName" class="grow" placeholder="코치 이름 (예: 김코치)" style="border:2px solid var(--line);border-radius:12px;padding:10px"><button class="btn sm red" id="coachAdd">코치 만들기</button></div>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">설정</h3>
@@ -1028,7 +1052,7 @@ $('#joinForm').onsubmit=async e=>{
     const m=blankMember({name,phone,birth:$('#jBirth').value,gender:$('#jGender').value,goal:$$('#jGoal .chip.on').map(c=>c.textContent),exp:$('#jExp').value,path:$('#jPath').value,note:$('#jNote').value.trim(),mkt:$('#ag3').checked,char:starterPick},id);
     const rf=($('#jRef').value||'').trim();if(stu){m.student=true;m.gPhone=gPhone;m.gName=$('#jGRel').value}
     if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
-    m.hasFace=true;await DB.save(m);await DB.savePriv(m);if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref')}catch(e){}lsSet(LS_SESSION,id);
+    m.hasFace=true;await DB.save(m);await DB.savePriv(m);if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}}if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref')}catch(e){}lsSet(LS_SESSION,id);
     showDone();
   }finally{$('#joinBtn').disabled=false}
 };
@@ -1064,7 +1088,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){fixDay(ME);await DB.meta();show('v-world');setTab('map');refreshTop();watchMe();setTimeout(nagMem,600)}
+async function enterWorld(){fixDay(ME);await DB.meta();show('v-world');setTab('map');refreshTop();watchMe();let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(nagMem,600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -1426,7 +1450,7 @@ function pinSheet(title,ok){
 }
 $('#goPad').onclick=()=>pinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>pinSheet('출석패드 종료',()=>show('v-home'));
-async function openPad(){await DB.meta();$('#padLogo').innerHTML=logoSVG('#fff',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
+async function openPad(){await DB.meta();setTimeout(startPadQR,50);$('#padLogo').innerHTML=logoSVG('#fff',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
 async function updPadCount(){const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
@@ -1458,7 +1482,68 @@ async function doAttend(){
     const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     padTimer=setTimeout(resetPad,9000);return}}
-  const makeup=padForce;padForce=false;if(makeup)m.makeup=(m.makeup||[]).concat([TODAY()]);
+  const makeup=padForce;padForce=false;
+  const {base,bonus,item,txt,bs}=await applyAttend(m,makeup,'pad');
+  $('#padMsg').textContent=m.name+' 님 출석 완료!';
+  $('#padSub').textContent=`+${base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`;
+  {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#5A1E22':'#26303F';el.style.color=pm.warn?'#FFD9D9':'#C8D6EA'}
+  let t0=performance.now();const vals=['+10','+20','+50','+100','장비?'];
+  const spin=now=>{const t=(now-t0)/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);drawChar(c,150,330,6.6,m.equip,{t,pose:Math.floor(t*4)%2?'jab':'cross'});
+    if(t<1.6){$('#wheel').textContent=vals[Math.floor(t*14)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<5)requestAnimationFrame(spin)}};
+  requestAnimationFrame(spin);
+  updPadCount();padTimer=setTimeout(resetPad,6500);
+}
+/* ================= 코치 ================= */
+const COACH={
+  async login(code){if(!FB_ON()){const c=(local.coachcodes||{})[code];return c?c.name:null}
+    try{await gref('coaches/'+fuid).set({code,at:Date.now()});return true}catch(e){return null}},
+  async check(){if(!FB_ON())return true;try{await gref('roster').get();return true}catch(e){return false}},
+  async list(){if(!FB_ON())return local.coachcodes||{};try{return(await gref('coachcodes').get()).val()||{}}catch(e){return{}}},
+  async add(name){const code=String(Math.floor(100000+Math.random()*900000));const v={name,at:Date.now()};if(!FB_ON()){local.coachcodes=local.coachcodes||{};local.coachcodes[code]=v;persist();return code}
+    try{await gref('coachcodes/'+code).set(v);return code}catch(e){toast('만들지 못했어요. 보안 규칙을 새로 붙여 넣었는지 확인해 주세요',4000);return null}},
+  async del(code){if(!FB_ON()){delete local.coachcodes[code];persist();return}try{await gref('coachcodes/'+code).set(null)}catch(e){}},
+  async roster(){if(!FB_ON())return Object.fromEntries(Object.values(local.members).map(m=>[m.id,{name:m.name}]));try{return(await gref('roster').get()).val()||{}}catch(e){return null}}
+};
+async function syncRoster(all){if(!FB_ON())return;let cur={};try{cur=(await gref('roster').get()).val()||{}}catch(e){return}
+  for(const m of all){if(m.demo)continue;if(!cur[m.id]||cur[m.id].name!==m.name){try{await gref('roster/'+m.id).set({name:m.name})}catch(e){}}}
+  for(const id of Object.keys(cur)){if(!all.some(m=>m.id===id)){try{await gref('roster/'+id).set(null)}catch(e){}}}}
+async function renderCoaches(){const box=$('#coachRows');if(!box)return;const o=await COACH.list();const ks=Object.keys(o);
+  box.innerHTML=ks.length?ks.map(k=>`<div class="payrow"><div class="grow"><b>${esc(o[k].name)}</b><div class="small">코치 코드 <b class="num" style="font-size:16px;letter-spacing:.1em">${k}</b></div></div><button class="btn sm ghost" data-cdel="${k}" style="color:var(--red)">지우기</button></div>`).join(''):'<div class="small">아직 만든 코치가 없어요.</div>';
+  box.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}await COACH.del(b.dataset.cdel);toast('코치 계정을 지웠어요');renderCoaches()})}
+$('#coachAdd').onclick=async()=>{const n=$('#coachName').value.trim();if(!n){toast('코치 이름을 적어 주세요');return}const code=await COACH.add(n);if(!code)return;$('#coachName').value='';renderCoaches();
+  sheet(`<h2>${esc(n)} 코치 계정</h2><div style="text-align:center;font-family:var(--display);font-size:48px;letter-spacing:.15em" class="num">${code}</div><p class="small" style="margin:0">코치에게 이 6자리 코드를 알려 주세요.<br>코치 폰: 회원 월드 → 처음 화면 아래 <b>코치</b> → 코드 입력</p><button class="btn" id="cCopy">안내 문구 복사</button><button class="btn ghost" data-close>닫기</button>`,el=>{el.querySelector('#cCopy').onclick=()=>copyText(`[NNN 복싱 코치 계정]\n${appBase()}\n처음 화면 아래 '코치' → 코드 ${code}`,'안내를')})};
+$('#goCoach').onclick=()=>{sheet(`<h2>코치 로그인</h2><div class="field"><label for="ccIn">코치 코드 (6자리)</label><input id="ccIn" inputmode="numeric" maxlength="6" type="password"></div><button class="btn red" id="ccOk">들어가기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+  const inp=el.querySelector('#ccIn');setTimeout(()=>inp.focus(),50);
+  const go=async()=>{const r=await COACH.login(inp.value.trim());if(r&&(await COACH.check())){lsSet('nnn_coach',1);close();openCoach()}else{toast('코치 코드가 맞지 않아요');inp.value=''}};
+  el.querySelector('#ccOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})};
+let CO={day:null,all:[],ros:{}};
+async function openCoach(){const ros=await COACH.roster();if(ros==null){try{localStorage.removeItem('nnn_coach')}catch(e){}toast('코치 계정이 해제됐어요. 관장님께 코드를 다시 받아 주세요',4000);show('v-home');return}
+  CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');renderCoach()}
+const faceCache={};
+function faceInto(el,id){if(!el)return;if(faceCache[id]!==undefined){el.innerHTML=faceCache[id]?`<img src="${faceCache[id]}" alt="">`:'사진 없음';return}FDB.get(id).then(s=>{faceCache[id]=s||'';el.innerHTML=s?`<img src="${s}" alt="">`:'사진 없음'})}
+function renderCoach(){const d=CO.day;const x=new Date(d+'T00:00:00');$('#cDay').textContent=`${md(d)} (${DAYN[x.getDay()]})${d===TODAY()?' · 오늘':''}`;$('#cNext').disabled=d>=TODAY();
+  const on=CO.all.filter(m=>(m.attend||[]).includes(d));const wk=new Set();for(let i=0;i<7;i++){const dd=dAdd(d,-i);CO.all.forEach(m=>{if((m.attend||[]).includes(dd))wk.add(m.id)})}
+  const mon=d.slice(0,7);const monCnt=CO.all.reduce((s,m)=>s+(m.attend||[]).filter(a=>a.startsWith(mon)).length,0);
+  $('#cStats').innerHTML=`<div class="stat"><b class="num">${on.length}</b><span>이날 출석</span></div><div class="stat"><b class="num">${wk.size}</b><span>최근 7일 나온 회원</span></div><div class="stat"><b class="num">${monCnt}</b><span>이달 출석 합계</span></div>`;
+  $('#cCnt').textContent=on.length+'명';
+  $('#cToday').innerHTML=on.length?on.map(m=>`<button class="cface" data-cm="${m.id}"><div class="cimg" data-f="${m.id}"></div><b style="font-size:14px">${esc(m.name)}</b></button>`).join(''):'<div class="small">출석한 회원이 없어요.</div>';
+  $$('#cToday [data-f]').forEach(el=>faceInto(el,el.dataset.f));
+  const q=($('#cSearch').value||'').trim();const list=CO.all.filter(m=>!q||m.name.includes(q)||m.id.includes(q)).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
+  $('#cList').innerHTML=list.map(m=>`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-cm="${m.id}"><div class="cimg" data-f2="${m.id}" style="width:40px;height:40px"></div><div class="grow"><b>${esc(m.name)}</b> <span class="small num">${m.id}</span><div class="small">최근 출석 ${m.last?md(m.last):'-'} · 총 ${(m.attend||[]).length}회</div></div></button>`).join('')||'<div class="small">회원이 없어요.</div>';
+  $$('#cList [data-f2]').forEach(el=>faceInto(el,el.dataset.f2));
+  $$('#v-coach [data-cm]').forEach(b=>b.onclick=()=>coachMember(b.dataset.cm))}
+function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=TODAY().slice(0,7);
+  const cal=()=>{const f=new Date(mon+'-01T00:00:00');const n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate();const set=new Set(m.attend||[]);const cnt=(m.attend||[]).filter(a=>a.startsWith(mon)).length;
+    return `<div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" data-mv="-1">‹</button><b>${f.getFullYear()}년 ${f.getMonth()+1}월 · ${cnt}회</b><button class="btn sm ghost" data-mv="1">›</button></div><div class="ccal">${['일','월','화','수','목','금','토'].map(x=>`<span class="hd">${x}</span>`).join('')}${'<span></span>'.repeat(f.getDay())}${Array.from({length:n},(_,i)=>{const dd=mon+'-'+pad2(i+1);return`<span class="${set.has(dd)?'on':''}">${i+1}</span>`}).join('')}</div>`};
+  sheet(`<div class="row" style="align-items:center"><div class="cimg" id="cmF" style="width:96px;height:96px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small num">회원번호 ${m.id} · 가입 ${esc(m.joined||'-')}</div><div class="small">총 출석 ${(m.attend||[]).length}회 · 최근 ${m.last?md(m.last):'-'} · 연속 ${m.streak||0}일</div></div></div>
+    <div id="cmCal"></div><button class="btn" data-close>닫기</button>`,el=>{faceInto(el.querySelector('#cmF'),m.id);const draw=()=>{el.querySelector('#cmCal').innerHTML=cal();el.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+ +b.dataset.mv);mon=dstr(f).slice(0,7);draw()})};draw()})}
+$('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
+$('#cSearch').oninput=renderCoach;
+$('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
+
+/* ================= QR 출석 ================= */
+async function applyAttend(m,makeup,via){
+  if(makeup)m.makeup=(m.makeup||[]).concat([TODAY()]);
   m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());
   const lvBefore=levelOf(m).lv;m.xp+=ATT_XP;const base=50+Math.min(m.streak-1,5)*10;earn(m,base,'attend');
   // 룰렛
@@ -1472,22 +1557,41 @@ async function doAttend(){
   else if(makeup)txt+=' · 보강 출석(관장 승인)';
   const rnotes=await referralOnAttend(m);if(rnotes.length)txt+=' · '+rnotes.join(' · ');
   const bs=checkBadges(m);const lvAfter=levelOf(m);if(lvAfter.lv>lvBefore)txt+=` · 레벨 업! Lv.${lvAfter.lv} ${lvAfter.title}`;
+  if(via==='qr')m.qrAtt=(m.qrAtt||[]).concat([TODAY()]).slice(-60);
   await DB.save(m);if(ME&&ME.id===m.id)ME=m;
-  $('#padMsg').textContent=m.name+' 님 출석 완료!';
-  $('#padSub').textContent=`+${base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`;
-  {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#5A1E22':'#26303F';el.style.color=pm.warn?'#FFD9D9':'#C8D6EA'}
-  let t0=performance.now();const vals=['+10','+20','+50','+100','장비?'];
-  const spin=now=>{const t=(now-t0)/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);drawChar(c,150,330,6.6,m.equip,{t,pose:Math.floor(t*4)%2?'jab':'cross'});
-    if(t<1.6){$('#wheel').textContent=vals[Math.floor(t*14)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<5)requestAnimationFrame(spin)}};
-  requestAnimationFrame(spin);
-  updPadCount();padTimer=setTimeout(resetPad,6500);
-}
+  return{base,bonus,item,txt,bs}}
+let padTokTimer=0,padPoll=0,padSeen=null;
+const newTok=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
+async function rotatePadTok(){const cur=newTok();const old=(local.meta.padtok&&local.meta.padtok.t||[])[0];const pt={t:old?[cur,old]:[cur],at:Date.now()};local.meta.padtok=pt;
+  if(FB_ON()){try{await gref('meta/padtok').set(pt)}catch(e){}}else persist();
+  const box=$('#padQR');if(box){box.innerHTML='';try{new QRCode(box,{text:appBase()+'?att='+cur,width:168,height:168,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){box.textContent='QR 오류'}}}
+async function pollPad(){if($('#v-pad').hidden){stopPadQR();return}const all=await DB.all();const today=all.filter(m=>m.last===TODAY());
+  if(padSeen){const fresh=today.filter(m=>!padSeen.has(m.id)&&(m.qrAtt||[]).includes(TODAY()));fresh.forEach(m=>{const f=$('#padFeed');const d=document.createElement('div');d.className='pfeed';d.innerHTML=`<canvas width="64" height="64"></canvas><b>${esc(maskName(m.name))}</b><span>QR 출석 완료!</span>`;f.prepend(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true});sfx('coin');while(f.children.length>4)f.lastChild.remove()})}
+  padSeen=new Set(today.map(m=>m.id));$('#padCount').textContent='오늘 출석 '+today.length+'명'}
+function startPadQR(){stopPadQR();padSeen=null;rotatePadTok();padTokTimer=setInterval(rotatePadTok,30000);pollPad();padPoll=setInterval(pollPad,4000)}
+function stopPadQR(){clearInterval(padTokTimer);clearInterval(padPoll)}
+function attSheet(ok,title,sub,extra='',m){
+  sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center"><div class="label" style="color:${ok?'#2B9B66':'var(--red)'}">${ok?'QR 출석':'출석 안 됨'}</div><canvas id="qaAv" width="240" height="280" style="width:120px;height:140px"></canvas><h2>${esc(title)}</h2><p style="margin:0">${sub}</p>${extra}</div><button class="btn${ok?'':' red'}" data-close>${ok?'좋아요':'확인'}</button>`);
+  if(m)avatarTo($('#qaAv'),m.equip,{h:46,pose:ok?'guard':'duck'})}
+async function qrAttend(tok){
+  try{sessionStorage.removeItem('nnn_att')}catch(e){}
+  await DB.meta();const pt=local.meta.padtok;
+  if(!pt||!(pt.t||[]).includes(tok)||Date.now()-pt.at>95000){attSheet(false,'QR이 만료됐어요','출석패드 화면의 QR을 지금 다시 찍어 주세요.<br><span class="small">QR은 30초마다 바뀌어요. 캡처한 QR로는 출석할 수 없어요.</span>');return}
+  const m=await DB.get(ME.id);if(!m)return;fixDay(m);const ms=memStatus(m),dow=new Date().getDay();
+  if(m.last===TODAY()){attSheet(true,'오늘은 이미 출석했어요','좋은 운동 되세요!','',m);return}
+  if(!m.approvedAt){attSheet(false,'가입 승인 전이에요','관장님이 가입을 승인하면 출석할 수 있어요.','',m);return}
+  if(ms.state==='hold'){attSheet(false,'정지(연기) 기간이에요',`정지 ${md(m.mem.hold.start)} ~ ${md(m.mem.hold.end)} · 정지 기간에는 출석할 수 없어요.`,'',m);return}
+  if(ms.state==='expired'){m.unpaid=Array.isArray(m.unpaid)?m.unpaid:[];if(!m.unpaid.some(u=>u.d===TODAY())){m.unpaid.push({d:TODAY(),ok:false});m.unpaid=m.unpaid.slice(-20);await DB.savePriv(m)}
+    attSheet(false,'등록 기간이 끝났어요',`${md(m.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 후 출석할 수 있어요.</b>`,'<button class="btn red" id="qaPay" style="margin-top:6px">지금 재등록하기</button>',m);{const b=$('#qaPay');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openPay()}}return}
+  if(m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='none'){attSheet(false,'오늘은 수강 요일이 아니에요',`등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)<br>${esc(WEEKLY_RULE(m.mem.weekly))}`,'',m);return}
+  const r=await applyAttend(m,false,'qr');sfx('win');
+  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`,m);try{refreshTop()}catch(e){}}
 function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -2609,7 +2713,7 @@ async function faceFromFile(f){const im=await loadImg(f);const S=320,cv=document
   const k=Math.max(S/im.width,S/im.height),w=im.width*k,h=im.height*k;c.drawImage(im,(S-w)/2,(S-h)/2,w,h);return cv.toDataURL('image/jpeg',.72)}
 async function approveMember(m){m.approvedAt=TODAY();await DB.savePriv(m);toast(m.name+' 님 가입 승인');renderAdmRows();sendAuto(m,'welcome')}
 async function deleteMember(m){
-  if(FB_ON()){try{await gref('members/'+m.id).set(null);await gref('private/'+m.id).set(null);await FDB.del(m.id);await gref('mpin/'+m.id).set(null)}catch(e){toast('삭제하지 못했어요');return false}}
+  if(FB_ON()){try{await gref('members/'+m.id).set(null);await gref('private/'+m.id).set(null);await FDB.del(m.id);await gref('mpin/'+m.id).set(null);try{await gref('roster/'+m.id).set(null)}catch(e){}}catch(e){toast('삭제하지 못했어요');return false}}
   else{delete local.members[m.id];persist()}
   toast(m.name+' 님 정보를 삭제했어요');return true}
 
@@ -2676,6 +2780,9 @@ $('#tplBtn').onclick=openTplEditor;
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
+  {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
+    if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
+  if(lsGet('nnn_coach')&&!sid){openCoach();return}
   if(hashv==='pad'){pinSheet('출석패드 모드 시작',openPad);show('v-home');return}
   if(sid){const m=await DB.get(sid);if(m){ME=m;enterWorld();return}}
   show('v-home');
