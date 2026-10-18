@@ -2093,6 +2093,7 @@ function render(){
   if(ph==='evening'&&!inS){ctx.fillStyle='rgba(255,130,70,.16)';ctx.fillRect(0,0,cv.width,cv.height)}
   if(ph==='night'&&!inS)drawNight(k);else if(ph==='night'){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='rgba(20,30,70,.16)';ctx.fillRect(0,0,cv.width,cv.height)}
   ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(inS&&inHome())drawHomeHint();
   if(inS&&MOM.mode==='monster'&&inHome()){ctx.fillStyle=`rgba(200,20,40,${.13+Math.sin(now*8)*.06})`;ctx.fillRect(0,0,VW,VH)}
   if(!inS)amb.forEach(a=>{
     if(ph==='night'){const x=((a.x*VW+Math.sin(now*.5+a.p)*30)%VW+VW)%VW,y=((a.y*VH+Math.cos(now*.4+a.p)*24)%VH+VH)%VH,gl=(Math.sin(now*3+a.p)+1)/2;ctx.beginPath();ctx.arc(x,y,6*gl+2,0,7);ctx.fillStyle=`rgba(255,240,140,${.12*gl})`;ctx.fill();ctx.beginPath();ctx.arc(x,y,1.8,0,7);ctx.fillStyle=`rgba(255,250,190,${.4+gl*.6})`;ctx.fill();return}
@@ -2657,7 +2658,7 @@ const MDEF={
 };
 function enterHome(){if(RUN||HIDE||RACE){toast('하던 놀이를 먼저 끝내요');return}closeModal();fade=1.1;sfx.pop();
   setTimeout(()=>{P.x=HOME_IN.x;P.y=HOME_IN.y;P.target=null;P.pending=null;P.face=1;touch();if(!MOMSPOTS.length)homeSpots(['kit','liv']).forEach(p=>MOMSPOTS.push(p));
-    const h=H();toast(MOM.mode==='angel'?'천사 엄마가 반겨 줘요!':h.wins?'다녀왔습니다! 엄마가 주방에 있어요':'집에 왔어요! 주방에 있는 <b>엄마</b>에게 말을 걸어 봐요');if(NET.code)sendState(true)},380)}
+    const h=H();if(!S.homeTip)setTimeout(()=>openHomeGuide(),450);else toast(MOM.mode==='angel'?'천사 엄마가 반겨 줘요!':h.wins?'다녀왔습니다! 엄마는 주방에 있어요':'집에 왔어요! 분홍 화살표를 따라 <b>엄마</b>를 찾아가요');if(NET.code)sendState(true)},380)}
 function exitHome(){if(MIS){toast('엄마: "어디 가! 미션 다 하고 나가야지!"');MOM.shake=0.5;return}fade=1.1;sfx.pop();
   setTimeout(()=>{P.x=(HOUSE.x+2)*T;P.y=(HOUSE.y+2.7)*T;P.target=null;P.pending=null;touch();if(NET.code)sendState(true)},380)}
 function momRatio(){return MIS?MIS.t/MIS.total:1}
@@ -2672,8 +2673,11 @@ function startMission(){
   MOM.mode='normal';$('#runHud').hidden=false;sfx.fan();closeModal();chunks.clear();
   openModal(`<canvas data-mom="normal" width="256" height="230" style="display:block;margin:0 auto;width:128px;height:115px"></canvas><div class="big" style="text-align:center">엄마의 미션!</div>
    <p class="lead center">"<b>${total}초</b> 안에 다 해 놓으렴. 안 그러면… 엄마 진짜 화난다?"</p>
-   <div class="list">${keys.map(k=>`<div class="li" style="cursor:default"><div class="grow"><div class="nm">${MDEF[k].n}</div><div class="meta">${MDEF[k].tip}</div></div></div>`).join('')}</div>
-   <div class="row"><button class="btn" id="ok">네, 엄마!</button></div>`);$('#ok').onclick=()=>{closeModal();MIS.start=now}}
+   <canvas id="hmC" width="440" height="210" style="width:100%;height:auto;display:block;margin:6px 0;border-radius:12px;border:2px solid var(--ink)"></canvas>
+   <div class="list">${keys.map((k,i)=>`<div class="li" style="cursor:default"><div class="grow"><div class="nm"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#FFD23F;border:2px solid #24363B;text-align:center;line-height:19px;font-size:13px;margin-right:6px">${i+1}</span>${MDEF[k].n}</div><div class="meta">${MDEF[k].tip}</div></div></div>`).join('')}</div>
+   <p class="sub center">노란 화살표가 다음 할 일을 가리켜요. 시간은 "네, 엄마!"를 누르면 시작해요.</p>
+   <div class="row"><button class="btn" id="ok">네, 엄마!</button></div>`,()=>{const c=$('#hmC');if(c)drawHouseMap(c,keys.map((k,i)=>[MPOS[k][0],MPOS[k][1]-0.6,String(i+1)]))});
+  MIS.paused=true;$('#ok').onclick=()=>{closeModal();MIS.start=now;MIS.paused=false}}
 function misDone(k){if(!MIS||MIS.done[k])return;MIS.done[k]=1;chunks.clear();sfx.coin();floater(P.x,P.y-T*1.6,MDEF[k].n+' 끝!','#FFE38A');
   const left=MIS.keys.filter(q=>!MIS.done[q]).length;toast(left?`<b>${MDEF[k].n}</b> 완료! 남은 미션 ${left}개`:'미션 전부 완료!');if(!left)setTimeout(winMission,500)}
 function winMission(){if(!MIS)return;const left=Math.ceil(MIS.t),h=H();MIS=null;chunks.clear();$('#runHud').hidden=true;MOM.mode='angel';MOM.angel=45;h.wins++;if(left>(h.best||0))h.best=left;touch();
@@ -2746,7 +2750,7 @@ function paintMomCanvas(cn){const g=cn.getContext('2d'),w=cn.width,h=cn.height;g
 /* 매 프레임 */
 function homeTick(dt){
   MOM.t+=dt;MOM.shake=Math.max(0,MOM.shake-dt);
-  if(MIS&&!uiOpen()){MIS.t-=dt;const mood=momMood(),r=momRatio();
+  if(MIS&&!uiOpen()&&!MIS.paused){MIS.t-=dt;const mood=momMood(),r=momRatio();
     $('#runHud').textContent=`엄마 미션 · ${Math.ceil(Math.max(0,MIS.t))}초 · ${MIS.keys.filter(k=>MIS.done[k]).length}/${MIS.keys.length} · 엄마 기분: ${mood==='normal'?'좋음':mood==='annoyed'?'슬슬 화남':'폭발 직전!'}`;
     MOM.fl-=dt;if(MOM.fl<=0&&inHome()){MOM.fl=mood==='boil'?1.2:mood==='annoyed'?3:6;floater(MOM.x,MOM.y-T*2.2,mood==='boil'?pick(['하나…','둘…!','셋 센다?!','으으으!']):mood==='annoyed'?pick(['흠…','아직이니?','빨리빨리~']):pick(['잘하고 있지?','엄마는 믿어~']),mood==='boil'?'#FF6B6B':'#fff')}
     if(MIS.t<=0)failMission()}
@@ -2791,11 +2795,13 @@ function openMom(){
   if(MIS){const left=MIS.keys.filter(k=>!MIS.done[k]);
     openModal(`${head}<div class="say">"${mood==='normal'?'잘하고 있지? 엄마는 믿는다~':mood==='annoyed'?'아직도 안 했어? 시간 얼마 안 남았다?':'하나… 둘…!! 빨리 해!!'}"</div>
      <div class="list">${MIS.keys.map(k=>`<div class="li" style="cursor:default"><div class="grow"><div class="nm">${MIS.done[k]?'✔ ':''}${MDEF[k].n}</div><div class="meta">${MDEF[k].tip}${k==='toys'&&!MIS.done.toys?` (${MIS.toyGot}/6)`:''}</div></div></div>`).join('')}</div>
-     <div class="row"><button class="btn" id="nX">빨리 할게요!</button></div>`);$('#nX').onclick=closeModal;return}
+     <canvas id="hmC" width="440" height="210" style="width:100%;height:auto;display:block;margin:6px 0;border-radius:12px;border:2px solid var(--ink)"></canvas>
+     <div class="row"><button class="btn" id="nX">빨리 할게요!</button></div>`,()=>{const c=$('#hmC');if(c)drawHouseMap(c,MIS.keys.filter(k=>!MIS.done[k]).map(k=>[MPOS[k][0],MPOS[k][1]-0.6,MDEF[k].n]))});$('#nX').onclick=closeModal;return}
   const h=H();
   openModal(`${head}<div class="say">"${h.wins+h.losses===0?'어서 와~ 엄마가 부탁할 게 있는데, 시간 안에 다 해 주면 엄마가 천사가 될지도? 대신 못 하면… 엄마 괴물로 변한다!':pick(['또 미션 해 볼래?','오늘은 엄마 기분 좋게 해 줄 거지?','엄마는 시간 약속 지키는 사람이 좋더라~'])}"</div>
    <p class="sub center">천사 엄마 ${h.wins}번 · 엄마 괴물 ${h.losses}번 · 최고 기록 ${h.best||0}초 남기고 성공</p>
-   <div class="row"><button class="btn" id="mS">엄마 미션 시작!</button><button class="btn soft" id="nX">이따가요</button></div>`);
+   <div class="row"><button class="btn" id="mS">엄마 미션 시작!</button><button class="btn soft" id="mH">게임 방법</button><button class="btn soft" id="nX">이따가요</button></div>`);
+  $('#mH').onclick=()=>openHomeGuide(openMom);
   $('#nX').onclick=closeModal;$('#mS').onclick=startMission}
 function tapGame(title,desc,btn,n,key){let c=0;
   openModal(`<h3>${title}</h3><p class="sub">${desc}</p><div class="prog" style="margin:16px 0"><i id="tgP" style="width:0%"></i></div><div class="row"><button class="btn" id="tgB" style="height:72px;font-size:26px">${btn}</button></div>`);
@@ -2843,6 +2849,53 @@ function drawToy(c,q){const{x,y,c:col,k}=q;c.save();c.translate(x,y-8);const b=M
   if(k==='ball')ell(c,0,0,7,7,col);else if(k==='car'){rr(c,-9,-4,18,8,3,col);ell(c,-5,5,3,3,'#24363B');ell(c,5,5,3,3,'#24363B')}else if(k==='duck'){ell(c,0,2,8,5,'#FFD43B');ell(c,4,-3,4,4,'#FFD43B');tri(c,[8,-3],[11,-2],[8,-1],'#FF9D3F')}
   else if(k==='star')star(c,0,0,8,col);else if(k==='bear'){ell(c,0,2,6,6,'#C98A4B');ell(c,0,-5,5,5,'#C98A4B');ell(c,-4,-9,2,2,'#C98A4B');ell(c,4,-9,2,2,'#C98A4B')}else rr(c,-6,-6,12,12,2,col);
   c.restore()}
+
+/* ---------- 집 안 힌트: 안내 지도, 엄마/미션 화살표 ---------- */
+const MPOS={toys:[21,6.6],bed:[13,4.6],brush:[40,1.8],dishes:[45,14],homework:[19.5,1.8],laundry:[45,6.6],plants:[50,4],shoes:[13,16],trash:[36,18.6],cat:[31,18.4]};
+function drawHouseMap(cn,marks){
+  const g=cn.getContext('2d'),W=cn.width,Hh=cn.height,x0=10,y0=0,s=W/44;g.clearRect(0,0,W,Hh);
+  g.fillStyle='#EADFCB';g.fillRect(0,0,W,Hh);
+  const col={my:'#FFE3EC',sib:'#E3F3FF',bath:'#E6F6FB',ver:'#FBE8C8',hall:'#EEF1F2',ent:'#E9EEF0',liv:'#F3E2C8',kit:'#F2F0EA'};
+  for(const k in HROOMS){const[a,b,c,d,n]=HROOMS[k];g.fillStyle=col[k];g.fillRect((a-x0)*s,(b-y0)*s,(c-a+1)*s,(d-b+1)*s);
+    if(k!=='hall'){g.fillStyle='#5F776D';g.font=`${Math.round(s*0.9)}px Jua, sans-serif`;g.textAlign='center';g.fillText(n,(a+c+1)/2*s-x0*s,(b+0.95)*s)}}
+  const dotAt=(lx,ly,c,txt,r=0.55)=>{const X=(lx+.5-x0)*s,Y=(ly+.5-y0)*s;g.beginPath();g.arc(X,Y,s*r,0,7);g.fillStyle=c;g.fill();g.lineWidth=2;g.strokeStyle='#24363B';g.stroke();
+    if(txt){g.font=`${Math.round(s*0.78)}px Jua, sans-serif`;g.textAlign='center';g.lineWidth=3;g.strokeStyle='#fff';g.strokeText(txt,X,Y-s*0.8);g.fillStyle='#24363B';g.fillText(txt,X,Y-s*0.8)}};
+  (marks||[]).forEach(([lx,ly,t],i)=>dotAt(lx,ly,'#FFD23F',t||String(i+1),0.5));
+  dotAt(MOM.x/T-.5,MOM.y/T-HY-.7,'#FF9DBB','엄마',0.7);
+  if(inHome())dotAt(P.x/T-.5,P.y/T-HY-.7,'#7FD1B9','나',0.55);
+  else dotAt(12.5,17.6,'#7FD1B9','현관',0.55);
+}
+function openHomeGuide(after){
+  S.homeTip=1;touch();
+  openModal(`<p class="sub center">처음 왔다면 읽어 봐요</p><div class="big" style="text-align:center">밍뉴네 집 안내</div>
+   <canvas id="hmC" width="440" height="210" style="width:100%;height:auto;display:block;margin:8px 0;border-radius:12px;border:2px solid var(--ink)"></canvas>
+   <div class="news"><h4>1. 엄마를 찾아요</h4>엄마는 <b>주방</b>(오른쪽 아래)에 있어요. 화면의 분홍 화살표를 따라가면 돼요.
+   <h4>2. 엄마 미션 시작!</h4>엄마에게 말을 걸면 할 일 3~4개와 제한 시간을 알려 줘요. 노란 화살표가 다음 할 일 자리를 가리켜요.
+   <h4>3. 엄마 기분을 잘 봐요</h4>시간이 줄수록 엄마가 <b>슬슬 화남 → 폭발 직전</b>으로 변해요. 시간 안에 다 하면 <b>천사 엄마</b>, 못 하면 <b>엄마 괴물</b>이 10초 동안 쫓아와요. 잡히지 않게 도망쳐요!
+   <h4>꿀팁</h4>미션 중에 엄마에게 말을 걸면 남은 할 일과 위치를 다시 볼 수 있어요. 가까운 방부터 돌면 시간이 남아요. 거실 TV와 주방 요리는 미션이 없을 때 해요.</div>
+   <div class="row"><button class="btn" id="ok">엄마 찾으러 가기!</button></div>`,()=>{const c=$('#hmC');if(c)drawHouseMap(c,[])});
+  $('#ok').onclick=()=>{closeModal();if(after)after()}}
+function misTargets(){if(!MIS)return[];const L=[];const W=(lx,ly,n)=>{const w=HW(lx,ly);L.push({x:w.x,y:w.y,n})};
+  MIS.keys.forEach(k=>{if(MIS.done[k])return;
+    if(k==='toys'){if(MIS.toyGot>=6)W(21,6.6,'장난감 상자');else MIS.toys.forEach(q=>{if(!q.got)L.push({x:q.x,y:q.y,n:'장난감'})})}
+    else if(k==='shoes')MIS.shoes.forEach(q=>{if(!q.got)L.push({x:q.x,y:q.y,n:'신발'})});
+    else if(k==='plants')[[50,2],[51,4],[50,6]].forEach(([x,y],i)=>{if(!MIS.plants[i])W(x-0.6,y+0.6,'화분')});
+    else if(k==='trash'){if(MIS.carry)W(13,18.8,'현관 문');else W(36,18.6,'쓰레기통')}
+    else{const p=MPOS[k];W(p[0],p[1],MDEF[k].n)}});
+  return L}
+function homeHintTarget(){if(!inHome()||uiOpen())return null;
+  if(MOM.mode==='monster')return null;
+  if(MIS){const L=misTargets();let best=null,bd=1e9;L.forEach(q=>{const d=Math.hypot(q.x-P.x,q.y-P.y);if(d<bd){bd=d;best=q}});return best?{...best,c:'#FFD23F'}:null}
+  if(MOM.mode==='normal'&&Math.hypot(MOM.x-P.x,MOM.y-P.y)>T*3.2&&!(S.home&&S.home.wins+S.home.losses>2))return{x:MOM.x,y:MOM.y-T*0.6,n:'엄마',c:'#FF9DBB'};
+  return null}
+function drawHomeHint(){const q=homeHintTarget();if(!q)return;
+  const sx=(q.x-cam.x)*Z,sy=(q.y-T*0.4-cam.y)*Z,px=(P.x-cam.x)*Z,py=(P.y-T*0.6-cam.y)*Z,m=24;
+  ctx.save();
+  if(sx>m&&sx<VW-m&&sy>m+60&&sy<VH-120){const b=Math.sin(now*6)*5;ctx.translate(sx,sy-34*Z+b);ctx.beginPath();ctx.moveTo(-11,-14);ctx.lineTo(11,-14);ctx.lineTo(0,2);ctx.closePath();ctx.fillStyle=q.c;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle='#24363B';ctx.stroke()}
+  else{const a=Math.atan2(sy-py,sx-px),R=Math.min(VW,VH)*0.22,ax=clamp(px+Math.cos(a)*R,m,VW-m),ay=clamp(py+Math.sin(a)*R,m+60,VH-120);ctx.translate(ax,ay);
+    ctx.save();ctx.rotate(a);ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-8,-12);ctx.lineTo(-3,0);ctx.lineTo(-8,12);ctx.closePath();ctx.fillStyle=q.c;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle='#24363B';ctx.stroke();ctx.restore();
+    ctx.font='14px Jua, sans-serif';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#24363B';ctx.strokeText(q.n,0,30);ctx.fillStyle='#fff';ctx.fillText(q.n,0,30)}
+  ctx.restore()}
 
 /* ---------- 나가기 ---------- */
 $('#exitBtn').onclick=()=>{if(RUN||HIDE||RACE){if(!confirm('하던 놀이가 끝나요. 나갈까요?'))return}
