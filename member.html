@@ -311,6 +311,12 @@ body.tvmode .app{max-width:none;padding:0}
       <div class="field grow"><label for="jBirth">생년월일</label><input id="jBirth" type="date"></div>
       <div class="field grow"><label for="jGender">성별</label><select id="jGender"><option value="">선택 안 함</option><option>남</option><option>여</option></select></div>
     </div>
+    <label class="check"><input type="checkbox" id="jStu"><span><b>학생이에요</b> (만 19세 미만은 보호자 연락처 필수)</span></label>
+    <div id="jGuard" class="card" hidden style="display:flex;flex-direction:column;gap:10px;background:var(--mat)">
+      <div class="row"><div class="field" style="width:110px"><label for="jGRel">보호자</label><select id="jGRel"><option>어머니</option><option>아버지</option><option>기타 보호자</option></select></div>
+      <div class="field grow"><label for="jGPhone">보호자 연락처</label><input id="jGPhone" inputmode="tel" placeholder="010-0000-0000"></div></div>
+      <span class="small">등록 완료·만료 안내와 결제 안내는 보호자 연락처로 보내 드려요.</span>
+    </div>
     <div class="field"><span>운동 목적 <span class="small">(여러 개 가능)</span></span>
       <div class="chips" id="jGoal"><button type="button" class="chip">다이어트</button><button type="button" class="chip">체력</button><button type="button" class="chip">스트레스 해소</button><button type="button" class="chip">실전·스파링</button><button type="button" class="chip">선수·대회</button><button type="button" class="chip">자기방어</button></div></div>
     <div class="field"><label for="jExp">복싱 경력</label><select id="jExp"><option>처음이에요</option><option>6개월 미만</option><option>6개월~2년</option><option>2년 이상</option><option>선수 경험</option></select></div>
@@ -653,7 +659,7 @@ async function fbInit(){
     fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
-const PRIV=['name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog'];
+const PRIV=['name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
 function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
@@ -998,6 +1004,9 @@ function buildJoin(){
     avatarTo(b.querySelector('canvas'),{char:ch,glove:'g_red',shoes:'s_basic',trunks:'t_black'},{h:44});
     b.onclick=()=>{starterPick=ch;buildJoin()}});
 }
+const ageOf=b=>{if(!b)return 99;const d=new Date(b+'T00:00:00'),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--;return a};
+const syncGuard=()=>{$('#jGuard').hidden=!$('#jStu').checked};
+$('#jStu').onchange=syncGuard;$('#jBirth').addEventListener('change',()=>{if(ageOf($('#jBirth').value)<19){$('#jStu').checked=true;syncGuard()}});
 $('#jGoal').onclick=e=>{if(e.target.classList.contains('chip'))e.target.classList.toggle('on')};
 $('#agAll').onchange=e=>$$('.ag').forEach(a=>a.checked=e.target.checked);
 $('#goJoin').onclick=()=>{buildJoin();show('v-join')};
@@ -1006,6 +1015,8 @@ $('#joinForm').onsubmit=async e=>{
   const name=$('#jName').value.trim(),phone=normPhone($('#jPhone').value);
   if(!name){toast('이름을 적어 주세요');$('#jName').focus();return}
   if(phone.replace(/\D/g,'').length<10){toast('연락처를 정확히 적어 주세요');$('#jPhone').focus();return}
+  const stu=$('#jStu').checked||ageOf($('#jBirth').value)<19,gPhone=normPhone($('#jGPhone').value);
+  if(stu&&gPhone.replace(/\D/g,'').length<10){$('#jStu').checked=true;syncGuard();toast('학생은 보호자 연락처를 꼭 적어 주세요');$('#jGPhone').focus();return}
   if(!JOIN_FACE){toast('본인 얼굴 사진을 찍어 주세요');$('#faceBox').scrollIntoView({block:'center'});return}
   if(!$('#ag1').checked||!$('#ag2').checked||!$('#ag4').checked||!$('#ag5').checked){toast('필수 항목에 모두 동의해 주세요');return}
   $('#joinBtn').disabled=true;
@@ -1015,7 +1026,8 @@ $('#joinForm').onsubmit=async e=>{
     for(let i=0;i<4&&!id;i++){const cand=await DB.newId();if(await DB.claim(cand,last4))id=cand}
     if(!id||!(await DB.loginMember(id,last4))){toast('가입 중 문제가 생겼어요. 인터넷 연결을 확인하고 다시 눌러 주세요',3500);return}
     const m=blankMember({name,phone,birth:$('#jBirth').value,gender:$('#jGender').value,goal:$$('#jGoal .chip.on').map(c=>c.textContent),exp:$('#jExp').value,path:$('#jPath').value,note:$('#jNote').value.trim(),mkt:$('#ag3').checked,char:starterPick},id);
-    const rf=($('#jRef').value||'').trim();if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
+    const rf=($('#jRef').value||'').trim();if(stu){m.student=true;m.gPhone=gPhone;m.gName=$('#jGRel').value}
+    if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
     m.hasFace=true;await DB.save(m);await DB.savePriv(m);if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref')}catch(e){}lsSet(LS_SESSION,id);
     showDone();
   }finally{$('#joinBtn').disabled=false}
@@ -1052,7 +1064,10 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){fixDay(ME);await DB.meta();show('v-world');setTab('map');refreshTop();watchMe()}
+async function enterWorld(){fixDay(ME);await DB.meta();show('v-world');setTab('map');refreshTop();watchMe();setTimeout(nagMem,600)}
+function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
+  if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
+  else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
 function refreshTop(){
   if(!ME)return;const L=levelOf(ME);fixDay(ME);if(ME.lvSeen&&L.lv>ME.lvSeen)levelUpSheet(L);if(ME.lvSeen!==L.lv){ME.lvSeen=L.lv;saveMe()}
   $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
@@ -1431,6 +1446,13 @@ async function doAttend(){
   if(!padForce&&ms.state==='hold'){avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='정지(연기) 기간이에요';$('#padSub').textContent=`${m.name} 님 정지 ${md(m.mem.hold.start)} ~ ${md(m.mem.hold.end)}`;
     const pm=$('#padMem');pm.innerHTML=`정지 기간에는 출석할 수 없어요. 정지는 1회만 가능해요.<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 출석</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};padTimer=setTimeout(resetPad,9000);return}
+  if(!padForce&&ms.state==='expired'){
+    avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='등록 기간이 끝났어요';$('#padSub').textContent=`${m.name} 님 등록 종료일 ${md(m.mem.end)}`;
+    m.unpaid=Array.isArray(m.unpaid)?m.unpaid:[];if(!m.unpaid.some(u=>u.d===TODAY())){m.unpaid.push({d:TODAY(),ok:false});m.unpaid=m.unpaid.slice(-20);DB.savePriv(m)}
+    const n=m.unpaid.filter(u=>u.ok).length;
+    const pm=$('#padMem');pm.innerHTML=`<b style="color:#fff;font-size:18px">재등록 후 출석할 수 있어요</b><br>카운터에서 관장님께 말씀해 주세요.${m.gPhone?'<br>보호자님께 안내 문자가 갑니다.':''}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 · 오늘만 출석${n?` (이전 승인 ${n}회)`:''}</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
+    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('만료 회원 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
+    sfx('bad');padTimer=setTimeout(resetPad,12000);return}
   if(!padForce&&m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='expired'&&ms.state!=='none'){
     avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='오늘은 수강 요일이 아니에요';$('#padSub').textContent=`${m.name} 님 등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)`;
     const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
@@ -1445,7 +1467,9 @@ async function doAttend(){
   else if(roll<.13)bonus=100;else if(roll<.28)bonus=50;else if(roll<.58)bonus=20;else bonus=10;
   if(bonus){earn(m,bonus,'attend');txt=txt||'룰렛 보너스 +'+bonus}
   if(HW&&Math.random()<.5){m.candy=(m.candy||0)+3;txt+=' · 할로윈 사탕 +3'}
-  if(makeup)txt+=' · 보강 출석(관장 승인)';
+  const wasExp=memStatus(m).state==='expired';
+  if(makeup&&wasExp){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m);txt+=' · 만료 후 출석(관장 승인)'}
+  else if(makeup)txt+=' · 보강 출석(관장 승인)';
   const rnotes=await referralOnAttend(m);if(rnotes.length)txt+=' · '+rnotes.join(' · ');
   const bs=checkBadges(m);const lvAfter=levelOf(m);if(lvAfter.lv>lvBefore)txt+=` · 레벨 업! Lv.${lvAfter.lv} ${lvAfter.title}`;
   await DB.save(m);if(ME&&ME.id===m.id)ME=m;
@@ -1489,6 +1513,8 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div></div><button class="btn sm red" id="admMem">${m.mem?'수정':'입력'}</button></div>
     ${m.mem&&m.mem.pt&&m.mem.pt.left>0?'<button class="btn ghost" id="admPt">PT 1회 차감 (남은 '+m.mem.pt.left+'회)</button>':''}
     ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div>${holdPolicy(m.mem)&&!m.mem.hold?'<button class="btn sm ghost" id="admHold">정지 처리</button>':''}</div>`:''}
+    <div class="qrow"><div class="grow small">${m.gPhone?`<b>보호자</b> ${esc(m.gName||'보호자')} ${esc(m.gPhone)}<br>결제·만료 안내는 보호자에게 가요`:'<b>보호자</b> 없음 (성인 회원)'}</div><button class="btn sm ghost" id="admGuard">${m.gPhone?'수정':'학생으로 지정'}</button></div>
+    ${(m.unpaid||[]).length?`<div class="qrow" style="background:#FDECEC;border-radius:10px;padding:8px"><div class="grow small" style="color:#8A1F24"><b>만료 후 출석 ${m.unpaid.length}회</b><br>${m.unpaid.slice(-5).map(u=>md(u.d)+(u.ok?' 승인 출석':' 출석 막힘')).join(' · ')}</div></div>`:''}
     <button class="btn" id="admSend">안내 보내기 (문자·카톡)</button>
     ${m.phone?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="sms:${String(m.phone).replace(/[^\d]/g,'')}">문자 대화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="tel:${String(m.phone).replace(/[^\d]/g,'')}">전화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a></div>`:''}
 
@@ -1504,10 +1530,11 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     el.querySelector('#admFaceIn').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const d=await faceFromFile(f);if(await FDB.save(m.id,d)){m.hasFace=true;await DB.savePriv(m);el.querySelector('#admFace').innerHTML=`<img src="${d}" alt="" style="width:100%;height:100%;object-fit:cover">`;toast('얼굴 사진을 등록했어요')}else toast('저장하지 못했어요')}catch(err){toast('사진을 열지 못했어요')}};
     {const h=el.querySelector('#admHold');if(h)h.onclick=()=>{close();openHoldSheet(m,()=>renderAdmRows())}}
     el.querySelector('#admSend').onclick=()=>{close();openSendPicker(m)};
+    el.querySelector('#admGuard').onclick=()=>{close();openGuardSheet(m)};
     el.querySelector('#admDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (되돌릴 수 없어요)';return}if(await deleteMember(m)){close();renderAdmRows()}};
     el.querySelector('#admVcf').onclick=()=>download(`NNN_${m.id}_${m.name}.vcf`,vcard(m),'text/vcard')});
 }
-async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');checkBadges(m);await DB.save(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
+async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');checkBadges(m);await DB.save(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
 function vcard(m){return`BEGIN:VCARD\nVERSION:3.0\nFN:NNN ${m.name}(${m.id})\nN:${m.name};;;;\nTEL;TYPE=CELL:${m.phone}\nNOTE:NNN복싱 회원번호 ${m.id} / 가입 ${m.joined}\nEND:VCARD\n`}
 $('#expVcf').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);if(!all.length){toast('내보낼 회원이 없어요');return}download('NNN_회원연락처_'+TODAY()+'.vcf',all.map(vcard).join(''),'text/vcard')};
 $('#expCsv').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);const rows=[['회원번호','이름','연락처','생년월일','성별','목적','경력','유입','참고사항','마케팅수신','가입일','총출석','최근출석','크레딧']].concat(all.map(m=>[m.id,m.name,m.phone,m.birth,m.gender,m.goal.join('/'),m.exp,m.path,m.note,m.agreeMkt?'Y':'N',m.joined,m.attend.length,m.last,m.credits]));
@@ -2373,7 +2400,8 @@ const DEFAULT_RULES=`1. 주 횟수 이용권(주2회·주3회 등)은 등록할 
 6. 수업은 시간표대로 진행됩니다. 늦게 오시면 남은 수업 시간만 진행됩니다.
 7. 1:1 PT 변경·취소는 하루 전까지 연락 주세요. 당일 취소와 노쇼는 1회 사용으로 처리됩니다.
 8. 환불은 관련 법령과 소비자분쟁해결기준에 따릅니다.
-9. 다른 회원을 배려해 주시고, 개인 물품은 직접 관리해 주세요.`;
+9. 다른 회원을 배려해 주시고, 개인 물품은 직접 관리해 주세요.
+10. 등록 기간이 끝나면 재등록(결제) 전까지 출석할 수 없습니다. 학생 회원은 결제·만료 안내가 보호자 연락처로 발송됩니다.`;
 const rulesTxt=()=>((local.meta.rules||'').trim()||DEFAULT_RULES);
 function openRules(){sheet(`<h2>이용수칙</h2><div class="terms" style="max-height:none">${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
 
@@ -2424,17 +2452,23 @@ const TPL_DEFAULT={
 ▶ 정지 기간: {정지기간}
 ▶ 변경된 종료일: {종료일}
 정지는 등록 기간 중 1회만 가능하며 이번에 사용하셨습니다. 정지 기간에는 출석할 수 없습니다.`,
-  exp:`[탕정 엔엔엔복싱] {이름}님, 등록 기간이 {남은일} 남았습니다. ({종료일} 종료)
-재등록하시면 남은 기간 다음 날부터 이어서 계산됩니다.
-재등록은 카운터나 회원 월드 → 결제에서 하실 수 있어요.
+  exp:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 기간이 {남은일} 남았습니다. ({종료일} 종료)
+종료일 이후에는 재등록 전까지 출석이 되지 않습니다. 끊김 없이 다니시려면 종료일 전에 결제해 주세요.
+▶ 입금 계좌: {입금계좌}
+▶ 카운터 결제나 회원 월드 → 결제도 가능합니다.
 {앱주소}`,
-  after:`[탕정 엔엔엔복싱] {이름}님, 등록 기간이 {종료일}에 끝났습니다.
-그동안 함께 운동해 주셔서 감사합니다. 다시 시작하실 때 언제든 연락 주세요!
-{앱주소}`
+  after:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 기간이 {종료일}에 끝났습니다.
+재등록 전까지는 출석패드에서 출석이 되지 않습니다.
+▶ 입금 계좌: {입금계좌}
+결제하신 뒤 이 번호로 알려 주시면 바로 확인해 드릴게요.`,
+  unpaid:`[탕정 엔엔엔복싱] {받는분}, 오늘 {이름} 회원이 체육관에 왔는데 등록 기간이 {종료일}에 끝난 상태입니다.
+재등록 후 출석할 수 있어 안내드립니다.
+▶ 입금 계좌: {입금계좌}
+결제하신 뒤 이 번호로 알려 주시면 바로 확인해 드릴게요.`
 };
-const TPL_NAME={welcome:'가입 승인 안내',pay:'등록 완료 안내',hold:'정지 처리 안내',exp:'만료 전 안내',after:'만료 안내'};
+const TPL_NAME={welcome:'가입 승인 안내',pay:'등록 완료 안내',hold:'정지 처리 안내',exp:'만료 전 안내',after:'만료 안내',unpaid:'만료 후 출석 안내'};
 const tplOf=k=>((local.meta.tpl||{})[k]||'').trim()||TPL_DEFAULT[k];
-const remindCfg=()=>Object.assign({d3:true,d2:true,d1:true,after:false},local.meta.remind||{});
+const remindCfg=()=>Object.assign({d7:true,d3:true,d2:true,d1:true,d0:true,after:true},local.meta.remind||{});
 function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
   return{'이름':m.name||'','회원번호':String(m.id||''),'앱주소':appBase(),'약관주소':appBase()+'?terms=1','이용수칙':rulesTxt(),
     '상품':mem.item||planLabel(mem)||'회원권','기간':mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-'),
@@ -2442,33 +2476,44 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
     '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${PAYM[pay.method]||''} / ${String(pay.at||'').slice(0,10)}`:'카운터 결제',
     '정지기간':mem.hold?`${mem.hold.start} ~ ${mem.hold.end} (${mem.hold.days}일)`:'-','종료일':mem.end||'-',
-    '남은일':st.left!=null?`${st.left}일`:'-',...extra}}
+    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'입금계좌':bankLine(),...extra}}
+function bankLine(){const P=local.meta.pay||{};return P.acct?`${P.bank||''} ${P.acct}${P.holder?' ('+P.holder+')':''}`.trim():'카운터 문의'}
+const G_KINDS=['pay','exp','after','unpaid'];
+const toGuard=(m,kind)=>!!m.gPhone&&(G_KINDS.includes(kind)||String(kind).startsWith('c:'));
+const msgPhone=(m,kind)=>toGuard(m,kind)?m.gPhone:m.phone;
+function openGuardSheet(m){
+  sheet(`<h2>보호자 연락처 · ${esc(m.name)}</h2><div class="row"><div class="field" style="width:110px"><label for="gRel">보호자</label><select id="gRel">${['어머니','아버지','기타 보호자'].map(x=>`<option ${m.gName===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field grow"><label for="gPh">연락처</label><input id="gPh" inputmode="tel" value="${esc(m.gPhone||'')}" placeholder="010-0000-0000"></div></div>
+    <p class="small" style="margin:0">보호자 연락처가 있으면 등록 완료·만료 전·만료·만료 후 출석 안내가 보호자에게 가요.</p>
+    <button class="btn red" id="gSave">저장</button>${m.gPhone?'<button class="btn ghost" id="gDel">보호자 연락처 지우기 (성인 회원)</button>':''}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#gSave').onclick=async()=>{const p=normPhone(el.querySelector('#gPh').value);if(p.replace(/\D/g,'').length<10){toast('연락처를 정확히 적어 주세요');return}m.gPhone=p;m.gName=el.querySelector('#gRel').value;m.student=true;await DB.savePriv(m);toast('보호자 연락처를 저장했어요');close();renderAdmRows();renderDue()};
+    const d=el.querySelector('#gDel');if(d)d.onclick=async()=>{m.gPhone='';m.gName='';m.student=false;await DB.savePriv(m);toast('지웠어요');close();renderAdmRows();renderDue()}})}
 function fillTpl(text,m,pay){const v=msgVars(m,pay);return String(text).replace(/\{([^{}]+)\}/g,(a,k)=>k in v?v[k]:a)}
 function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpls().find(x=>x.id===kind.slice(2));return c?fillTpl(c.text,m,pay):''}return fillTpl(tplOf(kind),m,pay)}
 const customTpls=()=>Array.isArray(local.meta.tplCustom)?local.meta.tplCustom:[];
 const kindName=k=>String(k).startsWith('c:')?((customTpls().find(x=>x.id===k.slice(2))||{}).name||'직접 만든 안내'):(TPL_NAME[k]||'안내');
 function sentKey(m,kind){const mem=m.mem||{};
   if(kind==='welcome')return 'welcome';if(kind==='pay')return 'pay:'+(mem.setAt||'')+':'+(mem.end||mem.item||'');
-  if(kind==='hold')return 'hold:'+(mem.hold?mem.hold.start:'');if(kind==='exp')return 'exp:'+mem.end+':'+memStatus(m).left;if(kind==='after')return 'after:'+mem.end;return kind+':'+Date.now()}
+  if(kind==='hold')return 'hold:'+(mem.hold?mem.hold.start:'');if(kind==='exp')return 'exp:'+mem.end+':'+memStatus(m).left;if(kind==='after')return 'after:'+mem.end;if(kind==='unpaid'){const u=(m.unpaid||[]).slice(-1)[0];return 'unpaid:'+(u?u.d:'')}return kind+':'+Date.now()}
 const CH_NAME={sms:'문자',kakao:'카톡',manual:'완료 처리'};
 async function markSent(m,kind,ch='manual',text=''){
   m.sent=m.sent||{};m.sent[sentKey(m,kind).replace(/[.#$\[\]/]/g,'_')]=TODAY();
   const log=Array.isArray(m.sentLog)?m.sentLog.slice(-29):[];log.push({at:Date.now(),kind,name:kindName(kind),ch,text:String(text).slice(0,1500)});m.sentLog=log;
   await DB.savePriv(m)}
 const wasSent=(m,kind)=>!!(m.sent&&m.sent[sentKey(m,kind).replace(/[.#$\[\]/]/g,'_')]);
-function smsHref(m,text){const num=String(m.phone||'').replace(/[^\d]/g,'');return`sms:${num}${isIOS()?'&':'?'}body=${encodeURIComponent(text)}`}
+function smsHref(m,text,kind){const num=String((kind?msgPhone(m,kind):m.phone)||'').replace(/[^\d]/g,'');return`sms:${num}${isIOS()?'&':'?'}body=${encodeURIComponent(text)}`}
 async function kakaoShare(text){try{if(navigator.share){await navigator.share({text});return true}}catch(e){if(e&&e.name==='AbortError')return false}copyText(text,'안내문을');return true}
 function openSendSheet(m,kind,pay,txt0){
   const num=String(m.phone||'').replace(/[^\d]/g,'');
-  sheet(`<h2>${esc(kindName(kind))} 보내기</h2><div class="small">${esc(m.name)} · ${esc(m.phone||'번호 없음')}</div>
+  const tg=toGuard(m,kind);
+  sheet(`<h2>${esc(kindName(kind))} 보내기</h2><div class="small">${tg?`받는 사람: ${esc(m.name)} 학생 ${esc(m.gName||'보호자')} · ${esc(m.gPhone)}`:`${esc(m.name)} · ${esc(m.phone||'번호 없음')}`}</div>
     <div class="field"><label for="sendTxt">보낼 내용 <span class="small">(이번에만 고쳐서 보낼 수 있어요)</span></label><textarea id="sendTxt" rows="10">${esc(txt0||msgText(m,kind,pay))}</textarea></div>
-    ${num?`<a class="btn red" style="text-align:center;text-decoration:none" href="#" id="smsGo">문자로 보내기 (대화창 바로 열림)</a>`:''}
+    ${num?`<a class="btn red" style="text-align:center;text-decoration:none" href="#" id="smsGo">${tg?'보호자에게 문자 보내기':'문자로 보내기 (대화창 바로 열림)'}</a>`:''}${tg&&m.phone?`<a class="btn ghost sm" style="text-align:center;text-decoration:none" href="#" id="smsMe">회원 본인에게도 문자</a>`:''}
     <button class="btn gold" id="kakaoGo">카톡으로 보내기</button>
     <div class="row"><button class="btn ghost sm grow" id="msgCopy">내용 복사</button><button class="btn ghost sm grow" id="msgDone">보낸 것으로 기록</button></div>
-    <p class="small" style="margin:0">문자: ${esc(m.name)} 님 대화창이 문구가 채워진 채로 열려요. 카톡: 공유창에서 카카오톡 → ${esc(m.name)} 님을 골라 주세요.</p>
+    <p class="small" style="margin:0">문자: ${esc(m.name)} 님 대화창이 문구가 채워진 채로 열려요. 카톡: 공유창에서 카카오톡 → ${tg?esc(m.name)+' 학생 보호자':esc(m.name)+' 님'}을 골라 주세요.</p>
     <button class="btn ghost" data-close>나중에</button>`,(el,close)=>{
     const ta=el.querySelector('#sendTxt');const sg=el.querySelector('#smsGo');
-    const sync=()=>{if(sg)sg.href=smsHref(m,ta.value)};sync();ta.oninput=sync;
+    const sm=el.querySelector('#smsMe');const sync=()=>{if(sg)sg.href=smsHref(m,ta.value,kind);if(sm)sm.href=smsHref(m,ta.value)};sync();ta.oninput=sync;
     const done=async ch=>{await markSent(m,kind,ch,ta.value);close();if(!$('#v-admin').hidden){renderDue();renderSendLog()}};
     if(sg)sg.addEventListener('click',()=>{setTimeout(()=>done('sms'),300)});
     el.querySelector('#kakaoGo').onclick=async()=>{if(await kakaoShare(ta.value))done('kakao')};
@@ -2477,7 +2522,7 @@ function openSendSheet(m,kind,pay,txt0){
   });
 }
 function openSendPicker(m){
-  const kinds=['welcome',...(m.mem?['pay']:[]),...(m.mem&&m.mem.hold?['hold']:[]),...(m.mem&&m.mem.end?['exp','after']:[]),...customTpls().map(c=>'c:'+c.id)];
+  const kinds=[...(memStatus(m).state==='expired'?['unpaid']:[]),'welcome',...(m.mem?['pay']:[]),...(m.mem&&m.mem.hold?['hold']:[]),...(m.mem&&m.mem.end?['exp','after']:[]),...customTpls().map(c=>'c:'+c.id)];
   sheet(`<h2>안내 보내기 · ${esc(m.name)}</h2><div class="ttl">${kinds.map(k=>`<button class="qrow" style="border:0;text-align:left" data-k="${esc(k)}"><div class="grow"><b>${esc(kindName(k))}</b><div class="small">${esc(msgText(m,k).slice(0,46))}…</div></div><span class="small">${String(k).startsWith('c:')?'직접 만든':''}</span></button>`).join('')}</div>
     <button class="btn ghost sm" id="pkNew">새 안내 문구 만들기</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{close();openSendSheet(m,b.dataset.k)});
@@ -2506,18 +2551,20 @@ function dueItems(all){
     if(recent(m.approvedAt)&&!wasSent(m,'welcome'))out.push({m,kind:'welcome'});
     if(mem&&mem.setAt&&recent(mem.paidAt)&&!wasSent(m,'pay'))out.push({m,kind:'pay'});
     if(mem&&mem.hold&&!wasSent(m,'hold'))out.push({m,kind:'hold'});
-    if(mem&&mem.end&&st.state!=='hold'){const L=st.left;if(((L===3&&rc.d3)||(L===2&&rc.d2)||(L===1&&rc.d1))&&!wasSent(m,'exp'))out.push({m,kind:'exp',tag:`D-${L}`});
-      if(rc.after&&L<0&&L>=-3&&!wasSent(m,'after'))out.push({m,kind:'after'})}
+    if(mem&&mem.end&&st.state!=='hold'){const L=st.left;if(((L===7&&rc.d7)||(L===3&&rc.d3)||(L===2&&rc.d2)||(L===1&&rc.d1)||(L===0&&rc.d0))&&!wasSent(m,'exp'))out.push({m,kind:'exp',tag:L?`D-${L}`:'오늘 종료'});
+      const u=(m.unpaid||[]).slice(-1)[0];const unpaidNow=st.state==='expired'&&u&&dDiff(TODAY(),u.d)<=7&&!wasSent(m,'unpaid');
+      if(unpaidNow)out.push({m,kind:'unpaid',tag:'만료 후 출석'});
+      else if(rc.after&&L<0&&L>=-3&&!wasSent(m,'after'))out.push({m,kind:'after'})}
   });
-  const ord={exp:0,after:1,pay:2,welcome:3,hold:4};return out.sort((a,b)=>ord[a.kind]-ord[b.kind]);
+  const ord={unpaid:-1,exp:0,after:1,pay:2,welcome:3,hold:4};return out.sort((a,b)=>ord[a.kind]-ord[b.kind]);
 }
 async function renderDue(){
   const box=$('#dueRows');if(!box)return;
   const all=(await DB.all()).filter(m=>!m.demo);const list=dueItems(all);
   $('#dueCnt').textContent=list.length?`${list.length}건`:'';
-  $('#dueBanner').hidden=!list.length;if(list.length)$('#dueBanner').innerHTML=`<b>오늘 보낼 안내 ${list.length}건</b><span>아래 '보낼 안내'에서 버튼 한 번으로 보내세요</span>`;
-  box.innerHTML=list.length?list.map((x,i)=>`<div style="display:flex;flex-direction:column;gap:8px;padding:10px 0;border-bottom:1px solid var(--mat)"><div class="row" style="flex-wrap:nowrap"><canvas width="64" height="64" data-dav="${i}" style="width:32px;height:32px;flex:0 0 auto"></canvas><div class="grow"><b>${esc(x.m.name)}</b> <span class="pill" style="background:${x.kind==='exp'?'#E9A91F':x.kind==='after'?'#D9343A':'#2F2F2F'};color:#fff">${x.tag?'만료 '+x.tag:TPL_NAME[x.kind]}</span><div class="small num">${esc(x.m.phone)}${x.kind==='exp'?' · '+md(x.m.mem.end)+' 종료':''}</div></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px"><a class="btn sm red" style="text-align:center;text-decoration:none" href="${smsHref(x.m,msgText(x.m,x.kind))}" data-sms="${i}">문자 보내기</a><button class="btn sm gold" data-kk="${i}">카톡 보내기</button><button class="btn sm ghost" data-skip="${i}" aria-label="보낸 것으로 처리">완료</button></div><button class="link" data-edit="${i}" style="align-self:flex-start;padding:0">문구 고쳐서 보내기</button></div>`).join(''):'<div class="small" style="padding:6px 0">오늘 보낼 안내가 없어요.</div>';
+  $('#dueBanner').hidden=!list.length;const nUp=list.filter(x=>x.kind==='unpaid').length;$('#dueBanner').style.background=nUp?'#5A1E22':'';$('#dueBanner').style.color=nUp?'#FFD9D9':'';if(list.length)$('#dueBanner').innerHTML=`<b${nUp?' style="color:#fff"':''}>${nUp?`만료 후 출석 ${nUp}명 · `:''}오늘 보낼 안내 ${list.length}건</b><span>아래 '보낼 안내'에서 버튼 한 번으로 보내세요</span>`;
+  box.innerHTML=list.length?list.map((x,i)=>`<div style="display:flex;flex-direction:column;gap:8px;padding:10px 0;border-bottom:1px solid var(--mat)"><div class="row" style="flex-wrap:nowrap"><canvas width="64" height="64" data-dav="${i}" style="width:32px;height:32px;flex:0 0 auto"></canvas><div class="grow"><b>${esc(x.m.name)}</b> <span class="pill" style="background:${x.kind==='exp'?'#E9A91F':x.kind==='after'||x.kind==='unpaid'?'#D9343A':'#2F2F2F'};color:#fff">${x.kind==='exp'?'만료 '+x.tag:x.tag||TPL_NAME[x.kind]}</span><div class="small num">${toGuard(x.m,x.kind)?'보호자 ':''}${esc(msgPhone(x.m,x.kind))}${x.kind==='exp'?' · '+md(x.m.mem.end)+' 종료':''}</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px"><a class="btn sm red" style="text-align:center;text-decoration:none" href="${smsHref(x.m,msgText(x.m,x.kind),x.kind)}" data-sms="${i}">문자 보내기</a><button class="btn sm gold" data-kk="${i}">카톡 보내기</button><button class="btn sm ghost" data-skip="${i}" aria-label="보낸 것으로 처리">완료</button></div><button class="link" data-edit="${i}" style="align-self:flex-start;padding:0">문구 고쳐서 보내기</button></div>`).join(''):'<div class="small" style="padding:6px 0">오늘 보낼 안내가 없어요.</div>';
   list.forEach((x,i)=>{const cv=box.querySelector(`[data-dav="${i}"]`);if(cv)avatarTo(cv,x.m.equip,{h:44,noFx:true})});
   box.querySelectorAll('[data-sms]').forEach(a=>a.addEventListener('click',()=>{const x=list[+a.dataset.sms];markSent(x.m,x.kind,'sms',msgText(x.m,x.kind)).then(()=>setTimeout(()=>{renderDue();renderSendLog()},600))}));
   box.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=list[+b.dataset.edit];openSendSheet(x.m,x.kind)});
@@ -2529,7 +2576,7 @@ function openTplEditor(){
   sheet(`<h2>안내 문구 설정</h2>
     <div class="small">자동으로 채워지는 칸: {이름} {회원번호} {상품} {기간} {요일} {정지규정} {결제} {정지기간} {종료일} {남은일} {앱주소} {약관주소} {이용수칙}</div>
     <div class="label">만료 전 안내 보낼 날</div>
-    <div class="chips"><label class="chip"><input type="checkbox" id="rD3" ${rc.d3?'checked':''}> 3일 전</label><label class="chip"><input type="checkbox" id="rD2" ${rc.d2?'checked':''}> 2일 전</label><label class="chip"><input type="checkbox" id="rD1" ${rc.d1?'checked':''}> 1일 전</label><label class="chip"><input type="checkbox" id="rAf" ${rc.after?'checked':''}> 만료 후</label></div>
+    <div class="chips"><label class="chip"><input type="checkbox" id="rD7" ${rc.d7?'checked':''}> 7일 전</label><label class="chip"><input type="checkbox" id="rD3" ${rc.d3?'checked':''}> 3일 전</label><label class="chip"><input type="checkbox" id="rD2" ${rc.d2?'checked':''}> 2일 전</label><label class="chip"><input type="checkbox" id="rD1" ${rc.d1?'checked':''}> 1일 전</label><label class="chip"><input type="checkbox" id="rD0" ${rc.d0?'checked':''}> 종료일 당일</label><label class="chip"><input type="checkbox" id="rAf" ${rc.after?'checked':''}> 만료 다음 날</label></div>
     <div class="label">기본 안내</div>
     ${Object.keys(TPL_DEFAULT).map(k=>`<div class="field"><label for="tp_${k}">${TPL_NAME[k]}</label><textarea id="tp_${k}" rows="6">${esc(tplOf(k))}</textarea><button type="button" class="link" data-reset="${k}" style="align-self:flex-start;padding:2px 0">기본 문구로 되돌리기</button></div>`).join('')}
     <div class="label">직접 만든 안내 <span class="small">(회원 상세 → 안내 보내기에서 골라 보내요)</span></div>
@@ -2546,7 +2593,7 @@ function openTplEditor(){
     el.querySelector('#tpSave').onclick=async()=>{read();const nt={};Object.keys(TPL_DEFAULT).forEach(k=>{const v=el.querySelector('#tp_'+k).value.trim();if(v&&v!==TPL_DEFAULT[k])nt[k]=v});
       if(cus.some(c=>!c.name.trim()||!c.text.trim())){toast('직접 만든 안내의 이름과 내용을 채워 주세요');return}
       local.meta.tpl=nt;local.meta.tplCustom=cus.map(c=>({id:c.id,name:c.name.trim(),text:c.text.trim()}));
-      local.meta.remind={d3:el.querySelector('#rD3').checked,d2:el.querySelector('#rD2').checked,d1:el.querySelector('#rD1').checked,after:el.querySelector('#rAf').checked};
+      local.meta.remind={d7:el.querySelector('#rD7').checked,d0:el.querySelector('#rD0').checked,d3:el.querySelector('#rD3').checked,d2:el.querySelector('#rD2').checked,d1:el.querySelector('#rD1').checked,after:el.querySelector('#rAf').checked};
       if(await DB.saveMeta()){toast('안내 문구를 저장했어요');close();renderDue()}};
   });
 }
