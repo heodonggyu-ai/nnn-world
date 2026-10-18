@@ -97,6 +97,30 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .kv:last-child{border-bottom:0}
 .kv .k{width:64px;color:var(--muted);font-size:13px;flex:0 0 auto}
 .kv .v{flex:1;min-width:0;font-variant-numeric:tabular-nums;word-break:break-all}
+.bring{background:#2F2F2F;color:#fff;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;border-left:6px solid var(--red)}
+.bring b{font-family:var(--display);font-weight:400;font-size:18px}
+.bring span{font-size:13px;color:#C8C8CC}
+body.tvmode{background:#1C1C1C;padding-left:0;padding-right:0}
+body.tvmode .app{max-width:none;padding:0}
+.tv{min-height:100vh;color:#fff;display:grid;grid-template-columns:1fr 1.25fr 1fr;grid-template-rows:auto 1fr auto;gap:18px;padding-block:20px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.tvhead{grid-column:1/-1;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.tvhead .lg{width:120px;flex:0 0 auto}
+.tvclock{font-family:var(--latin);font-weight:300;font-size:22px;color:#C8C8CC;letter-spacing:.05em}
+.tvbox{background:#2A2A2A;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tvbox b{font-family:var(--display);font-weight:400;font-size:26px}
+.tvbox span{color:#C8C8CC;font-size:15px}
+.tvcol{background:#262626;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tvcol h3{font-size:30px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tvcol h3 small{font-family:var(--body);font-size:14px;color:#FFB36B}
+.tvrow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #333;font-size:20px}
+.tvrow canvas{width:52px;height:52px;flex:0 0 auto}
+.tvrow small{display:block;font-size:13px;color:#9A9BA0}
+.tvrow b{font-family:var(--latin);font-weight:500;font-size:26px}
+.tvno{width:30px;font-family:var(--display);font-size:28px;color:#E9A91F;text-align:center}
+.tvempty{color:#8A8B90;padding:12px 0}
+.tvfoot{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.tvfoot canvas{width:100%;height:150px;display:block}
+@media (max-width:900px){.tv{grid-template-columns:1fr}}
 .snsrow{display:flex;gap:8px;flex-wrap:wrap}
 .sns{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:7px 14px 7px 7px;color:var(--ink);text-decoration:none;font-size:14px}
 .sns i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:12px;font-weight:700}
@@ -219,6 +243,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
       <div><div class="label">탕정 엔엔엔복싱</div><h1>회원 월드</h1><p>출석하면 크레딧, 크레딧으로 내 복서 꾸미기.</p></div></div>
     <canvas id="parade" width="720" height="240"></canvas>
   </div>
+  <div class="bring" data-bring hidden></div>
   <div class="ev" id="hwBanner" hidden><b>할로윈 이벤트</b><span>11월 7일까지 한정 캐릭터 · 맵에서 사탕 줍기</span></div>
   <div class="refban" id="refBanner" hidden><canvas width="96" height="96"></canvas><div class="grow"><b id="refWho"></b><div class="small">지금 가입하면 초대 선물 100 크레딧을 더 받아요</div></div></div>
   <button class="btn red" id="goJoin">처음 왔어요 · 가입 신청</button>
@@ -316,6 +341,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
   </div>
 
   <div class="tab" id="t-map">
+    <div class="bring" data-bring hidden style="margin-bottom:10px"></div>
     <div class="questbar" id="qbar"></div>
     <div class="mapwrap" style="margin-top:10px">
       <canvas id="map"></canvas>
@@ -358,6 +384,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
       <div class="row"><span class="grow">총 출석</span><b class="num" id="mAtt"></b></div>
       <div class="row"><span class="grow">가입일</span><b class="num" id="mJoin"></b></div>
       <div class="row"><span class="grow">다음 레벨</span><b class="num small" id="mNext" style="color:var(--ink)"></b></div>
+      <label class="check" style="padding:0"><input type="checkbox" id="blogOk"><span class="small">내 캐릭터 자랑 카드를 체육관 블로그·인스타 후기에 소개해도 좋아요 (이름은 김*수처럼 가려져요)</span></label>
       <div class="row"><button class="btn ghost sm grow" id="lvBtn">레벨표 보기</button><button class="btn gold sm grow" id="bragBtn">내 복서 자랑하기</button></div>
     </div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"><div class="label">친구 초대</div><div id="inviteBox" style="display:flex;flex-direction:column;gap:10px"></div></div>
@@ -391,6 +418,25 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
   <div class="row" style="justify-content:flex-end"><button class="link" id="padExit">출석패드 종료 (관장 PIN)</button></div>
 </section>
 
+<!-- 체육관 TV -->
+<section class="view" id="v-tv" hidden>
+  <div class="tv">
+    <div class="tvhead"><div class="lg" id="tvLogo"></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><div class="tvclock num" id="tvClock"></div><div style="font-family:var(--display);font-size:34px" id="tvToday"></div></div>
+      <div class="tvbox grow" id="tvNext"></div>
+      <div class="tvbox bring" id="tvBring" hidden></div>
+      <button class="x" id="tvExit" style="background:#2C2C2C;border:0;color:#9A9BA0;border-radius:8px;padding:8px 12px">나가기</button></div>
+    <div class="tvcol"><h3><span id="tvAttT">이달 출석왕</span><small id="tvAward"></small></h3><div id="tvAtt"></div></div>
+    <div class="tvcol" style="justify-content:center;align-items:center;text-align:center;gap:12px">
+      <div style="font-family:var(--display);font-size:40px;line-height:1.1">같이 운동하면<br>더 강해져요</div>
+      <div style="color:#C8C8CC;font-size:17px">회원 월드 → 내 정보 → 친구 초대하기<br>친구가 등록하면 +500 크레딧 · 버디 글러브</div>
+      <div id="tvQR" style="background:#fff;padding:10px;border-radius:8px"></div>
+      <div style="color:#9A9BA0;font-size:14px">QR을 찍으면 회원 월드가 열려요</div></div>
+    <div class="tvcol"><h3><span id="tvInvT">이달 추천왕</span></h3><div id="tvInv"></div></div>
+    <div class="tvfoot"><canvas id="tvParade"></canvas></div>
+  </div>
+</section>
+
 <!-- 관장 메뉴 -->
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
@@ -406,6 +452,17 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <h3 style="font-size:20px">체육관 TV · 이달 시상</h3>
+    <p class="small" style="margin:0">체육관 TV에 이달 출석왕·추천왕, 오늘 출석한 회원 캐릭터, 다음 수업을 띄워요. 30초마다 새로 고쳐져요.</p>
+    <button class="btn" id="tvBtn">TV 화면 열기</button>
+    <div class="small">TV 브라우저 주소: <span class="num" id="tvUrl"></span></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:4px">
+    <h3 style="font-size:20px">블로그 후기 카드</h3>
+    <p class="small" style="margin:0">후기 소개에 동의한 회원이에요. 카드를 만들어 저장하고, 문구를 복사해 블로그·인스타에 올리세요.</p>
+    <div id="blogRows"></div>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">입구 QR 코드</h3>
@@ -424,6 +481,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
     <div class="field"><label for="sAcct">계좌번호</label><input id="sAcct" inputmode="numeric"></div>
     <div class="field"><label for="sAsan">아산페이 QR 이미지 바꾸기</label><input id="sAsan" type="file" accept="image/*"></div>
     <div class="field"><label for="sOnnuri">온누리상품권 QR 이미지</label><input id="sOnnuri" type="file" accept="image/*"><span class="small" id="onnuriState"></span></div>
+    <div class="field"><label for="sBring">친구 데려오는 날 <span class="small">(날짜, 여러 개는 쉼표로)</span></label><input id="sBring" placeholder="2026-10-31, 2026-11-28"></div>
     <div class="field"><label for="sBlog">네이버 블로그 주소</label><input id="sBlog" placeholder="https://m.blog.naver.com/nnnboxing"></div>
     <div class="field"><label for="sInsta">인스타그램 (아이디 또는 주소)</label><input id="sInsta" placeholder="@nnnboxing"></div>
     <div class="field"><label for="sOnNote">온누리상품권 안내 문구</label><input id="sOnNote" placeholder="지류 상품권은 카운터에서 받아요"></div>
@@ -820,7 +878,7 @@ function sfx(type){if(!SND)return;try{AC=AC||new (window.AudioContext||window.we
 
 /* ================= 화면 전환 ================= */
 let ME=null;
-function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home')startParade();else stopParade();window.scrollTo(0,0)}
+function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
 $$('[data-back]').forEach(b=>b.onclick=()=>show('v-home'));
 $('#hwBanner').hidden=!HW;
 
@@ -896,7 +954,7 @@ function refreshTop(){
   $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
   avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});
-  $('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`;
+  renderBring();$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`;
   renderQbar();
 }
 function questState(){const qs=todaysQuests(ME.id);const d=fixDay(ME);return qs.map(q=>({...q,cur:Math.min(q.n,d.prog[q.k]||0),claimed:d.claimed.includes(q.k)}))}
@@ -1218,14 +1276,14 @@ function renderDex(){
 /* ================= 랭킹 ================= */
 let rkMode='att';
 async function renderRank(){
-  const modes=[['att','이달 출석왕'],['lv','레벨'],['bag','샌드백'],['rope','줄넘기'],['shadow','쉐도우']];
+  const modes=[['att','이달 출석왕'],['inv','이달 추천왕'],['lv','레벨'],['bag','샌드백'],['rope','줄넘기'],['shadow','쉐도우']];
   $('#rkTabs').innerHTML=modes.map(([k,n])=>`<button class="chip ${k===rkMode?'on':''}" data-r="${k}">${n}</button>`).join('');
   $$('#rkTabs [data-r]').forEach(b=>b.onclick=()=>{rkMode=b.dataset.r;renderRank()});
   $('#rkList').innerHTML='<div class="small">불러오는 중…</div>';
   const mon=TODAY().slice(0,7);
   const all=(await DB.all()).filter(m=>m&&m.id);
-  const val=m=>rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
-  const unit={att:'회',lv:'XP',bag:'점',rope:'개',shadow:'점'}[rkMode];
+  const invMap=monthStats(all).inv;const val=m=>rkMode==='inv'?(invMap[m.id]||0):rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
+  const unit={inv:'명',att:'회',lv:'XP',bag:'점',rope:'개',shadow:'점'}[rkMode];
   const top=all.sort((a,b)=>val(b)-val(a)).slice(0,20);
   if(!top.length){$('#rkList').innerHTML='<div class="small">아직 기록이 없어요. 첫 1등이 되어 보세요!</div>';return}
   $('#rkList').innerHTML='';top.forEach((m,i)=>{const d=document.createElement('div');d.className='rk'+(m.id===ME.id?' me':'');d.innerHTML=`<span class="no num" style="color:${i<3?['#D49A00','#8A94A6','#B0693A'][i]:'var(--muted)'}">${i+1}</span><canvas width="80" height="80"></canvas><div class="grow">${esc(m.id===ME.id?ME.name:maskName(m.name))}<div class="small">Lv.${levelOf(m).lv} ${levelOf(m).title}</div></div><b class="num">${(rkMode==='lv'?m.xp:val(m)).toLocaleString()}${unit}</b>`;$('#rkList').appendChild(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true,pad:3})});
@@ -1233,7 +1291,7 @@ async function renderRank(){
 }
 
 /* ================= 내 정보 ================= */
-function renderMore(){renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=local.meta.notice;$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
+function renderMore(){$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=local.meta.notice;$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
 $('#lvBtn').onclick=openLevels;$('#bragBtn').onclick=()=>openBrag('NNN 복싱\n운동 중!');
 $('#termsBtn').onclick=()=>sheet(`<h2>이용약관</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}</div><button class="btn" data-close>닫기</button>`);
 $('#logoutBtn').onclick=()=>{ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
@@ -1288,7 +1346,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
   await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();
-  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
+  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=FB_ON()||storageOK();drawQR();show('v-admin');renderAdmRows();
 }
@@ -1322,7 +1380,7 @@ $('#saveSet').onclick=async()=>{
   const pin=$('#sPin').value.trim();if((pin||!FB_ON())&&!/^\d{4}$/.test(pin)){toast('PIN은 숫자 4자리로 적어 주세요');return}
   if(pin&&FB_ON()&&!(await DB.setAdminPin(pin))){toast('PIN을 바꾸지 못했어요');return}
   Object.assign(local.meta.pay,{bank:$('#sBank').value.trim(),acct:$('#sAcct').value.trim(),holder:$('#sHolder').value.trim(),onnuriNote:$('#sOnNote').value.trim(),products:$('#sProd').value.split('\n').map(l=>l.split('|')).filter(a=>a[0].trim()).map(a=>({n:a[0].trim(),p:(a[1]||'').replace(/\D/g,'')}))});
-  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
+  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),bringDays:$('#sBring').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
   const saved=await DB.saveMeta();if(!saved){toast('이 화면에서는 저장이 안 돼요. GitHub 주소에서 열거나 서버를 연결해 주세요',4500);return}toast(FB_ON()?'설정을 저장했어요 · 모든 기기에 반영':'설정을 저장했어요')};
 
 /* ================= 로고 ================= */
@@ -1704,7 +1762,7 @@ async function referralOnAttend(m){
     if(m.ref&&m.attend.length===1&&!m.refPaid1){const r=await DB.get(m.ref);if(r){r.credits+=REF_BONUS_ATT;r.earned+=REF_BONUS_ATT;r.invites=(r.invites||0)+1;checkBadges(r);await DB.save(r);m.refPaid1=true;notes.push(`초대한 ${maskName(r.name)} 님에게 +${REF_BONUS_ATT} 선물`)}}
     const buddies=[m.ref].filter(Boolean);
     const all=await DB.all();all.filter(x=>x.ref===m.id).forEach(x=>buddies.push(x.id));
-    if(m.buddyDay!==TODAY()){for(const bid of buddies){const b=bid===m.ref?await DB.get(bid):all.find(x=>x.id===bid);if(b&&b.last===TODAY()){m.credits+=BUDDY_BONUS;m.earned+=BUDDY_BONUS;m.buddyDay=TODAY();if(b.buddyDay!==TODAY()){b.credits+=BUDDY_BONUS;b.earned+=BUDDY_BONUS;b.buddyDay=TODAY();await DB.save(b)}notes.push(`${maskName(b.name)} 님과 같이 운동! 둘 다 +${BUDDY_BONUS}`);break}}}
+    if(m.buddyDay!==TODAY()){for(const bid of buddies){const b=bid===m.ref?await DB.get(bid):all.find(x=>x.id===bid);if(b&&b.last===TODAY()){const bb=buddyBonus();m.credits+=bb;m.earned+=bb;m.buddyDay=TODAY();if(b.buddyDay!==TODAY()){b.credits+=bb;b.earned+=bb;b.buddyDay=TODAY();await DB.save(b)}notes.push(`${maskName(b.name)} 님과 같이 운동! 둘 다 +${bb}${isBringDay()?' (친구 데려오는 날)':''}`);break}}}
   }catch(e){}
   return notes;
 }
@@ -1721,9 +1779,9 @@ async function referralOnPay(m){
 }
 
 /* ================= 자랑 카드 ================= */
-function bragCanvas(head){
+function bragCanvas(head,M=ME,opt={}){
   const W2=1080,H2=1350,cv=document.createElement('canvas');cv.width=W2;cv.height=H2;const c=cv.getContext('2d');
-  const L=levelOf(ME);
+  const L=levelOf(M);const shownName=opt.blog?maskName(M.name)+' 회원님':M.name;
   c.fillStyle='#F4F4F2';c.fillRect(0,0,W2,H2);
   c.strokeStyle='#2F2F2F';c.lineWidth=18;c.beginPath();c.moveTo(560,1300);c.lineTo(60,1300);c.lineTo(60,60);c.lineTo(1020,60);c.lineTo(1020,700);c.stroke();
   drawLogo(c,96,96,150,'#2F2F2F');
@@ -1731,34 +1789,104 @@ function bragCanvas(head){
   c.fillStyle='#D9343A';c.font='64px "Black Han Sans",sans-serif';c.textBaseline='alphabetic';
   const lines=String(head).split('\n');lines.forEach((ln,i)=>c.fillText(ln,96,300+i*76));
   const g=c.createRadialGradient(610,880,40,610,880,320);g.addColorStop(0,'#FFFFFF');g.addColorStop(1,'#E2E4E8');c.fillStyle=g;c.beginPath();c.arc(610,880,300,0,Math.PI*2);c.fill();
-  drawChar(c,610,1120,12,ME.equip,{t:1.2,pose:'guard'});
-  c.fillStyle='#2F2F2F';c.font='54px "Black Han Sans",sans-serif';c.textAlign='left';c.fillText(ME.name,96,480);
+  drawChar(c,610,1120,12,M.equip,{t:1.2,pose:'guard'});
+  c.fillStyle='#2F2F2F';c.font='54px "Black Han Sans",sans-serif';c.textAlign='left';c.fillText(shownName,96,480);
   c.font='40px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';
-  c.fillText(`Lv.${L.lv} ${L.title}`,96,560);c.fillText(`출석 ${ME.attend.length}회 · 연속 ${ME.streak||0}일`,96,616);
+  c.fillText(`Lv.${L.lv} ${L.title}`,96,560);c.fillText(`출석 ${M.attend.length}회 · 연속 ${M.streak||0}일`,96,616);
   // 초대 QR
-  const link=inviteLink(ME.id);const tmp=document.createElement('div');let qr=null;
+  const link=opt.blog?appBase():inviteLink(M.id);const tmp=document.createElement('div');let qr=null;
   try{new QRCode(tmp,{text:link,width:200,height:200,colorDark:'#2F2F2F',colorLight:'#ffffff'});qr=tmp.querySelector('canvas')}catch(e){}
   c.fillStyle='#fff';c.fillRect(800,1080,220,220);if(qr)c.drawImage(qr,810,1090,200,200);
   c.fillStyle='#2F2F2F';c.textAlign='right';c.font='34px "Black Han Sans",sans-serif';c.fillText('같이 운동해요',780,1210);
-  c.font='30px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(`초대코드 ${ME.id} · 가입 시 +${REF_BONUS_JOIN}`,780,1260);c.textAlign='left';
+  c.font='30px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(opt.blog?'QR로 회원 월드 구경하기':`초대코드 ${M.id} · 가입 시 +${REF_BONUS_JOIN}`,780,1260);c.textAlign='left';
   return cv;
 }
-function openBrag(head){
-  const cv=bragCanvas(head);const url=cv.toDataURL('image/png');
+function openBrag(head,M=ME,opt={}){
+  const cv=bragCanvas(head,M,opt);const url=cv.toDataURL('image/png');
   sheet(`<h2>자랑하기</h2><img src="${url}" alt="내 복서 자랑 카드" style="width:100%;border-radius:8px;border:1px solid var(--line)">
     <p class="small" style="margin:0">카드 아래 QR로 친구가 바로 가입할 수 있어요. 공유가 안 되면 이미지를 길게 눌러 저장해서 인스타 스토리나 카톡에 올려 주세요.</p>
-    <button class="btn red" id="bragShare">공유하기</button><button class="btn ghost" data-close>닫기</button>`,(el)=>{
+    ${opt.blog?`<div class="terms" id="capTxt">${esc(blogCaption(M))}</div><button class="btn ghost" id="capCopy">후기 문구 복사</button>`:''}<button class="btn red" id="bragShare">${opt.blog?'카드 저장 · 공유':'공유하기'}</button><button class="btn ghost" data-close>닫기</button>`,(el)=>{
+    const cc=el.querySelector('#capCopy');if(cc)cc.onclick=()=>copyText(blogCaption(M),'후기 문구를');
     el.querySelector('#bragShare').onclick=async()=>{
       try{const blob=await new Promise(r=>cv.toBlob(r,'image/png'));const file=new File([blob],'nnn-boxing.png',{type:'image/png'});
-        if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:`탕정 엔엔엔복싱 ${inviteLink(ME.id)}`});return}}catch(e){if(e&&e.name==='AbortError')return}
+        if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:opt.blog?blogCaption(M):`탕정 엔엔엔복싱 ${inviteLink(M.id)}`});return}}catch(e){if(e&&e.name==='AbortError')return}
       shareLink(`탕정 엔엔엔복싱에서 운동 중! 내 링크로 가입하면 ${REF_BONUS_JOIN} 크레딧 더 줘요`,inviteLink(ME.id));
     };
   });
 }
 
+/* ================= 친구 데려오는 날 ================= */
+function bringDays(){return String(local.meta.bringDays||'').split(/[,\s]+/).map(x=>x.trim()).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).sort()}
+const isBringDay=()=>bringDays().includes(TODAY());
+function nextBringDay(){return bringDays().find(d=>d>=TODAY())||''}
+function fmtDay(d){const x=new Date(d+'T00:00:00');return`${x.getMonth()+1}월 ${x.getDate()}일(${DAYN[x.getDay()]})`}
+function bringText(){const d=nextBringDay();if(!d)return '';const diff=Math.round((new Date(d+'T00:00:00')-new Date(TODAY()+'T00:00:00'))/864e5);
+  if(diff>14)return '';return d===TODAY()?'오늘은 친구 데려오는 날!':`${fmtDay(d)} 친구 데려오는 날 · D-${diff}`}
+function renderBring(){const t=bringText();$$('[data-bring]').forEach(el=>{el.hidden=!t;if(t)el.innerHTML=`<b>${esc(t)}</b><span>초대받은 친구는 무료 체험 · 같이 출석하면 둘 다 +${BUDDY_BONUS*BRING_MULT}</span>`})}
+const BRING_MULT=3;
+const buddyBonus=()=>BUDDY_BONUS*(isBringDay()?BRING_MULT:1);
+
+/* ================= 이달 통계 ================= */
+function monthStats(all){
+  const mon=TODAY().slice(0,7);const att={},inv={};
+  all.forEach(m=>{att[m.id]=m.attend.filter(d=>d.startsWith(mon)).length});
+  all.forEach(f=>{if(f.ref&&f.attend.length&&f.attend[0].startsWith(mon))inv[f.ref]=(inv[f.ref]||0)+1});
+  const byId=Object.fromEntries(all.map(m=>[m.id,m]));
+  const attTop=all.filter(m=>att[m.id]>0).sort((a,b)=>att[b.id]-att[a.id]||b.xp-a.xp).slice(0,5).map(m=>({m,v:att[m.id]}));
+  const invTop=Object.keys(inv).filter(id=>byId[id]).sort((a,b)=>inv[b]-inv[a]).slice(0,3).map(id=>({m:byId[id],v:inv[id]}));
+  const today=all.filter(m=>m.last===TODAY());
+  return{mon,attTop,invTop,today,inv};
+}
+function daysLeftInMonth(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).getDate()-d.getDate()}
+
+/* ================= 체육관 TV ================= */
+let TVT=0,TVR=0,TVDATA=null;
+async function openTV(){
+  document.body.classList.add('tvmode');show('v-tv');
+  $('#tvLogo').innerHTML=logoSVG('#fff',true,'#C8C8CC');
+  {const q=$('#tvQR');q.innerHTML='';try{new QRCode(q,{text:appBase(),width:170,height:170,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){q.textContent=appBase()}}
+  await tvLoad();clearInterval(TVT);TVT=setInterval(tvLoad,30000);
+  const cv=$('#tvParade');const c=cv.getContext('2d');const t0=performance.now();cancelAnimationFrame(TVR);
+  const loop=now=>{if($('#v-tv').hidden)return;const t=(now-t0)/1000;const w=cv.clientWidth||800,h=cv.clientHeight||140;if(cv.width!==w*2){cv.width=w*2;cv.height=h*2}
+    c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,w,h);c.fillStyle='#262626';c.fillRect(0,h-26,w,26);c.fillStyle='#fff';c.fillRect(0,h-20,w,2);
+    const list=(TVDATA&&TVDATA.today)||[];const n=Math.max(list.length,1),gap=Math.max(70,(w+80)/Math.max(n,6));
+    list.forEach((m,i)=>{const x=((i*gap+t*35)%(Math.max(w+80,n*gap)))-40;const pose=Math.floor(t*1.5+i)%4===0?'jab':'guard';drawChar(c,x,h-22,2,m.equip,{t:t+i,pose,moving:true,noFx:false});
+      c.fillStyle='rgba(255,255,255,.85)';c.font='11px sans-serif';c.textAlign='center';c.fillText(maskName(m.name),x,h-22-110)});
+    if(!list.length){c.fillStyle='#8A8B90';c.font='16px sans-serif';c.textAlign='center';c.fillText('오늘 첫 출석의 주인공은 누구?',w/2,h/2)}
+    TVR=requestAnimationFrame(loop)};TVR=requestAnimationFrame(loop);
+}
+function closeTV(){clearInterval(TVT);cancelAnimationFrame(TVR);document.body.classList.remove('tvmode');show('v-home')}
+async function tvLoad(){
+  await DB.meta();const all=(await DB.all()).filter(m=>!m.demo);TVDATA=monthStats(all);const S2=TVDATA;
+  const now=new Date();$('#tvClock').textContent=`${now.getMonth()+1}월 ${now.getDate()}일 ${DAYN[now.getDay()]}요일 ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  const st=ttStatus();$('#tvNext').innerHTML=`<b>${esc(st.big)}</b><span>${esc(st.line||'')}</span>`;
+  const bt=bringText();$('#tvBring').hidden=!bt;if(bt)$('#tvBring').innerHTML=`<b>${esc(bt)}</b><span>친구 무료 체험 · 같이 출석하면 둘 다 +${BUDDY_BONUS*BRING_MULT}</span>`;
+  const mn=Number(S2.mon.slice(5));const left=daysLeftInMonth();
+  $('#tvAttT').textContent=`${mn}월 출석왕`;$('#tvInvT').textContent=`${mn}월 추천왕`;
+  $('#tvAward').textContent=left===0?'오늘 시상!':`시상까지 D-${left}`;
+  const row=(x,i,unit)=>`<div class="tvrow"><span class="tvno">${i+1}</span><canvas width="96" height="96" data-tvav="${esc(x.m.id)}"></canvas><span class="grow">${esc(maskName(x.m.name))}<small>Lv.${levelOf(x.m).lv} ${esc(levelOf(x.m).title)}</small></span><b>${x.v}${unit}</b></div>`;
+  $('#tvAtt').innerHTML=S2.attTop.map((x,i)=>row(x,i,'회')).join('')||'<div class="tvempty">이달 첫 출석을 기다려요</div>';
+  $('#tvInv').innerHTML=S2.invTop.map((x,i)=>row(x,i,'명')).join('')||'<div class="tvempty">친구를 데려오면 여기에 이름이 올라가요</div>';
+  $('#tvToday').textContent=`오늘 출석 ${S2.today.length}명`;
+  const byId=Object.fromEntries(all.map(m=>[m.id,m]));
+  $$('[data-tvav]').forEach(cv=>{const m=byId[cv.dataset.tvav];if(m)avatarTo(cv,m.equip,{h:46,noFx:true,pose:'guard'})});
+}
+
+/* ================= 블로그 후기 카드 (관장) ================= */
+function blogCaption(m){const L=levelOf(m);return`[NNN 복싱 회원 자랑] ${maskName(m.name)} 회원님\n출석 ${m.attend.length}회 · Lv.${L.lv} ${L.title}${m.bossWin?' · 스파링에서 관장님 격파!':''}\n꾸준함이 실력입니다. 탕정 엔엔엔복싱에서 같이 운동해요 🥊\n#탕정복싱 #엔엔엔복싱 #NNN복싱 #아산복싱 #복싱다이어트`}
+async function renderBlogList(){
+  const box=$('#blogRows');if(!box)return;const all=(await DB.all()).filter(m=>m.blogOk&&!m.demo).sort((a,b)=>b.attend.length-a.attend.length);
+  box.innerHTML=all.length?all.map(m=>`<div class="payrow"><canvas width="64" height="64" data-bav="${esc(m.id)}" style="width:32px;height:32px"></canvas><div class="grow"><b>${esc(m.name)}</b> <span class="small num">${esc(m.id)}</span><div class="small">출석 ${m.attend.length}회 · Lv.${levelOf(m).lv}</div></div><button class="btn sm ghost" data-blog="${esc(m.id)}">후기 카드</button></div>`).join(''):'<div class="small" style="padding:6px 0">아직 동의한 회원이 없어요. 회원이 내 정보에서 \'후기 소개 동의\'를 켜면 여기에 나와요.</div>';
+  all.forEach(m=>{const cv=box.querySelector(`[data-bav="${m.id}"]`);if(cv)avatarTo(cv,m.equip,{h:44,noFx:true})});
+  box.querySelectorAll('[data-blog]').forEach(b=>b.onclick=()=>{const m=all.find(x=>x.id===b.dataset.blog);if(m)openBrag(`회원 자랑\n꾸준함이 실력!`,m,{blog:true})});
+}
+
+$('#tvBtn').onclick=openTV;$('#tvExit').onclick=closeTV;
+$('#blogOk').onchange=e=>{ME.blogOk=e.target.checked;saveMe();toast(ME.blogOk?'고마워요! 멋진 후기로 소개할게요':'후기 소개를 껐어요')};
 /* ================= 시작 ================= */
 (async()=>{
-  show('v-home');renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();showInviteBanner();
+  show('v-home');renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();renderBring();showInviteBanner();
+  if(new URLSearchParams(location.search).get('tv')){openTV();return}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
   if(hashv==='pad'){pinSheet('출석패드 모드 시작',openPad);show('v-home');return}
   if(sid){const m=await DB.get(sid);if(m){ME=m;enterWorld();return}}
