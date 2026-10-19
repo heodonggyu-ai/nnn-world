@@ -677,7 +677,7 @@ body.tvmode .app{max-width:none;padding:0}
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="font-size:20px" class="grow">코치 · 직원</h3><button class="btn sm ghost" id="sfCsv">월간 근태(.csv)</button></div>
     <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="sfPrev">‹</button><b id="sfMon"></b><button class="btn sm ghost" id="sfNext">›</button></div><div id="sfList"></div><p class="small" style="margin:0">이름을 누르면 인사 정보·근무 일정·월간 근태·휴가를 보고 고칠 수 있어요.</p></div>
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">근태 설정</h3>
-    <div class="small" id="sfLoc"></div><div class="row"><button class="btn sm red grow" id="sfLocSet">지금 위치를 체육관으로 저장</button><select id="sfRad" style="border:2px solid var(--line);border-radius:10px;padding:6px"><option value="100">반경 100m</option><option value="200">반경 200m</option><option value="300">반경 300m</option><option value="500">반경 500m</option></select></div>
+    <div class="small" id="sfLoc"></div><div class="row"><button class="btn sm red grow" id="sfLocSet">지금 위치를 체육관으로 저장</button><select id="sfRad" style="border:2px solid var(--line);border-radius:10px;padding:6px"><option value="50">반경 50m</option><option value="100">반경 100m</option><option value="200">반경 200m</option><option value="300">반경 300m</option><option value="500">반경 500m</option></select></div>
     <div class="row" style="align-items:center;gap:6px"><span class="small grow">지각 · 조퇴 허용 시간</span><select id="sfGrace" style="border:2px solid var(--line);border-radius:10px;padding:6px"></select></div>
     <p class="small" style="margin:0">체육관 위치를 저장하면 코치가 체육관 근처에서만 출퇴근을 누를 수 있어요. 밖에서 누르면 사유를 남겨야 하고 '위치 밖'으로 표시돼요.</p></div>
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:10px">
@@ -2026,7 +2026,7 @@ $('#cwPrev').onclick=()=>{const f=new Date(CW.mon+'-01T00:00:00');f.setMonth(f.g
 $('#cwNext').onclick=()=>{const f=new Date(CW.mon+'-01T00:00:00');f.setMonth(f.getMonth()+1);CW.mon=dstr(f).slice(0,7);renderCoachHR()};
 $('#ckBtn').onclick=async()=>{const b=$('#ckBtn');b.disabled=true;const T=TODAY();const rec=Object.assign({},CW.att[T]||{});const isIn=!rec.in;
   const gl=local.meta.gymLoc;let pos=null,flag='',d=null;
-  if(gl){b.textContent='위치 확인 중…';pos=await getPos();if(!pos)flag='noloc';else{d=distM(pos,gl);if(d>gl.r+Math.min(pos.acc||0,150))flag='outside'}}
+  if(gl){b.textContent='위치 확인 중…';pos=await getPos();if(!pos)flag='noloc';else{d=distM(pos,gl);if(d>gl.r+Math.min(pos.acc||0,40))flag='outside'}}
   const save=async note=>{const now=Date.now();if(isIn){Object.assign(rec,{in:now,inD:d,flag:flag||'',note:note||''})}else{Object.assign(rec,{out:now,outD:d});if(flag){rec.flag=rec.flag||flag;rec.note=[rec.note,note].filter(Boolean).join(' / ')}}
     if(await hset(`hr/att/${CW.code}/${T}`,rec)){sfx('win');toast(isIn?`출근 ${hm(now)} · 오늘도 화이팅!`:`퇴근 ${hm(now)} · 수고하셨어요!`,3000)}renderCoachHR()};
   if(flag){sheet(`<h2>${flag==='outside'?'체육관 밖이에요':'위치를 확인하지 못했어요'}</h2><p style="margin:0">${flag==='outside'?`체육관에서 약 <b>${d}m</b> 떨어져 있어요.`:'휴대폰 위치 권한이 꺼져 있거나 신호가 약해요.'} 그래도 ${isIn?'출근':'퇴근'}을 기록하려면 사유를 적어 주세요. 관장님 화면에 '${flag==='outside'?'위치 밖':'위치 확인 안 됨'}'으로 표시돼요.</p>
@@ -2070,7 +2070,7 @@ async function renderStaffAdmin(){if(!$('#sfList'))return;const L=await loadStaf
   $('#sfList').innerHTML=L.map((x,i)=>{const s=monthSum(x.st,x.att,x.lvs,SF.mon);const pay=estPay(x.st,s);return`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-sf="${i}"><div class="grow"><b>${esc(x.st.name)}</b> <span class="small">${ROLE_T[x.st.role]||'코치'}${x.active?'':' · 계정 삭제됨'}</span><div class="small num">근무 ${s.days}일 · ${s.hours.toFixed(1)}시간 · 지각·조퇴 ${s.late+s.early} · 결근 ${s.absent} · 휴가 ${s.leave}</div></div><b class="num small">${pay?wonS(pay):''}</b></button>`}).join('')||'<div class="small">아직 코치가 없어요.</div>';
   $$('#sfList [data-sf]').forEach(b=>b.onclick=()=>openStaff(L[+b.dataset.sf]));
   const gl=local.meta.gymLoc;$('#sfLoc').innerHTML=gl?`체육관 위치 저장됨 · 반경 <b>${gl.r}m</b> 안에서만 출퇴근`:'<span style="color:var(--red)">체육관 위치가 아직 없어요.</span> 위치 없이도 출퇴근은 되지만 어디서 눌렀는지 확인할 수 없어요.';
-  $('#sfRad').value=String(gl?gl.r:200);$('#sfGrace').innerHTML=[0,5,10,15].map(m=>`<option value="${m}" ${graceMin()===m?'selected':''}>${m}분</option>`).join('')}
+  $('#sfRad').value=String(gl?gl.r:50);$('#sfGrace').innerHTML=[0,5,10,15].map(m=>`<option value="${m}" ${graceMin()===m?'selected':''}>${m}분</option>`).join('')}
 function estPay(st,s){const w=+(st.wage||0);if(!w)return 0;return st.payType==='month'?w:Math.round(s.hours*w)}
 $('#sfPrev').onclick=()=>{const f=new Date(SF.mon+'-01T00:00:00');f.setMonth(f.getMonth()-1);SF.mon=dstr(f).slice(0,7);renderStaffAdmin()};
 $('#sfNext').onclick=()=>{const f=new Date(SF.mon+'-01T00:00:00');f.setMonth(f.getMonth()+1);SF.mon=dstr(f).slice(0,7);renderStaffAdmin()};
