@@ -171,7 +171,7 @@ body.tvmode .app{max-width:none;padding:0}
 .memsum{background:var(--mat);border-radius:10px;padding:10px 12px;border-left:5px solid var(--red)}.memsum b{font-size:17px}
 .paybox{border:2px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .atabs{position:sticky;top:0;z-index:5;display:flex;gap:4px;overflow-x:auto;background:var(--mat);padding:8px 0;margin:-4px 0 0;scrollbar-width:none}.atabs::-webkit-scrollbar{display:none}
-.atabs button{flex:1 1 0;min-width:max-content;border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 8px;font:inherit;font-size:14px;color:var(--ink);position:relative;white-space:nowrap}
+.atabs button{flex:1 1 0;min-width:max-content;border:2px solid var(--line);background:#fff;border-radius:999px;padding:7px 6px;font:inherit;font-size:13px;color:var(--ink);position:relative;white-space:nowrap}
 .atabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .atabs i{font-style:normal;display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;margin-left:4px;padding:0 4px;vertical-align:1px}
 .adash{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -180,6 +180,10 @@ body.tvmode .app{max-width:none;padding:0}
 .bring.offtab{display:none!important}
 @media(max-width:360px){.adash{grid-template-columns:repeat(2,1fr)}}
 .ownerbar{display:flex;gap:6px;align-items:center;margin-top:8px;background:#2F2F2F;color:#fff;border-radius:10px;padding:8px 10px}.ownerbar .small{color:#C9CACF}.ownerbar .btn.ghost{color:#fff;border-color:#777}
+.clock{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.ckbig{font-family:var(--display);font-size:46px;line-height:1}
+.hrst{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;color:#fff;background:#66676D}.hrst.ok{background:#2B9B66}.hrst.late,.hrst.early{background:#E9A91F}.hrst.absent,.hrst.out{background:#D9343A}.hrst.leave{background:#2E5AAC}.hrst.work{background:#2F2F2F}.hrst.pend{background:#B07A08}
+.hrrow{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--mat)}
+.schedgrid{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 8px;align-items:center}.schedgrid input[type=time]{border:2px solid var(--line);border-radius:8px;padding:4px;width:100%}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -526,11 +530,25 @@ body.tvmode .app{max-width:none;padding:0}
 
 <section class="view" id="v-coach" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" id="coachHome">← 처음으로</button><span class="pill" style="background:var(--ink);color:#fff">코치 모드</span><button class="link" id="coachOut">코치 로그아웃</button></div>
+  <div class="atabs" id="ctabs"><button data-ct="work" class="on">내 근태</button><button data-ct="leave">휴가</button><button data-ct="mem">회원 출석</button></div>
+  <div id="cvWork" style="display:flex;flex-direction:column;gap:12px">
+    <div class="card clock"><div class="small" id="ckDate"></div><div id="ckSched" class="small"></div><div class="ckbig num" id="ckNow"></div><div id="ckState"></div><button class="btn red" id="ckBtn">출근하기</button><div class="small" id="ckLoc"></div></div>
+    <div class="card"><div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="cwPrev">‹</button><b id="cwMon" style="font-family:var(--display);font-weight:400;font-size:18px"></b><button class="btn sm ghost" id="cwNext">›</button></div>
+      <div class="stats" id="cwStats" style="grid-template-columns:repeat(4,1fr);margin-top:8px"></div><div id="cwDays" style="margin-top:6px"></div>
+      <button class="btn ghost sm" id="cwFix" style="margin-top:8px">근태 수정 요청 (출퇴근 누락·오류)</button><div id="cwFixes"></div></div>
+  </div>
+  <div id="cvLeave" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="card"><h3 style="font-size:18px">올해 연차</h3><div class="stats" id="lvStats" style="grid-template-columns:repeat(3,1fr);margin-top:6px"></div></div>
+    <button class="btn red" id="lvNew">+ 휴가 신청</button>
+    <div class="card"><h3 style="font-size:18px">신청 내역</h3><div id="lvList"></div></div>
+  </div>
+  <div id="cvMem" hidden style="display:flex;flex-direction:column;gap:12px">
   <h2 style="font-size:28px">출석 현황</h2>
   <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="cPrev" aria-label="전날">‹</button><b id="cDay" style="font-family:var(--display);font-weight:400;font-size:20px"></b><button class="btn sm ghost" id="cNext" aria-label="다음날">›</button></div>
   <div class="stats" id="cStats" style="grid-template-columns:repeat(3,1fr)"></div>
   <div class="card"><h3 style="font-size:18px">이날 출석한 회원 <span class="small num" id="cCnt"></span></h3><div class="cgrid" id="cToday"></div></div>
   <div class="card"><h3 style="font-size:18px">전체 회원</h3><div class="field"><input id="cSearch" placeholder="이름·회원번호 검색"></div><div id="cList"></div></div>
+  </div>
 </section>
 <!-- 체육관 TV -->
 <section class="view" id="v-tv" hidden>
@@ -597,7 +615,7 @@ body.tvmode .app{max-width:none;padding:0}
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
   <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div>
-  <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
+  <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="staff">코치<i id="atb-staff"></i></button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
   <div class="adash" data-atab="today" id="adash"></div>
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
   <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
@@ -641,9 +659,17 @@ body.tvmode .app{max-width:none;padding:0}
     <div><div id="qrbox"></div></div>
     <p class="small" style="margin:0">출력해서 데스크에 붙여 두세요. 휴대폰으로 찍으면 <b>가입 신청서가 바로</b> 열려요. 기존 회원은 신청서 위 '← 처음으로'에서 입장하면 돼요.</p>
   </div>
-  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:10px">
+  <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">오늘 근무</h3><div id="sfToday"></div></div>
+  <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">승인할 요청 <span class="small num" id="sfReqN"></span></h3><div id="sfReq"></div></div>
+  <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="font-size:20px" class="grow">코치 · 직원</h3><button class="btn sm ghost" id="sfCsv">월간 근태(.csv)</button></div>
+    <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="sfPrev">‹</button><b id="sfMon"></b><button class="btn sm ghost" id="sfNext">›</button></div><div id="sfList"></div><p class="small" style="margin:0">이름을 누르면 인사 정보·근무 일정·월간 근태·휴가를 보고 고칠 수 있어요.</p></div>
+  <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">근태 설정</h3>
+    <div class="small" id="sfLoc"></div><div class="row"><button class="btn sm red grow" id="sfLocSet">지금 위치를 체육관으로 저장</button><select id="sfRad" style="border:2px solid var(--line);border-radius:10px;padding:6px"><option value="100">반경 100m</option><option value="200">반경 200m</option><option value="300">반경 300m</option><option value="500">반경 500m</option></select></div>
+    <div class="row" style="align-items:center;gap:6px"><span class="small grow">지각 · 조퇴 허용 시간</span><select id="sfGrace" style="border:2px solid var(--line);border-radius:10px;padding:6px"></select></div>
+    <p class="small" style="margin:0">체육관 위치를 저장하면 코치가 체육관 근처에서만 출퇴근을 누를 수 있어요. 밖에서 누르면 사유를 남겨야 하고 '위치 밖'으로 표시돼요.</p></div>
+  <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">코치 계정</h3>
-    <p class="small" style="margin:0">코치는 <b>출석 현황, 회원 이름·얼굴 사진·출석 기록만</b> 볼 수 있어요. 연락처·결제·등록 정보·건강 참고사항은 볼 수 없어요. 지우면 그 코치는 바로 못 들어와요.</p>
+    <p class="small" style="margin:0">코치는 <b>회원 출석 현황·이름·얼굴 사진·출석 기록</b>과 <b>자기 근태·휴가</b>만 볼 수 있어요. 연락처·결제·등록 정보·건강 참고사항은 볼 수 없어요. 지우면 그 코치는 바로 못 들어와요.</p>
     <div id="coachRows"></div>
     <div class="row"><input id="coachName" class="grow" placeholder="코치 이름 (예: 김코치)" style="border:2px solid var(--line);border-radius:12px;padding:10px"><button class="btn sm red" id="coachAdd">코치 만들기</button></div>
   </div>
@@ -1830,7 +1856,7 @@ $('#nvAutoSave').onclick=async()=>{const o={};$$('#nvAutoRows [data-ak]').forEac
 
 /* ================= 코치 ================= */
 const COACH={
-  async login(code){if(!FB_ON()){const c=(local.coachcodes||{})[code];return c?c.name:null}
+  async login(code){MYCODE=null;try{localStorage.setItem('nnn_coach_code',JSON.stringify(code))}catch(e){}if(!FB_ON()){const c=(local.coachcodes||{})[code];return c?c.name:null}
     try{await gref('coaches/'+fuid).set({code,at:Date.now()});return true}catch(e){return null}},
   async check(){if(!FB_ON())return true;try{await gref('roster').get();return true}catch(e){return false}},
   async list(){if(!FB_ON())return local.coachcodes||{};try{return(await gref('coachcodes').get()).val()||{}}catch(e){return{}}},
@@ -1853,7 +1879,7 @@ $('#goCoach').onclick=()=>{sheet(`<h2>코치 로그인</h2><div class="field"><l
   el.querySelector('#ccOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})};
 let CO={day:null,all:[],ros:{}};
 async function openCoachMode(){const ros=await COACH.roster();if(ros==null){try{localStorage.removeItem('nnn_coach')}catch(e){}toast('코치 계정이 해제됐어요. 관장님께 코드를 다시 받아 주세요',4000);show('v-home');return}
-  CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');renderCoach()}
+  CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');setCTab('work')}
 const faceCache={};
 function faceInto(el,id){if(!el)return;if(faceCache[id]!==undefined){el.innerHTML=faceCache[id]?`<img src="${faceCache[id]}" alt="">`:'사진 없음';return}FDB.get(id).then(s=>{faceCache[id]=s||'';el.innerHTML=s?`<img src="${s}" alt="">`:'사진 없음'})}
 function renderCoach(){const d=CO.day;const x=new Date(d+'T00:00:00');$('#cDay').textContent=`${md(d)} (${DAYN[x.getDay()]})${d===TODAY()?' · 오늘':''}`;$('#cNext').disabled=d>=TODAY();
@@ -1875,6 +1901,163 @@ function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=
 $('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
 $('#cSearch').oninput=renderCoach;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
 $('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
+
+/* ================= 코치 인사 · 근태 ================= */
+const LEAVE_T={annual:'연차',half:'반차',sick:'병가',family:'경조사',etc:'기타'};const LEAVE_DED={annual:1,half:.5};
+const ROLE_T={coach:'코치',part:'파트타임',manager:'매니저'};
+function lget(p){return p.split('/').reduce((o,k)=>o==null?undefined:o[k],local.hrdb||{})}
+function lset(p,v){local.hrdb=local.hrdb||{};const ks=p.split('/');let o=local.hrdb;for(let i=0;i<ks.length-1;i++){o[ks[i]]=o[ks[i]]||{};o=o[ks[i]]}if(v==null)delete o[ks[ks.length-1]];else o[ks[ks.length-1]]=JSON.parse(JSON.stringify(v));persist()}
+async function hget(p){if(!FB_ON()){const v=lget(p);return v==null?null:JSON.parse(JSON.stringify(v))}try{return(await gref(p).get()).val()}catch(e){return null}}
+async function hset(p,v){if(!FB_ON()){lset(p,v);return true}try{await gref(p).set(v==null?null:clean(v));return true}catch(e){toast('저장하지 못했어요. 보안 규칙을 확인해 주세요',3500);return false}}
+let MYCODE=null;
+async function myCoachCode(){if(MYCODE)return MYCODE;if(!FB_ON())return MYCODE=lsGet('nnn_coach_code');try{MYCODE=(await gref('coaches/'+fuid+'/code').get()).val()}catch(e){}return MYCODE}
+const hm=ts=>{const d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())};
+const toMin=s=>{const [a,b]=String(s||'0:0').split(':').map(Number);return a*60+(b||0)};
+const tsMin=ts=>{const d=new Date(ts);return d.getHours()*60+d.getMinutes()};
+const graceMin=()=>+(local.meta.hrGrace!=null?local.meta.hrGrace:5);
+function schedOf(st,date){const s=st&&st.sched&&st.sched[new Date(date+'T00:00:00').getDay()];return s&&s.on?s:null}
+function leaveOn(lvs,date){return Object.values(lvs||{}).find(l=>l.status==='ok'&&date>=l.from&&date<=(l.to||l.from))}
+function dayStatus(st,rec,lvs,date){const sc=schedOf(st,date),lv=leaveOn(lvs,date),T=TODAY();const g=graceMin();
+  if(rec&&rec.in){const tags=[];let cls='ok',txt='정상';
+    if(sc&&tsMin(rec.in)>toMin(sc.s)+g){cls='late';txt='지각'}
+    if(rec.out&&sc&&tsMin(rec.out)<toMin(sc.e)-g){cls=cls==='late'?'late':'early';txt=cls==='late'?'지각·조퇴':'조퇴'}
+    if(!rec.out){if(date===T){cls='work';txt='근무 중'}else{cls='absent';txt='퇴근 누락'}}
+    if(rec.flag==='outside')tags.push('위치 밖');if(rec.flag==='noloc')tags.push('위치 확인 안 됨');if(rec.fixed)tags.push('수정됨');
+    return{cls,txt,tags,hours:rec.out?Math.max(0,(rec.out-rec.in)/36e5):0}}
+  if(lv)return{cls:'leave',txt:LEAVE_T[lv.type]||'휴가',tags:[],hours:0};
+  const since=st&&(st.joined||st.since);if(sc&&date<T&&(!since||date>=since))return{cls:'absent',txt:'결근',tags:[],hours:0};if(sc&&date<T)return null;
+  if(sc&&date===T)return{cls:'pend',txt:new Date().getHours()*60+new Date().getMinutes()>toMin(sc.s)+g?'미출근':'출근 전',tags:[],hours:0};
+  return null}
+function monthDays(mon){const f=new Date(mon+'-01T00:00:00');const n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate();return Array.from({length:n},(_,i)=>mon+'-'+pad2(i+1))}
+function monthSum(st,att,lvs,mon){const s={days:0,hours:0,late:0,early:0,absent:0,leave:0};monthDays(mon).filter(d=>d<=TODAY()).forEach(d=>{const r=dayStatus(st,(att||{})[d],lvs,d);if(!r)return;if((att||{})[d]&&att[d].in)s.days++;s.hours+=r.hours;if(r.txt.includes('지각'))s.late++;if(r.txt.includes('조퇴'))s.early++;if(r.cls==='absent')s.absent++;if(r.cls==='leave')s.leave++});return s}
+function leaveUsed(lvs,year){return Object.values(lvs||{}).filter(l=>l.status==='ok'&&(l.from||'').startsWith(year)).reduce((s,l)=>s+(LEAVE_DED[l.type]?(l.days||0):0),0)}
+function leaveDays(type,from,to,st){if(type==='half')return .5;let n=0;for(let d=from;d<=to;d=dAdd(d,1)){if(!st||!st.sched||schedOf(st,d))n++}return n}
+const hrPill=r=>r?`<span class="hrst ${r.cls}">${r.txt}</span>${r.tags.map(x=>` <span class="small" style="color:var(--red)">${x}</span>`).join('')}`:'<span class="small">-</span>';
+/* 위치 */
+function getPos(){return new Promise(res=>{if(!navigator.geolocation)return res(null);navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy}),()=>res(null),{enableHighAccuracy:true,timeout:9000,maximumAge:0})})}
+function distM(a,b){const R=6371000,toR=x=>x*Math.PI/180;const dLa=toR(b.lat-a.lat),dLo=toR(b.lng-a.lng);const h=Math.sin(dLa/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLo/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(h)))}
+/* ---- 코치 화면 ---- */
+const CW={mon:TODAY().slice(0,7),st:null,att:{},lvs:{},fix:{},code:null};
+function setCTab(k){$$('#ctabs [data-ct]').forEach(b=>b.classList.toggle('on',b.dataset.ct===k));$('#cvWork').hidden=k!=='work';$('#cvLeave').hidden=k!=='leave';$('#cvMem').hidden=k!=='mem';if(k==='mem')renderCoach();else renderCoachHR()}
+$$('#ctabs [data-ct]').forEach(b=>b.onclick=()=>setCTab(b.dataset.ct));
+async function loadCW(){const code=await myCoachCode();CW.code=code;if(!code)return false;
+  const [st,att,lvs,fix,cc]=await Promise.all([hget('staff/'+code),hget('hr/att/'+code),hget('hr/leave/'+code),hget('hr/fix/'+code),FB_ON()?Promise.resolve(null):Promise.resolve((local.coachcodes||{})[code])]);
+  CW.st=st||{name:(cc&&cc.name)||'코치'};CW.att=att||{};CW.lvs=lvs||{};CW.fix=fix||{};return true}
+let ckTimer=0;
+async function renderCoachHR(){if(!(await loadCW())){$('#ckState').innerHTML='<span class="small" style="color:var(--red)">코치 정보를 읽지 못했어요. 다시 로그인해 주세요.</span>';return}
+  const T=TODAY(),rec=CW.att[T],sc=schedOf(CW.st,T),st=dayStatus(CW.st,rec,CW.lvs,T);
+  $('#ckDate').textContent=`${CW.st.name||'코치'} · ${md(T)} (${DAYN[new Date().getDay()]})`;
+  $('#ckSched').innerHTML=sc?`오늘 근무 <b>${sc.s} ~ ${sc.e}</b>`:leaveOn(CW.lvs,T)?'오늘은 휴가예요':'오늘은 근무 일정이 없어요';
+  clearInterval(ckTimer);const tick=()=>{$('#ckNow').textContent=hm(Date.now())};tick();ckTimer=setInterval(tick,15000);
+  $('#ckState').innerHTML=rec&&rec.in?`출근 <b class="num">${hm(rec.in)}</b>${rec.out?` · 퇴근 <b class="num">${hm(rec.out)}</b> · ${((rec.out-rec.in)/36e5).toFixed(1)}시간`:''} ${hrPill(st)}`:hrPill(st);
+  const b=$('#ckBtn');b.hidden=!!(rec&&rec.out);b.textContent=rec&&rec.in?'퇴근하기':'출근하기';b.className='btn '+(rec&&rec.in?'':'red');b.disabled=false;
+  const gl=local.meta.gymLoc;$('#ckLoc').textContent=gl?`체육관 반경 ${gl.r}m 안에서 눌러 주세요 (위치 확인)`:'';
+  // month
+  $('#cwMon').textContent=`${CW.mon.slice(0,4)}년 ${+CW.mon.slice(5)}월`;$('#cwNext').disabled=CW.mon>=T.slice(0,7);
+  const s=monthSum(CW.st,CW.att,CW.lvs,CW.mon);
+  $('#cwStats').innerHTML=`<div class="stat"><b class="num">${s.days}</b><span>근무일</span></div><div class="stat"><b class="num">${s.hours.toFixed(1)}</b><span>시간</span></div><div class="stat warn"><b class="num">${s.late+s.early}</b><span>지각·조퇴</span></div><div class="stat bad"><b class="num">${s.absent}</b><span>결근·누락</span></div>`;
+  const days=monthDays(CW.mon).filter(d=>d<=T).reverse().map(d=>({d,r:dayStatus(CW.st,CW.att[d],CW.lvs,d),rec:CW.att[d]})).filter(x=>x.r);
+  $('#cwDays').innerHTML=days.map(x=>`<div class="hrrow"><b class="num" style="width:62px">${x.d.slice(5).replace('-','/')} <span class="small">${DAYN[new Date(x.d+'T00:00:00').getDay()]}</span></b><span class="grow small num">${x.rec&&x.rec.in?hm(x.rec.in)+' ~ '+(x.rec.out?hm(x.rec.out):'--:--'):''}</span>${hrPill(x.r)}</div>`).join('')||'<div class="small">기록이 없어요.</div>';
+  const fx=Object.entries(CW.fix).sort((a,b)=>(b[1].at||0)-(a[1].at||0)).slice(0,5);
+  $('#cwFixes').innerHTML=fx.length?'<div class="label" style="margin-top:8px">수정 요청</div>'+fx.map(([k,f])=>`<div class="hrrow"><span class="grow small">${md(f.date)} · ${f.in||'--'} ~ ${f.out||'--'} · ${esc(f.reason||'')}</span><span class="hrst ${f.status==='ok'?'ok':f.status==='no'?'absent':'pend'}">${f.status==='ok'?'승인':f.status==='no'?'반려':'대기'}</span></div>`).join(''):'';
+  // leave tab
+  const Y=T.slice(0,4),tot=+(CW.st.leaveTotal||0),used=leaveUsed(CW.lvs,Y);
+  $('#lvStats').innerHTML=`<div class="stat"><b class="num">${tot}</b><span>총 연차</span></div><div class="stat"><b class="num">${used}</b><span>사용</span></div><div class="stat"><b class="num" style="color:var(--red)">${Math.max(0,tot-used)}</b><span>남은 연차</span></div>`;
+  const ls=Object.entries(CW.lvs).sort((a,b)=>(b[1].from||'').localeCompare(a[1].from||''));
+  $('#lvList').innerHTML=ls.map(([k,l])=>`<div class="hrrow"><div class="grow"><b>${LEAVE_T[l.type]}</b> <span class="small num">${md(l.from)}${l.to&&l.to!==l.from?' ~ '+md(l.to):''} · ${l.days}일</span><div class="small">${esc(l.reason||'')}${l.memo?' · 관장: '+esc(l.memo):''}</div></div><span class="hrst ${l.status==='ok'?'ok':l.status==='no'?'absent':'pend'}">${l.status==='ok'?'승인':l.status==='no'?'반려':'대기'}</span>${l.status==='pending'?`<button class="btn sm ghost" data-lvc="${k}">취소</button>`:''}</div>`).join('')||'<div class="small">신청 내역이 없어요.</div>';
+  $$('#lvList [data-lvc]').forEach(b=>b.onclick=async()=>{if(await hset(`hr/leave/${CW.code}/${b.dataset.lvc}`,null)){toast('신청을 취소했어요');renderCoachHR()}})}
+$('#cwPrev').onclick=()=>{const f=new Date(CW.mon+'-01T00:00:00');f.setMonth(f.getMonth()-1);CW.mon=dstr(f).slice(0,7);renderCoachHR()};
+$('#cwNext').onclick=()=>{const f=new Date(CW.mon+'-01T00:00:00');f.setMonth(f.getMonth()+1);CW.mon=dstr(f).slice(0,7);renderCoachHR()};
+$('#ckBtn').onclick=async()=>{const b=$('#ckBtn');b.disabled=true;const T=TODAY();const rec=Object.assign({},CW.att[T]||{});const isIn=!rec.in;
+  const gl=local.meta.gymLoc;let pos=null,flag='',d=null;
+  if(gl){b.textContent='위치 확인 중…';pos=await getPos();if(!pos)flag='noloc';else{d=distM(pos,gl);if(d>gl.r+Math.min(pos.acc||0,150))flag='outside'}}
+  const save=async note=>{const now=Date.now();if(isIn){Object.assign(rec,{in:now,inD:d,flag:flag||'',note:note||''})}else{Object.assign(rec,{out:now,outD:d});if(flag){rec.flag=rec.flag||flag;rec.note=[rec.note,note].filter(Boolean).join(' / ')}}
+    if(await hset(`hr/att/${CW.code}/${T}`,rec)){sfx('win');toast(isIn?`출근 ${hm(now)} · 오늘도 화이팅!`:`퇴근 ${hm(now)} · 수고하셨어요!`,3000)}renderCoachHR()};
+  if(flag){sheet(`<h2>${flag==='outside'?'체육관 밖이에요':'위치를 확인하지 못했어요'}</h2><p style="margin:0">${flag==='outside'?`체육관에서 약 <b>${d}m</b> 떨어져 있어요.`:'휴대폰 위치 권한이 꺼져 있거나 신호가 약해요.'} 그래도 ${isIn?'출근':'퇴근'}을 기록하려면 사유를 적어 주세요. 관장님 화면에 '${flag==='outside'?'위치 밖':'위치 확인 안 됨'}'으로 표시돼요.</p>
+    <div class="field"><label for="ckNote">사유</label><input id="ckNote" placeholder="예: 외부 PT 출장, 위치 권한 오류"></div><button class="btn red" id="ckSave">사유 남기고 기록</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{el.querySelector('#ckSave').onclick=()=>{const n=el.querySelector('#ckNote').value.trim();if(!n){toast('사유를 적어 주세요');return}close();save(n)}});renderCoachHR();return}
+  save('')};
+$('#cwFix').onclick=()=>{sheet(`<h2>근태 수정 요청</h2><p class="small" style="margin:0">출퇴근을 깜빡했거나 잘못 눌렀을 때 관장님께 수정을 요청해요. 승인되면 기록이 바뀌어요.</p>
+  <div class="field"><label for="fxD">날짜</label><input type="date" id="fxD" value="${TODAY()}" max="${TODAY()}"></div>
+  <div class="row"><div class="field grow"><label for="fxI">출근 시각</label><input type="time" id="fxI"></div><div class="field grow"><label for="fxO">퇴근 시각</label><input type="time" id="fxO"></div></div>
+  <div class="field"><label for="fxR">사유</label><input id="fxR" placeholder="예: 퇴근 버튼을 깜빡했어요"></div><button class="btn red" id="fxGo">요청 보내기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+  const fill=()=>{const r=CW.att[el.querySelector('#fxD').value];el.querySelector('#fxI').value=r&&r.in?hm(r.in):'';el.querySelector('#fxO').value=r&&r.out?hm(r.out):''};fill();el.querySelector('#fxD').onchange=fill;
+  el.querySelector('#fxGo').onclick=async()=>{const v={date:el.querySelector('#fxD').value,in:el.querySelector('#fxI').value,out:el.querySelector('#fxO').value,reason:el.querySelector('#fxR').value.trim(),status:'pending',at:Date.now()};
+    if(!v.date||(!v.in&&!v.out)){toast('날짜와 시각을 적어 주세요');return}if(!v.reason){toast('사유를 적어 주세요');return}
+    if(await hset(`hr/fix/${CW.code}/f${Date.now().toString(36)}`,v)){toast('수정 요청을 보냈어요');close();renderCoachHR()}}})};
+$('#lvNew').onclick=()=>{let type='annual';sheet(`<h2>휴가 신청</h2><div class="chips" id="lvT">${Object.entries(LEAVE_T).map(([k,n])=>`<button type="button" class="chip ${k==='annual'?'on':''}" data-t="${k}">${n}</button>`).join('')}</div>
+  <div class="row"><div class="field grow"><label for="lvF">시작일</label><input type="date" id="lvF" value="${dAdd(TODAY(),1)}"></div><div class="field grow" id="lvToF"><label for="lvTo">끝나는 날</label><input type="date" id="lvTo" value="${dAdd(TODAY(),1)}"></div></div>
+  <div class="small" id="lvCalc"></div><div class="field"><label for="lvR">사유</label><input id="lvR" placeholder="예: 가족 행사"></div>
+  <p class="small" style="margin:0">연차·반차는 남은 연차에서 빠져요. 병가·경조사·기타는 관장님이 확인해요.</p><button class="btn red" id="lvGo">신청하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+  const calc=()=>{el.querySelectorAll('#lvT [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===type));el.querySelector('#lvToF').hidden=type==='half';const f=el.querySelector('#lvF').value,to=type==='half'?f:el.querySelector('#lvTo').value;if(to<f){el.querySelector('#lvTo').value=f}
+    const n=leaveDays(type,f,type==='half'?f:el.querySelector('#lvTo').value,CW.st);const left=Math.max(0,+(CW.st.leaveTotal||0)-leaveUsed(CW.lvs,TODAY().slice(0,4)));el.querySelector('#lvCalc').innerHTML=`<b>${n}일</b>${LEAVE_DED[type]?` · 남은 연차 ${left}일 → ${left-n}일`:''}${LEAVE_DED[type]&&n>left?' <span style="color:var(--red)">(연차 부족)</span>':''}`};
+  el.querySelectorAll('#lvT [data-t]').forEach(b=>b.onclick=()=>{type=b.dataset.t;calc()});el.querySelector('#lvF').onchange=calc;el.querySelector('#lvTo').onchange=calc;calc();
+  el.querySelector('#lvGo').onclick=async()=>{const f=el.querySelector('#lvF').value,to=type==='half'?f:el.querySelector('#lvTo').value;if(!f){toast('날짜를 골라 주세요');return}
+    const v={type,from:f,to,days:leaveDays(type,f,to,CW.st),reason:el.querySelector('#lvR').value.trim(),status:'pending',at:Date.now(),name:CW.st.name||''};
+    if(await hset(`hr/leave/${CW.code}/l${Date.now().toString(36)}`,v)){toast('휴가를 신청했어요. 관장님 승인을 기다려 주세요',3500);close();renderCoachHR()}}})};
+/* ---- 관장: 코치 탭 ---- */
+const SF={mon:TODAY().slice(0,7)};
+async function loadStaffAll(){const [codes,staff,att,lv,fx]=await Promise.all([COACH.list(),hget('staff'),hget('hr/att'),hget('hr/leave'),hget('hr/fix')]);
+  const ids=[...new Set([...Object.keys(codes||{}),...Object.keys(staff||{})])];
+  return ids.map(code=>({code,active:!!(codes||{})[code],st:Object.assign({name:((codes||{})[code]||{}).name||'(삭제된 계정)'},(staff||{})[code]||{}),att:(att||{})[code]||{},lvs:(lv||{})[code]||{},fix:(fx||{})[code]||{}}))}
+async function renderStaffAdmin(){if(!$('#sfList'))return;const L=await loadStaffAll();SF.L=L;const T=TODAY();
+  $('#sfToday').innerHTML=L.filter(x=>x.active).map(x=>{const r=x.att[T],s=dayStatus(x.st,r,x.lvs,T),sc=schedOf(x.st,T);return`<div class="hrrow"><b class="grow">${esc(x.st.name)} <span class="small">${sc?sc.s+'~'+sc.e:'일정 없음'}</span></b><span class="small num">${r&&r.in?hm(r.in)+' ~ '+(r.out?hm(r.out):''):''}</span>${hrPill(s)}</div>`}).join('')||'<div class="small">코치 계정을 먼저 만들어 주세요 (아래 코치 계정).</div>';
+  const reqs=[];L.forEach(x=>{Object.entries(x.lvs).forEach(([k,l])=>{if(l.status==='pending')reqs.push({kind:'leave',x,k,v:l})});Object.entries(x.fix).forEach(([k,f])=>{if(f.status==='pending')reqs.push({kind:'fix',x,k,v:f})})});
+  $('#sfReqN').textContent=reqs.length?reqs.length+'건':'';const bd=$('#atb-staff');if(bd){bd.textContent=reqs.length||'';bd.hidden=!reqs.length}
+  $('#sfReq').innerHTML=reqs.map((q,i)=>q.kind==='leave'?`<div class="hrrow"><div class="grow"><b>${esc(q.x.st.name)}</b> <span class="hrst leave">${LEAVE_T[q.v.type]}</span><div class="small num">${md(q.v.from)}${q.v.to!==q.v.from?' ~ '+md(q.v.to):''} · ${q.v.days}일 · 남은 연차 ${Math.max(0,+(q.x.st.leaveTotal||0)-leaveUsed(q.x.lvs,T.slice(0,4)))}일</div><div class="small">${esc(q.v.reason||'')}</div></div><button class="btn sm ghost" data-rq="${i}" data-a="no">반려</button><button class="btn sm red" data-rq="${i}" data-a="ok">승인</button></div>`
+    :`<div class="hrrow"><div class="grow"><b>${esc(q.x.st.name)}</b> <span class="hrst pend">근태 수정</span><div class="small num">${md(q.v.date)} · ${q.v.in||'--'} ~ ${q.v.out||'--'}${q.x.att[q.v.date]&&q.x.att[q.v.date].in?` (기존 ${hm(q.x.att[q.v.date].in)} ~ ${q.x.att[q.v.date].out?hm(q.x.att[q.v.date].out):'--'})`:' (기존 기록 없음)'}</div><div class="small">${esc(q.v.reason||'')}</div></div><button class="btn sm ghost" data-rq="${i}" data-a="no">반려</button><button class="btn sm red" data-rq="${i}" data-a="ok">승인</button></div>`).join('')||'<div class="small">대기 중인 요청이 없어요.</div>';
+  $$('#sfReq [data-rq]').forEach(b=>b.onclick=async()=>{const q=reqs[+b.dataset.rq],ok=b.dataset.a==='ok';b.disabled=true;
+    if(q.kind==='leave'){await hset(`hr/leave/${q.x.code}/${q.k}`,Object.assign({},q.v,{status:ok?'ok':'no',decidedAt:Date.now()}))}
+    else{if(ok){const base=q.x.att[q.v.date]||{};const mk=s=>s?new Date(q.v.date+'T'+s+':00').getTime():null;const nr=Object.assign({},base,{fixed:true});if(q.v.in)nr.in=mk(q.v.in);if(q.v.out)nr.out=mk(q.v.out);await hset(`hr/att/${q.x.code}/${q.v.date}`,nr)}
+      await hset(`hr/fix/${q.x.code}/${q.k}`,Object.assign({},q.v,{status:ok?'ok':'no',decidedAt:Date.now()}))}
+    toast(ok?'승인했어요':'반려했어요');renderStaffAdmin()});
+  $('#sfMon').textContent=`${SF.mon.slice(0,4)}년 ${+SF.mon.slice(5)}월`;$('#sfNext').disabled=SF.mon>=T.slice(0,7);
+  $('#sfList').innerHTML=L.map((x,i)=>{const s=monthSum(x.st,x.att,x.lvs,SF.mon);const pay=estPay(x.st,s);return`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-sf="${i}"><div class="grow"><b>${esc(x.st.name)}</b> <span class="small">${ROLE_T[x.st.role]||'코치'}${x.active?'':' · 계정 삭제됨'}</span><div class="small num">근무 ${s.days}일 · ${s.hours.toFixed(1)}시간 · 지각·조퇴 ${s.late+s.early} · 결근 ${s.absent} · 휴가 ${s.leave}</div></div><b class="num small">${pay?wonS(pay):''}</b></button>`}).join('')||'<div class="small">아직 코치가 없어요.</div>';
+  $$('#sfList [data-sf]').forEach(b=>b.onclick=()=>openStaff(L[+b.dataset.sf]));
+  const gl=local.meta.gymLoc;$('#sfLoc').innerHTML=gl?`체육관 위치 저장됨 · 반경 <b>${gl.r}m</b> 안에서만 출퇴근`:'<span style="color:var(--red)">체육관 위치가 아직 없어요.</span> 위치 없이도 출퇴근은 되지만 어디서 눌렀는지 확인할 수 없어요.';
+  $('#sfRad').value=String(gl?gl.r:200);$('#sfGrace').innerHTML=[0,5,10,15].map(m=>`<option value="${m}" ${graceMin()===m?'selected':''}>${m}분</option>`).join('')}
+function estPay(st,s){const w=+(st.wage||0);if(!w)return 0;return st.payType==='month'?w:Math.round(s.hours*w)}
+$('#sfPrev').onclick=()=>{const f=new Date(SF.mon+'-01T00:00:00');f.setMonth(f.getMonth()-1);SF.mon=dstr(f).slice(0,7);renderStaffAdmin()};
+$('#sfNext').onclick=()=>{const f=new Date(SF.mon+'-01T00:00:00');f.setMonth(f.getMonth()+1);SF.mon=dstr(f).slice(0,7);renderStaffAdmin()};
+$('#sfLocSet').onclick=async()=>{toast('위치 확인 중… 체육관 안에서 눌러 주세요');const p=await getPos();if(!p){toast('위치를 가져오지 못했어요. 휴대폰 위치 권한을 켜 주세요',4000);return}local.meta.gymLoc={lat:+p.lat.toFixed(6),lng:+p.lng.toFixed(6),r:+$('#sfRad').value};if(await DB.saveMeta()){toast(`체육관 위치를 저장했어요 (정확도 약 ${Math.round(p.acc)}m)`,3500);renderStaffAdmin()}};
+$('#sfRad').onchange=async()=>{if(local.meta.gymLoc){local.meta.gymLoc.r=+$('#sfRad').value;if(await DB.saveMeta())toast('반경을 바꿨어요');renderStaffAdmin()}};
+$('#sfGrace').onchange=async()=>{local.meta.hrGrace=+$('#sfGrace').value;if(await DB.saveMeta())toast('허용 시간을 바꿨어요');renderStaffAdmin()};
+$('#sfCsv').onclick=()=>{const L=SF.L||[];const rows=[['이름','직무','날짜','요일','근무일정','출근','퇴근','근무시간','상태','비고']];
+  L.forEach(x=>monthDays(SF.mon).forEach(d=>{const r=x.att[d],s=dayStatus(x.st,r,x.lvs,d),sc=schedOf(x.st,d);if(!s&&!r)return;rows.push([x.st.name,ROLE_T[x.st.role]||'코치',d,DAYN[new Date(d+'T00:00:00').getDay()],sc?sc.s+'~'+sc.e:'',r&&r.in?hm(r.in):'',r&&r.out?hm(r.out):'',s?s.hours.toFixed(2):'',s?s.txt:'',[...(s?s.tags:[]),r&&r.note?r.note:''].filter(Boolean).join(' / ')])}));
+  rows.push([]);rows.push(['이름','근무일','총시간','지각','조퇴','결근','휴가','급여형태','단가','예상급여']);L.forEach(x=>{const s=monthSum(x.st,x.att,x.lvs,SF.mon);rows.push([x.st.name,s.days,s.hours.toFixed(2),s.late,s.early,s.absent,s.leave,x.st.payType==='month'?'월급':'시급',x.st.wage||'',estPay(x.st,s)||''])});
+  download(`NNN_코치근태_${SF.mon}.csv`,'\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')};
+function openStaff(x){const st=Object.assign({role:'coach',payType:'hour',leaveTotal:15,sched:{}},x.st);let mon=SF.mon;
+  const dayRows=()=>monthDays(mon).filter(d=>d<=TODAY()).reverse().map(d=>({d,r:dayStatus(st,x.att[d],x.lvs,d),rec:x.att[d]})).filter(o=>o.r||o.rec).map(o=>`<button class="hrrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left;font:inherit;color:inherit" data-dd="${o.d}"><b class="num" style="width:62px">${o.d.slice(5).replace('-','/')} <span class="small">${DAYN[new Date(o.d+'T00:00:00').getDay()]}</span></b><span class="grow small num">${o.rec&&o.rec.in?hm(o.rec.in)+' ~ '+(o.rec.out?hm(o.rec.out):'--:--'):''}${o.rec&&o.rec.note?' · '+esc(o.rec.note):''}</span>${hrPill(o.r)}</button>`).join('')||'<div class="small">기록이 없어요.</div>';
+  sheet(`<h2>${esc(st.name)}</h2>
+    <div class="label">인사 정보</div>
+    <div class="row"><div class="field grow"><label for="sfN">이름</label><input id="sfN" value="${esc(st.name)}"></div><div class="field grow"><label for="sfR">직무</label><select id="sfR">${Object.entries(ROLE_T).map(([k,n])=>`<option value="${k}" ${st.role===k?'selected':''}>${n}</option>`).join('')}</select></div></div>
+    <div class="row"><div class="field grow"><label for="sfP">연락처</label><input id="sfP" inputmode="tel" value="${esc(st.phone||'')}"></div><div class="field grow"><label for="sfJ">입사일</label><input type="date" id="sfJ" value="${esc(st.joined||'')}"></div></div>
+    <div class="row"><div class="field grow"><label for="sfPT">급여 형태</label><select id="sfPT"><option value="hour" ${st.payType!=='month'?'selected':''}>시급</option><option value="month" ${st.payType==='month'?'selected':''}>월급</option></select></div><div class="field grow"><label for="sfW">금액 (원)</label><input id="sfW" inputmode="numeric" value="${st.wage?(+st.wage).toLocaleString():''}"></div><div class="field" style="width:80px"><label for="sfL">연차(일)</label><input id="sfL" type="number" min="0" step="0.5" value="${st.leaveTotal}"></div></div>
+    <div class="field"><label for="sfM">메모 <span class="small">(계약 조건·자격증 등, 관장님만 봐요)</span></label><textarea id="sfM" rows="2">${esc(st.memo||'')}</textarea></div>
+    <div class="label">주간 근무 일정</div>
+    <div class="schedgrid">${[1,2,3,4,5,6,0].map(w=>{const s=st.sched[w]||{};return`<label class="check" style="margin:0"><input type="checkbox" data-w="${w}" ${s.on?'checked':''}><b>${DAYN[w]}</b></label><input type="time" data-ws="${w}" value="${s.s||'14:00'}"><input type="time" data-we="${w}" value="${s.e||'22:00'}">`}).join('')}</div>
+    <button class="btn red" id="sfSave">인사 정보 · 일정 저장</button>
+    <div class="label">월간 근태</div>
+    <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="sdPrev">‹</button><b id="sdMon"></b><button class="btn sm ghost" id="sdNext">›</button></div>
+    <div id="sdSum" class="memsum"></div><div id="sdDays"></div><p class="small" style="margin:0">날짜를 누르면 출퇴근 시각을 직접 고칠 수 있어요.</p>
+    <div class="label">휴가 내역 (올해 남은 연차 ${Math.max(0,(+st.leaveTotal||0)-leaveUsed(x.lvs,TODAY().slice(0,4)))}일)</div>
+    <div>${Object.values(x.lvs).sort((a,b)=>(b.from||'').localeCompare(a.from||'')).map(l=>`<div class="hrrow"><span class="grow small">${LEAVE_T[l.type]} · ${md(l.from)}${l.to!==l.from?' ~ '+md(l.to):''} · ${l.days}일</span><span class="hrst ${l.status==='ok'?'ok':l.status==='no'?'absent':'pend'}">${l.status==='ok'?'승인':l.status==='no'?'반려':'대기'}</span></div>`).join('')||'<div class="small">없어요.</div>'}</div>
+    <button class="btn ghost" id="sdAddLv">휴가 직접 등록</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const W=el.querySelector('#sfW');W.oninput=()=>{const v=+W.value.replace(/\D/g,'');W.value=v?v.toLocaleString():''};
+    const draw=()=>{el.querySelector('#sdMon').textContent=`${mon.slice(0,4)}년 ${+mon.slice(5)}월`;const s=monthSum(st,x.att,x.lvs,mon);const pay=estPay(st,s);
+      el.querySelector('#sdSum').innerHTML=`<b class="num">${s.hours.toFixed(1)}시간 · ${s.days}일</b><div class="small num">지각 ${s.late} · 조퇴 ${s.early} · 결근·누락 ${s.absent} · 휴가 ${s.leave}${pay?` · 예상 급여 ${wonS(pay)}`:''}</div>`;
+      el.querySelector('#sdDays').innerHTML=dayRows();el.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>editDay(b.dataset.dd))};
+    const editDay=d=>{const r=x.att[d]||{};const wrap=el.querySelector('#sdDays');const box=document.createElement('div');box.className='memsum';box.innerHTML=`<b>${md(d)} 근태 수정</b><div class="row"><div class="field grow"><label>출근</label><input type="time" id="edI" value="${r.in?hm(r.in):''}"></div><div class="field grow"><label>퇴근</label><input type="time" id="edO" value="${r.out?hm(r.out):''}"></div></div><div class="row"><button class="btn sm red grow" id="edS">저장</button><button class="btn sm ghost grow" id="edD">기록 삭제</button></div>`;wrap.prepend(box);box.scrollIntoView({block:'center'});
+      box.querySelector('#edS').onclick=async()=>{const i=box.querySelector('#edI').value,o=box.querySelector('#edO').value;if(!i){toast('출근 시각을 적어 주세요');return}const nr=Object.assign({},r,{in:new Date(d+'T'+i+':00').getTime(),fixed:true});if(o)nr.out=new Date(d+'T'+o+':00').getTime();else delete nr.out;if(await hset(`hr/att/${x.code}/${d}`,nr)){x.att[d]=nr;toast('고쳤어요');draw();renderStaffAdmin()}};
+      box.querySelector('#edD').onclick=async()=>{if(await hset(`hr/att/${x.code}/${d}`,null)){delete x.att[d];toast('지웠어요');draw();renderStaffAdmin()}}};
+    el.querySelector('#sdPrev').onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()-1);mon=dstr(f).slice(0,7);draw()};
+    el.querySelector('#sdNext').onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+1);mon=dstr(f).slice(0,7);draw()};draw();
+    el.querySelector('#sfSave').onclick=async()=>{const sched={};el.querySelectorAll('[data-w]').forEach(c=>{const w=c.dataset.w;sched[w]={on:c.checked,s:el.querySelector(`[data-ws="${w}"]`).value||'14:00',e:el.querySelector(`[data-we="${w}"]`).value||'22:00'}});
+      const v={name:el.querySelector('#sfN').value.trim()||st.name,role:el.querySelector('#sfR').value,phone:el.querySelector('#sfP').value.trim(),joined:el.querySelector('#sfJ').value,payType:el.querySelector('#sfPT').value,wage:+W.value.replace(/\D/g,'')||0,leaveTotal:+el.querySelector('#sfL').value||0,memo:el.querySelector('#sfM').value.trim(),sched,since:st.since||TODAY()};
+      if(await hset('staff/'+x.code,v)){Object.assign(st,v);x.st=st;if(x.active&&FB_ON()){try{await gref('coachcodes/'+x.code+'/name').set(v.name)}catch(e){}}toast('저장했어요');draw();renderStaffAdmin();renderCoaches()}};
+    el.querySelector('#sdAddLv').onclick=()=>{close();sheet(`<h2>${esc(st.name)} · 휴가 등록</h2><div class="field"><label for="alT">종류</label><select id="alT">${Object.entries(LEAVE_T).map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}</select></div><div class="row"><div class="field grow"><label for="alF">시작</label><input type="date" id="alF" value="${TODAY()}"></div><div class="field grow"><label for="alTo">끝</label><input type="date" id="alTo" value="${TODAY()}"></div></div><div class="field"><label for="alR">메모</label><input id="alR"></div><button class="btn red" id="alGo">승인된 휴가로 등록</button><button class="btn ghost" data-close>취소</button>`,(e2,c2)=>{
+      e2.querySelector('#alGo').onclick=async()=>{const type=e2.querySelector('#alT').value,f=e2.querySelector('#alF').value,to=type==='half'?f:(e2.querySelector('#alTo').value||f);const v={type,from:f,to,days:leaveDays(type,f,to,st),reason:e2.querySelector('#alR').value.trim(),status:'ok',at:Date.now(),decidedAt:Date.now(),byAdmin:true,name:st.name};
+        if(await hset(`hr/leave/${x.code}/l${Date.now().toString(36)}`,v)){toast('휴가를 등록했어요');c2();renderStaffAdmin()}}})};
+  })}
 
 /* ================= QR 출석 ================= */
 async function applyAttend(m,makeup,via){
@@ -1933,7 +2116,7 @@ async function openAdmin(){
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
   {let k='today';try{k=localStorage.getItem('nnn_atab')||'today'}catch(e){}setATab(k)}renderADash();
 }
-function setATab(k){if(!['today','mem','biz','ops','set'].includes(k))k='today';$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
+function setATab(k){if(!['today','mem','biz','staff','ops','set'].includes(k))k='today';if(k==='staff')renderStaffAdmin();$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
 $$('#atabs [data-at]').forEach(b=>b.onclick=()=>{setATab(b.dataset.at);window.scrollTo({top:0,behavior:'smooth'})});
 async function renderADash(){const box=$('#adash');if(!box)return;const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
   const pend=all.filter(m=>!m.approvedAt).length,payN=pays.filter(x=>x.status==='pending').length,dueN=dueItems(all).length,today=all.filter(m=>m.last===TODAY()).length,soon=all.filter(m=>memGroup(m)==='soon').length,valid=all.filter(m=>['active','soon'].includes(memGroup(m))).length;
@@ -1943,7 +2126,7 @@ async function renderADash(){const box=$('#adash');if(!box)return;const all=(awa
   box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go,f=b.dataset.f;if(g==='sales'){openSales();return}if(g==='notice'){openNoticeAdmin();return}
     if(g==='mem'){admFilter=f||'all';setATab('mem');renderAdmRows();setTimeout(()=>{const c=$('#admPend').hidden?$('#admFilt'):$('#admPend');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
     setATab('today');setTimeout(()=>{const el=f==='pay'?$('#payRows'):$('#dueRows');el&&el.parentElement.scrollIntoView({behavior:'smooth',block:'start'})},60)});
-  const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};bd('#atb-today',payN+dueN);bd('#atb-mem',pend)}
+  const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};bd('#atb-today',payN+dueN);bd('#atb-mem',pend);try{const [lv,fx]=await Promise.all([hget('hr/leave'),hget('hr/fix')]);let n=0;[lv,fx].forEach(o=>Object.values(o||{}).forEach(c=>Object.values(c||{}).forEach(v=>{if(v&&v.status==='pending')n++})));bd('#atb-staff',n)}catch(e){}}
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){

@@ -207,6 +207,42 @@
    "backups": {
     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+   },
+   "staff": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    "$code": {
+     ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+    }
+   },
+   "hr": {
+    "att": {
+     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     "$code": {
+      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+      "$date": {
+       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && newData.exists() && (!data.exists() || !data.child('out').exists())))"
+      }
+     }
+    },
+    "leave": {
+     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     "$code": {
+      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+      "$id": {
+       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
+      }
+     }
+    },
+    "fix": {
+     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     "$code": {
+      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+      "$id": {
+       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
+      }
+     }
+    }
    }
   }
  }
