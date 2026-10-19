@@ -408,6 +408,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .mrow .ms{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
 .mrow .mb{display:flex;gap:6px;flex:0 0 auto}
 .mrow.pend{background:#FFF6EE}
+.mrow .mface{width:48px;height:48px;border-radius:10px;font-size:10px;line-height:1.2;text-align:center;background:var(--mat)}
 .famc{background:linear-gradient(135deg,#FFF1F1,#FFF8E6);border:2px solid #F2C9C9;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .famc .fh{display:flex;align-items:center;gap:8px}.famc .fh b{flex:1;font-family:var(--display);font-weight:400;font-size:18px}
 .famc .fm{display:flex;gap:8px;overflow-x:auto;padding:9px 4px 2px}
@@ -2924,8 +2925,10 @@ async function renderAdmRows(){
     return false};
   renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&srch(m));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
-  $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]'))return;admDetail(r.dataset.d)});
+  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  {const io=window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){io.unobserve(en.target);faceInto(en.target,en.target.dataset.mf)}}),{rootMargin:'200px'}):null;
+    $$('#admRows [data-mf]').forEach(el=>{const m=list.find(x=>x.id===el.dataset.mf);if(!m||!m.hasFace)return;if(io)io.observe(el);else faceInto(el,el.dataset.mf)})}
+  $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]')||e.target.closest('.mface img'))return;admDetail(r.dataset.d)});
   clearTimeout(window._adT);window._adT=setTimeout(renderADash,300);
   $$('#admRows [data-ap]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
 }
