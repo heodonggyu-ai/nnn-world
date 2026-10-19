@@ -184,6 +184,11 @@ body.tvmode .app{max-width:none;padding:0}
 .hrst{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;color:#fff;background:#66676D}.hrst.ok{background:#2B9B66}.hrst.late,.hrst.early{background:#E9A91F}.hrst.absent,.hrst.out{background:#D9343A}.hrst.leave{background:#2E5AAC}.hrst.work{background:#2F2F2F}.hrst.pend{background:#B07A08}
 .hrrow{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--mat)}
 .schedgrid{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 8px;align-items:center}.schedgrid input[type=time]{border:2px solid var(--line);border-radius:8px;padding:4px;width:100%}
+.skb{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;color:#fff;background:#2F2F2F;font-family:var(--display);font-weight:400;letter-spacing:.02em}
+.excard{border:2px solid var(--ink);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.exbar{height:8px;background:var(--mat);border-radius:4px;overflow:hidden}.exbar i{display:block;height:100%;background:var(--red)}
+.studio canvas{width:100%;height:auto;border-radius:8px;display:block;background:#222}
+.scoreRow{display:grid;grid-template-columns:1fr 110px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--mat)}.scoreRow input[type=range]{width:100%}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -465,6 +470,7 @@ body.tvmode .app{max-width:none;padding:0}
 
   <div class="tab" id="t-feed" hidden>
     <div class="owc" id="owanCard"></div>
+    <button class="btn gold" id="snsOnly" style="margin-top:8px">SNS 자랑 카드 만들기 (인스타 · 스토리)</button>
     <div class="card" style="margin-top:12px"><div class="label">이달 오운완 TOP</div><div id="owanTop"></div></div>
     <div style="margin-top:12px" id="feedBox"></div>
   </div>
@@ -484,6 +490,7 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="card"><div class="label">공지</div><div id="noticeTxt" style="white-space:pre-wrap;margin-top:6px"></div></div>
     <div data-face style="margin-top:12px"></div>
     <div data-mem="full" style="margin-top:12px"></div>
+    <div data-exam style="margin-top:12px"></div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
       <div class="label">내 정보</div>
       <div class="row"><span class="grow">회원번호</span><b class="num" id="mId"></b></div>
@@ -641,6 +648,12 @@ body.tvmode .app{max-width:none;padding:0}
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
   </div>
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:8px;border:2px solid var(--ink)">
+    <h3 style="font-size:20px">승급심사 <span class="small num" id="exN"></span></h3>
+    <div id="exInfo" class="small"></div>
+    <div class="row"><button class="btn sm red grow" id="exSet">심사 일정 만들기 · 수정</button><button class="btn sm grow" id="exRun">채점하기</button></div>
+    <p class="small" style="margin:0">일정을 만들면 응시 자격이 되는 회원에게 앱 팝업으로 알려요. 회원이 앱에서 신청하면 여기 명단에 올라와요. 심사 날 <b>채점하기</b>로 항목별 점수를 넣으면 70점 이상은 자동 합격 · 레벨 업!</p>
+  </div>
   <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">체육관 TV · 이달 시상</h3>
     <p class="small" style="margin:0">체육관 TV에 이달 출석왕·추천왕, 오늘 출석한 회원 캐릭터, 다음 수업을 띄워요. 30초마다 새로 고쳐져요.</p>
@@ -777,7 +790,7 @@ async function fbInit(){
     fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
-const PRIV=['name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid'];
+const PRIV=['name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
 function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
@@ -1557,22 +1570,22 @@ function renderDex(){
 /* ================= 랭킹 ================= */
 let rkMode='att';
 async function renderRank(){
-  const modes=[['att','이달 출석왕'],['inv','이달 추천왕'],['lv','레벨'],['bag','샌드백'],['rope','줄넘기'],['shadow','쉐도우']];
+  const modes=[['att','이달 출석왕'],['inv','이달 추천왕'],['lv','레벨'],['skill','승급 레벨'],['sns','이달 홍보왕'],['bag','샌드백'],['rope','줄넘기'],['shadow','쉐도우']];
   $('#rkTabs').innerHTML=modes.map(([k,n])=>`<button class="chip ${k===rkMode?'on':''}" data-r="${k}">${n}</button>`).join('');
   $$('#rkTabs [data-r]').forEach(b=>b.onclick=()=>{rkMode=b.dataset.r;renderRank()});
   $('#rkList').innerHTML='<div class="small">불러오는 중…</div>';
   const mon=TODAY().slice(0,7);
   const all=(await DB.all()).filter(m=>m&&m.id&&!isOwner(m));
-  const invMap=monthStats(all).inv;const val=m=>rkMode==='inv'?(invMap[m.id]||0):rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
-  const unit={inv:'명',att:'회',lv:'XP',bag:'점',rope:'점',shadow:'점'}[rkMode];
+  const invMap=monthStats(all).inv;const val=m=>rkMode==='skill'?skillOf(m)*1e4+(m.attend||[]).length:rkMode==='sns'?((m.sns||{})[mon]||0):rkMode==='inv'?(invMap[m.id]||0):rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
+  const unit={inv:'명',att:'회',lv:'XP',bag:'점',rope:'점',shadow:'점',skill:'',sns:'회'}[rkMode];
   const top=all.sort((a,b)=>val(b)-val(a)).slice(0,20);
   if(!top.length){$('#rkList').innerHTML='<div class="small">아직 기록이 없어요. 첫 1등이 되어 보세요!</div>';return}
-  $('#rkList').innerHTML='';top.forEach((m,i)=>{const d=document.createElement('div');d.className='rk'+(m.id===ME.id?' me':'');d.innerHTML=`<span class="no num" style="color:${i<3?['#D49A00','#8A94A6','#B0693A'][i]:'var(--muted)'}">${i+1}</span><canvas width="80" height="80"></canvas><div class="grow">${esc(m.id===ME.id?ME.name:maskName(m.name))}<div class="small">Lv.${levelOf(m).lv} ${levelOf(m).title}</div></div><b class="num">${(rkMode==='lv'?m.xp:val(m)).toLocaleString()}${unit}</b>`;$('#rkList').appendChild(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true,pad:3})});
+  $('#rkList').innerHTML='';top.forEach((m,i)=>{const d=document.createElement('div');d.className='rk'+(m.id===ME.id?' me':'');d.innerHTML=`<span class="no num" style="color:${i<3?['#D49A00','#8A94A6','#B0693A'][i]:'var(--muted)'}">${i+1}</span><canvas width="80" height="80"></canvas><div class="grow">${esc(m.id===ME.id?ME.name:maskName(m.name))}<div class="small">Lv.${levelOf(m).lv} ${levelOf(m).title}${skillOf(m)>1?' · 승급 '+skillOf(m):''}</div></div><b class="num">${rkMode==='skill'?'레벨 '+skillOf(m):(rkMode==='lv'?m.xp:val(m)).toLocaleString()+unit}</b>`;$('#rkList').appendChild(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true,pad:3})});
   if(!FB_ON())$('#rkList').insertAdjacentHTML('beforeend','<p class="small" style="margin:8px 0 0">지금은 이 기기에 저장된 회원만 보여요. 서버를 연결하면 체육관 전체 랭킹이 돼요.</p>');
 }
 
 /* ================= 내 정보 ================= */
-function renderMore(){renderFaceCard();renderMemCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=[...noticesAll().filter(n=>nActive(n)).map(n=>'['+NKIND[n.kind]+'] '+n.title+'\n'+nBody(n)),local.meta.notice].filter(Boolean).join('\n\n');$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
+function renderMore(){renderFaceCard();renderMemCard();renderExamCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=[...noticesAll().filter(n=>nActive(n)).map(n=>'['+NKIND[n.kind]+'] '+n.title+'\n'+nBody(n)),local.meta.notice].filter(Boolean).join('\n\n');$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
 $('#lvBtn').onclick=openLevels;$('#bragBtn').onclick=()=>openBrag('NNN 복싱\n운동 중!');
 $('#termsBtn').onclick=()=>sheet(`<h2>이용약관</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>닫기</button>`);
 $('#logoutBtn').onclick=()=>{stopLive();W.others={};if(meOff){meOff();meOff=null}ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
@@ -1819,12 +1832,14 @@ function popItems(m){
   if(A.birthday&&m.birth&&m.birth.slice(5)===T.slice(5)&&once('bd:'+T.slice(0,4)))out.push({k:'bd:'+T.slice(0,4),cls:'auto',tag:'생일',title:`${m.name} 님, 생일 축하해요!`,body:'NNN 복싱이 생일 선물로 100 크레딧을 드려요. 오늘 운동은 더 신나게!',gift:100});
   if(A.comeback&&m.last&&dDiff(T,m.last)>=14&&st.state!=='expired'&&once('cb:'+m.last))out.push({k:'cb:'+m.last,cls:'auto',tag:'보고 싶어요',title:`${dDiff(T,m.last)}일째 못 봤어요`,body:'샌드백이 기다리고 있어요. 이번 주에 한 번 나와서 몸 풀어요!'});
   if(A.today&&mem&&mem.weekly&&(mem.days||[]).includes(new Date().getDay())&&m.last!==T&&st.state!=='expired'&&daily('td:'+T)){let line='';try{line=ttStatus().line}catch(e){}out.push({k:'td:'+T,cls:'auto',tag:'운동하는 날',title:'오늘은 운동하는 날이에요',body:`주${mem.weekly}회권 운동 요일이에요.${line?'\n'+line:''}`})}
+  {const e=curExam();if(e&&e.pop!==false&&!isOwner(m)&&TODAY()<=(e.until||e.date)&&examElig(m).ok&&!(m.examApply&&m.examApply.eid===e.id)&&daily('exam:'+e.id))out.push({k:'exam:'+e.id,cls:'imp',tag:'승급심사',title:`${e.title||'승급심사'} 응시 가능!`,body:`${md(e.date)} (${DAYN[new Date(e.date+'T00:00:00').getDay()]}) ${e.time||''}\n레벨 ${skillOf(m)} → 레벨 ${skillOf(m)+1} ${SKL[skillOf(m)+1]} 도전!\n심사 항목: ${EXAM_ITEMS[skillOf(m)+1].map(x=>x[0]).join(' · ')}\n신청 마감 ${md(e.until||e.date)} · 내 정보 → 승급심사에서 신청`,exam:true})}
+  {const h=(m.skillHist||[]).slice(-1)[0];if(h&&once('exr:'+h.eid))out.push({k:'exr:'+h.eid,cls:h.pass?'auto':'',tag:h.pass?'승급 합격':'승급심사 결과',title:h.pass?`축하해요! 레벨 ${h.to} · ${SKL[h.to]}`:`${h.score}점 · 다음 달에 다시 도전!`,body:(h.pass?`${h.score}점으로 합격! +300 크레딧\n`:`합격까지 ${EXAM_PASS-h.score}점 남았어요.\n`)+(h.fb?'관장님 한마디: '+h.fb:''),cert:h.pass?h:null})}
   return out}
 let popBusy=false;
 async function showPopups(){if(!ME||popBusy||$('#sheetRoot').innerHTML)return;const items=popItems(ME);if(!items.length){autoInstallNudge();return}popBusy=true;
   const imp=items.some(x=>x.cls==='imp'||x.cls==='closed');
   sheet(`<div class="label" style="color:${imp?'var(--red)':'var(--muted)'}">${imp?'꼭 확인해 주세요':'새 소식'} · ${items.length}건</div>
-    ${items.map((x,i)=>`<div class="popn ${x.cls}"><div><span class="ntag ${x.cls}">${esc(x.tag)}</span></div><b class="t">${esc(x.title)}</b><div class="bd">${esc(x.body)}</div>${x.pay?`<button class="btn sm red" data-pp="${i}" style="align-self:flex-start">${esc(x.pay)}</button>`:''}</div>`).join('')}
+    ${items.map((x,i)=>`<div class="popn ${x.cls}"><div><span class="ntag ${x.cls}">${esc(x.tag)}</span></div><b class="t">${esc(x.title)}</b><div class="bd">${esc(x.body)}</div>${x.pay?`<button class="btn sm red" data-pp="${i}" style="align-self:flex-start">${esc(x.pay)}</button>`:''}${x.exam?`<button class="btn sm red" data-pe="${i}" style="align-self:flex-start">지금 응시 신청</button>`:''}${x.cert?`<button class="btn sm gold" data-pc="${i}" style="align-self:flex-start">합격증 자랑하기</button>`:''}</div>`).join('')}
     <button class="btn red" id="popOk">확인했어요</button>`,(el,close)=>{
     const bd=el.parentNode;bd.onclick=null;bd.addEventListener('click',e=>{if(e.target===bd)e.stopImmediatePropagation()},true);
     const ack=async()=>{const m=await DB.get(ME.id)||ME;m.ack=m.ack||{};items.forEach(x=>{m.ack[x.k]=TODAY();if(x.gift&&!(ME.ack||{})[x.k]){m.credits+=x.gift;m.earned+=x.gift}});
@@ -1832,6 +1847,8 @@ async function showPopups(){if(!ME||popBusy||$('#sheetRoot').innerHTML)return;co
       await DB.save(m);ME=m;try{refreshTop()}catch(e){}};
     el.querySelector('#popOk').onclick=async()=>{await ack();popBusy=false;close();if(items.some(x=>x.gift)){sfx('win');toast('생일 선물 100 크레딧!')}};
     el.querySelectorAll('[data-pp]').forEach(b=>b.onclick=async()=>{await ack();popBusy=false;close();openPay()});
+    el.querySelectorAll('[data-pe]').forEach(b=>b.onclick=async()=>{await ack();const e=curExam();if(e){ME.examApply={eid:e.id,at:Date.now(),to:skillOf(ME)+1};await DB.save(ME)}popBusy=false;close();toast('승급심사 신청 완료!',3000);sfx('win')});
+    el.querySelectorAll('[data-pc]').forEach(b=>b.onclick=async()=>{const h=items[+b.dataset.pc].cert;await ack();popBusy=false;close();const cv=certCanvas(ME,h);const im=new Image();im.onload=()=>openSnsStudio(im,{counted:false,tpl:'none',char:false});im.src=cv.toDataURL('image/png')});
   })}
 /* 관장: 공지 관리 */
 async function openNoticeAdmin(){await DB.meta();show('v-notice');nvTab('list')}
@@ -2149,7 +2166,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -3001,6 +3018,130 @@ function padMemLine(m){const st=memStatus(m);if(!m.approvedAt)return{t:'가입 �
   if(w.quota){t+=` · 이번 주 ${w.cnt}/${w.quota}회`;if(w.cnt>w.quota){t+=' (주 횟수 초과)';warn=true}else if(m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow))t+=' · 정해진 요일 아님'}
   return{t,warn}}
 
+/* ================= 승급심사 ================= */
+const SKL=['','입문','기본기','콤비네이션','디펜스','스파링','실전','챔피언'];
+const EXAM_ITEMS={2:[['스탠스·가드',20],['잽·원투',30],['기본 스텝(전후좌우)',30],['줄넘기 1분',20]],3:[['훅·어퍼',25],['더킹·위빙',25],['미트 3연타 콤비',25],['섀도 1라운드',25]],4:[['관장님 콜 반응',25],['방어 후 반격',25],['섀도 2라운드',25],['체력(버피·스텝)',25]],5:[['매스 스파링 2라운드',40],['카운터',30],['체력',30]],6:[['스파링 2라운드',50],['종합 평가',50]],7:[['관장 종합 평가',100]]};
+const EXAM_PASS=70;
+const skillOf=m=>Math.max(1,+(m&&m.skill)||1);
+const skLabel=n=>`승급 레벨 ${n} · ${SKL[n]}`;
+function examNeed(m){const to=skillOf(m)+1;return{to,att:to>=5?20:12,days:28}}
+function examElig(m){if(!m||skillOf(m)>=7)return{ok:false,why:'최고 레벨이에요',cnt:0,need:0};const nd=examNeed(m);const since=m.skillAt||m.joined||'0000';const cnt=(m.attend||[]).filter(d=>d>since).length;const days=dDiff(TODAY(),since);
+  const ok=cnt>=nd.att&&(since==='0000'||days>=nd.days||!m.skillAt);return{ok,cnt,need:nd.att,why:cnt<nd.att?`출석 ${cnt}/${nd.att}회`:days<nd.days&&m.skillAt?`지난 승급 후 ${nd.days}일이 지나야 해요`:''}}
+const curExam=()=>{const e=local.meta.exam;return e&&e.date&&e.status!=='done'?e:null};
+function examCardHTML(m){const e=curExam(),s=skillOf(m),el=examElig(m),ap=e&&m.examApply&&m.examApply.eid===e.id;
+  const last=(m.skillHist||[]).slice(-1)[0];
+  return`<div class="excard"><div class="row" style="justify-content:space-between;align-items:center"><b style="font-family:var(--display);font-weight:400;font-size:20px">승급심사</b><span class="skb">${skLabel(s)}</span></div>
+    ${s<7?`<div class="small">다음: <b>레벨 ${s+1} · ${SKL[s+1]}</b> — 심사 항목: ${EXAM_ITEMS[s+1].map(x=>x[0]).join(' · ')}</div>
+    <div class="small">응시 자격: 지난 승급 후 출석 ${el.need}회 이상 (${el.cnt}/${el.need})</div><div class="exbar"><i style="width:${Math.min(100,el.cnt/Math.max(1,el.need)*100)}%"></i></div>`:'<div class="small">최고 레벨 달성! NNN 챔피언이에요.</div>'}
+    ${e?`<div class="small">이번 심사: <b>${md(e.date)} (${DAYN[new Date(e.date+'T00:00:00').getDay()]}) ${esc(e.time||'')}</b> · 신청 마감 ${md(e.until||e.date)}</div>
+      ${ap?'<span class="mhint ok">응시 신청 완료! 심사 날 체육관에서 만나요.</span>':s>=7?'':el.ok&&TODAY()<=(e.until||e.date)?'<button class="btn red sm" data-exapply>응시 신청하기</button>':`<span class="small" style="color:var(--muted)">${TODAY()>(e.until||e.date)?'신청이 마감됐어요':'아직 응시 자격이 안 돼요 · '+esc(el.why)}</span>`}`:'<div class="small">다음 심사 일정은 공지로 알려 드려요.</div>'}
+    ${last?`<div class="small">지난 심사 ${md(last.date)}: <b>${last.score}점 ${last.pass?'합격':'보류'}</b>${last.fb?' · '+esc(last.fb):''}</div>`:''}
+  </div>`}
+function renderExamCard(){if(!ME||isOwner(ME)){$$('[data-exam]').forEach(e=>e.innerHTML='');return}$$('[data-exam]').forEach(el=>{el.innerHTML=examCardHTML(ME);const b=el.querySelector('[data-exapply]');if(b)b.onclick=async()=>{const e=curExam();if(!e)return;ME.examApply={eid:e.id,at:Date.now(),to:skillOf(ME)+1};await DB.save(ME);sfx('win');toast(`승급심사 신청 완료! ${md(e.date)}에 만나요`,3500);renderExamCard()}})}
+/* 관장 */
+async function renderExamAdmin(){const e=curExam();const all=(await DB.all()).filter(m=>!m.demo);const apps=e?all.filter(m=>m.examApply&&m.examApply.eid===e.id):[];
+  $('#exN').textContent=e?`신청 ${apps.length}명`:'';
+  $('#exInfo').innerHTML=e?`<b>${esc(e.title||'승급심사')}</b> · ${md(e.date)} (${DAYN[new Date(e.date+'T00:00:00').getDay()]}) ${esc(e.time||'')} · 신청 마감 ${md(e.until||e.date)}<br>응시 가능 회원 ${all.filter(m=>examElig(m).ok).length}명 · 신청 ${apps.length}명 · 채점 완료 ${apps.filter(m=>(m.skillHist||[]).some(h=>h.eid===e.id)).length}명`:'예정된 심사가 없어요.'}
+function openExamSet(){const e=local.meta.exam&&local.meta.exam.status!=='done'?local.meta.exam:null;const lastSat=(()=>{const d=new Date();const end=new Date(d.getFullYear(),d.getMonth()+1,0);while(end.getDay()!==6)end.setDate(end.getDate()-1);let s=dstr(end);if(s<TODAY()){const e2=new Date(d.getFullYear(),d.getMonth()+2,0);while(e2.getDay()!==6)e2.setDate(e2.getDate()-1);s=dstr(e2)}return s})();
+  sheet(`<h2>승급심사 일정</h2><div class="field"><label for="exT">이름</label><input id="exT" value="${esc(e?e.title:Number(lastSat.slice(5,7))+'월 NNN 승급심사')}"></div>
+    <div class="row"><div class="field grow"><label for="exD">심사일</label><input type="date" id="exD" value="${e?e.date:lastSat}"></div><div class="field grow"><label for="exTm">시간</label><input id="exTm" value="${esc(e?e.time||'':'오전 11시')}"></div></div>
+    <div class="field"><label for="exU">신청 마감일</label><input type="date" id="exU" value="${e?e.until||e.date:dAdd(lastSat,-3)}"></div>
+    <label class="check" style="margin:0"><input type="checkbox" id="exPop" checked><span>자격 되는 회원에게 앱 팝업으로 알리기</span></label>
+    <button class="btn red" id="exSave">저장</button>${e?'<button class="btn ghost" id="exEnd">이번 심사 마감하기 (결과 정리)</button><button class="btn ghost" id="exDel" style="color:var(--red)">심사 취소</button>':''}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#exSave').onclick=async()=>{const d=el.querySelector('#exD').value;if(!d){toast('심사일을 골라 주세요');return}local.meta.exam={id:e?e.id:'ex'+Date.now().toString(36),title:el.querySelector('#exT').value.trim(),date:d,time:el.querySelector('#exTm').value.trim(),until:el.querySelector('#exU').value||d,status:'open',pop:el.querySelector('#exPop').checked};if(await DB.saveMeta()){toast('승급심사 일정을 저장했어요');close();renderExamAdmin()}};
+    const en=el.querySelector('#exEnd');if(en)en.onclick=async()=>{local.meta.exam=Object.assign({},e,{status:'done'});const passed=(await DB.all()).filter(m=>(m.skillHist||[]).some(h=>h.eid===e.id&&h.pass));
+      const list=noticesAll().filter(x=>x.id!=='exr'+e.id);if(passed.length)list.push({id:'exr'+e.id,kind:'normal',title:`${e.title||'승급심사'} 합격을 축하해요!`,body:passed.map(m=>`${maskName(m.name)} → ${skLabel(skillOf(m))}`).join('\n'),from:TODAY(),to:dAdd(TODAY(),7),at:Date.now()});local.meta.notices=list;
+      if(await DB.saveMeta()){toast(`심사를 마감했어요 · 합격 ${passed.length}명${passed.length?' (축하 공지 7일)':''}`,3500);close();renderExamAdmin()}};
+    const dl=el.querySelector('#exDel');if(dl)dl.onclick=async()=>{if(dl.dataset.sure!=='1'){dl.dataset.sure='1';dl.textContent='한 번 더 누르면 취소돼요';return}local.meta.exam=null;if(await DB.saveMeta()){toast('심사를 취소했어요');close();renderExamAdmin()}}})}
+async function openExamRun(){const e=curExam();if(!e){toast('먼저 심사 일정을 만들어 주세요');return}const all=(await DB.all()).filter(m=>!m.demo);
+  const apps=all.filter(m=>m.examApply&&m.examApply.eid===e.id),others=all.filter(m=>!(m.examApply&&m.examApply.eid===e.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const row=m=>{const h=(m.skillHist||[]).find(x=>x.eid===e.id);return`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-ex="${esc(m.id)}"><div class="cimg" data-exf="${esc(m.id)}" style="width:44px;height:44px"></div><div class="grow"><b>${esc(m.name)}</b> <span class="small num">${esc(m.id)}</span><div class="small">레벨 ${skillOf(m)}${h?'':' → '+(skillOf(m)+1)} · 출석 ${examElig(m).cnt}회</div></div>${h?`<span class="hrst ${h.pass?'ok':'absent'}">${h.score}점 ${h.pass?'합격':'보류'}</span>`:'<span class="small">채점 전</span>'}</button>`};
+  sheet(`<h2>${esc(e.title||'승급심사')} 채점</h2><div class="label">응시 신청 ${apps.length}명</div><div>${apps.map(row).join('')||'<div class="small">신청한 회원이 없어요.</div>'}</div>
+    <details><summary class="small">신청 안 한 회원도 채점하기 (현장 응시)</summary><div class="field" style="margin-top:6px"><input id="exQ" placeholder="이름 검색"></div><div id="exOthers"></div></details><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const bind=()=>{el.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{close();openExamScore(all.find(m=>m.id===b.dataset.ex),e)});el.querySelectorAll('[data-exf]').forEach(x=>{const m=all.find(y=>y.id===x.dataset.exf);if(m&&m.hasFace)faceInto(x,m.id);else x.textContent='사진 없음'})};
+    const q=el.querySelector('#exQ');const drawO=()=>{const v=q.value.trim();el.querySelector('#exOthers').innerHTML=others.filter(m=>!v||m.name.includes(v)).slice(0,30).map(row).join('');bind()};q.oninput=drawO;drawO();bind()})}
+function openExamScore(m,e){const from=skillOf(m),to=Math.min(7,from+1);const items=EXAM_ITEMS[to];const prev=(m.skillHist||[]).find(x=>x.eid===e.id);
+  sheet(`<div class="row" style="align-items:center"><div class="cimg" id="esF" style="width:72px;height:72px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small">레벨 ${from} ${SKL[from]} → <b>레벨 ${to} ${SKL[to]}</b></div></div></div>
+    ${items.map(([n,mx],i)=>`<div class="scoreRow"><div><b>${n}</b> <span class="small">/${mx}</span><input type="range" min="0" max="${mx}" value="${prev&&prev.items?prev.items[i]:Math.round(mx*.7)}" data-si="${i}"></div><div class="row" style="gap:4px"><input type="number" min="0" max="${mx}" value="${prev&&prev.items?prev.items[i]:Math.round(mx*.7)}" data-sn="${i}" style="width:60px;border:2px solid var(--line);border-radius:8px;padding:4px"><span class="small">점</span></div></div>`).join('')}
+    <div class="memsum"><b class="num" id="esTot"></b><div class="small" id="esRes"></div></div>
+    <div class="field"><label for="esFb">피드백 (회원에게 보여요)</label><input id="esFb" value="${esc(prev?prev.fb||'':'')}" placeholder="예: 가드가 좋아졌어요. 다음엔 훅 각도!"></div>
+    <label class="check" style="margin:0"><input type="checkbox" id="esOv"><span>점수와 상관없이 결과 직접 정하기</span></label><div id="esOvBox" hidden class="chips"><button type="button" class="chip on" data-ov="1">합격</button><button type="button" class="chip" data-ov="0">보류</button></div>
+    <button class="btn red" id="esSave">채점 저장</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{if(m.hasFace)faceInto(el.querySelector('#esF'),m.id);else el.querySelector('#esF').textContent='사진 없음';
+    let ov=1;const tot=()=>[...el.querySelectorAll('[data-sn]')].reduce((s,x)=>s+(+x.value||0),0);
+    const upd=()=>{const s=tot();const pass=el.querySelector('#esOv').checked?!!ov:s>=EXAM_PASS;el.querySelector('#esTot').textContent=s+'점 / 100';el.querySelector('#esRes').innerHTML=pass?`<b style="color:#2B9B66">합격</b> → 레벨 ${to} ${SKL[to]} · +300 크레딧`:`<b style="color:var(--red)">보류</b> (${EXAM_PASS}점 이상 합격)`};
+    el.querySelectorAll('[data-si]').forEach(r=>r.oninput=()=>{el.querySelector(`[data-sn="${r.dataset.si}"]`).value=r.value;upd()});el.querySelectorAll('[data-sn]').forEach(n=>n.oninput=()=>{el.querySelector(`[data-si="${n.dataset.sn}"]`).value=n.value;upd()});
+    el.querySelector('#esOv').onchange=e2=>{el.querySelector('#esOvBox').hidden=!e2.target.checked;upd()};el.querySelectorAll('[data-ov]').forEach(b=>b.onclick=()=>{ov=+b.dataset.ov;el.querySelectorAll('[data-ov]').forEach(x=>x.classList.toggle('on',x===b));upd()});upd();
+    el.querySelector('#esSave').onclick=async()=>{const s=tot(),pass=el.querySelector('#esOv').checked?!!ov:s>=EXAM_PASS;const fresh=await DB.get(m.id)||m;
+      fresh.skillHist=(fresh.skillHist||[]).filter(x=>x.eid!==e.id);const wasPass=prev&&prev.pass;
+      fresh.skillHist.push({eid:e.id,date:e.date,from,to,score:s,pass,items:[...el.querySelectorAll('[data-sn]')].map(x=>+x.value||0),fb:el.querySelector('#esFb').value.trim()});fresh.skillHist=fresh.skillHist.slice(-20);
+      if(pass&&!wasPass){fresh.skill=to;fresh.skillAt=TODAY();fresh.credits+=300;fresh.earned+=300;fresh.examNew=e.id}else if(!pass&&wasPass){fresh.skill=from;fresh.credits=Math.max(0,fresh.credits-300)}
+      await DB.save(fresh);await DB.savePriv(fresh);toast(`${fresh.name} ${s}점 ${pass?'합격!':'보류'}`,3000);close();openExamRun();renderExamAdmin()}})}
+$('#exSet').onclick=openExamSet;$('#exRun').onclick=openExamRun;
+/* 합격증 카드 */
+function certCanvas(m,h){const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  c.fillStyle='#fff';c.fillRect(0,0,W,H);c.strokeStyle='#2F2F2F';c.lineWidth=28;c.strokeRect(14,14,W-28,H-28);c.fillStyle='#D9343A';c.fillRect(28,28,W-56,14);
+  drawLogo(c,W/2-90,90,180,'#2F2F2F');c.textAlign='center';c.fillStyle='#66676D';c.font='34px "Gowun Dodum",sans-serif';c.fillText('TANGJEONG NNN BOXING',W/2,330);
+  c.fillStyle='#2F2F2F';c.font='110px "Black Han Sans",sans-serif';c.fillText('승급 합격',W/2,470);
+  c.fillStyle='#D9343A';c.font='64px "Black Han Sans",sans-serif';c.fillText(`레벨 ${h.to} · ${SKL[h.to]}`,W/2,570);
+  c.fillStyle='rgba(233,169,31,.18)';c.beginPath();c.arc(W/2,820,190,0,Math.PI*2);c.fill();drawChar(c,W/2,990,8,m.equip,{t:1,pose:'upR',noFx:false});
+  c.fillStyle='#2F2F2F';c.font='54px "Black Han Sans",sans-serif';c.fillText(m.name,W/2,1100);c.font='34px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(`${h.date.replace(/-/g,'.')} · ${h.score}점`,W/2,1160);
+  c.font='30px "Gowun Dodum",sans-serif';c.fillText('#NNN승급심사 #탕정복싱 #엔엔엔복싱',W/2,1250);return cv}
+
+/* ================= SNS 자랑 카드 스튜디오 ================= */
+const SNS_BONUS=30;
+const QUOTES=['오늘도 한 라운드 끝!','땀은 거짓말 안 한다','어제의 나를 이겼다','가드 올리고, 끝까지','원투 원투, 오늘도 출석','복싱은 사랑입니다','다이어트는 주먹으로'];
+const instaHandle=()=>{const u=local.meta.insta||'';const mm=u.match(/instagram\.com\/([^/?#]+)/i);return mm?mm[1]:''};
+function snsCaption(o){const mon=Number(monKey().slice(5));const hd=instaHandle();
+  return [o.quote,'',o.counted?`${mon}월 오운완 DAY ${o.day}`:'',`📍 탕정 엔엔엔복싱${hd?' @'+hd:''}`,ME&&ME.id&&!isOwner(ME)?`👊 같이 운동해요! NNN WORLD 초대코드 ${ME.id}`:'',ME&&!isOwner(ME)?joinUrl():appBase()+'?join=1','','#오운완 #탕정복싱 #엔엔엔복싱 #NNNBOXING #아산복싱 #탕정 #복싱 #복싱스타그램 #운동기록 #복싱다이어트'].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n').trim()}
+function openSnsStudio(im,o={}){const S={fmt:o.fmt||'feed',tpl:o.tpl||'classic',char:o.char!==false,invite:true,date:true,quote:pick(QUOTES),counted:!!o.counted,day:o.day||owanCount(ME)};
+  const F={feed:[1080,1350,'피드 4:5'],story:[1080,1920,'스토리 9:16'],sq:[1080,1080,'정사각']},TP={classic:'클래식',ring:'링 프레임',stat:'기록 카드',mini:'심플',none:'사진 그대로'};
+  sheet(`<div class="studio" style="display:flex;flex-direction:column;gap:8px"><h2>SNS 자랑 카드</h2><canvas id="snC"></canvas>
+    <div class="chips" id="snF">${Object.entries(F).map(([k,v])=>`<button type="button" class="chip" data-f="${k}">${v[2]}</button>`).join('')}</div>
+    <div class="chips" id="snT">${Object.entries(TP).map(([k,v])=>`<button type="button" class="chip" data-t="${k}">${v}</button>`).join('')}</div>
+    <div class="chips"><label class="chip"><input type="checkbox" id="snCh" ${S.char?'checked':''}> 내 캐릭터</label><label class="chip"><input type="checkbox" id="snIv" checked> 초대 QR</label><label class="chip"><input type="checkbox" id="snDt" checked> 날짜</label></div>
+    <div class="field"><label for="snQ">한마디</label><div class="row"><input id="snQ" class="grow" value="${esc(S.quote)}"><button class="btn sm ghost" id="snQr" type="button">다른 문구</button></div></div>
+    <div class="field"><label for="snCap">캡션 (해시태그 포함 · 자동 복사돼요)</label><textarea id="snCap" rows="6"></textarea></div>
+    <button class="btn red" id="snShare">인스타 · 카톡으로 공유하기</button>
+    <div class="row"><button class="btn ghost sm grow" id="snSave">이미지 저장</button><button class="btn ghost sm grow" id="snCopy">캡션 복사</button></div>
+    <p class="small" style="margin:0">공유하면 하루 한 번 <b>+${SNS_BONUS} 크레딧</b>! 인스타 앱 → 새 게시물(또는 스토리) → 사진 고르고 캡션 붙여넣기.</p>
+    <button class="btn ghost" data-close>닫기</button></div>`,(el,close)=>{
+    const cv=el.querySelector('#snC'),cap=el.querySelector('#snCap');
+    const qrC=(()=>{try{const d=document.createElement('div');new QRCode(d,{text:joinUrl(),width:220,height:220,colorDark:'#1C1C1C',colorLight:'#ffffff'});return d.querySelector('canvas')}catch(e){return null}})();
+    const draw=()=>{const [W,H]=F[S.fmt];cv.width=W;cv.height=H;const c=cv.getContext('2d');c.textBaseline='alphabetic';
+      const pad=S.tpl==='ring'?48:0,ph=S.tpl==='stat'?H*.70:H;
+      const k=Math.max((W-pad*2)/im.width,(ph-pad*2)/im.height),iw=im.width*k,ih=im.height*k;c.fillStyle='#111';c.fillRect(0,0,W,H);c.save();c.beginPath();c.rect(pad,pad,W-pad*2,ph-pad*2);c.clip();c.drawImage(im,pad+(W-pad*2-iw)/2,pad+(ph-pad*2-ih)/2,iw,ih);c.restore();
+      const date=(()=>{const n=new Date();return`${n.getFullYear()}.${pad2(n.getMonth()+1)}.${pad2(n.getDate())}`})();
+      if(S.tpl==='classic'){const g=c.createLinearGradient(0,H*.6,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.82)');c.fillStyle=g;c.fillRect(0,H*.6,W,H*.4);
+        c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,W,130);drawLogo(c,36,28,84,'#fff');c.fillStyle='#fff';c.font='500 36px Jost,"Century Gothic",sans-serif';c.textBaseline='middle';c.textAlign='left';c.fillText('NNNBOXING',140,66);
+        if(S.date){c.textAlign='right';c.font='34px "Gowun Dodum",sans-serif';c.fillText(date,W-36,66)}c.textBaseline='alphabetic';c.textAlign='left';
+        c.fillStyle='#fff';c.font='150px "Black Han Sans",sans-serif';c.fillText('오운완',44,H-190);c.fillStyle='#FFD98A';c.font='44px "Gowun Dodum",sans-serif';c.fillText(S.quote,50,H-120);
+        if(S.counted){c.fillStyle='#fff';c.font='36px "Black Han Sans",sans-serif';c.fillText(`${Number(monKey().slice(5))}월 챌린지 DAY ${S.day}`,50,H-62)}}
+      if(S.tpl==='ring'){c.lineWidth=pad;c.strokeStyle='#2F2F2F';c.strokeRect(pad/2,pad/2,W-pad,H-pad);c.fillStyle='#D9343A';c.fillRect(pad,pad,260,74);c.fillStyle='#fff';c.font='48px "Black Han Sans",sans-serif';c.textAlign='left';c.fillText(S.counted?'ROUND '+S.day:'ROUND 1',pad+22,pad+56);
+        const g=c.createLinearGradient(0,H*.68,0,H-pad);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.8)');c.fillStyle=g;c.fillRect(pad,H*.68,W-pad*2,H*.32-pad);
+        c.fillStyle='#fff';c.font='64px "Black Han Sans",sans-serif';c.fillText(S.quote,pad+34,H-pad-120);c.font='34px "Gowun Dodum",sans-serif';c.fillStyle='#ddd';c.fillText('TANGJEONG NNN BOXING'+(S.date?' · '+date:''),pad+36,H-pad-62);drawLogo(c,W-pad-120,pad+20,96,'#fff')}
+      if(S.tpl==='stat'){c.fillStyle='#fff';c.fillRect(0,ph,W,H-ph);c.fillStyle='#D9343A';c.fillRect(0,ph,W,12);const sb=H-ph,ty=ph+sb*.12;drawLogo(c,40,ty,110,'#2F2F2F');c.textAlign='left';c.fillStyle='#2F2F2F';c.font='60px "Black Han Sans",sans-serif';c.fillText('오운완',180,ty+60);c.font='34px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(S.quote,182,ty+108);
+        const L=levelOf(ME),stats=[[S.counted?'DAY '+S.day:owanCount(ME)+'일','이달 오운완'],[(ME.streak||0)+'일','연속 출석'],[(ME.attend||[]).length+'회','총 출석'],[isOwner(ME)?'관장':'Lv.'+L.lv,isOwner(ME)?'':'레벨']];const cw=(W-80)/4;
+        stats.forEach(([v,l],i)=>{const x=40+cw*i+cw/2;c.textAlign='center';c.fillStyle='#2F2F2F';c.font='52px "Black Han Sans",sans-serif';c.fillText(v,x,ph+sb*.72);c.fillStyle='#66676D';c.font='28px "Gowun Dodum",sans-serif';c.fillText(l,x,ph+sb*.72+45)});
+        if(S.date){c.textAlign='right';c.fillStyle='#9A9BA0';c.font='28px "Gowun Dodum",sans-serif';c.fillText(date,W-40,ph+60)}}
+      if(S.tpl==='mini'){drawLogo(c,W-150,H-150,110,'#fff');c.textAlign='left';c.fillStyle='rgba(255,255,255,.95)';c.font='46px "Black Han Sans",sans-serif';c.shadowColor='rgba(0,0,0,.5)';c.shadowBlur=12;c.fillText(S.quote,44,H-70);if(S.date){c.font='30px "Gowun Dodum",sans-serif';c.fillText(date+' · #오운완',44,H-126)}c.shadowBlur=0}
+      if(S.char){const cx=S.tpl==='stat'?W-140:S.tpl==='mini'?W-140:W-150,cy=S.tpl==='stat'?ph-40:S.tpl==='mini'?H-200:H-90-(S.tpl==='ring'?pad:0);c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.arc(cx,cy-95,125,0,Math.PI*2);c.fill();drawChar(c,cx,cy+18,4.6,ME.equip,{t:1,pose:'guard',noFx:true})}
+      if(S.invite&&qrC){const qs=150,qx=S.tpl==='stat'?W-qs-40:36+(S.tpl==='ring'?pad:0),qy=S.tpl==='stat'?ph+20:S.tpl==='classic'?150:S.tpl==='ring'?pad+100:40;
+        c.fillStyle='#fff';rr(c,qx-10,qy-10,qs+20,qs+62,14);c.fill();c.drawImage(qrC,qx,qy,qs,qs);c.fillStyle='#2F2F2F';c.textAlign='center';c.font='24px "Black Han Sans",sans-serif';c.fillText(isOwner(ME)?'NNN WORLD 가입':'초대코드 '+ME.id,qx+qs/2,qy+qs+38)}
+      el.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===S.fmt));el.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===S.tpl))};
+    const capUpd=()=>{cap.value=snsCaption(S)};
+    el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.fmt=b.dataset.f;draw()});el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.tpl=b.dataset.t;draw()});
+    el.querySelector('#snCh').onchange=e=>{S.char=e.target.checked;draw()};el.querySelector('#snIv').onchange=e=>{S.invite=e.target.checked;draw()};el.querySelector('#snDt').onchange=e=>{S.date=e.target.checked;draw()};
+    const q=el.querySelector('#snQ');q.oninput=()=>{S.quote=q.value.slice(0,24);draw();capUpd()};el.querySelector('#snQr').onclick=()=>{S.quote=pick(QUOTES.filter(x=>x!==S.quote));q.value=S.quote;draw();capUpd()};
+    draw();capUpd();
+    const bonus=()=>{if(!ME||isOwner(ME))return;ME.sns=ME.sns||{};ME.sns[monKey()]=(ME.sns[monKey()]||0)+1;if(ME.snsDay!==TODAY()){ME.snsDay=TODAY();ME.credits+=SNS_BONUS;ME.earned+=SNS_BONUS;toast(`홍보해 줘서 고마워요! +${SNS_BONUS} 크레딧`,3000);sfx('win')}saveMe();refreshTop()};
+    const blob=()=>new Promise(r=>cv.toBlob(r,'image/jpeg',.92));
+    el.querySelector('#snShare').onclick=async()=>{const b=await blob();const file=new File([b],'nnn_owan.jpg',{type:'image/jpeg'});try{navigator.clipboard&&navigator.clipboard.writeText(cap.value).catch(()=>{})}catch(e){}
+      if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:cap.value});bonus()}catch(e){if(!e||e.name!=='AbortError')toast('공유하지 못했어요. 이미지 저장 후 올려 주세요')}}
+      else{download('nnn_owan.jpg',b,'image/jpeg');toast('이미지를 저장하고 캡션을 복사했어요. 인스타에서 붙여넣기 하세요',4000);bonus()}};
+    el.querySelector('#snSave').onclick=async()=>{const b=await blob();download('nnn_owan.jpg',b,'image/jpeg');try{navigator.clipboard&&navigator.clipboard.writeText(cap.value).catch(()=>{})}catch(e){}toast('저장했어요 · 캡션도 복사됨');bonus()};
+    el.querySelector('#snCopy').onclick=()=>copyText(cap.value,'캡션을')})}
+$('#snsOnly').onclick=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;try{const im=await loadImg(f);openSnsStudio(im,{counted:false})}catch(e){toast('사진을 열지 못했어요')}};inp.click()};
+
 /* ================= 오운완 인증샷 ================= */
 const SHOT_CREDIT=20,OWAN_GOAL=12,OWAN_MILES=[[4,40],[8,80],[12,150]];
 const monKey=()=>TODAY().slice(0,7);
@@ -3045,7 +3186,7 @@ function openShotUpload(){
     el.querySelector('#shotFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
       let im;try{im=await loadImg(f)}catch(err){toast('사진을 열지 못했어요');return}
       const out=stampShot(im,counted);
-      el.querySelector('#shotPrev').innerHTML=`<img src="${out.img}" alt="오운완 인증샷 미리보기" style="width:100%;border-radius:8px"><button class="btn gold" id="shotGo" style="width:100%;margin-top:8px">인증샷 올리기</button>`;
+      el.querySelector('#shotPrev').innerHTML=`<img src="${out.img}" alt="오운완 인증샷 미리보기" style="width:100%;border-radius:8px"><button class="btn gold" id="shotGo" style="width:100%;margin-top:8px">인증샷 올리기</button><p class="small" style="margin:6px 0 0">올리면 바로 인스타·스토리용 자랑 카드를 꾸밀 수 있어요.</p>`;
       el.querySelector('#shotGo').onclick=async ev=>{ev.target.disabled=true;
         if(out.img.length>290000){toast('사진이 너무 커요. 다른 사진으로 해 주세요');ev.target.disabled=false;return}
         const meta={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:ME.id,nick:maskName(ME.name),at:Date.now(),date:TODAY(),mon:monKey(),thumb:out.thumb,counted:!!counted,eq:clean(ME.equip)};
@@ -3057,7 +3198,7 @@ function openShotUpload(){
           OWAN_MILES.forEach(([n,cr])=>{if(owanCount(ME)>=n&&!cl.includes(n)){cl.push(n);ME.credits+=cr;ME.earned+=cr;msg+=` · ${n}일 달성 보너스 +${cr}`;if(n===OWAN_GOAL&&!ME.owned.includes('h_owan')){ME.owned.push('h_owan');msg+=' · 오운완 헤드밴드 획득!'}}});
           checkBadges(ME).forEach(b=>msg+=` · 배지 ${b.name}`)}
         sfx('win');saveMe();refreshTop();toast(msg,4000);close();if(!$('#t-feed').hidden)renderFeed();
-        if(navigator.canShare){setTimeout(()=>sheet(`<h2>인스타에도 올려 볼까요?</h2><img src="${out.img}" alt="" style="width:100%;border-radius:8px"><button class="btn red" id="shShare">공유하기</button><button class="btn ghost" data-close>괜찮아요</button>`,(el2,close2)=>{el2.querySelector('#shShare').onclick=async()=>{try{const blob=await new Promise(r=>out.cv.toBlob(r,'image/jpeg',.9));const file=new File([blob],'owan.jpg',{type:'image/jpeg'});if(navigator.canShare({files:[file]}))await navigator.share({files:[file],text:'#오운완 #탕정복싱 #엔엔엔복싱 '+inviteLink(ME.id)})}catch(e){}close2()}}),300)}
+        setTimeout(()=>openSnsStudio(im,{counted,day:owanCount(ME)}),600);
       };
     };
   });
