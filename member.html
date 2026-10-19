@@ -382,6 +382,12 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 #chatRoot .ncard .nb{white-space:pre-wrap;font-size:14px}
 #chatRoot .nsec{font-size:13px;color:var(--muted);margin:6px 2px 0}
 .cbadge{display:inline-block;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:var(--red);color:#fff;font-size:12px;text-align:center;padding:0 6px;margin-left:6px;font-style:normal}
+#arcRoot{position:fixed;inset:0;z-index:85;background:#14171F;display:flex;flex-direction:column}
+#arcRoot .arch{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;background:var(--ink);color:#fff}
+#arcRoot .arch b{flex:1;font-family:var(--display);font-weight:400;font-size:17px}
+#arcRoot .arch button{border:0;border-radius:10px;padding:8px 12px;font-size:14px;background:rgba(255,255,255,.16);color:#fff}
+#arcRoot .arch #arcX{background:var(--red)}
+#arcRoot iframe{flex:1;width:100%;border:0;background:#000}
 #zoomRoot{position:fixed;inset:0;z-index:99;background:rgba(10,12,18,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
 #zoomRoot img{max-width:92vw;max-height:76vh;border-radius:14px;object-fit:contain;background:#222;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 #zoomRoot .zc{color:#fff;font-family:var(--display);font-size:18px}
@@ -1465,7 +1471,8 @@ const ST=[
   {id:'counter',x:58,y:458,label:'카운터 · 결제',r:32,ly:418,go:490},
   {id:'pad',x:180,y:492,label:'출석패드',r:26,ly:452},
   {id:'mis',x:50,y:136,label:'오늘의 미션',r:30,ly:176,go:186},
-  {id:'bell',x:314,y:104,label:'타임벨',r:30,ly:146,go:178}
+  {id:'bell',x:314,y:104,label:'타임벨',r:30,ly:146,go:178},
+  {id:'arcade',x:186,y:352,label:'게임장',r:28,ly:318,go:384}
 ];
 const W={running:false,raf:0,t:0,p:{x:180,y:440,tx:180,ty:440,flip:false},target:null,animals:[],coins:[],candies:[],coach:{x:262,y:226,tx:262,ty:226},bagSwing:[0,0,0],spawnT:0,coinT:0,lastTs:0,float:[]};
 function mapCtx(){const cv=$('#map');const w=cv.clientWidth||340;const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=w*dpr;cv.height=w*(MH/MW)*dpr;cv.style.height=w*(MH/MW)+'px';const c=cv.getContext('2d');c.setTransform(cv.width/MW,0,0,cv.width/MW,0,0);return c}
@@ -1481,7 +1488,7 @@ function worldLoop(now){
   try{drawWorld(MC)}catch(e){if(!W.errD){W.errD=1;console.error('drawWorld',e)}try{MC=mapCtx()}catch(e2){}}
   if(W.running)W.raf=requestAnimationFrame(worldLoop)}
 /* 맵 자동 복구: 화면 복귀·캔버스 초기화·멈춤 감지 */
-function mapVisible(){return document.visibilityState==='visible'&&!$('#v-world').hidden&&!$('#t-map').hidden&&!G&&!$('#gameRoot').innerHTML}
+function mapVisible(){return document.visibilityState==='visible'&&!$('#v-world').hidden&&!$('#t-map').hidden&&!G&&!$('#gameRoot').innerHTML&&!$('#arcRoot')}
 function reviveWorld(){if(!mapVisible())return;cancelAnimationFrame(W.raf);W.running=false;MC=mapCtx();startWorld()}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(reviveWorld,120)});
 window.addEventListener('pageshow',()=>setTimeout(reviveWorld,120));
@@ -1541,6 +1548,9 @@ function drawWorld(c){
   c.fillStyle='#fff';rr(c,18,108,64,46,4);c.fill();c.strokeStyle='#8A8D96';c.lineWidth=1.5;rr(c,18,108,64,46,4);c.stroke();
   c.fillStyle='#2E5AAC';c.font='8px "Black Han Sans",sans-serif';c.fillText('TODAY',50,117);
   {const mi=(typeof misToday==='function'&&ME)?misToday():null,nI=mi?Math.min(4,mi.items.length):3,ck=(ME&&ME.day&&ME.day.d===TODAY()&&ME.day.mis)||[];for(let i=0;i<nI;i++){const yy=125+i*7.2;c.strokeStyle='#2F2F2F';c.lineWidth=.8;c.strokeRect(24,yy-2.5,4.5,4.5);if(ck.includes(i)){c.strokeStyle='#2B9B66';c.lineWidth=1.4;c.beginPath();c.moveTo(24.5,yy);c.lineTo(26,yy+1.6);c.lineTo(29,yy-3);c.stroke()}c.fillStyle='#B9BAC0';c.fillRect(32,yy-1,38-i*5,2)}}
+  // 게임장 (오락기 2대)
+  [[168,'#2E5AAC','#5CC8FF'],[204,'#D9343A','#FFD23F']].forEach(([x,b1,sc],i)=>{ell(c,x,372,13,3.5,'rgba(0,0,0,.18)');c.fillStyle=b1;rr(c,x-12,328,24,44,4);c.fill();c.fillStyle='#1D2433';rr(c,x-9,333,18,14,2);c.fill();
+    c.fillStyle=sc;c.globalAlpha=.6+.4*Math.abs(Math.sin(t*3+i));rr(c,x-7,335,14,10,1);c.fill();c.globalAlpha=1;c.fillStyle='#2F2F2F';c.fillRect(x-10,350,20,5);circ(c,x-4,352,1.8,'#FFD23F');circ(c,x+4,352,1.8,'#5CE0A0');c.fillStyle='rgba(255,255,255,.25)';c.fillRect(x-12,328,24,3)});
   // 타임벨
   c.fillStyle='#4A4D55';c.fillRect(312,116,4,22);ell(c,314,138,12,3,'#2F2F2F');
   c.fillStyle='#1D2433';rr(c,286,86,56,32,5);c.fill();
@@ -1595,7 +1605,7 @@ $('.mapwrap').addEventListener('click',e=>{if(e.target.id!=='map')return;
 });
 function go(x,y,tg){W.p.tx=clamp(x,12,348);W.p.ty=clamp(y,54,526);W.target=tg}
 function interact(tg){
-  if(tg.type==='st'){({ring:openRing,bag:()=>openGame('bag'),rope:()=>openGame('rope'),rest:openRest,notice:openNotice,pad:openPadInfo,tt:openTimetable,counter:openPay,mirror:openShotUpload,mis:openMission,bell:openBell})[tg.id]()}
+  if(tg.type==='st'){({ring:openRing,bag:()=>openGame('bag'),rope:()=>openGame('rope'),rest:openRest,notice:openNotice,pad:openPadInfo,tt:openTimetable,counter:openPay,mirror:openShotUpload,mis:openMission,bell:openBell,arcade:openArcade})[tg.id]()}
   if(tg.type==='coach')openCoach();
   if(tg.type==='animal')openAnimal(tg.a);
 }
@@ -1821,6 +1831,24 @@ function openCal(inp){const pad=n=>String(n).padStart(2,'0');const v=/^\d{4}-\d{
   const pick=ds=>{inp.value=ds;close();inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))};
   r.addEventListener('click',e=>{if(e.target===r)close()});draw()}
 document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('input.dpick');if(i&&!i.disabled){e.preventDefault();i.blur();openCal(i)}});
+
+/* ================= 게임장 (관장님이 만든 게임들) ================= */
+const GHUB='https://heodonggyu-ai.github.io/nnn-world/';
+const ARCADE=[
+  {id:'forest',name:'밍뉴의숲',desc:'동네에 숨은 동물 친구들을 찾아 데려와 키워요. 학교·집·엔엔엔복싱에도 들어가요.',href:GHUB+'forest/',img:GHUB+'shared/img/forest-cover.jpg',col:'#3E8A2E',art:'밍뉴의<br>숲',tags:['동물 키우기','친구와 같이']},
+  {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',col:'#D9343A',art:'NNN<br>콤보 러시',tags:['복싱','랭킹']},
+  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:GHUB+'crash/',col:'#2E5AAC',art:'꽝!<br>크래시 드라이브',tags:['자동차','3D','미션']}];
+function openArcade(){sheet(`<h2>게임장</h2><p class="small" style="margin:0">관장님이 직접 만든 게임들이에요. 하루 처음 한 판은 <b>+10 크레딧</b>!</p>
+  <div style="display:flex;flex-direction:column;gap:10px">${ARCADE.map(g=>`<button class="qrow" data-ag="${g.id}" style="border:0;text-align:left;padding:0;overflow:hidden;align-items:stretch;background:#fff">
+    <div style="width:96px;flex:0 0 auto;background:${g.col};${g.img?`background-image:url('${g.img}');background-size:cover;background-position:center;`:''}display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:15px;line-height:1.1;text-align:center;padding:8px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${g.art||''}</div>
+    <div class="grow" style="padding:10px 12px"><b style="font-family:var(--display);font-weight:400;font-size:17px">${esc(g.name)}</b><div class="small">${esc(g.desc)}</div><div style="display:flex;gap:4px;margin-top:4px">${g.tags.map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div></div></button>`).join('')}</div>
+  <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{el.querySelectorAll('[data-ag]').forEach(b=>b.onclick=()=>{close();playArcade(ARCADE.find(g=>g.id===b.dataset.ag))})})}
+function playArcade(g){if(!g)return;stopWorld();let r=$('#arcRoot');if(r)r.remove();r=document.createElement('div');r.id='arcRoot';
+  r.innerHTML=`<div class="arch"><b>${esc(g.name)}</b><button id="arcNew" aria-label="새 창으로 열기">새 창</button><button id="arcX">맵으로</button></div><iframe src="${g.href}" title="${esc(g.name)}" allow="fullscreen; autoplay; accelerometer; gyroscope" allowfullscreen></iframe>`;
+  document.body.appendChild(r);
+  r.querySelector('#arcX').onclick=()=>{r.remove();if(!$('#v-world').hidden&&!$('#t-map').hidden)startWorld()};
+  r.querySelector('#arcNew').onclick=()=>{try{window.open(g.href,'_blank','noopener')}catch(e){location.href=g.href}};
+  if(ME&&!isGuest()&&!isStaff(ME)){const d=fixDay(ME);d.arc=d.arc||[];if(!d.arc.length){earn(ME,10,'arcade');toast(g.name+' 첫 플레이! +10 크레딧',2500);refreshTop()}if(!d.arc.includes(g.id))d.arc.push(g.id);prog(ME,'arcade');saveMe()}}
 
 /* ================= 체육관 대화 (맵) ================= */
 const WC={msgs:[],off:null,offOn:null,on:{},last:0,seen:0,hb:0};
