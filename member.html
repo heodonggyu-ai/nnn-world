@@ -193,6 +193,7 @@ body.tvmode .app{max-width:none;padding:0}
 .glive{display:flex;align-items:center;gap:8px;background:#2B9B66;color:#fff;border-radius:10px;padding:10px 12px;font-size:15px}.glive canvas{width:28px;height:28px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.gbig{border:2px solid var(--ink);background:#fff;border-radius:12px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}.gbig b{font-family:var(--display);font-weight:400;font-size:19px}.gbig span{font-size:12px;color:var(--muted)}.gbig.red{background:var(--red);border-color:var(--red);color:#fff}.gbig.red span{color:#FFD9D9}
 .gprog{padding:10px 0;border-bottom:1px solid var(--mat)}.gprog b{font-size:16px}.gvid iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;display:block}
+.bsel{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px}.bsel select{border:2px solid var(--line);border-radius:12px;padding:11px 8px;background:#fff;font:inherit;font-size:16px;width:100%;appearance:auto;-webkit-appearance:menulist}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -352,10 +353,8 @@ body.tvmode .app{max-width:none;padding:0}
   <form id="joinForm" class="card" style="display:flex;flex-direction:column;gap:12px" novalidate>
     <div class="field"><label for="jName">이름</label><input id="jName" required autocomplete="name" placeholder="홍길동"></div>
     <div class="field"><label for="jPhone">연락처</label><input id="jPhone" required inputmode="tel" autocomplete="tel" placeholder="010-0000-0000"></div>
-    <div class="row">
-      <div class="field grow"><label for="jBirth">생년월일</label><input id="jBirth" type="date"></div>
-      <div class="field grow"><label for="jGender">성별</label><select id="jGender"><option value="">선택 안 함</option><option>남</option><option>여</option></select></div>
-    </div>
+    <div class="field"><span>생년월일</span><div class="bsel"><select id="jBY" aria-label="태어난 해"></select><select id="jBM" aria-label="태어난 월"></select><select id="jBD" aria-label="태어난 날"></select></div><input id="jBirth" type="hidden"></div>
+    <div class="field"><label for="jGender">성별</label><select id="jGender"><option value="">선택 안 함</option><option>남</option><option>여</option></select></div>
     <label class="check"><input type="checkbox" id="jStu"><span><b>학생이에요</b> (만 19세 미만은 보호자 연락처 필수)</span></label>
     <div id="jGuard" class="card" hidden style="display:flex;flex-direction:column;gap:10px;background:var(--mat)">
       <div class="row"><div class="field" style="width:110px"><label for="jGRel">보호자</label><select id="jGRel"><option>어머니</option><option>아버지</option><option>기타 보호자</option></select></div>
@@ -1167,6 +1166,12 @@ function buildJoin(){
 }
 const ageOf=b=>{if(!b)return 99;const d=new Date(b+'T00:00:00'),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--;return a};
 const syncGuard=()=>{$('#jGuard').hidden=!$('#jStu').checked};
+{const Y=new Date().getFullYear(),by=$('#jBY'),bm=$('#jBM'),bd=$('#jBD');
+  by.innerHTML='<option value="">년도 ▾</option>'+Array.from({length:Y-1939},(_,i)=>Y-i).map(y=>`<option value="${y}">${y}년</option>`).join('');
+  bm.innerHTML='<option value="">월 ▾</option>'+Array.from({length:12},(_,i)=>`<option value="${pad2(i+1)}">${i+1}월</option>`).join('');
+  const fillD=()=>{const cur=bd.value;const n=by.value&&bm.value?new Date(+by.value,+bm.value,0).getDate():31;bd.innerHTML='<option value="">일 ▾</option>'+Array.from({length:n},(_,i)=>`<option value="${pad2(i+1)}">${i+1}일</option>`).join('');if(cur&&+cur<=n)bd.value=cur};fillD();
+  const sync=()=>{$('#jBirth').value=by.value&&bm.value&&bd.value?`${by.value}-${bm.value}-${bd.value}`:'';$('#jBirth').dispatchEvent(new Event('change'))};
+  by.onchange=()=>{fillD();sync()};bm.onchange=()=>{fillD();sync()};bd.onchange=sync}
 $('#jStu').onchange=syncGuard;$('#jBirth').addEventListener('change',()=>{if(ageOf($('#jBirth').value)<19){$('#jStu').checked=true;syncGuard()}});
 $('#jGoal').onclick=e=>{if(e.target.classList.contains('chip'))e.target.classList.toggle('on')};
 $('#agAll').onchange=e=>$$('.ag').forEach(a=>a.checked=e.target.checked);
