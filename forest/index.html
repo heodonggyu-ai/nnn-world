@@ -165,6 +165,10 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 .fli img{width:52px;height:44px;object-fit:contain}
 .fli b{font-family:var(--f-display);font-weight:400;font-size:17px}
 .fli small{color:var(--mute);margin-left:auto}
+#lookBtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:6;width:58px;height:58px;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper);color:var(--ink);box-shadow:0 4px 0 rgba(36,54,59,.3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--f-display);font-size:10px;padding:0}
+#lookBtn.on{background:var(--ink);color:#fff}
+#lookBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 56px);z-index:7;background:rgba(36,54,59,.92);color:#fff;border-radius:14px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:14px;max-width:calc(100% - 32px)}
+#lookBar button{flex:none;height:36px;border-radius:10px;border:2px solid #fff;background:var(--sun);color:var(--ink);font-family:var(--f-display);font-size:14px;padding:0 10px;cursor:pointer}
 #emoBtn{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:6;width:58px;height:58px;border-radius:50%;border:2.5px solid var(--ink);background:var(--sun);font-family:var(--f-display);font-size:16px;box-shadow:0 4px 0 rgba(36,54,59,.3);cursor:pointer}
 #emoBar{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 154px);z-index:7;display:flex;flex-wrap:wrap;gap:6px;max-width:360px}
 #emoBar button{height:42px;padding:0 14px;border-radius:999px;border:2.5px solid var(--ink);background:#fff;font-family:var(--f-display);font-size:16px;cursor:pointer;box-shadow:0 3px 0 rgba(36,54,59,.25)}
@@ -208,6 +212,8 @@ input.name{width:100%;box-sizing:border-box;height:48px;border:2.5px solid var(-
 <script src="../shared/world.js?v=8"></script>
 <div id="emoBar" hidden></div>
 <button id="emoBtn" hidden aria-label="인사하기">인사</button>
+<button id="lookBtn" aria-label="지도 둘러보기"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2.2"/></svg><span>둘러보기</span></button>
+<div id="lookBar" hidden><span>둘러보기 중 · 손가락으로 끌어서 지도를 움직여요</span><button id="lookBack">내 캐릭터로</button></div>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -1691,7 +1697,7 @@ function openTown(){
   const today=dateKey(),done=(S.stamps&&S.stamps.date===today)?S.stamps.done:[];
   const fedN=NCATS.filter(n=>S.cats[n.id].fed===today).length;
   openSheet('우리 동네',`<canvas id="mm" width="640" height="480" style="width:100%;height:auto;border-radius:16px;border:2px solid var(--ink);display:block"></canvas>
-   <p class="sub" style="margin:6px 0 0">빨간 점이 ${PN()}예요. 동그라미는 놀이터 도장 자리예요.</p>
+   <p class="sub" style="margin:6px 0 0">빨간 점이 ${PN()}예요. 동그라미는 놀이터 도장 자리예요. 지도를 누르면 그곳을 둘러볼 수 있어요.</p>
    <div class="label">오늘의 놀이터 도장 ${done.length}/${PLAYS.length}</div>
    <div class="stamps">${PLAYS.map(p=>`<div class="stamp${done.includes(p.id)?' on':''}"><span>${done.includes(p.id)?'쾅!':''}</span><b>${p.name}</b><small>${p.where}</small></div>`).join('')}</div>
    ${HALLOWEEN?`<div class="label">핼러윈 사탕 ${S.candy||0}개 · 귀신 분장 ${S.wear.costume==='ghost'?'하는 중':'안 함'}</div><p class="sub">분장을 하고 동네를 떠도는 유령에게 다가가면 사탕을 받아요. 사탕은 지웰시티몰에서 잭오랜턴, 유령 풍선으로 바꿀 수 있어요.</p>`:''}
@@ -1702,7 +1708,11 @@ function openTown(){
    <div class="label">3단지 고양이 밥 주기 ${fedN}/${NCATS.length}</div>
    <div class="list">${NCATS.map(n=>{const st=S.cats[n.id],c=CATS.find(q=>q.id===n.id);const fed=st.fed===today;return `<div class="li" style="cursor:default">${por(n.look,{w:144,h:116,sil:!st.met&&!st.name})}<div class="grow"><div class="nm">${st.name||(st.met?'이름 없음':'???')}</div><div class="meta">${fed?'오늘 밥 먹었어요 · 배불러요':`어디 있을까? 오늘은 <b>${c?c.tag:'3단지'}</b> 쪽에 있대요`}</div>${heartsHTML(5,Math.ceil(st.bond/2),true)}</div></div>`}).join('')}</div>`);
   drawMinimap($('#mm'));$('#sheetB').onclick=null;
+  $('#mm').onclick=e=>{const cn=$('#mm'),r=cn.getBoundingClientRect(),tx=(e.clientX-r.left)/r.width*MW,ty=(e.clientY-r.top)/r.height*OUT_H;if(P.y>=OUT_H*T)return;closeSheet();setLook(true,tx*T,ty*T)};
+  $('#mm').style.cursor='pointer';
 }
+$('#lookBtn').onclick=()=>{unlockAudio();setLook(!LOOK.on);if(LOOK.on&&!S.lookTip){S.lookTip=1;touch();toast('두 손가락으로 크기도 바꿀 수 있어요. 동네 지도에서 장소를 눌러도 거기로 가서 봐요')}};
+$('#lookBack').onclick=()=>setLook(false);
 $('#bBag').onclick=()=>openBag();$('#bDex').onclick=openDex;$('#bPets').onclick=openPets;$('#bTasks').onclick=openTasks;$('#bTown').onclick=openTown;
 
 /* ---------- characters ---------- */
@@ -1933,17 +1943,21 @@ function intro(step=0){
 let ptr=null;const keys=new Set();
 let cam={x:0,y:0};
 function toWorld(sx,sy){return{x:sx/Z+cam.x,y:sy/Z+cam.y}}
+const LOOK={on:false,x:0,y:0,drag:null};
+function lookRange(){if(P.y>=OUT_H*T){const top=P.y>=HY*T?HY:SY;return{x0:0,x1:MW*T,y0:top*T,y1:(top+(top===HY?21:30))*T}}return{x0:0,x1:MW*T,y0:0,y1:OUT_H*T}}
+function setLook(on,x,y){LOOK.on=on;LOOK.drag=null;if(on){LOOK.x=x!=null?x:P.x;LOOK.y=y!=null?y:P.y-T*.4;P.target=null;P.pending=null;ptr=null}$('#lookBar').hidden=!on;$('#lookBtn').classList.toggle('on',on);$('#act').hidden=true}
 const PTS=new Map();let pinch=null;
 const pdist=()=>{const a=[...PTS.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
+const pmid=()=>{const a=[...PTS.values()];return{x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2}};
 cv.addEventListener('pointerdown',e=>{PTS.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(PTS.size===2&&!uiOpen()){ptr=null;P.target=null;P.pending=null;pinch={d0:Math.max(20,pdist()),z0:ZU};try{cv.setPointerCapture(e.pointerId)}catch(_){}return}},true);
-cv.addEventListener('pointermove',e=>{if(!PTS.has(e.pointerId))return;PTS.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&PTS.size>=2){ZU=pinch.z0*pdist()/pinch.d0;applyZoom(false);e.stopImmediatePropagation()}},true);
+  if(PTS.size===2&&!uiOpen()){ptr=null;LOOK.drag=null;P.target=null;P.pending=null;pinch={d0:Math.max(20,pdist()),z0:ZU,m:pmid()};try{cv.setPointerCapture(e.pointerId)}catch(_){}return}},true);
+cv.addEventListener('pointermove',e=>{if(!PTS.has(e.pointerId))return;PTS.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&PTS.size>=2){ZU=pinch.z0*pdist()/pinch.d0;applyZoom(false);if(LOOK.on){const m=pmid();LOOK.x-=(m.x-pinch.m.x)/Z;LOOK.y-=(m.y-pinch.m.y)/Z;pinch.m=m}e.stopImmediatePropagation()}},true);
 const endPinch=e=>{PTS.delete(e.pointerId);if(pinch&&PTS.size<2){pinch=null;ptr=null;applyZoom(true);if(!S.zoomTip){S.zoomTip=1;touch()}}};
 cv.addEventListener('pointerup',endPinch,true);cv.addEventListener('pointercancel',endPinch,true);
 cv.addEventListener('wheel',e=>{e.preventDefault();ZU*=e.deltaY<0?1.1:1/1.1;applyZoom(true)},{passive:false});
-cv.addEventListener('pointerdown',e=>{if(uiOpen()||pinch||PTS.size>1)return;unlockAudio();if(tryCatchStar(e.clientX,e.clientY))return;ptr={id:e.pointerId,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,drag:false};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
-cv.addEventListener('pointermove',e=>{if(pinch||!ptr||e.pointerId!==ptr.id)return;ptr.x=e.clientX;ptr.y=e.clientY;if(!ptr.drag&&Math.hypot(ptr.x-ptr.sx,ptr.y-ptr.sy)>14){ptr.drag=true;P.target=null;P.pending=null}});
-const endPtr=e=>{if(pinch||!ptr||e.pointerId!==ptr.id)return;if(!ptr.drag&&e.type==='pointerup')handleTap(ptr.sx,ptr.sy);ptr=null};
+cv.addEventListener('pointerdown',e=>{if(LOOK.on&&!uiOpen()&&PTS.size<=1){unlockAudio();LOOK.drag={id:e.pointerId,x:e.clientX,y:e.clientY};try{cv.setPointerCapture(e.pointerId)}catch(_){}return}if(uiOpen()||pinch||PTS.size>1)return;unlockAudio();if(tryCatchStar(e.clientX,e.clientY))return;ptr={id:e.pointerId,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,drag:false};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+cv.addEventListener('pointermove',e=>{if(LOOK.drag&&e.pointerId===LOOK.drag.id&&!pinch){LOOK.x-=(e.clientX-LOOK.drag.x)/Z;LOOK.y-=(e.clientY-LOOK.drag.y)/Z;LOOK.drag.x=e.clientX;LOOK.drag.y=e.clientY;return}if(pinch||!ptr||e.pointerId!==ptr.id)return;ptr.x=e.clientX;ptr.y=e.clientY;if(!ptr.drag&&Math.hypot(ptr.x-ptr.sx,ptr.y-ptr.sy)>14){ptr.drag=true;P.target=null;P.pending=null}});
+const endPtr=e=>{if(LOOK.drag&&e.pointerId===LOOK.drag.id){LOOK.drag=null;return}if(pinch||!ptr||e.pointerId!==ptr.id)return;if(!ptr.drag&&e.type==='pointerup')handleTap(ptr.sx,ptr.sy);ptr=null};
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 function handleTap(sx,sy){
   const w=toWorld(sx,sy);tapFx={x:w.x,y:w.y,t:0};
@@ -1970,7 +1984,8 @@ function update(dt){
   if(phase()==='night'&&!uiOpen()&&!inIndoor()){shootTm-=dt;if(shootTm<=0&&!shoot){shoot={x:VW*rnd(.55,1.05),y:VH*rnd(.05,.3),vx:-rnd(200,280),vy:rnd(90,150),t:0,caught:false};shootTm=rnd(20,45)}}
   updateGhosts(dt);updateNPCs(dt);schoolTick(dt);homeTick(dt);ambientTick(dt);trainTick(dt);netTick(dt);
   if(shoot){shoot.t+=dt;shoot.x+=shoot.vx*dt;shoot.y+=shoot.vy*dt;if(shoot.t>(shoot.caught?0.6:2.4))shoot=null}
-  if(!uiOpen()){
+  if(LOOK.on&&!uiOpen()){const k=T*9*dt/Math.max(.5,ZU);if(keys.has('arrowleft')||keys.has('a'))LOOK.x-=k;if(keys.has('arrowright')||keys.has('d'))LOOK.x+=k;if(keys.has('arrowup')||keys.has('w'))LOOK.y-=k;if(keys.has('arrowdown')||keys.has('s'))LOOK.y+=k;P.moving=false}
+  else if(!uiOpen()){
     let vx=0,vy=0;
     if(keys.has('arrowleft')||keys.has('a'))vx-=1;if(keys.has('arrowright')||keys.has('d'))vx+=1;if(keys.has('arrowup')||keys.has('w'))vy-=1;if(keys.has('arrowdown')||keys.has('s'))vy+=1;
     if(ptr&&ptr.drag){const dx=ptr.x-ptr.sx,dy=ptr.y-ptr.sy,m=Math.hypot(dx,dy);if(m>8){const s=Math.min(1,m/50);vx=dx/m*s;vy=dy/m*s}}
@@ -2021,7 +2036,7 @@ function update(dt){
   conf.forEach(c=>{c.x+=c.vx*dt;c.y+=c.vy*dt;c.r+=c.vr*dt;c.life-=dt});conf=conf.filter(c=>c.life>0&&c.y<VH+20);
   if(tapFx){tapFx.t+=dt;if(tapFx.t>0.5)tapFx=null}
   fade=Math.max(0,fade-dt);
-  const cand=uiOpen()?null:gather(P.x,P.y-T*.3,T*1.35)[0]||null;
+  const cand=uiOpen()||LOOK.on?null:gather(P.x,P.y-T*.3,T*1.35)[0]||null;
   const b=$('#act');
   if(cand){if(b.hidden||b.textContent!==cand.label){b.textContent=cand.label;b.hidden=false}actItem=cand}else{if(!b.hidden)b.hidden=true;actItem=null}
   saveTm+=dt;if(saveTm>4){saveTm=0;if(dirty)save()}
@@ -2036,7 +2051,10 @@ function render(){
   const k=Math.round(DPR*Z*100)/100;
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2E5A3F';ctx.fillRect(0,0,cv.width,cv.height);
   const vw=VW/Z,vh=VH/Z,ww=MW*T,wh=MH*T;
-  cam.x=vw>=ww?(ww-vw)/2:clamp(P.x-vw/2,0,ww-vw);cam.y=vh>=wh?(wh-vh)/2:clamp(P.y-T*.4-vh/2,0,wh-vh);
+  if(LOOK.on){const r=lookRange();LOOK.x=clamp(LOOK.x,r.x0,r.x1);LOOK.y=clamp(LOOK.y,r.y0,r.y1)}
+  const fx=LOOK.on?LOOK.x:P.x,fy=LOOK.on?LOOK.y:P.y-T*.4;
+  const rg=lookRange(),rh=rg.y1-rg.y0;
+  cam.x=vw>=ww?(ww-vw)/2:clamp(fx-vw/2,0,ww-vw);cam.y=vh>=rh?rg.y0+(rh-vh)/2:clamp(fy-vh/2,rg.y0,rg.y1-vh);
   if(MOM.shake>0&&inHome()){cam.x+=rnd(-5,5)*MOM.shake;cam.y+=rnd(-5,5)*MOM.shake}
   ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);
   const px=CH*T,cx0=Math.max(0,Math.floor(cam.x/px)),cy0=Math.max(0,Math.floor(cam.y/px)),cx1=Math.min(Math.ceil(MW/CH)-1,Math.floor((cam.x+vw)/px)),cy1=Math.min(Math.ceil(MH/CH)-1,Math.floor((cam.y+vh)/px));
@@ -3064,9 +3082,9 @@ function openGym(){
   $('#gyX').onclick=closeModal;
   $('#gyA').onclick=()=>{$('#gyA').disabled=true;toast('NNN 회원 월드로 이동해요');leaveTo('../member.html')};
   $('#gyC').onclick=()=>{$('#gyC').disabled=true;toast('NNN 콤보 러시로 이동해요');leaveTo('https://nnn-combo.netlify.app')};
-  $('#gyB').onclick=openBag;
+  $('#gyB').onclick=openSandbag;
 }
-function openBag(){const s=SC2();let cnt=0,tl=10,run=true,started=false,last=performance.now(),hit=0,side=1;
+function openSandbag(){const s=SC2();let cnt=0,tl=10,run=true,started=false,last=performance.now(),hit=0,side=1;
   openModal(`<h3>샌드백 치기</h3><p class="sub">샌드백을 마구 눌러요! 원투 원투! 오늘 최고 ${s.bag||0}번</p><canvas id="sbC" width="360" height="360" style="width:100%;max-width:300px;height:auto;display:block;margin:6px auto;background:#2A2A33;border-radius:16px;touch-action:none"></canvas><div class="row"><button class="btn soft" id="sbX">그만</button></div>`);
   const cn=$('#sbC'),g=cn.getContext('2d');
   cn.onpointerdown=()=>{if(tl<=0){cnt=0;tl=10;started=false;return}started=true;cnt++;hit=0.18;side=-side;tone(120+Math.random()*40,.09,'square',.06,0,.5)};
