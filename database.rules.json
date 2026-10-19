@@ -203,6 +203,10 @@
      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
      ".validate": "!newData.exists() || (newData.child('at').isNumber() && newData.child('nick').isString())"
     }
+   },
+   "backups": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
    }
   }
  }

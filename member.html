@@ -645,6 +645,16 @@ body.tvmode .app{max-width:none;padding:0}
     <div id="coachRows"></div>
     <div class="row"><input id="coachName" class="grow" placeholder="코치 이름 (예: 김코치)" style="border:2px solid var(--line);border-radius:12px;padding:10px"><button class="btn sm red" id="coachAdd">코치 만들기</button></div>
   </div>
+  <div class="card" data-atab="set" style="display:flex;flex-direction:column;gap:10px;border:2px solid var(--ink)">
+    <h3 style="font-size:20px">백업 · 복구</h3>
+    <p class="small" style="margin:0">회원·등록·결제·설정 정보를 <b>매일 자동으로</b> 서버에 따로 저장해요(최근 30일). 관장 메뉴나 출석패드가 켜질 때 하루 한 번 저장돼요. 혹시 정보가 지워지거나 깨지면 여기서 그날로 되돌릴 수 있어요.</p>
+    <div class="small" id="bkLast"></div>
+    <div id="bkList"></div>
+    <div class="label">백업 파일 (내 기기에 보관)</div>
+    <label class="check" style="margin:0"><input type="checkbox" id="bkFaces"><span>얼굴 사진도 포함 <span class="small">(파일이 커지고, 외부 유출에 주의해야 해요)</span></span></label>
+    <div class="row"><button class="btn red sm grow" id="bkDown">백업 파일 받기</button><label class="btn ghost sm grow" for="bkFile" style="text-align:center">백업 파일로 복구</label><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
+    <p class="small" style="margin:0">한 달에 한 번쯤 파일로도 받아서 PC나 구글 드라이브에 보관해 두세요. 서버 백업과 별개로 한 번 더 지켜 줘요.</p>
+  </div>
   <div class="card" data-atab="set" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">설정</h3>
     <div class="field"><label for="sNotice">공지</label><textarea id="sNotice" rows="4"></textarea></div>
@@ -1597,6 +1607,64 @@ function openShowQR(){const u=joinUrl();const ref=u.includes('ref=');
     <button class="btn ghost" id="sqCopy">링크 복사해서 보내기</button><button class="btn" data-close>닫기</button>`,el=>{qrInto(el.querySelector('#bigQR'),u,Math.min(280,innerWidth-110));el.querySelector('#sqCopy').onclick=async()=>{const txt='탕정 엔엔엔복싱 NNN WORLD 가입하기\n'+u;try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}copyText(txt,'링크를')}})}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-showqr]');if(b){e.preventDefault();openShowQR()}});
 
+/* ================= 백업 · 복구 ================= */
+const BK_KEEP=30;
+async function bkCollect(faces){const out={app:'NNN WORLD',ver:1,at:new Date().toISOString()};
+  if(!FB_ON()){out.members={};out.private={};Object.values(local.members||{}).forEach(m=>{const s=splitM(m);out.members[m.id]=s.pub;out.private[m.id]=s.prv});out.pays=local.pays||{};const {pin,...mt}=local.meta;out.meta=mt;if(faces)out.faces=local.faces||{};return out}
+  const g=async p=>{try{return(await gref(p).get()).val()||{}}catch(e){return{}}};
+  out.members=await g('members');out.private=await g('private');out.pays=await g('pays');out.meta=await g('meta');out.coachcodes=await g('coachcodes');out.roster=await g('roster');if(faces)out.faces=await g('faces');return out}
+const bkCount=b=>({mem:Object.keys(b.members||{}).length,reg:Object.values(b.private||{}).filter(p=>p&&p.mem).length,pay:Object.keys(b.pays||{}).length});
+async function autoSnapshot(){if(!FB_ON()||!IS_ADMIN)return;const key=TODAY();
+  try{const ex=(await gref('backups/'+key+'/at').get()).val();if(ex)return;const b=await bkCollect(false);if(!Object.keys(b.members).length)return;await gref('backups/'+key).set(clean(b));
+    const ks=Object.keys((await gref('backups').get()).val()||{}).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();for(const k of ks.slice(0,Math.max(0,ks.length-BK_KEEP))){try{await gref('backups/'+k).set(null)}catch(e){}}
+    const br=Object.keys((await gref('backups').get()).val()||{}).filter(k=>k.startsWith('before-restore-')).sort();for(const k of br.slice(0,Math.max(0,br.length-5))){try{await gref('backups/'+k).set(null)}catch(e){}}}catch(e){}}
+async function renderBackups(){const box=$('#bkList');if(!box)return;let lf='';try{lf=localStorage.getItem('nnn_bkfile')||''}catch(e){}
+  $('#bkLast').innerHTML=lf?`마지막 백업 파일: <b>${md(lf.slice(0,10))}</b> (${dDiff(TODAY(),lf.slice(0,10))}일 전)`:'<span style="color:var(--red)">아직 백업 파일을 받은 적이 없어요.</span>';
+  if(!FB_ON()){box.innerHTML='<div class="small">서버에 연결되면 자동 백업 목록이 보여요.</div>';return}
+  let o={};try{const ks=(await gref('backups').get()).val()||{};o=ks}catch(e){box.innerHTML='<div class="small" style="color:var(--red)">자동 백업을 읽지 못했어요. 보안 규칙을 최신으로 붙여 넣었는지 확인해 주세요.</div>';return}
+  const ks=Object.keys(o).sort().reverse();
+  box.innerHTML=ks.length?ks.slice(0,10).map(k=>{const c=bkCount(o[k]);return`<div class="payrow"><div class="grow"><b>${/^\d{4}/.test(k)?md(k)+' ('+DAYN[new Date(k+'T00:00:00').getDay()]+')':'복구 직전 보관본'}</b><div class="small num">${new Date(o[k].at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} · 회원 ${c.mem}명 · 등록 ${c.reg}건 · 결제 ${c.pay}건</div></div><button class="btn sm ghost" data-bkr="${esc(k)}">이날로 복구</button></div>`}).join('')+(ks.length>10?`<div class="small">그 이전 ${ks.length-10}개도 보관 중이에요.</div>`:''):'<div class="small">아직 자동 백업이 없어요. 오늘 안에 만들어져요.</div>';
+  box.querySelectorAll('[data-bkr]').forEach(b=>b.onclick=()=>openRestore(o[b.dataset.bkr],b.dataset.bkr))}
+$('#bkDown').onclick=async()=>{const faces=$('#bkFaces').checked;toast('백업을 모으는 중…');const b=await bkCollect(faces);const c=bkCount(b);
+  const n=new Date();download(`NNN_WORLD_백업_${TODAY().replace(/-/g,'')}_${pad2(n.getHours())}${pad2(n.getMinutes())}${faces?'_사진포함':''}.json`,JSON.stringify(b),'application/json');
+  try{localStorage.setItem('nnn_bkfile',new Date().toISOString())}catch(e){}toast(`백업 파일을 받았어요 · 회원 ${c.mem}명 · 결제 ${c.pay}건`,3500);renderBackups()};
+$('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const b=JSON.parse(r.result);if(!b||b.app!=='NNN WORLD'||!b.members)throw 0;openRestore(b,'파일')}catch(err){toast('NNN WORLD 백업 파일이 아니에요')}e.target.value=''};r.readAsText(f)};
+function openRestore(b,label){const c=bkCount(b);
+  sheet(`<h2>백업으로 복구</h2><div class="memsum"><div class="small">${label==='파일'?'백업 파일':esc(label)} · ${new Date(b.at).toLocaleString('ko-KR')}</div><b>회원 ${c.mem}명 · 등록 ${c.reg}건 · 결제 ${c.pay}건</b>${b.faces?'<div class="small">얼굴 사진 포함</div>':''}</div>
+    <div class="label">무엇을 복구할까요?</div>
+    <label class="check" style="margin:0"><input type="checkbox" id="rsMem" checked><span>회원 정보 · 등록 기간 · 출석 기록</span></label>
+    <label class="check" style="margin:0"><input type="checkbox" id="rsPay" checked><span>결제 · 매출 기록</span></label>
+    <label class="check" style="margin:0"><input type="checkbox" id="rsMeta"><span>설정 · 공지 · 안내 문구</span></label>
+    ${b.faces?'<label class="check" style="margin:0"><input type="checkbox" id="rsFace" checked><span>얼굴 사진</span></label>':''}
+    <div class="label">방법</div>
+    <label class="check" style="margin:0"><input type="radio" name="rsMode" value="fill" checked><span><b>빠진 것만 채우기 (권장)</b><br><span class="small">지금 있는 정보는 그대로 두고, 지워지거나 비어 있는 것만 백업에서 되살려요.</span></span></label>
+    <label class="check" style="margin:0"><input type="radio" name="rsMode" value="over"><span><b>백업 시점으로 되돌리기</b><br><span class="small">백업 이후에 바뀐 내용(새 출석·결제 등)은 백업 때 상태로 돌아가요. 백업 이후 새로 생긴 회원·결제는 지우지 않아요.</span></span></label>
+    <div class="field"><label for="rsOk">확인을 위해 <b>복구</b>라고 적어 주세요</label><input id="rsOk" placeholder="복구"></div>
+    <p class="small" style="margin:0">복구하기 직전 상태도 자동으로 한 번 더 보관해 둬요.</p>
+    <button class="btn red" id="rsGo">복구하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    el.querySelector('#rsGo').onclick=async()=>{if(el.querySelector('#rsOk').value.trim()!=='복구'){toast("'복구'라고 적어 주세요");return}
+      const mode=el.querySelector('[name=rsMode]:checked').value,doM=el.querySelector('#rsMem').checked,doP=el.querySelector('#rsPay').checked,doT=el.querySelector('#rsMeta').checked,fc=el.querySelector('#rsFace'),doF=fc&&fc.checked;
+      const btn=el.querySelector('#rsGo');btn.disabled=true;btn.textContent='복구 중…';
+      try{const n=await doRestore(b,{mode,doM,doP,doT,doF});close();toast(`복구했어요 · 회원 ${n.m}명 · 결제 ${n.p}건${n.t?' · 설정':''}`,4500);openAdmin()}catch(e){btn.disabled=false;btn.textContent='복구하기';toast('복구 중 문제가 생겼어요: '+(e&&e.message||e),5000)}}})}
+async function doRestore(b,o){const n={m:0,p:0,t:0};const fill=o.mode==='fill';
+  if(!FB_ON()){if(o.doM)Object.keys(b.members).forEach(id=>{const cur=local.members[id];const bk=joinM(b.members[id],(b.private||{})[id]);if(!cur||!fill){local.members[id]=fill&&cur?Object.assign({},bk,cur):bk;n.m++}else{const mg=Object.assign({},bk,cur);if(JSON.stringify(mg)!==JSON.stringify(cur)){local.members[id]=mg;n.m++}}});
+    if(o.doP)Object.entries(b.pays||{}).forEach(([k,v])=>{if(!fill||!local.pays[k]){local.pays[k]=v;n.p++}});if(o.doT&&b.meta){Object.assign(local.meta,b.meta);n.t=1}persist();return n}
+  try{const pre=await bkCollect(false);await gref('backups/before-restore-'+Date.now()).set(clean(pre))}catch(e){}
+  const get=async p=>{try{return(await gref(p).get()).val()||{}}catch(e){return{}}};
+  if(o.doM){const curM=await get('members'),curP=await get('private');
+    for(const id of Object.keys(b.members)){const bp=b.members[id],bq=(b.private||{})[id]||{};const cp=curM[id],cq=curP[id];
+      const np=fill&&cp?Object.assign({},bp,cp):bp,nq=fill&&cq?Object.assign({},bq,cq):bq;
+      const ch=JSON.stringify(np)!==JSON.stringify(cp)||JSON.stringify(nq)!==JSON.stringify(cq);if(!ch)continue;
+      await gref('members/'+id).set(clean(np));await gref('private/'+id).set(clean(nq));
+      const ph=String(nq.phone||'').replace(/\D/g,'').slice(-4);if(ph.length===4){try{await gref('mpin/'+id).set(ph)}catch(e){}}
+      if(nq.name){try{await gref('roster/'+id).set({name:nq.name})}catch(e){}}n.m++}
+    try{const nx=(await gref('nextId').get()).val()||1000;const mx=Math.max(nx,...Object.keys(b.members).map(Number).filter(x=>x>0));let cur=nx;while(cur<mx){await gref('nextId').set(cur+1);cur++}}catch(e){}}
+  if(o.doP){const cur=await get('pays');for(const [k,v] of Object.entries(b.pays||{})){if(fill&&cur[k])continue;if(JSON.stringify(cur[k])===JSON.stringify(v))continue;await gref('pays/'+k).set(clean(v));n.p++}}
+  if(o.doT&&b.meta){const {pin,nextId,...mt}=b.meta;const cur=await get('meta');await gref('meta').set(clean(fill?Object.assign({},mt,cur):mt));n.t=1;
+    if(b.coachcodes){for(const [k,v] of Object.entries(b.coachcodes)){try{if(!fill||!(await get('coachcodes'))[k])await gref('coachcodes/'+k).set(v)}catch(e){}}}}
+  if(o.doF&&b.faces){for(const [k,v] of Object.entries(b.faces)){try{if(fill&&(await gref('faces/'+k).get()).val())continue;await gref('faces/'+k).set(v)}catch(e){}}}
+  return n}
+
 /* ================= 실시간 체육관 (출석한 회원이 월드에 등장) ================= */
 const stayMin=()=>+(local.meta.stayMin||120);
 async function liveCheckIn(m){const v={at:Date.now(),nick:maskName(m.name),eq:m.equip,lv:levelOf(m).lv};
@@ -1811,7 +1879,7 @@ async function rotatePadTok(){const cur=newTok();const old=(local.meta.padtok&&l
 async function pollPad(){if($('#v-pad').hidden){stopPadQR();return}const all=await DB.all();const today=all.filter(m=>m.last===TODAY());
   if(padSeen){const fresh=today.filter(m=>!padSeen.has(m.id)&&(m.qrAtt||[]).includes(TODAY()));fresh.forEach(m=>{const f=$('#padFeed');const d=document.createElement('div');d.className='pfeed';d.innerHTML=`<canvas width="64" height="64"></canvas><b>${esc(maskName(m.name))}</b><span>QR 출석 완료!</span>`;f.prepend(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true});sfx('coin');while(f.children.length>4)f.lastChild.remove()})}
   padSeen=new Set(today.map(m=>m.id));$('#padCount').textContent='오늘 출석 '+today.length+'명'}
-function startPadQR(){stopPadQR();padSeen=null;rotatePadTok();padTokTimer=setInterval(rotatePadTok,30000);pollPad();padPoll=setInterval(pollPad,4000)}
+function startPadQR(){stopPadQR();setTimeout(autoSnapshot,5000);padSeen=null;rotatePadTok();padTokTimer=setInterval(rotatePadTok,30000);pollPad();padPoll=setInterval(pollPad,4000)}
 function stopPadQR(){clearInterval(padTokTimer);clearInterval(padPoll)}
 function attSheet(ok,title,sub,extra='',m){
   sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center"><div class="label" style="color:${ok?'#2B9B66':'var(--red)'}">${ok?'QR 출석':'출석 안 됨'}</div><canvas id="qaAv" width="240" height="280" style="width:120px;height:140px"></canvas><h2>${esc(title)}</h2><p style="margin:0">${sub}</p>${extra}</div><button class="btn${ok?'':' red'}" data-close>${ok?'좋아요':'확인'}</button>`);
@@ -1834,7 +1902,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
