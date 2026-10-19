@@ -179,6 +179,7 @@ body.tvmode .app{max-width:none;padding:0}
 .dtile b{font-size:20px}.dtile span{font-size:12px;color:var(--muted)}.dtile.hot{border:2px solid var(--red)}.dtile.hot b{color:var(--red)}.dtile.warn{border:2px solid var(--gold)}.dtile.warn b{color:#B07A08}
 .bring.offtab{display:none!important}
 @media(max-width:360px){.adash{grid-template-columns:repeat(2,1fr)}}
+.ownerbar{display:flex;gap:6px;align-items:center;margin-top:8px;background:#2F2F2F;color:#fff;border-radius:10px;padding:8px 10px}.ownerbar .small{color:#C9CACF}.ownerbar .btn.ghost{color:#fff;border-color:#777}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -440,6 +441,7 @@ body.tvmode .app{max-width:none;padding:0}
       <canvas id="map"></canvas>
       <div class="hint" id="mapHint">바닥을 누르면 이동해요. 샌드백·줄넘기·링·휴식 구역으로 가 보세요.</div>
     </div>
+    <div class="ownerbar" id="ownerBar" hidden><span class="grow"><b>관장 모드</b> <span class="small" id="ownerSt"></span></span><button class="btn sm red" id="ownerLive">체육관 출근</button><button class="btn sm ghost" id="ownerAdm">관장 메뉴</button></div>
     <div class="row small" style="margin-top:8px;justify-content:space-between"><span id="todayCap"></span><button class="link" id="sndBtn">소리 켜기</button></div>
   </div>
 
@@ -594,7 +596,7 @@ body.tvmode .app{max-width:none;padding:0}
 </section>
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
-  <h2 style="font-size:28px">관장 메뉴</h2>
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div>
   <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
   <div class="adash" data-atab="today" id="adash"></div>
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
@@ -1153,7 +1155,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
+async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();syncOwnerBar();setTimeout(syncOwnerBar,1500);if(isOwner(ME))return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -1252,7 +1254,8 @@ function drawWorld(c){
     c.fillStyle='#fff';c.fillRect(46,420,13,16);c.fillStyle='#2F2F2F';[[47,421],[54,421],[47,429]].forEach(([qx,qy])=>{c.fillRect(qx,qy,4,4)});c.fillRect(53,428,2,2);c.fillRect(55,431,3,2);
     c.fillStyle='#5D5E64';rr(c,72,424,26,13,2);c.fill();c.fillStyle=`rgba(120,230,170,${.7+.3*Math.sin(t*2)})`;c.fillRect(75,426,13,6);c.fillStyle='#2F2F2F';c.fillRect(90,427,5,7)}});
   ents.push({y:494,d:()=>{c.fillStyle='#5D6880';c.fillRect(176,476,8,18);c.fillStyle='#2A3147';rr(c,166,462,28,18,4);c.fill();c.fillStyle=`rgba(92,242,255,${.6+.3*Math.sin(t*3)})`;rr(c,169,465,22,12,2);c.fill()}});
-  ents.push({y:W.coach.y,d:()=>{drawChar(c,W.coach.x,W.coach.y,1,{char:'boxer',glove:'g_black',trunks:'t_black',shoes:'s_black'},{t,moving:W.coach.moving,noFx:true});c.fillStyle='#1D2433';c.font='9px "Black Han Sans",sans-serif';c.fillText('관장님',W.coach.x,W.coach.y-48);
+  const npcOn=!isOwner(ME)&&!Object.values(W.others||{}).some(o=>o.owner&&!o.leaving);
+  if(npcOn)ents.push({y:W.coach.y,d:()=>{drawChar(c,W.coach.x,W.coach.y,1,{char:'boxer',glove:'g_black',trunks:'t_black',shoes:'s_black'},{t,moving:W.coach.moving,noFx:true});c.fillStyle='#1D2433';c.font='9px "Black Han Sans",sans-serif';c.fillText('관장님',W.coach.x,W.coach.y-48);
     c.fillStyle='#fff';rr(c,W.coach.x+6,W.coach.y-62,14,12,4);c.fill();c.fillStyle='#D9343A';c.font='10px "Black Han Sans",sans-serif';c.fillText(questState().some(q=>q.cur>=q.n&&!q.claimed)?'!':'?',W.coach.x+13,W.coach.y-56)}});
   W.animals.forEach(a=>ents.push({y:a.y,d:()=>{drawAnimal(c,a.id,a.x,a.y,1.2,a.t,{moving:a.moving,flip:a.flip});if(!ME.friends.includes(a.id)){c.fillStyle='#FF4D7A';c.font='9px sans-serif';c.fillText('♥',a.x,a.y-24+Math.sin(a.t*4)*2)}}}));
   W.coins.forEach(k=>ents.push({y:k.y,d:()=>{const w=Math.abs(Math.cos(t*3+k.x))*5+1;ell(c,k.x,k.y-4,w,5,'#E9A91F');ell(c,k.x,k.y-4,w*.5,3,'#FFE58A')}}));
@@ -1276,7 +1279,7 @@ $('#map').addEventListener('click',e=>{
   {const ho=hitOther(x,y);if(ho){showOther(ho);return}}
   const hitA=W.animals.find(a=>Math.hypot(a.x-x,a.y-10-y)<20);
   if(hitA){go(hitA.x-14,hitA.y,{type:'animal',a:hitA});return}
-  if(Math.hypot(W.coach.x-x,W.coach.y-20-y)<22){go(W.coach.x-16,W.coach.y+4,{type:'coach'});return}
+  if(!isOwner(ME)&&!Object.values(W.others||{}).some(o=>o.owner&&!o.leaving)&&Math.hypot(W.coach.x-x,W.coach.y-20-y)<22){go(W.coach.x-16,W.coach.y+4,{type:'coach'});return}
   // 링 내부 클릭도 링으로
   if(x>106&&x<254&&y>56&&y<206){go(180,214,{type:'st',id:'ring'});return}
   if(x<70&&y>210&&y<420){go(82,318,{type:'st',id:'bag'});return}
@@ -1494,7 +1497,7 @@ async function renderRank(){
   $$('#rkTabs [data-r]').forEach(b=>b.onclick=()=>{rkMode=b.dataset.r;renderRank()});
   $('#rkList').innerHTML='<div class="small">불러오는 중…</div>';
   const mon=TODAY().slice(0,7);
-  const all=(await DB.all()).filter(m=>m&&m.id);
+  const all=(await DB.all()).filter(m=>m&&m.id&&!isOwner(m));
   const invMap=monthStats(all).inv;const val=m=>rkMode==='inv'?(invMap[m.id]||0):rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
   const unit={inv:'명',att:'회',lv:'XP',bag:'점',rope:'개',shadow:'점'}[rkMode];
   const top=all.sort((a,b)=>val(b)-val(a)).slice(0,20);
@@ -1607,6 +1610,27 @@ function openShowQR(){const u=joinUrl();const ref=u.includes('ref=');
     <button class="btn ghost" id="sqCopy">링크 복사해서 보내기</button><button class="btn" data-close>닫기</button>`,el=>{qrInto(el.querySelector('#bigQR'),u,Math.min(280,innerWidth-110));el.querySelector('#sqCopy').onclick=async()=>{const txt='탕정 엔엔엔복싱 NNN WORLD 가입하기\n'+u;try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}copyText(txt,'링크를')}})}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-showqr]');if(b){e.preventDefault();openShowQR()}});
 
+/* ================= 관장 캐릭터 ================= */
+const OWNER_ID='owner';
+const isOwner=m=>!!(m&&(m.owner||m.id===OWNER_ID));
+async function enterOwner(){let m=await DB.get(OWNER_ID);
+  if(!m){m=blankMember({name:local.meta.ownerName||'관장',phone:'',char:'boxer'},OWNER_ID);m.owner=true;m.demo=true;m.approvedAt=TODAY();m.credits=99999;m.earned=99999;
+    m.owned=[...new Set([...m.owned,...ITEMS.map(i=>i.id)])];m.equip={char:'boxer',glove:'g_winning',head:'',shoes:'s_mizuno',trunks:'t_black',belt:''};
+    if(!ITEMS.some(i=>i.id==='g_winning'))m.equip.glove='g_black';if(!ITEMS.some(i=>i.id==='s_mizuno'))m.equip.shoes='s_black';
+    await DB.save(m);await DB.savePriv(m);toast('관장 캐릭터를 만들었어요. 장비는 모두 열려 있어요!',3500)}
+  else{const all=ITEMS.map(i=>i.id);if(all.some(id=>!m.owned.includes(id))){m.owned=[...new Set([...m.owned,...all])];m.credits=Math.max(m.credits,99999);await DB.save(m)}}
+  ME=m;lsSet(LS_SESSION,OWNER_ID);enterWorld()}
+$('#ownerGo').onclick=enterOwner;
+function ownerLiveOn(){const v=(LIVE.data||{})[OWNER_ID];return !!(v&&v.until&&Date.now()<v.until)}
+function syncOwnerBar(){const b=$('#ownerBar');if(!b)return;b.hidden=!isOwner(ME);if(b.hidden)return;const on=ownerLiveOn();
+  $('#ownerSt').textContent=on?'회원 맵에 보이는 중':'회원 맵에 안 보임';$('#ownerLive').textContent=on?'퇴근하기':'체육관 출근';$('#ownerLive').className='btn sm '+(on?'ghost':'red')}
+$('#ownerLive').onclick=async()=>{if(!isOwner(ME))return;const on=ownerLiveOn();
+  if(on){if(FB_ON()){try{await gref('live/'+OWNER_ID).set(null)}catch(e){}}else{delete (local.live||{})[OWNER_ID];persist()}toast('퇴근! 맵에서 관장님이 사라져요')}
+  else{const end=new Date();end.setHours(23,59,0,0);const v={at:Date.now(),until:end.getTime(),nick:'관장님',eq:ME.equip,lv:10,owner:true};
+    if(FB_ON()){try{await gref('live/'+OWNER_ID).set(clean(v))}catch(e){toast('저장하지 못했어요');return}}else{local.live=local.live||{};local.live[OWNER_ID]=v;persist();LIVE.data=local.live}toast('출근! 회원들 맵에 관장님이 나타나요')}
+  setTimeout(syncOwnerBar,400)};
+$('#ownerAdm').onclick=()=>pinSheet('관장 메뉴',openAdmin);
+
 /* ================= 백업 · 복구 ================= */
 const BK_KEEP=30;
 async function bkCollect(faces){const out={app:'NNN WORLD',ver:1,at:new Date().toISOString()};
@@ -1672,7 +1696,7 @@ async function liveCheckIn(m){const v={at:Date.now(),nick:maskName(m.name),eq:m.
 const LIVE={data:{},off:null};
 function startLive(){stopLive();if(FB_ON()){try{const r=gref('live');const hnd=s=>{LIVE.data=s.val()||{}};r.on('value',hnd);LIVE.off=()=>r.off('value',hnd)}catch(e){}}else{LIVE.data=local.live||{}}}
 function stopLive(){if(LIVE.off){LIVE.off();LIVE.off=null}}
-function livePresent(){const now=Date.now(),lim=stayMin()*60000;return Object.entries(LIVE.data||{}).filter(([id,v])=>v&&v.at&&now-v.at<lim&&new Date(v.at).toDateString()===new Date().toDateString())}
+function livePresent(){const now=Date.now(),lim=stayMin()*60000;return Object.entries(LIVE.data||{}).filter(([id,v])=>v&&v.at&&(v.until?now<v.until:now-v.at<lim)&&new Date(v.at).toDateString()===new Date().toDateString())}
 async function pruneLive(){if(!FB_ON())return;try{const o=(await gref('live').get()).val()||{};const lim=Date.now()-20*3600000;for(const [id,v] of Object.entries(o)){if(!v||!v.at||v.at<lim){try{await gref('live/'+id).set(null)}catch(e){}}}}catch(e){}}
 const SPOTS=[{x:58,y:262,pose:['jab','cross'],what:'샌드백'},{x:58,y:330,pose:['jab','cross'],what:'샌드백'},{x:58,y:395,pose:['cross','jab'],what:'샌드백'},
   {x:150,y:140,pose:['guard','jab','duck'],what:'쉐도우'},{x:205,y:110,pose:['jab','block','duck'],what:'쉐도우'},{x:190,y:170,pose:['guard','cross'],what:'쉐도우'},
@@ -1680,7 +1704,7 @@ const SPOTS=[{x:58,y:262,pose:['jab','cross'],what:'샌드백'},{x:58,y:330,pose
 function syncOthers(dt){W.others=W.others||{};const pres=livePresent();const ids=new Set();
   pres.forEach(([id,v])=>{if(ME&&id===ME.id)return;ids.add(id);let o=W.others[id];
     if(!o){const fresh=Date.now()-v.at<90000;const s=fresh?null:pick(SPOTS);o=W.others[id]={id,x:fresh?180:s.x,y:fresh?528:s.y,tx:fresh?180:s.x,ty:fresh?480:s.y,eq:v.eq||{char:'boxer'},nick:v.nick||'회원',lv:v.lv||1,at:v.at,stay:fresh?0:rnd(2,8),spot:s,t:Math.random()*5};if(fresh){floatTxt(180,500,(v.nick||'회원')+' 입장!');sfx('coin')}}
-    o.eq=v.eq||o.eq;o.at=v.at;o.lv=v.lv||o.lv});
+    o.eq=v.eq||o.eq;o.at=v.at;o.lv=v.lv||o.lv;o.owner=!!v.owner});
   Object.keys(W.others).forEach(id=>{if(!ids.has(id)){const o=W.others[id];if(!o.leaving){o.leaving=true;o.tx=180;o.ty=530}}});
   Object.values(W.others).forEach(o=>{o.t+=dt;if(o.enter>0)o.enter-=dt;const d=Math.hypot(o.tx-o.x,o.ty-o.y);o.moving=d>1.5;
     if(o.moving){const sp=45*dt;o.x+=(o.tx-o.x)/d*Math.min(sp,d);o.y+=(o.ty-o.y)/d*Math.min(sp,d);o.flip=o.tx<o.x}
@@ -1690,12 +1714,13 @@ function othersEnts(c,t){return Object.values(W.others||{}).map(o=>({y:o.y,d:()=
   let pose='idle',yo=0;if(!o.moving&&o.spot){const ps=o.spot.pose;const pp=ps[Math.floor((o.t*1.6))%ps.length];if(pp==='jump'){yo=-Math.abs(Math.sin(o.t*7))*5}else pose=pp}
   c.globalAlpha=o.leaving?.6:1;drawChar(c,o.x,o.y+yo,1,o.eq,{t:o.t,moving:o.moving,flip:o.spot&&o.spot.x<120&&!o.moving?true:o.flip,pose,noFx:true});c.globalAlpha=1;
   if(yo){c.strokeStyle='#D9343A';c.lineWidth=1.2;c.beginPath();c.ellipse(o.x,o.y-20+yo,13,24,0,0,7);c.stroke()}
+  if(o.owner){c.font='10px "Black Han Sans",sans-serif';const nm='관장님';const tw=c.measureText(nm).width+14;c.fillStyle='#E9A91F';rr(c,o.x-tw/2,o.y-58,tw,15,7);c.fill();c.fillStyle='#2F2F2F';c.fillText(nm,o.x,o.y-50);c.fillStyle='#fff';rr(c,o.x+tw/2-2,o.y-74,14,12,4);c.fill();c.fillStyle='#D9343A';c.fillText(questState().some(q=>q.cur>=q.n&&!q.claimed)?'!':'?',o.x+tw/2+5,o.y-68);return}
   c.font='9px sans-serif';const nm=o.nick+' Lv.'+o.lv;const tw=c.measureText(nm).width+10;c.fillStyle='rgba(255,255,255,.92)';rr(c,o.x-tw/2,o.y-54,tw,13,6);c.fill();c.fillStyle='#2F2F2F';c.fillText(nm,o.x,o.y-47)}}))}
-function drawLiveBadge(c){const n=Object.values(W.others||{}).filter(o=>!o.leaving).length+(ME&&ME.inAt&&Date.now()-ME.inAt<stayMin()*60000&&ME.last===TODAY()?1:0);
+function drawLiveBadge(c){const n=Object.values(W.others||{}).filter(o=>!o.leaving).length+((ME&&ME.inAt&&Date.now()-ME.inAt<stayMin()*60000&&ME.last===TODAY())||(isOwner(ME)&&ownerLiveOn())?1:0);
   const txt=n?`지금 체육관 ${n}명`:'지금 체육관 0명';c.font='11px "Black Han Sans",sans-serif';const w=c.measureText(txt).width+26;
   c.fillStyle=n?'rgba(43,155,102,.95)':'rgba(47,47,47,.8)';rr(c,8,74,w,20,10);c.fill();circ(c,19,84,3.5,n?`rgba(255,255,255,${.6+.4*Math.sin(W.t*4)})`:'#9A9BA0');c.fillStyle='#fff';c.textAlign='left';c.fillText(txt,27,84.5);c.textAlign='center'}
 function hitOther(x,y){return Object.values(W.others||{}).find(o=>Math.hypot(o.x-x,o.y-20-y)<18)}
-function showOther(o){const m=Math.round((Date.now()-o.at)/60000);floatTxt(o.x,o.y-30,`${o.nick} · ${m<1?'방금':m+'분 전'} 입장`)}
+function showOther(o){if(o.owner){openCoach();return}const m=Math.round((Date.now()-o.at)/60000);floatTxt(o.x,o.y-30,`${o.nick} · ${m<1?'방금':m+'분 전'} 입장`)}
 
 /* ================= 공지 · 자동 알림 ================= */
 const NKIND={normal:'일반',imp:'중요',closed:'휴무'};
@@ -2675,7 +2700,7 @@ function memCardHTML(m,full){
     ${full&&mem.item?`<div class="small">등록 상품: ${esc(mem.item)}${mem.paidAt?' · 결제 확인 '+esc(md(mem.paidAt)):''}</div>`:''}
   </div>`;
 }
-function renderMemCard(){
+function renderMemCard(){if(ME&&isOwner(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
   if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full');el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules)});
 }
 /* 관장: 등록 정보 입력 */
