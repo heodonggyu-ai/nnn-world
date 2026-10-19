@@ -165,6 +165,8 @@ body.tvmode .app{max-width:none;padding:0}
 .popn{border-radius:10px;padding:12px;background:var(--mat);display:flex;flex-direction:column;gap:6px;border-left:6px solid #66676D}.popn.imp{border-left-color:var(--red);background:#FDECEC}.popn.closed{border-left-color:#2E5AAC;background:#E9EEF8}.popn.auto{border-left-color:#E9A91F;background:#FBF3DF}
 .popn b.t{font-size:17px}.popn .bd{white-space:pre-wrap;font-size:15px}
 .autorow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--mat)}.autorow input{width:22px;height:22px;flex:0 0 auto;margin-top:2px}
+.shareqr{display:flex;gap:12px;align-items:center;width:100%;border:2px solid var(--line);cursor:pointer;font:inherit;color:inherit;text-align:left}
+.sqr{width:84px;height:84px;flex:0 0 auto;background:#fff;border-radius:8px;padding:4px;display:grid;place-items:center}.sqr img,.sqr canvas{width:100%!important;height:auto!important;display:block}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -305,6 +307,7 @@ body.tvmode .app{max-width:none;padding:0}
   <button class="btn red" id="goJoin">처음 왔어요 · 가입 신청</button>
   <button class="btn" id="goLogin">회원번호로 입장</button>
   <button class="btn ghost sm" data-instgo data-inst>휴대폰 홈 화면에 앱 추가</button>
+  <button class="card shareqr" data-showqr><div class="sqr" id="homeQR"></div><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:20px">가입 QR 보여 주기</b><span class="small" style="display:block">친구에게 화면을 보여 주면 카메라로 찍고 바로 가입해요. 누르면 크게 보여요.</span></span></button>
   <div class="quick"><button id="qTT"><b>수업 시간표</b><span id="qTTsub">오늘 수업 보기</span></button><button id="qPay"><b>결제 · 카운터</b><span>아산페이 · 온누리 · 계좌이체</span></button></div>
   <div data-sns></div>
   <div class="row" style="justify-content:space-between">
@@ -477,6 +480,7 @@ body.tvmode .app{max-width:none;padding:0}
       <div class="quick"><button id="mTT"><b>수업 시간표</b><span>요일별 수업</span></button><button id="mPay"><b>결제</b><span>회원권 · PT</span></button></div>
       <a class="btn gold sm" id="kakaoBtn2" style="text-align:center;text-decoration:none" target="_blank" rel="noopener">카카오톡 채널 추가</a>
       <button class="btn ghost sm" id="termsBtn">이용약관 보기</button>
+      <button class="btn ghost sm" data-showqr>가입 QR 보여 주기</button>
       <button class="btn ghost sm" data-instgo data-inst>홈 화면에 앱 추가</button>
       <button class="btn ghost sm" id="logoutBtn">로그아웃</button>
     </div>
@@ -1562,6 +1566,17 @@ function openInstall(){
     <button class="btn" data-close>알겠어요</button>`)}
 function autoInstallNudge(){if(isStandalone())return;let s=null;try{s=localStorage.getItem('nnn_inst')}catch(e){}if(s==='done')return;if(s&&Date.now()-+s<7*864e5)return;try{localStorage.setItem('nnn_inst',String(Date.now()))}catch(e){}setTimeout(()=>{if(!$('#sheetRoot').innerHTML)openInstall()},900)}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-instgo]');if(b){e.preventDefault();openInstall()}});
+
+/* ================= 가입 QR 보여 주기 ================= */
+const joinUrl=()=>appBase()+'?join=1'+(ME&&ME.id&&ME.id!=='0000'?'&ref='+ME.id:'');
+function qrInto(box,text,size){if(!box)return;box.innerHTML='';try{new QRCode(box,{text,width:size,height:size,colorDark:'#1C1C1C',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){box.textContent='QR'}}
+function renderHomeQR(){qrInto($('#homeQR'),appBase()+'?join=1',160)}
+function openShowQR(){const u=joinUrl();const ref=u.includes('ref=');
+  sheet(`<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px"><div class="label">NNN WORLD 가입</div><h2>카메라로 찍으면 바로 가입</h2>
+    <div id="bigQR" style="background:#fff;padding:12px;border-radius:12px;border:4px solid var(--red)"></div>
+    <p style="margin:0">${ref?`<b>${esc(ME.name)} 님 초대</b>로 가입돼요. 친구가 등록하면 초대 선물을 받아요!`:'탕정 엔엔엔복싱 가입 신청서가 열려요.'}</p></div>
+    <button class="btn ghost" id="sqCopy">링크 복사해서 보내기</button><button class="btn" data-close>닫기</button>`,el=>{qrInto(el.querySelector('#bigQR'),u,Math.min(280,innerWidth-110));el.querySelector('#sqCopy').onclick=async()=>{const txt='탕정 엔엔엔복싱 NNN WORLD 가입하기\n'+u;try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}copyText(txt,'링크를')}})}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-showqr]');if(b){e.preventDefault();openShowQR()}});
 
 /* ================= 공지 · 자동 알림 ================= */
 const NKIND={normal:'일반',imp:'중요',closed:'휴무'};
@@ -2951,7 +2966,7 @@ function renderFaceCard(){
 $('#tplBtn').onclick=openTplEditor;
 /* ================= 시작 ================= */
 (async()=>{
-  show('v-home');syncInstUI();renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();renderBring();showInviteBanner();
+  show('v-home');syncInstUI();setTimeout(renderHomeQR,300);renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();renderBring();showInviteBanner();
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
