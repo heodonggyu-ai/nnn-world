@@ -271,6 +271,18 @@
    "lockers": {
     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+   },
+   "families": {
+    ".read": "auth != null",
+    "$fid": {
+     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     "cheer": {
+      "$from": {
+       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/mdev').child($from).child(auth.uid).exists() && root.child('gym/families').child($fid).child('m').child($from).exists()))",
+       ".validate": "!newData.exists() || (newData.child('to').isString() && newData.child('emo').isString() && newData.child('emo').val().length <= 30)"
+      }
+     }
+    }
    }
   }
  }
