@@ -1,5 +1,5 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2F2F2F"><link rel="icon" href="member-icons/icon-192.png"><link rel="manifest" href="member.webmanifest"><link rel="apple-touch-icon" href="member-icons/apple-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="NNN 복싱"><style>body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
-<title>NNN 복싱 회원 월드</title>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2F2F2F"><link rel="icon" href="member-icons/icon-192.png"><link rel="manifest" href="member.webmanifest"><link rel="apple-touch-icon" href="member-icons/apple-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="NNN WORLD"><style>body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>NNN WORLD</title>
 <meta name="claude:viewport-fit-sides" content="cover"></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=Jost:wght@300;500&display=swap">
@@ -296,7 +296,7 @@ body.tvmode .app{max-width:none;padding:0}
 <section class="view" id="v-home">
   <div class="hero">
     <div class="hero-top"><div class="lg" id="heroLogo"></div>
-      <div><div class="label">탕정 엔엔엔복싱</div><h1>회원 월드</h1><p>출석하면 크레딧, 크레딧으로 내 복서 꾸미기.</p></div></div>
+      <div><div class="label">탕정 엔엔엔복싱</div><h1>NNN WORLD</h1><p>출석하면 크레딧, 크레딧으로 내 복서 꾸미기.</p></div></div>
     <canvas id="parade" width="720" height="240"></canvas>
   </div>
   <div class="bring" data-bring hidden></div>
@@ -385,7 +385,7 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="row"><span class="grow num" id="gymPhoneTxt"></span><button class="btn sm ghost" id="saveGymVcf">연락처 파일 받기</button></div>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">NNN 복싱 소식</h3><div data-sns></div></div>
-  <button class="btn" id="doneGo">내 체육관 월드 입장</button>
+  <button class="btn" id="doneGo">NNN WORLD 입장</button>
 </section>
 
 <!-- 로그인 -->
@@ -400,7 +400,7 @@ body.tvmode .app{max-width:none;padding:0}
   </form>
 </section>
 
-<!-- 회원 월드 -->
+<!-- NNN WORLD -->
 <section class="view" id="v-world" hidden>
   <div class="top">
     <canvas id="topAv" width="96" height="96"></canvas>
@@ -524,9 +524,9 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="tvcol"><h3><span id="tvAttT">이달 출석왕</span><small id="tvAward"></small></h3><div id="tvAtt"></div></div>
     <div class="tvcol" style="justify-content:center;align-items:center;text-align:center;gap:12px">
       <div style="font-family:var(--display);font-size:40px;line-height:1.1">같이 운동하면<br>더 강해져요</div>
-      <div style="color:#C8C8CC;font-size:17px">회원 월드 → 내 정보 → 친구 초대하기<br>친구가 등록하면 +500 크레딧 · 버디 글러브</div>
+      <div style="color:#C8C8CC;font-size:17px">NNN WORLD → 내 정보 → 친구 초대하기<br>친구가 등록하면 +500 크레딧 · 버디 글러브</div>
       <div id="tvQR" style="background:#fff;padding:10px;border-radius:8px"></div>
-      <div style="color:#9A9BA0;font-size:14px">QR을 찍으면 회원 월드가 열려요</div></div>
+      <div style="color:#9A9BA0;font-size:14px">QR을 찍으면 NNN WORLD가 열려요</div></div>
     <div class="tvcol"><h3><span id="tvInvT">이달 추천왕</span></h3><div id="tvInv"></div></div>
     <div class="tvfoot"><canvas id="tvParade"></canvas></div>
   </div>
@@ -706,7 +706,7 @@ function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return localStorage.getItem(k)!==null}catch(e){return false}}
 function storageOK(){try{localStorage.setItem('nnn_t','1');const ok=localStorage.getItem('nnn_t')==='1';localStorage.removeItem('nnn_t');return ok}catch(e){return false}}
 let local=lsGet(LS)||{meta:{},members:{}};
-local.meta=Object.assign({tplCustom:[],tpl:{},remind:null,rules:'',blog:'https://m.blog.naver.com/nnnboxing',insta:'',pay:null,nextId:1001,notice:'탕정 엔엔엔복싱 회원 월드에 오신 걸 환영합니다!\n출석패드에 회원번호를 입력하면 크레딧이 쌓여요.\n할로윈 이벤트: 11월 7일까지 한정 캐릭터 판매 중.',kakao:'',gymPhone:'',pin:'0000',terms:DEFAULT_TERMS,appUrl:DEFAULT_APP_URL},local.meta);
+local.meta=Object.assign({tplCustom:[],tpl:{},remind:null,rules:'',blog:'https://m.blog.naver.com/nnnboxing',insta:'',pay:null,nextId:1001,notice:'탕정 엔엔엔복싱 NNN WORLD에 오신 걸 환영합니다!\n출석패드에 회원번호를 입력하면 크레딧이 쌓여요.\n할로윈 이벤트: 11월 7일까지 한정 캐릭터 판매 중.',kakao:'',gymPhone:'',pin:'0000',terms:DEFAULT_TERMS,appUrl:DEFAULT_APP_URL},local.meta);
 local.meta.pay=Object.assign({bank:'',acct:'',holder:'',asanQR:ASAN_QR,onnuriQR:'',onnuriNote:'',products:[{n:'1개월 회원권',p:''},{n:'3개월 회원권',p:''},{n:'6개월 회원권',p:''},{n:'1:1 PT 10회',p:''},{n:'초등부 1개월',p:''}]},local.meta.pay||{});
 local.pays=local.pays||{};
 let fdb=null,fuid=null;
@@ -1535,7 +1535,7 @@ const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matc
 const UA=navigator.userAgent;const isAndroid=/Android/i.test(UA);
 const inApp=()=>/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|BAND\//i.test(UA);
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST_EVT=e});
-window.addEventListener('appinstalled',()=>{INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}syncInstUI();toast('홈 화면에 NNN 복싱 앱을 추가했어요!',3500)});
+window.addEventListener('appinstalled',()=>{INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}syncInstUI();toast('홈 화면에 NNN WORLD 앱을 추가했어요!',3500)});
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){navigator.serviceWorker.register('member-sw.js',{scope:'./member'}).catch(()=>{})}
 function syncInstUI(){const hide=isStandalone();$$('[data-inst]').forEach(el=>el.hidden=hide)}
 function openInstall(){
@@ -1549,7 +1549,7 @@ function openInstall(){
         if(kakao)location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(back);
         else if(isAndroid)location.href='intent://'+back.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
         else copyText(back,'주소를')}});return}
-  if(INST_EVT){const ev=INST_EVT;sheet(`<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px"><img src="member-icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px"><h2>NNN 복싱 앱 추가</h2><p style="margin:0">아래 버튼을 누르고 <b>설치</b>(또는 <b>추가</b>)를 누르면 홈 화면에 아이콘이 생겨요.</p></div><button class="btn red" id="instGo">홈 화면에 추가하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#instGo').onclick=async()=>{close();try{await ev.prompt();const r=await ev.userChoice;if(r&&r.outcome==='accepted'){INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}}}catch(e){}}});return}
+  if(INST_EVT){const ev=INST_EVT;sheet(`<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px"><img src="member-icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px"><h2>NNN WORLD 앱 추가</h2><p style="margin:0">아래 버튼을 누르고 <b>설치</b>(또는 <b>추가</b>)를 누르면 홈 화면에 아이콘이 생겨요.</p></div><button class="btn red" id="instGo">홈 화면에 추가하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#instGo').onclick=async()=>{close();try{await ev.prompt();const r=await ev.userChoice;if(r&&r.outcome==='accepted'){INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}}}catch(e){}}});return}
   const ios=isIOS();const samsung=/SamsungBrowser/i.test(UA);const iosChrome=ios&&/CriOS/i.test(UA);
   const dev=ios?(/iPad|Macintosh/.test(UA)?'아이패드':'아이폰')+(iosChrome?' · 크롬':' · 사파리'):isAndroid?(/SM-|Samsung/i.test(UA)?'갤럭시':'안드로이드')+(samsung?' · 삼성 인터넷':' · 크롬'):'이 기기';
   const steps=iosChrome?[['공유 버튼 누르기','주소창 오른쪽의 <b>네모에 위쪽 화살표</b> 모양 버튼'],['홈 화면에 추가','목록에서 <b>홈 화면에 추가</b>'],['추가','오른쪽 위 <b>추가</b>를 누르면 끝!']]
@@ -1686,7 +1686,7 @@ async function renderCoaches(){const box=$('#coachRows');if(!box)return;const o=
   box.innerHTML=ks.length?ks.map(k=>`<div class="payrow"><div class="grow"><b>${esc(o[k].name)}</b><div class="small">코치 코드 <b class="num" style="font-size:16px;letter-spacing:.1em">${k}</b></div></div><button class="btn sm ghost" data-cdel="${k}" style="color:var(--red)">지우기</button></div>`).join(''):'<div class="small">아직 만든 코치가 없어요.</div>';
   box.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}await COACH.del(b.dataset.cdel);toast('코치 계정을 지웠어요');renderCoaches()})}
 $('#coachAdd').onclick=async()=>{const n=$('#coachName').value.trim();if(!n){toast('코치 이름을 적어 주세요');return}const code=await COACH.add(n);if(!code)return;$('#coachName').value='';renderCoaches();
-  sheet(`<h2>${esc(n)} 코치 계정</h2><div style="text-align:center;font-family:var(--display);font-size:48px;letter-spacing:.15em" class="num">${code}</div><p class="small" style="margin:0">코치에게 이 6자리 코드를 알려 주세요.<br>코치 폰: 회원 월드 → 처음 화면 아래 <b>코치</b> → 코드 입력</p><button class="btn" id="cCopy">안내 문구 복사</button><button class="btn ghost" data-close>닫기</button>`,el=>{el.querySelector('#cCopy').onclick=()=>copyText(`[NNN 복싱 코치 계정]\n${appBase()}\n처음 화면 아래 '코치' → 코드 ${code}`,'안내를')})};
+  sheet(`<h2>${esc(n)} 코치 계정</h2><div style="text-align:center;font-family:var(--display);font-size:48px;letter-spacing:.15em" class="num">${code}</div><p class="small" style="margin:0">코치에게 이 6자리 코드를 알려 주세요.<br>코치 폰: NNN WORLD → 처음 화면 아래 <b>코치</b> → 코드 입력</p><button class="btn" id="cCopy">안내 문구 복사</button><button class="btn ghost" data-close>닫기</button>`,el=>{el.querySelector('#cCopy').onclick=()=>copyText(`[NNN 복싱 코치 계정]\n${appBase()}\n처음 화면 아래 '코치' → 코드 ${code}`,'안내를')})};
 $('#goCoach').onclick=()=>{sheet(`<h2>코치 로그인</h2><div class="field"><label for="ccIn">코치 코드 (6자리)</label><input id="ccIn" inputmode="numeric" maxlength="6" type="password"></div><button class="btn red" id="ccOk">들어가기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
   const inp=el.querySelector('#ccIn');setTimeout(()=>inp.focus(),50);
   const go=async()=>{const r=await COACH.login(inp.value.trim());if(r&&(await COACH.check())){lsSet('nnn_coach',1);close();openCoach()}else{toast('코치 코드가 맞지 않아요');inp.value=''}};
@@ -2374,7 +2374,7 @@ function bragCanvas(head,M=ME,opt={}){
   try{new QRCode(tmp,{text:link,width:200,height:200,colorDark:'#2F2F2F',colorLight:'#ffffff'});qr=tmp.querySelector('canvas')}catch(e){}
   c.fillStyle='#fff';c.fillRect(800,1080,220,220);if(qr)c.drawImage(qr,810,1090,200,200);
   c.fillStyle='#2F2F2F';c.textAlign='right';c.font='34px "Black Han Sans",sans-serif';c.fillText('같이 운동해요',780,1210);
-  c.font='30px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(opt.blog?'QR로 회원 월드 구경하기':`초대코드 ${M.id} · 가입 시 +${REF_BONUS_JOIN}`,780,1260);c.textAlign='left';
+  c.font='30px "Gowun Dodum",sans-serif';c.fillStyle='#66676D';c.fillText(opt.blog?'QR로 NNN WORLD 구경하기':`초대코드 ${M.id} · 가입 시 +${REF_BONUS_JOIN}`,780,1260);c.textAlign='left';
   return cv;
 }
 function openBrag(head,M=ME,opt={}){
@@ -2713,7 +2713,7 @@ const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test
 const TPL_DEFAULT={
   welcome:`[탕정 엔엔엔복싱] {이름}님, 가입이 승인되었습니다!
 ▶ 회원번호: {회원번호} (입구 출석패드에 입력)
-▶ 회원 월드: {앱주소}
+▶ NNN WORLD: {앱주소}
 ▶ 이용약관 전문: {약관주소}
 
 [이용수칙]
@@ -2734,7 +2734,7 @@ const TPL_DEFAULT={
   exp:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 기간이 {남은일} 남았습니다. ({종료일} 종료)
 종료일 이후에는 재등록 전까지 출석이 되지 않습니다. 끊김 없이 다니시려면 종료일 전에 결제해 주세요.
 ▶ 입금 계좌: {입금계좌}
-▶ 카운터 결제나 회원 월드 → 결제도 가능합니다.
+▶ 카운터 결제나 NNN WORLD → 결제도 가능합니다.
 {앱주소}`,
   after:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 기간이 {종료일}에 끝났습니다.
 재등록 전까지는 출석패드에서 출석이 되지 않습니다.
