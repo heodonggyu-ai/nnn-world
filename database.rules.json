@@ -249,6 +249,20 @@
     "$id": {
      ".write": "auth != null && ((!data.exists() && newData.child('name').isString() && newData.child('phone').isString() && newData.child('status').val() === 'new') || root.child('gym/admins').child(auth.uid).exists())"
     }
+   },
+   "staffchat": {
+    ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+    "$id": {
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('uid').val() === auth.uid))))",
+     ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 1000 && newData.child('at').isNumber() && newData.child('name').isString())"
+    }
+   },
+   "staffnotice": {
+    ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+    "$id": {
+     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     ".validate": "!newData.exists() || (newData.child('title').isString() && newData.child('at').isNumber())"
+    }
    }
   }
  }
