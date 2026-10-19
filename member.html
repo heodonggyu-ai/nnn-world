@@ -170,6 +170,15 @@ body.tvmode .app{max-width:none;padding:0}
 .pendlist{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:6px}.pendrow{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.85);color:var(--ink);border-radius:10px;padding:6px 8px}
 .memsum{background:var(--mat);border-radius:10px;padding:10px 12px;border-left:5px solid var(--red)}.memsum b{font-size:17px}
 .paybox{border:2px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.atabs{position:sticky;top:0;z-index:5;display:flex;gap:4px;overflow-x:auto;background:var(--mat);padding:8px 0;margin:-4px 0 0;scrollbar-width:none}.atabs::-webkit-scrollbar{display:none}
+.atabs button{flex:1 1 0;min-width:max-content;border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 8px;font:inherit;font-size:14px;color:var(--ink);position:relative;white-space:nowrap}
+.atabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.atabs i{font-style:normal;display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;margin-left:4px;padding:0 4px;vertical-align:1px}
+.adash{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dtile{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;color:var(--ink);cursor:pointer}
+.dtile b{font-size:20px}.dtile span{font-size:12px;color:var(--muted)}.dtile.hot{border:2px solid var(--red)}.dtile.hot b{color:var(--red)}.dtile.warn{border:2px solid var(--gold)}.dtile.warn b{color:#B07A08}
+.bring.offtab{display:none!important}
+@media(max-width:360px){.adash{grid-template-columns:repeat(2,1fr)}}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -586,17 +595,19 @@ body.tvmode .app{max-width:none;padding:0}
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
   <h2 style="font-size:28px">관장 메뉴</h2>
-  <button class="card salesbtn" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
-  <button class="card salesbtn" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
-  <div class="bring" id="dueBanner" hidden></div>
-  <div class="card" style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--ink)">
+  <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
+  <div class="adash" data-atab="today" id="adash"></div>
+  <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
+  <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
+  <div class="bring" data-atab="today" id="dueBanner" hidden></div>
+  <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--ink)">
     <div class="row"><h3 style="font-size:20px" class="grow">보낼 안내 <span class="small num" id="dueCnt"></span></h3><button class="btn sm ghost" id="tplBtn">안내 문구 설정</button></div>
     <p class="small" style="margin:0">가입 승인 · 등록 완료 · 정지 처리 · 만료 3·2·1일 전 안내가 날짜에 맞춰 여기에 모여요. <b>문자</b>를 누르면 그 회원 대화창이 문구가 채워진 채로 열려요.</p>
     <div id="dueRows"></div>
   </div>
   <div class="ev" id="connWarn" hidden style="background:#5A1E22;color:#FFD9D9;flex-direction:column;align-items:flex-start"></div>
   <div class="ev" id="storeWarn" hidden style="background:#5A1E22;color:#FFD9D9"><b style="color:#fff">저장 안 됨</b><span>이 화면은 기기 저장소를 쓸 수 없어서 설정이 사라져요. GitHub 주소에서 열거나 서버를 연결해 주세요.</span></div>
-  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+  <div class="card" data-atab="mem" style="display:flex;flex-direction:column;gap:10px">
     <div class="row"><h3 style="font-size:20px" class="grow">회원 <span class="small num" id="admCnt"></span></h3>
       <button class="btn sm ghost" id="expVcf">연락처(.vcf)</button><button class="btn sm ghost" id="expCsv">엑셀(.csv)</button></div>
     <div class="bring" id="admPend" hidden></div>
@@ -605,36 +616,36 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="field"><input id="admSearch" placeholder="이름·번호 검색"></div>
     <div class="memtable"><table><thead><tr><th>번호</th><th>이름</th><th>등록</th><th>연락처</th><th>출석</th><th>크레딧</th><th>가입</th><th></th></tr></thead><tbody id="admRows"></tbody></table></div>
   </div>
-  <div class="card" style="display:flex;flex-direction:column;gap:4px">
+  <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:4px">
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
   </div>
-  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">체육관 TV · 이달 시상</h3>
     <p class="small" style="margin:0">체육관 TV에 이달 출석왕·추천왕, 오늘 출석한 회원 캐릭터, 다음 수업을 띄워요. 30초마다 새로 고쳐져요.</p>
     <button class="btn" id="tvBtn">TV 화면 열기</button>
     <div class="small">TV 브라우저 주소: <span class="num" id="tvUrl"></span></div>
   </div>
 
-  <div class="card" style="display:flex;flex-direction:column;gap:4px">
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:4px">
     <h3 style="font-size:20px">블로그 후기 카드</h3>
     <p class="small" style="margin:0">후기 소개에 동의한 회원이에요. 카드를 만들어 저장하고, 문구를 복사해 블로그·인스타에 올리세요.</p>
     <div id="blogRows"></div>
   </div>
-  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">입구 QR 코드</h3>
     <div class="field"><label for="sUrl">앱 주소</label><input id="sUrl"></div>
     <div><div id="qrbox"></div></div>
     <p class="small" style="margin:0">출력해서 데스크에 붙여 두세요. 휴대폰으로 찍으면 <b>가입 신청서가 바로</b> 열려요. 기존 회원은 신청서 위 '← 처음으로'에서 입장하면 돼요.</p>
   </div>
-  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">코치 계정</h3>
     <p class="small" style="margin:0">코치는 <b>출석 현황, 회원 이름·얼굴 사진·출석 기록만</b> 볼 수 있어요. 연락처·결제·등록 정보·건강 참고사항은 볼 수 없어요. 지우면 그 코치는 바로 못 들어와요.</p>
     <div id="coachRows"></div>
     <div class="row"><input id="coachName" class="grow" placeholder="코치 이름 (예: 김코치)" style="border:2px solid var(--line);border-radius:12px;padding:10px"><button class="btn sm red" id="coachAdd">코치 만들기</button></div>
   </div>
-  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+  <div class="card" data-atab="set" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">설정</h3>
     <div class="field"><label for="sNotice">공지</label><textarea id="sNotice" rows="4"></textarea></div>
     <div class="field"><label for="sKakao">카카오톡 채널 주소</label><input id="sKakao" placeholder="http://pf.kakao.com/_xxxxx"></div>
@@ -1827,7 +1838,19 @@ async function openAdmin(){
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
+  {let k='today';try{k=localStorage.getItem('nnn_atab')||'today'}catch(e){}setATab(k)}renderADash();
 }
+function setATab(k){if(!['today','mem','biz','ops','set'].includes(k))k='today';$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
+$$('#atabs [data-at]').forEach(b=>b.onclick=()=>{setATab(b.dataset.at);window.scrollTo({top:0,behavior:'smooth'})});
+async function renderADash(){const box=$('#adash');if(!box)return;const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
+  const pend=all.filter(m=>!m.approvedAt).length,payN=pays.filter(x=>x.status==='pending').length,dueN=dueItems(all).length,today=all.filter(m=>m.last===TODAY()).length,soon=all.filter(m=>memGroup(m)==='soon').length,valid=all.filter(m=>['active','soon'].includes(memGroup(m))).length;
+  const mon=TODAY().slice(0,7);const sales=pays.filter(x=>x&&x.status==='done').map(normSale).filter(x=>x.date.startsWith(mon)).reduce((s,x)=>s+x.amount,0);
+  const tiles=[['승인 대기',pend,'mem','pending',pend?'hot':''],['결제 확인',payN,'today','pay',payN?'hot':''],['보낼 안내',dueN,'today','due',dueN?'warn':''],['오늘 출석',today,'mem','all',''],['7일 내 만료',soon,'mem','soon',soon?'warn':''],['유효 회원',valid,'mem','valid',''],['이달 매출',manS(sales)+'원','sales','',''],['공지 팝업',noticesAll().filter(n=>nActive(n)).length,'notice','','']];
+  box.innerHTML=tiles.map(([n,v,go,f,cls])=>`<button class="dtile ${cls}" data-go="${go}" data-f="${f}"><b class="num">${v}</b><span>${n}</span></button>`).join('');
+  box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go,f=b.dataset.f;if(g==='sales'){openSales();return}if(g==='notice'){openNoticeAdmin();return}
+    if(g==='mem'){admFilter=f||'all';setATab('mem');renderAdmRows();setTimeout(()=>{const c=$('#admPend').hidden?$('#admFilt'):$('#admPend');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+    setATab('today');setTimeout(()=>{const el=f==='pay'?$('#payRows'):$('#dueRows');el&&el.parentElement.scrollIntoView({behavior:'smooth',block:'start'})},60)});
+  const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};bd('#atb-today',payN+dueN);bd('#atb-mem',pend)}
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){
@@ -1836,6 +1859,7 @@ async function renderAdmRows(){
   $('#admCnt').textContent=all.length+'명';
   $('#admRows').innerHTML=list.map(m=>`<tr><td class="num">${esc(m.id)}</td><td>${esc(m.name)}${m.approvedAt?'':' <span class="pill fire">승인 대기</span>'}</td><td>${memShort(m)}</td><td class="num">${esc(m.phone)}</td><td class="num">${m.attend.length}${m.last===TODAY()?' ✓':''}</td><td class="num">${m.credits}</td><td class="num">${esc(m.joined.slice(5))}</td><td style="white-space:nowrap">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button> `}<button class="btn sm ghost" data-d="${esc(m.id)}">상세</button></td></tr>`).join('')||'<tr><td colspan="8" class="small">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</td></tr>';
   $$('#admRows [data-d]').forEach(b=>b.onclick=()=>admDetail(b.dataset.d));
+  clearTimeout(window._adT);window._adT=setTimeout(renderADash,300);
   $$('#admRows [data-ap]').forEach(b=>b.onclick=async()=>{const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
 }
 $('#admSearch').oninput=renderAdmRows;
@@ -2026,7 +2050,7 @@ $('#qPay').onclick=openPay;$('#mPay').onclick=openPay;
 
 async function renderPays(){
   const list=(await DB.pays()).sort((a,b)=>b.at.localeCompare(a.at));const pend=list.filter(x=>x.status==='pending');
-  $('#payCnt').textContent=pend.length?`확인 대기 ${pend.length}건`:'';
+  $('#payCnt').textContent=pend.length?`확인 대기 ${pend.length}건`:'';setTimeout(renderADash,0);
   const rows=[...pend,...list.filter(x=>x.status!=='pending').slice(0,15)];
   $('#payRows').innerHTML=rows.map(x=>`<div class="payrow"><div class="grow"><b>${esc(x.name)}</b> <span class="small num">${esc(x.mid)}</span><div class="small num">${esc(x.item)} · ${x.amount?won(x.amount):'금액 미입력'} · ${payName(x.method)}${x.days&&x.days.length?' · 요일 '+daysTxt(x.days):''} · ${x.at.slice(5,10).replace('-','/')} ${new Date(x.at).toTimeString().slice(0,5)}</div></div>${x.status==='pending'?`<button class="btn sm red" data-ok="${x.id}">확인</button><button class="btn sm ghost" data-no="${x.id}">취소</button>`:`<span class="pill">${x.status==='done'?'확인됨':'취소'}</span>`}</div>`).join('')||'<div class="small" style="padding:8px 0">아직 결제 알림이 없어요.</div>';
   $$('#payRows [data-ok]').forEach(b=>b.onclick=()=>setPay(b.dataset.ok,'done'));
