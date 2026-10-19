@@ -2855,7 +2855,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
-    el.querySelector('#admAtt').onclick=async()=>{close();padBuf=m.id;await doAttendAdmin(m.id)};
+    el.querySelector('#admAtt').onclick=async e=>{e.target.disabled=true;e.target.textContent='출석 처리 중…';const sc=el.scrollTop;padBuf=m.id;await doAttendAdmin(m.id);await admDetail(m.id);const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc};
     memoBox(el,m);
     el.querySelector('#admMem').onclick=()=>{close();openMemEditor(m,{},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})};
     {const pb=el.querySelector('#admPt');if(pb)pb.onclick=async()=>{m.mem.pt.left--;await DB.savePriv(m);toast(`PT 차감 · 남은 ${m.mem.pt.left}회`);close();renderAdmRows()}}
