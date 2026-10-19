@@ -354,6 +354,14 @@ body.tvmode .app{max-width:none;padding:0}
 
 .toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;z-index:90;font-size:14px;max-width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .memtable{overflow-x:auto}
+.mlist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.mrow{display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer}
+.mrow .mi{flex:1;min-width:0}
+.mrow .mn{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:15px}
+.mrow .mn b{font-weight:600}
+.mrow .ms{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.mrow .mb{display:flex;gap:6px;flex:0 0 auto}
+.mrow.pend{background:#FFF6EE}
 .memtable table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
 .memtable th,.memtable td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;white-space:nowrap}
 .memtable th{font-weight:400;color:var(--muted)}
@@ -703,7 +711,7 @@ body.tvmode .app{max-width:none;padding:0}
     <div class="stats" id="admStats"></div>
     <div class="chips" id="admFilt"></div>
     <div class="field"><input id="admSearch" placeholder="이름·번호 검색"></div>
-    <div class="memtable"><table><thead><tr><th>번호</th><th>이름</th><th>등록</th><th>연락처</th><th>출석</th><th>크레딧</th><th>가입</th><th></th></tr></thead><tbody id="admRows"></tbody></table></div>
+    <div class="mlist" id="admRows"></div>
   </div>
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:4px">
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
@@ -2529,10 +2537,10 @@ async function renderAdmRows(){
   const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
   renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&(!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').includes(q)));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<tr><td class="num">${esc(m.id)}</td><td>${esc(m.name)}${m.approvedAt?'':' <span class="pill fire">승인 대기</span>'}</td><td>${memShort(m)}</td><td class="num">${esc(m.phone)}</td><td class="num">${m.attend.length}${m.last===TODAY()?' ✓':''}</td><td class="num">${m.credits}</td><td class="num">${esc(m.joined.slice(5))}</td><td style="white-space:nowrap">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button> `}<button class="btn sm ghost" data-d="${esc(m.id)}">상세</button></td></tr>`).join('')||'<tr><td colspan="8" class="small">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</td></tr>';
-  $$('#admRows [data-d]').forEach(b=>b.onclick=()=>admDetail(b.dataset.d));
+  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div></div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]'))return;admDetail(r.dataset.d)});
   clearTimeout(window._adT);window._adT=setTimeout(renderADash,300);
-  $$('#admRows [data-ap]').forEach(b=>b.onclick=async()=>{const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
+  $$('#admRows [data-ap]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
 }
 $('#admSearch').oninput=renderAdmRows;
 
@@ -2540,7 +2548,8 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
   sheet(`<div class="row" style="align-items:center"><div id="admFace" style="width:84px;height:84px;border-radius:10px;background:var(--mat);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:var(--muted)">${m.hasFace?'불러오는 중':'사진 없음'}</div><div class="grow"><h2>${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>${m.approvedAt?`<span class="pill">승인 ${esc(md(m.approvedAt))}</span>`:'<span class="pill fire">승인 대기</span>'}</div></div>
     ${m.approvedAt?'':'<button class="btn red" id="admApprove">가입 승인하고 약관·이용수칙 보내기</button>'}
     <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden></div>
-    <div class="qrow"><div class="grow small">연락처 ${esc(m.phone)}<br>생년월일 ${esc(m.birth||'-')} · ${esc(m.gender||'-')}<br>목적 ${esc(m.goal.join(', ')||'-')} · 경력 ${esc(m.exp)}<br>유입 ${esc(m.path||'-')} · 마케팅 수신 ${m.agreeMkt?'동의':'미동의'}<br>참고사항 ${esc(m.note||'-')}</div></div>
+    <div class="qrow"><div class="grow">연락처 <a class="num" href="tel:${esc((m.phone||'').replace(/[^0-9]/g,''))}" style="font-weight:600">${esc(m.phone||'-')}</a></div>${m.phone?`<a class="btn sm ghost" href="tel:${esc(m.phone.replace(/[^0-9]/g,''))}">전화</a><a class="btn sm ghost" href="sms:${esc(m.phone.replace(/[^0-9]/g,''))}">문자</a>`:''}</div>
+    <div class="qrow"><div class="grow small">가입일 ${esc(m.joined||'-')} · 크레딧 <span class="num">${m.credits}</span> · 출석 <span class="num">${m.attend.length}</span>회<br>생년월일 ${esc(m.birth||'-')} · ${esc(m.gender||'-')}<br>목적 ${esc(m.goal.join(', ')||'-')} · 경력 ${esc(m.exp)}<br>유입 ${esc(m.path||'-')} · 마케팅 수신 ${m.agreeMkt?'동의':'미동의'}<br>참고사항 ${esc(m.note||'-')}</div></div>
     <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
     <button class="btn" id="admAtt" ${m.last===TODAY()?'disabled':''}>오늘 출석 처리</button>
     <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div></div><button class="btn sm red" id="admMem">${m.mem?'수정':'입력'}</button></div>
