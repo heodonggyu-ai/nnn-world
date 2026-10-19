@@ -1,0 +1,18 @@
+{
+  "id": "nnn-member-world",
+  "name": "NNN 복싱 회원 월드",
+  "short_name": "NNN 복싱",
+  "description": "탕정 엔엔엔복싱 회원 앱 · 출석 · 등록 현황 · 체육관 월드",
+  "lang": "ko",
+  "start_url": "member.html?src=home",
+  "scope": "./member",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDEEF0",
+  "theme_color": "#2F2F2F",
+  "icons": [
+    {"src": "member-icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "member-icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "member-icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

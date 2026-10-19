@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2F2F2F"><link rel="icon" href="shared/img/samsaek.png"><style>body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2F2F2F"><link rel="icon" href="member-icons/icon-192.png"><link rel="manifest" href="member.webmanifest"><link rel="apple-touch-icon" href="member-icons/apple-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="NNN 복싱"><style>body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <title>NNN 복싱 회원 월드</title>
 <meta name="claude:viewport-fit-sides" content="cover"></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -304,6 +304,7 @@ body.tvmode .app{max-width:none;padding:0}
   <div class="refban" id="refBanner" hidden><canvas width="96" height="96"></canvas><div class="grow"><b id="refWho"></b><div class="small">지금 가입하면 초대 선물 100 크레딧을 더 받아요</div></div></div>
   <button class="btn red" id="goJoin">처음 왔어요 · 가입 신청</button>
   <button class="btn" id="goLogin">회원번호로 입장</button>
+  <button class="btn ghost sm" data-instgo data-inst>휴대폰 홈 화면에 앱 추가</button>
   <div class="quick"><button id="qTT"><b>수업 시간표</b><span id="qTTsub">오늘 수업 보기</span></button><button id="qPay"><b>결제 · 카운터</b><span>아산페이 · 온누리 · 계좌이체</span></button></div>
   <div data-sns></div>
   <div class="row" style="justify-content:space-between">
@@ -367,6 +368,11 @@ body.tvmode .app{max-width:none;padding:0}
     <div id="doneId" class="num" style="font-family:var(--display);font-size:64px;line-height:1;color:var(--red)"></div>
     <div class="small">출석패드에 이 번호를 입력하면 출석 + 크레딧!</div>
     <div class="pill">가입 선물 100 크레딧 지급 완료</div>
+  </div>
+  <div class="card instcard" data-inst style="display:flex;flex-direction:column;gap:8px;border:2px solid var(--red)">
+    <h3 style="font-size:20px">휴대폰 홈 화면에 앱 추가</h3>
+    <p class="small" style="margin:0">홈 화면 아이콘으로 바로 열려요. 출석 확인·QR 출석이 훨씬 편해져요.</p>
+    <button class="btn red" data-instgo>홈 화면에 추가하기</button>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">카카오톡 채널 친구 추가</h3>
@@ -471,6 +477,7 @@ body.tvmode .app{max-width:none;padding:0}
       <div class="quick"><button id="mTT"><b>수업 시간표</b><span>요일별 수업</span></button><button id="mPay"><b>결제</b><span>회원권 · PT</span></button></div>
       <a class="btn gold sm" id="kakaoBtn2" style="text-align:center;text-decoration:none" target="_blank" rel="noopener">카카오톡 채널 추가</a>
       <button class="btn ghost sm" id="termsBtn">이용약관 보기</button>
+      <button class="btn ghost sm" data-instgo data-inst>홈 화면에 앱 추가</button>
       <button class="btn ghost sm" id="logoutBtn">로그아웃</button>
     </div>
   </div>
@@ -1091,7 +1098,7 @@ function showDone(){
   avatarTo($('#doneAv'),ME.equip,{pose:'guard',h:46});
   kakaoLink($('#kakaoBtn'),$('#kakaoMissing'));renderSNS();
   $('#gymPhoneTxt').textContent=local.meta.gymPhone||'체육관 번호 미등록';
-  show('v-done');
+  show('v-done');syncInstUI();autoInstallNudge();
 }
 $('#saveGymVcf').onclick=()=>{const p=local.meta.gymPhone;if(!p){toast('체육관 번호가 아직 등록되지 않았어요');return}
   download('NNN복싱.vcf',`BEGIN:VCARD\nVERSION:3.0\nFN:탕정 엔엔엔복싱\nORG:NNN BOXING\nTEL;TYPE=WORK:${p}\nEND:VCARD\n`,'text/vcard')};
@@ -1522,6 +1529,38 @@ async function doAttend(){
   requestAnimationFrame(spin);
   updPadCount();padTimer=setTimeout(resetPad,6500);
 }
+/* ================= 홈 화면에 앱 추가 ================= */
+let INST_EVT=null;
+const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
+const UA=navigator.userAgent;const isAndroid=/Android/i.test(UA);
+const inApp=()=>/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|BAND\//i.test(UA);
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST_EVT=e});
+window.addEventListener('appinstalled',()=>{INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}syncInstUI();toast('홈 화면에 NNN 복싱 앱을 추가했어요!',3500)});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){navigator.serviceWorker.register('member-sw.js',{scope:'./member'}).catch(()=>{})}
+function syncInstUI(){const hide=isStandalone();$$('[data-inst]').forEach(el=>el.hidden=hide)}
+function openInstall(){
+  const back=location.href.replace(/[?#].*$/,'');
+  if(isStandalone()){toast('이미 홈 화면 앱으로 열려 있어요');return}
+  if(inApp()){const kakao=/KAKAOTALK/i.test(UA);
+    sheet(`<h2>홈 화면에 앱 추가</h2><p style="margin:0">지금은 ${kakao?'카카오톡':'앱'} 안의 브라우저라서 홈 화면에 추가할 수 없어요.<br><b>${isAndroid?'크롬':'사파리'}으로 열어서</b> 추가해 주세요.</p>
+      <button class="btn red" id="instExt">${isAndroid?'크롬':'사파리'}으로 열기</button>
+      ${!kakao&&!isAndroid?'<p class="small" style="margin:0">버튼이 안 되면 오른쪽 아래(또는 위) <b>···</b> → <b>Safari로 열기</b>를 눌러 주세요.</p>':''}
+      <button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#instExt').onclick=()=>{
+        if(kakao)location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(back);
+        else if(isAndroid)location.href='intent://'+back.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+        else copyText(back,'주소를')}});return}
+  if(INST_EVT){const ev=INST_EVT;sheet(`<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px"><img src="member-icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px"><h2>NNN 복싱 앱 추가</h2><p style="margin:0">아래 버튼을 누르고 <b>설치</b>(또는 <b>추가</b>)를 누르면 홈 화면에 아이콘이 생겨요.</p></div><button class="btn red" id="instGo">홈 화면에 추가하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#instGo').onclick=async()=>{close();try{await ev.prompt();const r=await ev.userChoice;if(r&&r.outcome==='accepted'){INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}}}catch(e){}}});return}
+  const ios=isIOS();const samsung=/SamsungBrowser/i.test(UA);
+  const steps=ios?[['공유 버튼 누르기','화면 아래(아이패드는 위)의 <b>네모에 위쪽 화살표</b> 모양 버튼'],['홈 화면에 추가','목록을 조금 내려서 <b>홈 화면에 추가</b>'],['추가','오른쪽 위 <b>추가</b>를 누르면 끝!']]
+    :samsung?[['메뉴 누르기','화면 아래 오른쪽 <b>≡</b> 버튼'],['현재 페이지 추가','<b>현재 페이지 추가</b> → <b>홈 화면</b>'],['추가','<b>추가</b>를 누르면 끝!']]
+    :[['메뉴 누르기','오른쪽 위 <b>⋮</b> 버튼'],['홈 화면에 추가','<b>홈 화면에 추가</b> 또는 <b>앱 설치</b>'],['설치','<b>설치</b>(또는 추가)를 누르면 끝!']];
+  sheet(`<h2>홈 화면에 앱 추가</h2>${ios&&!/Safari/i.test(UA)||ios&&/CriOS|FxiOS|NAVER/i.test(UA)?'<p class="small" style="margin:0;color:var(--red)">아이폰은 <b>사파리</b>에서만 추가할 수 있어요. 사파리로 열어 주세요.</p>':''}
+    <div class="ttl">${steps.map((s,i)=>`<div class="qrow"><b class="num" style="width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;flex:0 0 auto">${i+1}</b><div class="grow"><b>${s[0]}</b><div class="small">${s[1]}</div></div></div>`).join('')}</div>
+    ${ios?'<p class="small" style="margin:0">아이폰은 홈 화면 앱을 처음 열 때 <b>회원번호와 연락처 뒤 4자리</b>로 한 번 더 입장해 주세요.</p>':''}
+    <button class="btn" data-close>알겠어요</button>`)}
+function autoInstallNudge(){if(isStandalone())return;let s=null;try{s=localStorage.getItem('nnn_inst')}catch(e){}if(s==='done')return;if(s&&Date.now()-+s<7*864e5)return;try{localStorage.setItem('nnn_inst',String(Date.now()))}catch(e){}setTimeout(()=>{if(!$('#sheetRoot').innerHTML)openInstall()},900)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-instgo]');if(b){e.preventDefault();openInstall()}});
+
 /* ================= 공지 · 자동 알림 ================= */
 const NKIND={normal:'일반',imp:'중요',closed:'휴무'};
 const AUTO_DEF=[
@@ -1556,7 +1595,7 @@ function popItems(m){
   if(A.today&&mem&&mem.weekly&&(mem.days||[]).includes(new Date().getDay())&&m.last!==T&&st.state!=='expired'&&daily('td:'+T)){let line='';try{line=ttStatus().line}catch(e){}out.push({k:'td:'+T,cls:'auto',tag:'운동하는 날',title:'오늘은 운동하는 날이에요',body:`주${mem.weekly}회권 운동 요일이에요.${line?'\n'+line:''}`})}
   return out}
 let popBusy=false;
-async function showPopups(){if(!ME||popBusy||$('#sheetRoot').innerHTML)return;const items=popItems(ME);if(!items.length)return;popBusy=true;
+async function showPopups(){if(!ME||popBusy||$('#sheetRoot').innerHTML)return;const items=popItems(ME);if(!items.length){autoInstallNudge();return}popBusy=true;
   const imp=items.some(x=>x.cls==='imp'||x.cls==='closed');
   sheet(`<div class="label" style="color:${imp?'var(--red)':'var(--muted)'}">${imp?'꼭 확인해 주세요':'새 소식'} · ${items.length}건</div>
     ${items.map((x,i)=>`<div class="popn ${x.cls}"><div><span class="ntag ${x.cls}">${esc(x.tag)}</span></div><b class="t">${esc(x.title)}</b><div class="bd">${esc(x.body)}</div>${x.pay?`<button class="btn sm red" data-pp="${i}" style="align-self:flex-start">${esc(x.pay)}</button>`:''}</div>`).join('')}
@@ -2910,7 +2949,7 @@ function renderFaceCard(){
 $('#tplBtn').onclick=openTplEditor;
 /* ================= 시작 ================= */
 (async()=>{
-  show('v-home');renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();renderBring();showInviteBanner();
+  show('v-home');syncInstUI();renderSNS();const fbok=await fbInit();if(fbok)await DB.meta();renderSNS();renderBring();showInviteBanner();
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
