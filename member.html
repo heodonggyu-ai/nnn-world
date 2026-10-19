@@ -251,6 +251,8 @@ body.tvmode .app{max-width:none;padding:0}
 #bellRoot .bctl{display:flex;gap:10px;padding:8px 16px}
 #bellRoot .bctl button{flex:1;border:0;border-radius:16px;padding:16px 0;font-family:var(--display);font-size:20px}
 #bellRoot .bgo{background:var(--green);color:#fff}#bellRoot .bgo.pause{background:var(--gold);color:#2F2F2F}
+#bellRoot .bctl2{padding-top:0}#bellRoot .bctl2 button{padding:13px 0;font-size:16px}
+#bellRoot .bset{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
 #bellRoot .bsec{background:rgba(255,255,255,.14);color:#fff}
 #bellRoot .bset{padding:6px 16px 20px;display:flex;flex-direction:column;gap:10px}
 #bellRoot .bpre{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
@@ -1586,12 +1588,13 @@ function bellMini(){if(!TB.st||TB.st==='idle')return null;if(TB.st==='done')retu
   return {txt:mmss(left),col:TB.st==='work'?(left<=bellCfg().warn?'#B08A0A':'#1E8A50'):TB.st==='rest'?'#B32A30':'#8A7A10'}}
 function openBell(preset){const c=bellCfg();if(preset&&(TB.st==='idle'||TB.st==='done')){Object.assign(c,preset);bellSave()}
   let root=$('#bellRoot');if(!root){root=document.createElement('div');root.id='bellRoot';document.body.appendChild(root)}
-  root.innerHTML=`<div class="bhd"><b>복싱 타임벨</b><button class="bx" id="bMute"></button><button class="bx" id="bClose">맵으로</button></div>
+  root.innerHTML=`<div class="bhd"><b>복싱 타임벨</b></div>
     <div class="bface"><div class="bph" id="bPh">준비 완료</div>
       <div class="bclock"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="6"/><circle id="bArc" cx="50" cy="50" r="45" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="282.74" stroke-dashoffset="0"/></svg>
         <div class="btime"><div class="btt num" id="bTime">3:00</div><div class="rd" id="bRd"></div></div></div>
       <div class="bnext" id="bNext"></div></div>
     <div class="bctl"><button class="bsec" id="bReset">리셋</button><button class="bgo" id="bGo">시작</button><button class="bsec" id="bSkip">건너뛰기</button></div>
+    <div class="bctl bctl2"><button class="bsec" id="bMute"></button><button class="bsec" id="bClose">맵으로 나가기</button></div>
     <div class="bset" id="bSet"></div>`;
   root.querySelector('#bClose').onclick=()=>{root.remove();renderMisCard()};
   root.querySelector('#bMute').onclick=()=>{c.mute=!c.mute;bellSave();bellRender()};
