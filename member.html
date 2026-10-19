@@ -167,6 +167,7 @@ body.tvmode .app{max-width:none;padding:0}
 .autorow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--mat)}.autorow input{width:22px;height:22px;flex:0 0 auto;margin-top:2px}
 .shareqr{display:flex;gap:12px;align-items:center;width:100%;border:2px solid var(--line);cursor:pointer;font:inherit;color:inherit;text-align:left}
 .sqr{width:84px;height:84px;flex:0 0 auto;background:#fff;border-radius:8px;padding:4px;display:grid;place-items:center}.sqr img,.sqr canvas{width:100%!important;height:auto!important;display:block}
+.pendlist{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:6px}.pendrow{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.85);color:var(--ink);border-radius:10px;padding:6px 8px}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -1830,8 +1831,9 @@ async function renderAdmRows(){
   const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
   renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&(!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').includes(q)));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<tr><td class="num">${esc(m.id)}</td><td>${esc(m.name)}${m.approvedAt?'':' <span class="pill fire">승인 대기</span>'}</td><td>${memShort(m)}</td><td class="num">${esc(m.phone)}</td><td class="num">${m.attend.length}${m.last===TODAY()?' ✓':''}</td><td class="num">${m.credits}</td><td class="num">${esc(m.joined.slice(5))}</td><td><button class="btn sm ghost" data-d="${esc(m.id)}">상세</button></td></tr>`).join('')||'<tr><td colspan="8" class="small">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</td></tr>';
+  $('#admRows').innerHTML=list.map(m=>`<tr><td class="num">${esc(m.id)}</td><td>${esc(m.name)}${m.approvedAt?'':' <span class="pill fire">승인 대기</span>'}</td><td>${memShort(m)}</td><td class="num">${esc(m.phone)}</td><td class="num">${m.attend.length}${m.last===TODAY()?' ✓':''}</td><td class="num">${m.credits}</td><td class="num">${esc(m.joined.slice(5))}</td><td style="white-space:nowrap">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button> `}<button class="btn sm ghost" data-d="${esc(m.id)}">상세</button></td></tr>`).join('')||'<tr><td colspan="8" class="small">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</td></tr>';
   $$('#admRows [data-d]').forEach(b=>b.onclick=()=>admDetail(b.dataset.d));
+  $$('#admRows [data-ap]').forEach(b=>b.onclick=async()=>{const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
 }
 $('#admSearch').oninput=renderAdmRows;
 
@@ -2713,7 +2715,11 @@ function renderAdmFilter(all){
   const g={all:all.length,active:0,soon:0,expired:0,none:0};all.forEach(m=>{const k=memGroup(m);g[k]++});
   const valid=g.active+g.soon;
   $('#admStats').innerHTML=`<div class="stat"><b class="num">${valid}</b><span>유효 회원</span></div><div class="stat warn"><b class="num">${g.soon}</b><span>7일 내 만료</span></div><div class="stat bad"><b class="num">${g.expired}</b><span>기간 만료</span></div><div class="stat mute"><b class="num">${g.none}</b><span>미등록</span></div>`;
-  const pend=all.filter(m=>!m.approvedAt).length;$('#admPend').hidden=!pend;$('#admPend').innerHTML=`<b>가입 승인 대기 ${pend}명</b><span>아래 '승인 대기'를 눌러 확인하고 약관·이용수칙을 보내 주세요</span>`;
+  const pl=all.filter(m=>!m.approvedAt);const pend=pl.length;const pb=$('#admPend');pb.hidden=!pend;
+  pb.innerHTML=`<b>가입 승인 대기 ${pend}명</b><span>얼굴과 정보를 확인하고 승인을 누르면 약관·이용수칙 안내 문자 창이 열려요</span><div class="pendlist">${pl.map(m=>`<div class="pendrow"><div class="cimg" data-pf="${esc(m.id)}" style="width:44px;height:44px">${m.hasFace?'':'사진 없음'}</div><div class="grow"><b>${esc(m.name)}</b> <span class="small num">${esc(m.id)}</span><div class="small num">${esc(m.phone)} · ${esc((m.joined||'').slice(5).replace('-','/'))} 신청${m.gPhone?' · 학생':''}</div></div><button class="btn sm ghost" data-pd="${esc(m.id)}">보기</button><button class="btn sm red" data-pa="${esc(m.id)}">승인</button></div>`).join('')}</div>`;
+  pb.querySelectorAll('[data-pf]').forEach(el=>{const m=pl.find(x=>x.id===el.dataset.pf);if(m&&m.hasFace)faceInto(el,m.id)});
+  pb.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>admDetail(b.dataset.pd));
+  pb.querySelectorAll('[data-pa]').forEach(b=>b.onclick=async()=>{const m=pl.find(x=>x.id===b.dataset.pa);if(!m)return;b.disabled=true;b.textContent='승인 중';await approveMember(m)});
   $('#admFilt').innerHTML=[['pending','승인 대기',pend],['all','전체',g.all],['valid','유효',valid],['soon','만료 임박',g.soon],['expired','만료',g.expired],['none','미등록',g.none]].map(([k,n,c])=>`<button class="chip ${admFilter===k?'on':''}" data-f="${k}">${n} ${c}</button>`).join('');
   $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=b.dataset.f;renderAdmRows()});
 }
