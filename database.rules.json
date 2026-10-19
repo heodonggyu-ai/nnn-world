@@ -267,6 +267,10 @@
    "memos": {
     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+   },
+   "lockers": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
    }
   }
  }

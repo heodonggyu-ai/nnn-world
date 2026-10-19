@@ -403,6 +403,24 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .mrow .ms{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
 .mrow .mb{display:flex;gap:6px;flex:0 0 auto}
 .mrow.pend{background:#FFF6EE}
+.lkgrid{flex:0 0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.lkc{position:relative;aspect-ratio:1/1.05;border-radius:10px;border:2px dashed #C9CBD1;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;overflow:hidden;color:var(--ink);min-width:0}
+.lkc b{font-family:var(--display);font-weight:400;font-size:17px;line-height:1}
+.lkc span{font-size:11px;line-height:1.15;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lkc small{font-size:10px;opacity:.85}
+.lkc.u{border:2px solid var(--ink);background:var(--ink);color:#fff}
+.lkc.s{border:2px solid #C98A00;background:#FFE7A3;color:#5A3E00}
+.lkc.x{border:2px solid var(--red);background:#FDE2E3;color:#8A1F24}
+.lkc.o{border:2px solid #B9BAC0;background:repeating-linear-gradient(45deg,#EDEEF0 0 6px,#DCDDE1 6px 12px);color:#6B6E76}
+.lkc.hit{outline:3px solid var(--green);outline-offset:1px}
+.lkc.dim{opacity:.25}
+.lklegend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted)}
+.lklegend span{display:inline-flex;align-items:center;gap:4px}.lklegend i{display:inline-block;width:14px;height:14px;border-radius:4px}
+.lk-e{border:2px dashed #C9CBD1;background:#fff}.lk-u{background:var(--ink)}.lk-s{background:#FFE7A3;border:2px solid #C98A00}.lk-x{background:#FDE2E3;border:2px solid var(--red)}.lk-o{background:repeating-linear-gradient(45deg,#EDEEF0 0 4px,#DCDDE1 4px 8px);border:2px solid #B9BAC0}
+.lkpick{flex:0 0 auto;max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+.lkpick button{display:flex;width:100%;gap:8px;align-items:center;background:#fff;border:0;border-bottom:1px solid var(--mat);padding:9px 12px;text-align:left;font-size:15px}
+.lkpick button.on{background:#EEF9F2}
+.lkpick button .small{margin-left:auto}
 .memo-pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#FFF3C9;color:#7A5A00;border-radius:999px;padding:1px 7px}
 .memobox{background:#FFFBEA;border:1px solid #F0DE9A;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .memobox .mh{display:flex;align-items:center;gap:8px}.memobox .mh b{flex:1}
@@ -743,7 +761,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
   <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div>
-  <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="staff">코치<i id="atb-staff"></i></button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
+  <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="staff">코치<i id="atb-staff"></i></button><button data-at="lock">락커<i id="atb-lock"></i></button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
   <div class="adash" data-atab="today" id="adash"></div>
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
   <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
@@ -829,6 +847,19 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
     <p class="small" style="margin:0">코치는 <b>회원 출석 현황·이름·얼굴 사진·출석 기록</b>과 <b>자기 근태·휴가</b>만 볼 수 있어요. 연락처·결제·등록 정보·건강 참고사항은 볼 수 없어요. 지우면 그 코치는 바로 못 들어와요.</p>
     <div id="coachRows"></div>
     <div class="row"><input id="coachName" class="grow" placeholder="코치 이름 (예: 김코치)" style="border:2px solid var(--line);border-radius:12px;padding:10px"><button class="btn sm red" id="coachAdd">코치 만들기</button></div>
+  </div>
+  <div class="card" data-atab="lock" style="display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">락커 · 캐비넷</h3><button class="btn sm ghost" id="lkSet">개수·요금 설정</button></div>
+    <div class="chips" id="lkType"></div>
+    <div class="stats" id="lkStats" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="lklegend"><span><i class="lk-e"></i>비어 있음</span><span><i class="lk-u"></i>사용 중</span><span><i class="lk-s"></i>7일 안 만료</span><span><i class="lk-x"></i>만료</span><span><i class="lk-o"></i>사용 불가</span></div>
+    <div class="field"><input id="lkSearch" placeholder="이름·회원번호·락커 번호로 찾기"></div>
+    <div class="lkgrid" id="lkGrid"></div>
+  </div>
+  <div class="card" data-atab="lock" style="display:flex;flex-direction:column;gap:6px">
+    <h3 style="font-size:20px">만료 · 연장 안내 <span class="small num" id="lkDueN"></span></h3>
+    <p class="small" style="margin:0">만료 7일 전부터 여기에 올라와요. 문자를 보내고, 연장하면 결제까지 한 번에 기록돼요.</p>
+    <div id="lkDue"></div>
   </div>
   <div class="card" data-atab="set" style="display:flex;flex-direction:column;gap:10px;border:2px solid var(--ink)">
     <h3 style="font-size:20px">백업 · 복구</h3>
@@ -934,7 +965,7 @@ async function fbInit(){
     fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
-const PRIV=['name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
+const PRIV=['lockers','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
 function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
@@ -1734,6 +1765,104 @@ function openCal(inp){const pad=n=>String(n).padStart(2,'0');const v=/^\d{4}-\d{
   r.addEventListener('click',e=>{if(e.target===r)close()});draw()}
 document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('input.dpick');if(i&&!i.disabled){e.preventDefault();i.blur();openCal(i)}});
 
+/* ================= 락커 · 캐비넷 ================= */
+const LK_DEF={L:{name:'락커',n:45,price:10000},C:{name:'캐비넷',n:45,price:20000}};
+const LKS={type:'L',data:{},q:''};
+function lkCfg(){const c=local.meta.lockerCfg||{};return{L:Object.assign({},LK_DEF.L,c.L||{}),C:Object.assign({},LK_DEF.C,c.C||{})}}
+const lkKey=(ty,no)=>ty+no;
+const lkName=(ty,no)=>`${lkCfg()[ty].name} ${no}번`;
+function lkState(r){if(!r)return 'e';if(r.off)return 'o';if(!r.mid)return 'e';const d=dDiff(r.end,TODAY());return d<0?'x':d<=7?'s':'u'}
+const lkDday=r=>{const d=dDiff(r.end,TODAY());return d<0?`${-d}일 지남`:d===0?'오늘 만료':`D-${d}`};
+function myLockerHTML(m){const L=Object.values(m.lockers||{}).filter(x=>x&&x.no);if(!L.length)return '';
+  return `<div class="qrow" style="margin-top:6px;background:#fff;border-radius:12px;padding:8px 12px">${L.map(x=>{const d=dDiff(x.end,TODAY());return `<div class="grow small"><b>${esc(lkName(x.type,x.no))}</b> · ${md(x.end)}까지 ${d<0?'<b style="color:var(--red)">만료</b>':d<=7?`<b style="color:#B4400C">D-${d}</b>`:''}</div>`}).join('')}</div>`}
+function lockLineHTML(m){const fromLk=Object.values(LKS.data||{}).filter(r=>r&&r.mid===m.id&&r.no);const L=fromLk.length?fromLk:Object.values(m.lockers||{}).filter(x=>x&&x.no);return `<div class="qrow"><div class="grow small"><b>락커·캐비넷</b> ${L.length?L.map(x=>`${esc(lkName(x.type,x.no))} ~${md(x.end)}`).join(', '):'없음'}</div><button class="btn sm ghost" onclick="lkFromMember('${esc(m.id)}')">${L.length?'관리':'배정'}</button></div>`}
+async function lkFromMember(mid){if(closeSheetFn)closeSheetFn();setATab('lock');const m=await DB.get(mid);const L=Object.values((m&&m.lockers)||{}).filter(x=>x&&x.no);if(L.length){LKS.type=L[0].type;renderLockers().then(()=>lkOpen(L[0].type,L[0].no))}else{LKS.q='';renderLockers().then(()=>toast('빈 칸(점선)을 누르면 '+(m?m.name+' 님':'회원')+'을 배정할 수 있어요',3500));LKS.pre=mid}}
+async function lkLoad(){LKS.data=(await hget('lockers'))||{};return LKS.data}
+async function renderLockers(){await lkLoad();const C=lkCfg();const ty=LKS.type;const cf=C[ty];
+  $('#lkType').innerHTML=['L','C'].map(k=>`<button class="chip ${k===ty?'on':''}" data-lt="${k}">${C[k].name} · 월 ${C[k].price.toLocaleString()}원</button>`).join('');
+  $$('#lkType [data-lt]').forEach(b=>b.onclick=()=>{LKS.type=b.dataset.lt;renderLockers()});
+  const cells=[];let cnt={e:0,u:0,s:0,x:0,o:0};for(let no=1;no<=cf.n;no++){const r=LKS.data[lkKey(ty,no)];const st=lkState(r);cnt[st]++;cells.push({no,r,st})}
+  $('#lkStats').innerHTML=`<div class="stat"><b class="num">${cnt.u+cnt.s+cnt.x}/${cf.n}</b><span>사용</span></div><div class="stat"><b class="num">${cnt.e}</b><span>빈 칸</span></div><div class="stat"><b class="num" style="color:#B4400C">${cnt.s}</b><span>7일 안 만료</span></div><div class="stat"><b class="num" style="color:var(--red)">${cnt.x}</b><span>만료</span></div>`;
+  const q=($('#lkSearch').value||'').trim();
+  $('#lkGrid').innerHTML=cells.map(c=>{const r=c.r;const hit=q&&(String(c.no)===q||(r&&r.mid&&((r.name||'').includes(q)||r.mid.includes(q))));
+    return `<button class="lkc ${c.st==='e'?'':c.st}${hit?' hit':''}${q&&!hit?' dim':''}" data-no="${c.no}" aria-label="${esc(cf.name)} ${c.no}번"><b class="num">${c.no}</b>${c.st==='o'?'<span>사용 불가</span>':r&&r.mid?`<span>${esc(r.name||'')}</span><small class="num">${c.st==='u'?md(r.end):lkDday(r)}</small>`:'<small>비어 있음</small>'}</button>`}).join('');
+  $$('#lkGrid [data-no]').forEach(b=>b.onclick=()=>lkOpen(ty,+b.dataset.no));
+  // 만료 목록 (두 종류 모두)
+  const due=[];['L','C'].forEach(k=>{for(let no=1;no<=C[k].n;no++){const r=LKS.data[lkKey(k,no)];const st=lkState(r);if(st==='s'||st==='x')due.push({k,no,r,st})}});
+  due.sort((a,b)=>a.r.end.localeCompare(b.r.end));
+  $('#lkDueN').textContent=due.length?due.length+'건':'';const bd=$('#atb-lock');if(bd){bd.textContent=due.length||'';bd.hidden=!due.length}
+  $('#lkDue').innerHTML=due.length?due.map((x,i)=>`<div class="payrow" style="border-bottom:1px solid var(--mat)"><div class="grow"><b>${esc(lkName(x.k,x.no))}</b> · ${esc(x.r.name)} <span class="small num">${esc(x.r.mid)}</span><div class="small">${md(x.r.end)}까지 · <b style="color:${x.st==='x'?'var(--red)':'#B4400C'}">${lkDday(x.r)}</b></div></div><button class="btn sm ghost" data-lsms="${i}">문자</button><button class="btn sm red" data-lx="${i}">연장</button></div>`).join(''):'<div class="small">만료가 다가오는 락커가 없어요.</div>';
+  $$('#lkDue [data-lx]').forEach(b=>b.onclick=()=>{const x=due[+b.dataset.lx];lkAssign(x.k,x.no,x.r)});
+  $$('#lkDue [data-lsms]').forEach(b=>b.onclick=async()=>{const x=due[+b.dataset.lsms];const m=await DB.get(x.r.mid);if(!m){toast('회원 정보를 찾지 못했어요');return}location.href=smsHref(m,lkMsg(x.k,x.no,x.r),'exp')})}
+$('#lkSearch').oninput=()=>renderLockers();
+function lkMsg(ty,no,r){const cf=lkCfg()[ty];const d=dDiff(r.end,TODAY());return `[탕정 엔엔엔복싱] ${r.name}님, ${cf.name} ${no}번 사용 기간이 ${md(r.end)}${d<0?'에 끝났어요':'에 끝나요'}. 계속 쓰시려면 카운터에서 연장해 주세요 (월 ${cf.price.toLocaleString()}원). ${d<0?'연장하지 않으시면 짐을 빼 주세요. ':''}감사합니다!`}
+async function lkSetMember(mid,ty,no,rec){const m=await DB.get(mid);if(!m)return;m.lockers=Object.assign({},m.lockers||{});if(rec)m.lockers[lkKey(ty,no)]={type:ty,no,start:rec.start,end:rec.end};else delete m.lockers[lkKey(ty,no)];await DB.savePriv(m)}
+function lkOpen(ty,no){const r=LKS.data[lkKey(ty,no)];const st=lkState(r);
+  if(st==='e'||st==='o'){if(st==='o'){sheet(`<h2>${esc(lkName(ty,no))}</h2><p class="small" style="margin:0">사용 불가로 표시돼 있어요.${r.memo?'<br>사유: '+esc(r.memo):''}</p><button class="btn red" id="lkOn">다시 사용 가능으로</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{el.querySelector('#lkOn').onclick=async()=>{if(await hset('lockers/'+lkKey(ty,no),null)){toast('사용 가능으로 바꿨어요');close();renderLockers()}}});return}
+    return lkAssign(ty,no,null)}
+  const hist=(r.hist||[]).slice().reverse();
+  sheet(`<h2>${esc(lkName(ty,no))}</h2>
+    <div class="qrow"><div class="grow"><b>${esc(r.name)}</b> <span class="small num">${esc(r.mid)}</span><div class="small">${md(r.start)} ~ ${md(r.end)} · ${r.months||'-'}개월 · <b style="color:${st==='x'?'var(--red)':st==='s'?'#B4400C':'var(--green)'}">${lkDday(r)}</b></div>${r.memo?`<div class="small">메모: ${esc(r.memo)}</div>`:''}</div></div>
+    <button class="btn red" id="lkExt">연장 (결제 기록)</button>
+    <div class="row" style="gap:8px"><button class="btn ghost" id="lkSms" style="flex:1">안내 문자</button><button class="btn ghost" id="lkMove" style="flex:1">자리 이동</button></div>
+    <div class="row" style="gap:8px"><button class="btn ghost" id="lkMem" style="flex:1">회원 상세</button><button class="btn ghost" id="lkOut" style="flex:1;color:var(--red)">해지 (비우기)</button></div>
+    ${hist.length?`<div class="label">이전 사용 기록</div>${hist.slice(0,5).map(x=>`<div class="small">${esc(x.name)} · ${md(x.start)} ~ ${md(x.end)}${x.out?' · '+esc(x.out):''}</div>`).join('')}`:''}
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#lkExt').onclick=()=>{close();lkAssign(ty,no,r)};
+    el.querySelector('#lkSms').onclick=async()=>{const m=await DB.get(r.mid);if(!m){toast('회원 정보를 찾지 못했어요');return}location.href=smsHref(m,lkMsg(ty,no,r),'exp')};
+    el.querySelector('#lkMem').onclick=()=>{close();admDetail(r.mid)};
+    el.querySelector('#lkOut').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 비워져요';return}
+      const h=(r.hist||[]).concat([{mid:r.mid,name:r.name,start:r.start,end:r.end,out:'해지 '+md(TODAY())}]).slice(-10);
+      if(await hset('lockers/'+lkKey(ty,no),{hist:h})){await lkSetMember(r.mid,ty,no,null);toast(lkName(ty,no)+'을 비웠어요');close();renderLockers()}};
+    el.querySelector('#lkMove').onclick=()=>{const C=lkCfg();const empt=[];for(let n=1;n<=C[ty].n;n++)if(lkState(LKS.data[lkKey(ty,n)])==='e')empt.push(n);
+      if(!empt.length){toast('빈 '+C[ty].name+'이 없어요');return}close();
+      sheet(`<h2>${esc(r.name)} 님 자리 이동</h2><p class="small" style="margin:0">${esc(lkName(ty,no))} → 옮길 번호를 누르세요. 기간은 그대로예요.</p><div class="lkgrid">${empt.map(n=>`<button class="lkc" data-mv="${n}"><b class="num">${n}</b></button>`).join('')}</div><button class="btn ghost" data-close>취소</button>`,(el2,close2)=>{
+        el2.querySelectorAll('[data-mv]').forEach(b=>b.onclick=async()=>{const n2=+b.dataset.mv;const nr=Object.assign({},r,{no:n2,hist:(LKS.data[lkKey(ty,n2)]||{}).hist||[]});
+          if(await hset('lockers/'+lkKey(ty,n2),clean(nr))){await hset('lockers/'+lkKey(ty,no),{hist:(r.hist||[]).concat([{mid:r.mid,name:r.name,start:r.start,end:r.end,out:n2+'번으로 이동'}]).slice(-10)});
+            const m=await DB.get(r.mid);if(m){m.lockers=Object.assign({},m.lockers||{});delete m.lockers[lkKey(ty,no)];m.lockers[lkKey(ty,n2)]={type:ty,no:n2,start:r.start,end:r.end};await DB.savePriv(m)}
+            toast(`${n2}번으로 옮겼어요`);close2();renderLockers()}})})}})}
+async function lkAssign(ty,no,cur){const C=lkCfg();const cf=C[ty];const ext=!!(cur&&cur.mid);
+  const all=(await DB.all()).filter(m=>!m.demo&&!isStaff(m));
+  const st={mid:ext?cur.mid:(LKS.pre||''),months:1,pm:''};LKS.pre=null;
+  const start0=ext?(cur.end>=TODAY()?dAdd(cur.end,1):TODAY()):TODAY();
+  sheet(`<h2>${esc(lkName(ty,no))} ${ext?'연장':'배정'}</h2>
+    ${ext?`<div class="qrow"><div class="grow"><b>${esc(cur.name)}</b> <span class="small num">${esc(cur.mid)}</span><div class="small">지금 ${md(cur.end)}까지</div></div></div>`:`<div class="field"><label for="lkQ">회원 찾기</label><input id="lkQ" placeholder="이름·회원번호·전화번호"></div><div class="lkpick" id="lkList"></div>`}
+    <div class="field"><span>기간</span><div class="chips" id="lkMo">${[1,2,3,6,12].map(n=>`<button type="button" class="chip" data-mo="${n}">${n}개월</button>`).join('')}</div></div>
+    <div class="row"><div class="field grow"><label for="lkS">시작일</label><input id="lkS" class="dpick" readonly value="${start0}"></div><div class="field grow"><label for="lkE">종료일</label><input id="lkE" class="dpick" readonly></div></div>
+    <div class="paybox"><label class="check" style="margin:0"><input type="checkbox" id="lkPayOn" checked><b>결제 기록하기</b> <span class="small">(매출 통계 '락커·캐비넷'으로 들어가요)</span></label>
+      <div id="lkPayBox"><div class="chips" id="lkPm">${Object.entries(SALEM).map(([k,n])=>`<button type="button" class="chip" data-pm="${k}">${n}</button>`).join('')}</div>
+      <div class="row"><div class="field grow"><label for="lkAmt">금액 (원)</label><input id="lkAmt" inputmode="numeric"></div><div class="field grow"><label for="lkPD">결제일</label><input id="lkPD" class="dpick" readonly value="${TODAY()}"></div></div></div></div>
+    <div class="field"><label for="lkMemo">메모 <span class="small">(선택)</span></label><input id="lkMemo" maxlength="100" value="${ext&&cur.memo?esc(cur.memo):''}" placeholder="예: 열쇠 지급 / 비밀번호 1234"></div>
+    <button class="btn red" id="lkGo">${ext?'연장하기':'배정하기'}</button>
+    ${ext?'':'<button class="btn ghost" id="lkOff">사용 불가로 표시 (고장 등)</button>'}
+    <button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const S=el.querySelector('#lkS'),E=el.querySelector('#lkE'),A=el.querySelector('#lkAmt');
+    const recalc=()=>{E.value=dAdd(mAdd(S.value||TODAY(),st.months),0);A.value=(cf.price*st.months).toLocaleString();el.querySelectorAll('#lkMo [data-mo]').forEach(b=>b.classList.toggle('on',+b.dataset.mo===st.months))};
+    el.querySelectorAll('#lkMo [data-mo]').forEach(b=>b.onclick=()=>{st.months=+b.dataset.mo;recalc()});S.onchange=recalc;recalc();
+    el.querySelectorAll('#lkPm [data-pm]').forEach(b=>b.onclick=()=>{st.pm=b.dataset.pm;el.querySelectorAll('#lkPm [data-pm]').forEach(x=>x.classList.toggle('on',x===b))});
+    const pOn=el.querySelector('#lkPayOn');pOn.onchange=()=>{el.querySelector('#lkPayBox').hidden=!pOn.checked};
+    const used=new Set();Object.values(LKS.data).forEach(r=>{if(r&&r.mid&&r.mid!==(cur&&cur.mid))used.add(r.mid)});
+    const lq=el.querySelector('#lkQ');
+    const drawList=()=>{if(!lq)return;const q=lq.value.trim();const list=all.filter(m=>!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').replace(/\D/g,'').includes(q.replace(/\D/g,'')||'#')).sort((a,b)=>(b.last||'').localeCompare(a.last||'')).slice(0,40);
+      el.querySelector('#lkList').innerHTML=list.length?list.map(m=>`<button type="button" data-pk="${esc(m.id)}" class="${st.mid===m.id?'on':''}"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span><span class="small">${Object.keys(m.lockers||{}).length?'락커 있음':''}</span></button>`).join(''):'<div class="small" style="padding:10px">찾는 회원이 없어요</div>';
+      el.querySelectorAll('#lkList [data-pk]').forEach(b=>b.onclick=()=>{st.mid=b.dataset.pk;drawList()})};
+    if(lq){lq.oninput=drawList;drawList()}
+    const off=el.querySelector('#lkOff');if(off)off.onclick=async()=>{const why=(el.querySelector('#lkMemo').value||'').trim();if(await hset('lockers/'+lkKey(ty,no),clean({off:true,memo:why,hist:(cur&&cur.hist)||((LKS.data[lkKey(ty,no)]||{}).hist)||[]}))){toast('사용 불가로 표시했어요');close();renderLockers()}};
+    el.querySelector('#lkGo').onclick=async()=>{const m=all.find(x=>x.id===st.mid);if(!m){toast('회원을 골라 주세요');return}
+      if(!S.value||!E.value||E.value<S.value){toast('기간을 확인해 주세요');return}
+      if(pOn.checked&&!st.pm){toast('결제 방식을 골라 주세요');el.querySelector('#lkPm').scrollIntoView({block:'center'});return}
+      const old=LKS.data[lkKey(ty,no)]||{};const memo=el.querySelector('#lkMemo').value.trim();
+      const rec=clean({type:ty,no,mid:m.id,name:m.name,start:ext?cur.start:S.value,end:E.value,months:(ext?(cur.months||0):0)+st.months,memo,at:Date.now(),hist:old.hist||[]});
+      if(!(await hset('lockers/'+lkKey(ty,no),rec)))return;await lkSetMember(m.id,ty,no,rec);
+      if(pOn.checked){const amt=+String(A.value).replace(/\D/g,'')||0;const pd=el.querySelector('#lkPD').value||TODAY();
+        await DB.addPay(clean({id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:m.id,name:m.name,item:`${cf.name} ${no}번 ${st.months}개월${ext?' 연장':''}`,amount:amt,method:st.pm,status:'done',source:'admin',saleDate:pd,at:new Date().toISOString(),doneAt:new Date().toISOString(),months:0,lockMonths:st.months,kind:'locker'}))}
+      toast(`${m.name} 님 ${lkName(ty,no)} ${ext?'연장':'배정'} 완료 · ${md(E.value)}까지`,3000);close();renderLockers()}})}
+$('#lkSet').onclick=()=>{const C=lkCfg();sheet(`<h2>락커 · 캐비넷 설정</h2><p class="small" style="margin:0">번호는 1번부터 개수만큼 생겨요. 개수를 줄여도 사용 중인 칸의 기록은 지워지지 않아요.</p>
+  ${['L','C'].map(k=>`<div class="row"><div class="field grow"><label for="ls${k}N">${C[k].name} 개수</label><input id="ls${k}N" type="number" min="0" max="300" value="${C[k].n}"></div><div class="field grow"><label for="ls${k}P">한 달 요금 (원)</label><input id="ls${k}P" inputmode="numeric" value="${C[k].price}"></div></div>`).join('')}
+  <button class="btn red" id="lsSave">저장</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+  el.querySelector('#lsSave').onclick=async()=>{const o={};['L','C'].forEach(k=>{o[k]={n:Math.max(0,Math.min(300,+el.querySelector('#ls'+k+'N').value||0)),price:+String(el.querySelector('#ls'+k+'P').value).replace(/\D/g,'')||0}});local.meta.lockerCfg=o;if(await DB.saveMeta()){toast('저장했어요');close();renderLockers()}}})};
+async function lkBadge(){try{await lkLoad();const C=lkCfg();let n=0;['L','C'].forEach(k=>{for(let no=1;no<=C[k].n;no++){const s=lkState(LKS.data[lkKey(k,no)]);if(s==='s'||s==='x')n++}});const bd=$('#atb-lock');if(bd){bd.textContent=n||'';bd.hidden=!n}}catch(e){}}
+
 /* ================= 관장 메모 (회원에게 안 보임 · 관장만) ================= */
 const MTAG={pay:'결제',mem:'등록',etc:'기타'};
 async function memoAdd(mid,text,tag='etc'){text=String(text||'').trim().slice(0,500);if(!text)return false;const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);return hset(`memos/${mid}/${id}`,{text,tag,at:Date.now()})}
@@ -2217,7 +2346,7 @@ const BK_KEEP=30;
 async function bkCollect(faces){const out={app:'NNN WORLD',ver:1,at:new Date().toISOString()};
   if(!FB_ON()){out.members={};out.private={};Object.values(local.members||{}).forEach(m=>{const s=splitM(m);out.members[m.id]=s.pub;out.private[m.id]=s.prv});out.pays=local.pays||{};const {pin,...mt}=local.meta;out.meta=mt;if(faces)out.faces=local.faces||{};return out}
   const g=async p=>{try{return(await gref(p).get()).val()||{}}catch(e){return{}}};
-  out.members=await g('members');out.private=await g('private');out.pays=await g('pays');out.meta=await g('meta');out.coachcodes=await g('coachcodes');out.roster=await g('roster');out.memos=await g('memos');if(faces)out.faces=await g('faces');return out}
+  out.members=await g('members');out.private=await g('private');out.pays=await g('pays');out.meta=await g('meta');out.coachcodes=await g('coachcodes');out.roster=await g('roster');out.memos=await g('memos');out.lockers=await g('lockers');if(faces)out.faces=await g('faces');return out}
 const bkCount=b=>({mem:Object.keys(b.members||{}).length,reg:Object.values(b.private||{}).filter(p=>p&&p.mem).length,pay:Object.keys(b.pays||{}).length});
 async function autoSnapshot(){if(!FB_ON()||!IS_ADMIN)return;const key=TODAY();
   try{const ex=(await gref('backups/'+key+'/at').get()).val();if(ex)return;const b=await bkCollect(false);if(!Object.keys(b.members).length)return;await gref('backups/'+key).set(clean(b));
@@ -2266,6 +2395,7 @@ async function doRestore(b,o){const n={m:0,p:0,t:0};const fill=o.mode==='fill';
     try{const nx=(await gref('nextId').get()).val()||1000;const mx=Math.max(nx,...Object.keys(b.members).map(Number).filter(x=>x>0));let cur=nx;while(cur<mx){await gref('nextId').set(cur+1);cur++}}catch(e){}}
   if(o.doP){const cur=await get('pays');for(const [k,v] of Object.entries(b.pays||{})){if(fill&&cur[k])continue;if(JSON.stringify(cur[k])===JSON.stringify(v))continue;await gref('pays/'+k).set(clean(v));n.p++}}
   if(o.doT&&b.meta){const {pin,nextId,...mt}=b.meta;const cur=await get('meta');await gref('meta').set(clean(fill?Object.assign({},mt,cur):mt));n.t=1;
+    if(b.lockers){for(const [k,v] of Object.entries(b.lockers)){try{if(!fill||!Object.keys((await get('lockers/'+k))||{}).length)await gref('lockers/'+k).set(v)}catch(e){}}}
     if(b.memos){for(const [k,v] of Object.entries(b.memos)){try{if(!fill||!Object.keys((await get('memos/'+k))||{}).length)await gref('memos/'+k).set(v)}catch(e){}}}
     if(b.coachcodes){for(const [k,v] of Object.entries(b.coachcodes)){try{if(!fill||!(await get('coachcodes'))[k])await gref('coachcodes/'+k).set(v)}catch(e){}}}}
   if(o.doF&&b.faces){for(const [k,v] of Object.entries(b.faces)){try{if(fill&&(await gref('faces/'+k).get()).val())continue;await gref('faces/'+k).set(v)}catch(e){}}}
@@ -2672,13 +2802,13 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
   {let k='today';try{k=localStorage.getItem('nnn_atab')||'today'}catch(e){}setATab(k)}renderADash();
 }
-function setATab(k){if(!['today','mem','biz','staff','ops','set'].includes(k))k='today';if(k==='staff'){renderStaffAdmin();chatBadge('owner')}$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
+function setATab(k){if(!['today','mem','biz','staff','lock','ops','set'].includes(k))k='today';if(k==='lock')renderLockers();if(k==='staff'){renderStaffAdmin();chatBadge('owner')}$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
 $$('#atabs [data-at]').forEach(b=>b.onclick=()=>{setATab(b.dataset.at);window.scrollTo({top:0,behavior:'smooth'})});
 async function renderADash(){const box=$('#adash');if(!box)return;const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
   const pend=all.filter(m=>!m.approvedAt).length,payN=pays.filter(x=>x.status==='pending').length,dueN=dueItems(all).length,today=all.filter(m=>m.last===TODAY()).length,soon=all.filter(m=>memGroup(m)==='soon').length,valid=all.filter(m=>['active','soon'].includes(memGroup(m))).length;
@@ -2712,6 +2842,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
     <button class="btn" id="admAtt" ${m.last===TODAY()?'disabled':''}>오늘 출석 처리</button>
     <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div></div><button class="btn sm red" id="admMem">${m.mem?'수정':'입력'}</button></div>
+    ${lockLineHTML(m)}
     <div class="memobox" id="admMemo"><div class="small">메모 불러오는 중…</div></div>
     ${m.mem&&m.mem.pt&&m.mem.pt.left>0?'<button class="btn ghost" id="admPt">PT 1회 차감 (남은 '+m.mem.pt.left+'회)</button>':''}
     ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div>${holdPolicy(m.mem)&&!m.mem.hold?'<button class="btn sm ghost" id="admHold">정지 처리</button>':''}</div>`:''}
@@ -2909,7 +3040,7 @@ $('#sOnnuri').onchange=e=>readImg(e.target,d=>{local.meta.pay.onnuriQR=d;$('#onn
 
 /* ================= 매출 · 통계 (관장) ================= */
 const SALEM={card:'카드',cash:'현금',bank:'계좌이체',asan:'아산페이',onnuri:'온누리상품권',etc:'기타'};
-const KIND_NAME={new:'신규',renew:'재등록',refund:'환불',etc:'기타'};
+const KIND_NAME={new:'신규',renew:'재등록',locker:'락커·캐비넷',refund:'환불',etc:'기타'};
 let SALES=[],SV={mode:'month',anchor:TODAY(),from:'',to:'',sel:null};
 function normSale(x){
   const p=parsePlan(x.item||'');const amt=+x.amount||0;
@@ -2964,8 +3095,8 @@ function breakdown(list,keyFn,labelFn,order){
   const m={};list.forEach(x=>{const k=keyFn(x);m[k]=m[k]||{v:0,n:0};m[k].v+=x.amount;m[k].n++});
   let ks=Object.keys(m);ks.sort(order||((a,b)=>m[b].v-m[a].v));const tot=list.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0)||1;const max=Math.max(1,...ks.map(k=>Math.abs(m[k].v)));
   return ks.length?ks.map(k=>`<div class="bk" role="button" tabindex="0" data-bkk="${esc(k)}"><div class="bkh"><span>${esc(labelFn(k))} <span class="bkgo" aria-hidden="true">›</span></span><b class="num">${wonS(m[k].v)}</b></div><div class="bkbar"><i style="width:${Math.abs(m[k].v)/max*100}%;${m[k].v<0?'background:var(--red)':''}"></i></div><div class="small num">${m[k].n}건${m[k].v>0?` · ${Math.round(m[k].v/tot*100)}%`:''}</div></div>`).join(''):'<div class="small">해당 기간 기록이 없어요.</div>'}
-const monthsLabel=x=>x.pt&&!x.months?'PT만':x.months?`${x.months}개월`:'기타';
-const usageLabel=x=>x.pt&&!x.months?'PT':x.weekly?`주${x.weekly}회`:x.months?'자유이용':'기타';
+const monthsLabel=x=>x.kind==='locker'?'락커·캐비넷':x.pt&&!x.months?'PT만':x.months?`${x.months}개월`:'기타';
+const usageLabel=x=>x.kind==='locker'?'락커·캐비넷':x.pt&&!x.months?'PT':x.weekly?`주${x.weekly}회`:x.months?'자유이용':'기타';
 async function openSales(){show('v-sales');await loadSales();renderSales()}
 function renderSales(){
   const p=periodOf();const list=SALES.filter(x=>inP(x,p));const k=kpis(list);
@@ -3450,7 +3581,7 @@ function memCardHTML(m,full){
   </div>`;
 }
 function renderMemCard(){if(ME&&isStaff(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
-  if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full');el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules)});
+  if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules)});
 }
 /* 관장: 등록 정보 입력 */
 function openMemEditor(m,pre={},onDone){
