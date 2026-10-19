@@ -1237,7 +1237,17 @@ window.addEventListener('resize',()=>{if(W.running)MC=mapCtx()});
 function walkable(x,y){return y>50&&y<528&&x>10&&x<350}
 function spawnPos(){for(let i=0;i<30;i++){const x=rnd(20,340),y=rnd(240,500);if(!(x>110&&x<250&&y<200)&&!(x>250&&y>395&&y<470&&x>270)&&!(x<112&&y>412))return{x,y}}return{x:180,y:400}}
 function worldLoop(now){
-  const dt=Math.min(.05,(now-W.lastTs)/1000);W.lastTs=now;W.t+=dt;updWorld(dt);drawWorld(MC);if(W.running)W.raf=requestAnimationFrame(worldLoop)}
+  const dt=Math.max(0,Math.min(.05,(now-W.lastTs)/1000));W.lastTs=now;W.t+=dt;
+  try{updWorld(dt)}catch(e){if(!W.errU){W.errU=1;console.error('updWorld',e)}}
+  try{drawWorld(MC)}catch(e){if(!W.errD){W.errD=1;console.error('drawWorld',e)}try{MC=mapCtx()}catch(e2){}}
+  if(W.running)W.raf=requestAnimationFrame(worldLoop)}
+/* 맵 자동 복구: 화면 복귀·캔버스 초기화·멈춤 감지 */
+function mapVisible(){return document.visibilityState==='visible'&&!$('#v-world').hidden&&!$('#t-map').hidden&&!G}
+function reviveWorld(){if(!mapVisible())return;cancelAnimationFrame(W.raf);W.running=false;MC=mapCtx();startWorld()}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(reviveWorld,120)});
+window.addEventListener('pageshow',()=>setTimeout(reviveWorld,120));
+setInterval(()=>{if(mapVisible()&&(!W.running||performance.now()-W.lastTs>1500))reviveWorld()},1500);
+{const mc=$('#map');mc.addEventListener('contextlost',e=>{e.preventDefault()});mc.addEventListener('contextrestored',()=>reviveWorld())}
 function updWorld(dt){
   const p=W.p,dx=p.tx-p.x,dy=p.ty-p.y,dist=Math.hypot(dx,dy);
   p.moving=dist>2;if(p.moving){const sp=120*dt;p.x+=dx/dist*Math.min(sp,dist);p.y+=dy/dist*Math.min(sp,dist);p.flip=dx<0}
