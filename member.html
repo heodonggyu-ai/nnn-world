@@ -177,6 +177,7 @@ body.tvmode .app{max-width:none;padding:0}
 .kpi.big{grid-column:1/-1;background:var(--ink);color:#fff;border-color:var(--ink)}.kpi.big span,.kpi.big small{color:#C9CACF}.kpi.big b{font-size:30px;font-family:var(--display);font-weight:400}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
 .bk{padding:6px 0;border-bottom:1px solid var(--mat)}.bkh{display:flex;justify-content:space-between;gap:8px}
+.bk[data-bkk]{cursor:pointer;border-radius:8px;margin:0 -6px;padding:6px}.bk[data-bkk]:active{background:var(--mat)}.bkgo{color:var(--muted);font-weight:700}
 .bkbar{height:8px;background:var(--mat);border-radius:4px;margin:4px 0 2px;overflow:hidden}.bkbar i{display:block;height:100%;background:var(--ink);border-radius:0 4px 4px 0}
 #svRange input{border:2px solid var(--line);border-radius:12px;padding:8px}
 .payrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--mat)}
@@ -2096,7 +2097,7 @@ function barChart(bs){
 function breakdown(list,keyFn,labelFn,order){
   const m={};list.forEach(x=>{const k=keyFn(x);m[k]=m[k]||{v:0,n:0};m[k].v+=x.amount;m[k].n++});
   let ks=Object.keys(m);ks.sort(order||((a,b)=>m[b].v-m[a].v));const tot=list.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0)||1;const max=Math.max(1,...ks.map(k=>Math.abs(m[k].v)));
-  return ks.length?ks.map(k=>`<div class="bk"><div class="bkh"><span>${esc(labelFn(k))}</span><b class="num">${wonS(m[k].v)}</b></div><div class="bkbar"><i style="width:${Math.abs(m[k].v)/max*100}%;${m[k].v<0?'background:var(--red)':''}"></i></div><div class="small num">${m[k].n}건${m[k].v>0?` · ${Math.round(m[k].v/tot*100)}%`:''}</div></div>`).join(''):'<div class="small">해당 기간 기록이 없어요.</div>'}
+  return ks.length?ks.map(k=>`<div class="bk" role="button" tabindex="0" data-bkk="${esc(k)}"><div class="bkh"><span>${esc(labelFn(k))} <span class="bkgo" aria-hidden="true">›</span></span><b class="num">${wonS(m[k].v)}</b></div><div class="bkbar"><i style="width:${Math.abs(m[k].v)/max*100}%;${m[k].v<0?'background:var(--red)':''}"></i></div><div class="small num">${m[k].n}건${m[k].v>0?` · ${Math.round(m[k].v/tot*100)}%`:''}</div></div>`).join(''):'<div class="small">해당 기간 기록이 없어요.</div>'}
 const monthsLabel=x=>x.pt&&!x.months?'PT만':x.months?`${x.months}개월`:'기타';
 const usageLabel=x=>x.pt&&!x.months?'PT':x.weekly?`주${x.weekly}회`:x.months?'자유이용':'기타';
 async function openSales(){show('v-sales');await loadSales();renderSales()}
@@ -2121,11 +2122,24 @@ function renderSales(){
   $('#bkMonths').innerHTML=breakdown(list.filter(x=>x.amount>0),monthsLabel,k=>k,(a,b)=>(parseInt(a)||99)-(parseInt(b)||99));
   $('#bkUsage').innerHTML=breakdown(list.filter(x=>x.amount>0),usageLabel,k=>k);
   $('#bkKind').innerHTML=breakdown(list,x=>x.kind,k=>KIND_NAME[k]||k);
+  const pos=list.filter(x=>x.amount>0);
+  [['#bkMethod','결제 방식',list,x=>x.method,k=>SALEM[k]||k],['#bkItem','상품',list,x=>x.item||'직접 입력',k=>k],['#bkMonths','등록 개월수',pos,monthsLabel,k=>k],['#bkUsage','이용 방식',pos,usageLabel,k=>k],['#bkKind','구분',list,x=>x.kind,k=>KIND_NAME[k]||k]].forEach(([sel,grp,src,keyFn,labelFn])=>{
+    $$(sel+' [data-bkk]').forEach(el=>{const go=()=>openBkDetail(grp,labelFn(el.dataset.bkk),src.filter(x=>String(keyFn(x))===el.dataset.bkk),p);el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}})});
   const rows=list.slice().sort((a,b)=>b.date.localeCompare(a.date)||(b.at||'').localeCompare(a.at||''));
   $('#svList').innerHTML=rows.length?rows.map((x,i)=>`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-sx="${i}"><div class="grow"><b>${esc(x.name||'-')}</b> <span class="small">${esc(x.item||'')}</span><div class="small num">${x.date.slice(5).replace('-','/')} · ${SALEM[x.method]||x.method} · ${KIND_NAME[x.kind]||''}${x.source==='manual'?' · 직접 입력':''}</div></div><b class="num" style="${x.amount<0?'color:var(--red)':''}">${wonS(x.amount)}</b></button>`).join(''):'<div class="small" style="padding:8px 0">이 기간 매출이 없어요.</div>';
   $$('#svList [data-sx]').forEach(b=>b.onclick=()=>openSaleEditor(rows[+b.dataset.sx]));
   $('#svCnt').textContent=rows.length?rows.length+'건':'';
 }
+function openBkDetail(grp,label,rows,p){rows=rows.slice().sort((a,b)=>b.date.localeCompare(a.date)||(b.at||'').localeCompare(a.at||''));
+  const tot=rows.reduce((s,x)=>s+x.amount,0);const cnt=rows.filter(x=>x.amount>0).length;
+  const sub=(fn,lab)=>{const o={};rows.forEach(x=>{const k=fn(x);o[k]=(o[k]||0)+x.amount});return Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="pill" style="background:#fff;border:1px solid var(--line)">${esc(lab(k))} <b class="num">${wonS(v)}</b></span>`).join(' ')};
+  const subBy=grp==='결제 방식'?sub(x=>x.item||'직접 입력',k=>k):sub(x=>x.method,k=>SALEM[k]||k);
+  sheet(`<div class="label">${esc(grp)} · ${esc(p.label)}</div><h2>${esc(label)}</h2>
+    <div class="memsum"><b class="num">${wonS(tot)}</b><div class="small num">${cnt}건${cnt?' · 객단가 '+wonS(Math.round(rows.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0)/cnt)):''}</div></div>
+    ${subBy?`<div class="small">${grp==='결제 방식'?'상품별':'결제 방식별'}</div><div style="display:flex;flex-wrap:wrap;gap:4px">${subBy}</div>`:''}
+    <div>${rows.map((x,i)=>`<button class="payrow" style="width:100%;background:none;border:0;border-bottom:1px solid var(--mat);text-align:left" data-bi="${i}"><div class="grow"><b>${esc(x.name||'-')}</b> <span class="small">${esc(x.item||'')}</span><div class="small num">${x.date.slice(5).replace('-','/')} (${DAYN[new Date(x.date+'T00:00:00').getDay()]}) · ${SALEM[x.method]||x.method} · ${KIND_NAME[x.kind]||''}${x.memo?' · '+esc(x.memo):''}</div></div><b class="num" style="${x.amount<0?'color:var(--red)':''}">${wonS(x.amount)}</b></button>`).join('')||'<div class="small">내역이 없어요.</div>'}</div>
+    <p class="small" style="margin:0">한 줄을 누르면 결제 방식·금액을 고치거나 지울 수 있어요.</p>
+    <button class="btn" data-close>닫기</button>`,(el,close)=>{el.querySelectorAll('[data-bi]').forEach(b=>b.onclick=()=>{close();openSaleEditor(rows[+b.dataset.bi])})})}
 async function openSaleEditor(rec){
   const isNew=!rec;const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>a.name.localeCompare(b.name));
   const r=rec||{saleDate:TODAY(),method:'card',kind:'new',amount:0,item:'',mid:'',name:''};
