@@ -189,6 +189,10 @@ body.tvmode .app{max-width:none;padding:0}
 .exbar{height:8px;background:var(--mat);border-radius:4px;overflow:hidden}.exbar i{display:block;height:100%;background:var(--red)}
 .studio canvas{width:100%;height:auto;border-radius:8px;display:block;background:#222}
 .scoreRow{display:grid;grid-template-columns:1fr 110px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--mat)}.scoreRow input[type=range]{width:100%}
+.ghero{display:flex;gap:14px;align-items:center;background:#fff;border:6px solid var(--ink);padding:16px}.ghero .lg{width:84px;flex:0 0 auto}.ghero .lg svg{width:100%;height:auto;display:block}.ghero h1{font-size:30px;line-height:1.05}.ghero h1 span{color:var(--red)}.ghero p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.glive{display:flex;align-items:center;gap:8px;background:#2B9B66;color:#fff;border-radius:10px;padding:10px 12px;font-size:15px}.glive canvas{width:28px;height:28px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.gbig{border:2px solid var(--ink);background:#fff;border-radius:12px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}.gbig b{font-family:var(--display);font-weight:400;font-size:19px}.gbig span{font-size:12px;color:var(--muted)}.gbig.red{background:var(--red);border-color:var(--red);color:#fff}.gbig.red span{color:#FFD9D9}
+.gprog{padding:10px 0;border-bottom:1px solid var(--mat)}.gprog b{font-size:16px}.gvid iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;display:block}
 .salesbtn{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);cursor:pointer;font:inherit;color:inherit}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
@@ -329,6 +333,7 @@ body.tvmode .app{max-width:none;padding:0}
   <div class="refban" id="refBanner" hidden><canvas width="96" height="96"></canvas><div class="grow"><b id="refWho"></b><div class="small">지금 가입하면 초대 선물 100 크레딧을 더 받아요</div></div></div>
   <button class="btn red" id="goJoin">처음 왔어요 · 가입 신청</button>
   <button class="btn" id="goLogin">회원번호로 입장</button>
+  <button class="btn gold" id="goGuest">처음이라면 · 게스트로 구경하기</button>
   <button class="btn ghost sm" data-instgo data-inst>휴대폰 홈 화면에 앱 추가</button>
   <button class="card shareqr" data-showqr><div class="sqr" id="homeQR"></div><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:20px">가입 QR 보여 주기</b><span class="small" style="display:block">친구에게 화면을 보여 주면 카메라로 찍고 바로 가입해요. 누르면 크게 보여요.</span></span></button>
   <div class="quick"><button id="qTT"><b>수업 시간표</b><span id="qTTsub">오늘 수업 보기</span></button><button id="qPay"><b>결제 · 카운터</b><span>아산페이 · 온누리 · 계좌이체</span></button></div>
@@ -450,6 +455,7 @@ body.tvmode .app{max-width:none;padding:0}
       <canvas id="map"></canvas>
       <div class="hint" id="mapHint">바닥을 누르면 이동해요. 샌드백·줄넘기·링·휴식 구역으로 가 보세요.</div>
     </div>
+    <div class="ownerbar" id="guestBar" hidden style="background:var(--gold);color:#2F2F2F"><span class="grow"><b>게스트 체험 중</b> <span class="small" style="color:#2F2F2F">가입하면 내 캐릭터·크레딧이 저장돼요</span></span><button class="btn sm red" id="gbJoin">가입하기</button><button class="btn sm ghost" id="gbBack" style="color:#2F2F2F;border-color:#2F2F2F">둘러보기</button></div>
     <div class="ownerbar" id="ownerBar" hidden><span class="grow"><b>관장 모드</b> <span class="small" id="ownerSt"></span></span><button class="btn sm red" id="ownerLive">체육관 출근</button><button class="btn sm ghost" id="ownerAdm">관장 메뉴</button></div>
     <div class="row small" style="margin-top:8px;justify-content:space-between"><span id="todayCap"></span><button class="link" id="sndBtn">소리 켜기</button></div>
   </div>
@@ -535,6 +541,19 @@ body.tvmode .app{max-width:none;padding:0}
   <div class="row" style="justify-content:flex-end"><button class="link" id="padExit">출석패드 종료 (관장 PIN)</button></div>
 </section>
 
+<section class="view" id="v-guest" hidden>
+  <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="pill" style="background:var(--gold);color:#2F2F2F">게스트</span></div>
+  <div class="ghero"><div class="lg" id="gLogo"></div><div><div class="label">탕정 엔엔엔복싱</div><h1>NNN WORLD<br><span>둘러보기</span></h1><p>가입 없이 체육관을 구경하고, 게임도 해 보세요!</p></div></div>
+  <div class="glive" id="gLive"></div>
+  <div class="grid2"><button class="gbig red" id="gTrial"><b>1일 무료 체험 신청</b><span>전화번호만 남기면 연락드려요</span></button><button class="gbig" id="gPlay"><b>게임 체험하기</b><span>체육관 맵 · 샌드백 · 줄넘기</span></button></div>
+  <div class="card"><h3 style="font-size:20px">프로그램</h3><div id="gProg"></div></div>
+  <div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="font-size:20px">수업 시간표</h3><button class="btn sm ghost" id="gTT">전체 보기</button></div><div class="small" id="gTTnow"></div></div>
+  <div class="card" id="gVidC"><h3 style="font-size:20px">영상으로 보는 NNN</h3><div id="gVid" style="display:flex;flex-direction:column;gap:10px"></div></div>
+  <div class="card" id="gPostC"><h3 style="font-size:20px">NNN 이야기</h3><div id="gPost"></div></div>
+  <div class="card"><h3 style="font-size:20px">회원권 가격</h3><div id="gPrice"></div></div>
+  <div class="card"><h3 style="font-size:20px">오시는 길 · 문의</h3><div id="gContact" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <button class="btn red" id="gJoin">마음에 드셨다면 · 가입 신청하기</button>
+</section>
 <section class="view" id="v-coach" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" id="coachHome">← 처음으로</button><span class="pill" style="background:var(--ink);color:#fff">코치 모드</span><button class="link" id="coachOut">코치 로그아웃</button></div>
   <button class="btn gold" id="cWorld">내 캐릭터로 NNN WORLD 입장 (꾸미기)</button>
@@ -649,6 +668,16 @@ body.tvmode .app{max-width:none;padding:0}
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
   </div>
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:8px">
+    <h3 style="font-size:20px">게스트 둘러보기 내용</h3>
+    <p class="small" style="margin:0">처음 화면의 <b>게스트로 구경하기</b>에 보이는 내용이에요. 한 줄에 하나씩 <b>제목 | 내용(또는 주소)</b>로 적어 주세요.</p>
+    <div class="field"><label for="gpProg">프로그램 <span class="small">(예: 다이어트 복싱 | 줄넘기·미트·서킷으로 1시간 땀 빼기)</span></label><textarea id="gpProg" rows="4"></textarea></div>
+    <div class="field"><label for="gpVid">홍보 영상 <span class="small">(유튜브·인스타 릴스 주소 · 유튜브는 앱 안에서 바로 재생)</span></label><textarea id="gpVid" rows="3" placeholder="NNN 수업 맛보기 | https://youtu.be/..."></textarea></div>
+    <div class="field"><label for="gpPost">홍보 글 <span class="small">(블로그 글 주소)</span></label><textarea id="gpPost" rows="3" placeholder="초보도 할 수 있는 복싱 다이어트 | https://m.blog.naver.com/nnnboxing/..."></textarea></div>
+    <div class="field"><label for="gpAddr">주소 · 오시는 길</label><input id="gpAddr" placeholder="예: 충남 아산시 탕정면 ○○로 00, 2층"></div>
+    <button class="btn red" id="gpSave">게스트 내용 저장</button><button class="btn ghost sm" id="gpPreview">게스트 화면 미리보기</button>
+  </div>
+  <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px"><h3 style="font-size:20px">무료 체험 신청 <span class="small num" id="trN"></span></h3><div id="trRows"></div></div>
   <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:8px;border:2px solid var(--ink)">
     <h3 style="font-size:20px">승급심사 <span class="small num" id="exN"></span></h3>
     <div id="exInfo" class="small"></div>
@@ -1196,7 +1225,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();syncOwnerBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME))return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
+async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)||isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -1724,7 +1753,50 @@ $('#ownerLive').onclick=async()=>{if(!isOwner(ME))return;const on=ownerLiveOn();
   setTimeout(syncOwnerBar,400)};
 $('#ownerAdm').onclick=()=>{if(isCoachRec(ME)){stopLive();openCoachMode();return}pinSheet('관장 메뉴',openAdmin)};
 
+/* ================= 게스트 모드 ================= */
+const parseLines=s=>String(s||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.indexOf('|');return i<0?{t:l,v:''}:{t:l.slice(0,i).trim(),v:l.slice(i+1).trim()}});
+const ytId=u=>{const m=String(u).match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/);return m?m[1]:''};
+const DEFAULT_PROG='기초 복싱 | 스텝·잽·원투부터 차근차근. 처음 오셔도 1주면 미트를 쳐요\n다이어트 복싱 | 줄넘기·샌드백·서킷으로 1시간 땀 빼는 수업\n실전 · 스파링 | 레벨에 맞춘 매스 스파링과 카운터 훈련\n1:1 PT | 목표에 맞춘 개인 레슨';
+const isGuest=()=>ME&&ME.id==='0000';
+async function openGuest(){show('v-guest');$('#gLogo').innerHTML=logoSVG('#2F2F2F',true,'#4A4A4A');try{await DB.meta()}catch(e){}renderGuest();startLive();setTimeout(renderGuest,1500)}
+function renderGuest(){const M=local.meta,G2=M.guest||{};
+  const pres=livePresent().filter(([id])=>id!=='0000');$('#gLive').innerHTML=pres.length?`<b>지금 체육관에 ${pres.length}명이 운동 중!</b><span style="margin-left:auto;font-size:13px">맵에서 보기 ›</span>`:'<b>NNN WORLD에서 회원들이 캐릭터로 운동해요</b><span style="margin-left:auto;font-size:13px">구경하기 ›</span>';$('#gLive').onclick=guestPlay;$('#gLive').style.cursor='pointer';
+  $('#gProg').innerHTML=parseLines(G2.prog||DEFAULT_PROG).map(p=>`<div class="gprog"><b>${esc(p.t)}</b>${p.v?`<div class="small">${esc(p.v)}</div>`:''}</div>`).join('');
+  try{$('#gTTnow').textContent=ttStatus().line}catch(e){$('#gTTnow').textContent='시간표를 눌러 확인하세요'}
+  const vids=parseLines(G2.vid);$('#gVidC').hidden=!vids.length;$('#gVid').innerHTML=vids.map(v=>{const id=ytId(v.v);return id?`<div class="gvid"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${esc(v.t)}" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><div class="small" style="margin-top:4px">${esc(v.t)}</div></div>`:`<a class="btn ghost" style="text-decoration:none;text-align:left" href="${esc(v.v)}" target="_blank" rel="noopener">▶ ${esc(v.t)}</a>`}).join('');
+  const posts=parseLines(G2.post);const blog=(M.blog||'').trim();$('#gPostC').hidden=!posts.length&&!blog;
+  $('#gPost').innerHTML=posts.map(p=>`<a class="payrow" style="text-decoration:none;color:inherit" href="${esc(p.v)}" target="_blank" rel="noopener"><span class="grow"><b>${esc(p.t)}</b></span><span aria-hidden="true">›</span></a>`).join('')+(blog?`<a class="btn ghost sm" style="text-decoration:none;text-align:center;margin-top:8px" href="${esc(blog)}" target="_blank" rel="noopener">네이버 블로그 전체 보기</a>`:'')+((M.insta||'').trim()?`<a class="btn ghost sm" style="text-decoration:none;text-align:center;margin-top:6px" href="${esc(M.insta)}" target="_blank" rel="noopener">인스타그램 보기</a>`:'');
+  const pr=(M.pay&&M.pay.products)||[];$('#gPrice').innerHTML=pr.length?pr.map(p=>`<div class="payrow"><span class="grow">${esc(p.n)}</span><b class="num">${p.p?(isNaN(+String(p.p).replace(/\D/g,''))||!String(p.p).replace(/\D/g,'')?esc(p.p):(+String(p.p).replace(/\D/g,'')).toLocaleString()+'원'):'문의'}</b></div>`).join(''):'<div class="small">카운터에 문의해 주세요.</div>';
+  const ph=(M.gymPhone||'').trim();$('#gContact').innerHTML=`${G2.addr?`<div>${esc(G2.addr)}</div><a class="btn ghost sm" style="text-decoration:none;text-align:center" href="https://map.naver.com/p/search/${encodeURIComponent(G2.addr)}" target="_blank" rel="noopener">네이버 지도에서 보기</a>`:''}${ph?`<a class="btn sm" style="text-decoration:none;text-align:center" href="tel:${esc(ph.replace(/[^\d]/g,''))}">전화 문의 ${esc(ph)}</a>`:''}${(M.kakao||'').trim()?`<a class="btn gold sm" style="text-decoration:none;text-align:center" href="${esc(M.kakao)}" target="_blank" rel="noopener">카카오톡으로 문의</a>`:''}`||'<div class="small">탕정 엔엔엔복싱</div>'}
+async function guestPlay(){let m=local.members['0000'];if(!m){m=blankMember({name:'게스트',phone:'',char:'cat'},'0000');m.credits=500;m.earned=500;m.demo=true;m.guest=true;m.owned.push('g_blue','h_red');local.members['0000']=m;persist()}
+  ME=m;try{sessionStorage.setItem('nnn_guest','1')}catch(e){}enterWorld();toast('게스트 체험 중이에요. 맵을 눌러 돌아다녀 보세요!',3000)}
+function openTrial(){sheet(`<h2>1일 무료 체험 신청</h2><p class="small" style="margin:0">남겨 주시면 관장님이 연락드려요. 운동복과 실내화만 챙겨 오세요!</p>
+  <div class="field"><label for="trN1">이름</label><input id="trN1" autocomplete="name"></div><div class="field"><label for="trP">연락처</label><input id="trP" inputmode="tel" placeholder="010-0000-0000"></div>
+  <div class="field"><label for="trW">희망 시간 <span class="small">(선택)</span></label><input id="trW" placeholder="예: 평일 저녁 8시 · 토요일 오전"></div>
+  <div class="field"><label for="trG">궁금한 점 <span class="small">(선택)</span></label><input id="trG" placeholder="예: 완전 처음인데 괜찮을까요?"></div>
+  <label class="check" style="margin:0"><input type="checkbox" id="trOk"><span>체험 안내 연락을 위한 이름·연락처 수집에 동의해요</span></label>
+  <button class="btn red" id="trGo">신청하기</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{el.querySelector('#trGo').onclick=async()=>{const n=el.querySelector('#trN1').value.trim(),p=normPhone(el.querySelector('#trP').value);
+    if(!n||p.replace(/\D/g,'').length<10){toast('이름과 연락처를 적어 주세요');return}if(!el.querySelector('#trOk').checked){toast('개인정보 수집에 동의해 주세요');return}
+    const id='t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);const v={name:n,phone:p,when:el.querySelector('#trW').value.trim(),q:el.querySelector('#trG').value.trim(),at:Date.now(),status:'new'};
+    let ok=true;if(FB_ON()){try{await gref('trials/'+id).set(v)}catch(e){ok=false}}else{local.trials=local.trials||{};local.trials[id]=v;persist()}
+    if(!ok){toast('신청하지 못했어요. 전화로 문의해 주세요');return}sfx('win');close();sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label">신청 완료</div><h2>${esc(n)} 님, 곧 연락드릴게요!</h2><p class="small" style="margin:0">기다리는 동안 NNN WORLD 게임도 해 보세요.</p></div><button class="btn red" id="trPlay">게임 체험하기</button><button class="btn ghost" data-close>닫기</button>`,(e2,c2)=>{e2.querySelector('#trPlay').onclick=()=>{c2();guestPlay()}})}})}
+$('#goGuest').onclick=openGuest;$('#demoBtn').onclick=openGuest;$('#gPlay').onclick=guestPlay;$('#gTrial').onclick=openTrial;$('#gTT').onclick=()=>openTimetable();
+$('#gJoin').onclick=()=>{buildJoin();show('v-join')};$('#gbJoin').onclick=()=>{ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}buildJoin();show('v-join')};$('#gbBack').onclick=()=>{try{localStorage.removeItem(LS_SESSION)}catch(e){}ME=null;openGuest()};
+function syncGuestBar(){const b=$('#guestBar');if(b)b.hidden=!isGuest()}
+/* 관장: 게스트 내용 · 체험 신청 */
+function fillGuestAdmin(){const G2=local.meta.guest||{};$('#gpProg').value=G2.prog||DEFAULT_PROG;$('#gpVid').value=G2.vid||'';$('#gpPost').value=G2.post||'';$('#gpAddr').value=G2.addr||''}
+$('#gpSave').onclick=async()=>{local.meta.guest={prog:$('#gpProg').value.trim(),vid:$('#gpVid').value.trim(),post:$('#gpPost').value.trim(),addr:$('#gpAddr').value.trim()};if(await DB.saveMeta())toast('게스트 내용을 저장했어요')};
+$('#gpPreview').onclick=()=>{local.meta.guest={prog:$('#gpProg').value.trim(),vid:$('#gpVid').value.trim(),post:$('#gpPost').value.trim(),addr:$('#gpAddr').value.trim()};openGuest()};
+async function renderTrials(){const box=$('#trRows');if(!box)return;let o={};if(FB_ON()){try{o=(await gref('trials').get()).val()||{}}catch(e){box.innerHTML='<div class="small">체험 신청을 읽지 못했어요. 보안 규칙을 최신으로 붙여 넣어 주세요.</div>';return}}else o=local.trials||{};
+  const L=Object.entries(o).sort((a,b)=>(b[1].at||0)-(a[1].at||0));const nw=L.filter(([k,v])=>v.status==='new');$('#trN').textContent=nw.length?`새 신청 ${nw.length}건`:'';
+  box.innerHTML=L.slice(0,12).map(([k,v])=>`<div class="hrrow" style="flex-wrap:wrap"><div class="grow"><b>${esc(v.name)}</b> ${v.status==='new'?'<span class="hrst absent">새 신청</span>':'<span class="hrst ok">연락함</span>'}<div class="small num">${esc(v.phone)} · ${new Date(v.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})} 신청${v.when?' · 희망 '+esc(v.when):''}</div>${v.q?`<div class="small">${esc(v.q)}</div>`:''}</div>
+    <a class="btn sm ghost" href="tel:${esc(String(v.phone).replace(/\D/g,''))}" style="text-decoration:none">전화</a><a class="btn sm ghost" href="${smsHref({phone:v.phone},`[탕정 엔엔엔복싱] ${v.name}님, 무료 체험 신청 감사합니다! 편하신 날짜·시간 알려 주시면 예약해 드릴게요.`)}" style="text-decoration:none">문자</a>${v.status==='new'?`<button class="btn sm red" data-trd="${k}">연락함</button>`:`<button class="btn sm ghost" data-trx="${k}" style="color:var(--red)">삭제</button>`}</div>`).join('')||'<div class="small">아직 신청이 없어요. 게스트 화면에서 신청할 수 있어요.</div>';
+  const upd=async(k,v)=>{if(FB_ON()){try{await gref('trials/'+k).set(v)}catch(e){}}else{if(v)local.trials[k]=v;else delete local.trials[k];persist()}renderTrials()};
+  box.querySelectorAll('[data-trd]').forEach(b=>b.onclick=()=>upd(b.dataset.trd,Object.assign({},o[b.dataset.trd],{status:'done'})));
+  box.querySelectorAll('[data-trx]').forEach(b=>b.onclick=()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}upd(b.dataset.trx,null)})}
+
 /* ================= 코치 캐릭터 ================= */
+async function guestBlock(msg){sheet(`<h2>${esc(msg)}</h2><p style="margin:0">가입하면 내 캐릭터와 크레딧이 저장되고, 출석·오운완·랭킹에 참여할 수 있어요.</p><button class="btn red" id="gbJ">가입 신청하기</button><button class="btn gold" id="gbT">1일 무료 체험 신청</button><button class="btn ghost" data-close>계속 구경하기</button>`,(el,close)=>{el.querySelector('#gbJ').onclick=()=>{close();$('#gbJoin').click()};el.querySelector('#gbT').onclick=()=>{close();openTrial()}})}
 async function enterCoachWorld(){const code=await myCoachCode();if(!code){toast('코치 정보를 읽지 못했어요. 다시 로그인해 주세요');return}const id='c'+code;
   let m=await DB.get(id);const st=(await hget('staff/'+code))||{};const nm=st.name||(CW.st&&CW.st.name)||'코치';
   if(!m){m=blankMember({name:nm,phone:'',char:'boxer'},id);m.coachRec=true;m.demo=true;m.approvedAt=TODAY();m.credits=99999;m.earned=99999;m.owned=[...new Set([...m.owned,...ITEMS.map(i=>i.id)])];m.equip={char:'boxer',glove:'g_blue',head:'',shoes:'s_black',trunks:'t_black',belt:''};
@@ -2195,7 +2267,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -2355,7 +2427,7 @@ const payName=k=>(typeof SALEM!=='undefined'&&SALEM[k])||PAYM[k]||k||'';
 const PAYM={asan:'아산페이',onnuri:'온누리상품권',bank:'계좌이체',card:'카드 (현장)'};
 const won=n=>(+n||0).toLocaleString()+'원';
 function copyText(t,label){try{navigator.clipboard.writeText(t).then(()=>toast(label+' 복사했어요'),()=>toast('길게 눌러 복사해 주세요'))}catch(e){toast('길게 눌러 복사해 주세요')}}
-function openPay(){
+function openPay(){if(isGuest()){guestBlock('결제는 가입 후에 할 수 있어요');return}
   const P=local.meta.pay;let item=null,method='asan';
   sheet(`<div class="tthead"><span id="payLogo" style="width:54px;display:block"></span><div><div class="eng">COUNTER</div><h2>카운터 · 결제</h2></div></div>
     <div class="label">1. 결제 항목</div><div class="chips" id="pItems"></div>
@@ -3204,7 +3276,7 @@ function stampShot(im,counted){
   return{img:cv.toDataURL('image/jpeg',.72),thumb:thumb.toDataURL('image/jpeg',.6),cv};
 }
 function openShotUpload(){
-  if(!ME){toast('로그인 후 올릴 수 있어요');return}
+  if(!ME){toast('로그인 후 올릴 수 있어요');return}if(isGuest()){guestBlock('오운완 인증은 회원만 할 수 있어요');return}
   const counted=ME.last===TODAY()&&ME.shotDay!==TODAY();
   sheet(`<h2>오운완 인증샷</h2>
     <div class="mhint ${counted?'go':ME.shotDay===TODAY()?'ok':'warn'}">${counted?`오늘 출석 확인! 올리면 +${SHOT_CREDIT} 크레딧 · 챌린지 DAY ${owanCount(ME)+1}`:ME.shotDay===TODAY()?'오늘 인증은 이미 인정됐어요. 더 올려도 크레딧은 하루 한 번이에요':'출석한 날 올려야 크레딧과 챌린지가 인정돼요. 사진은 올릴 수 있어요'}</div>
@@ -3578,6 +3650,7 @@ $('#tplBtn').onclick=openTplEditor;
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
+  if(new URLSearchParams(location.search).get('guest')&&!sid){try{history.replaceState(null,'',location.pathname)}catch(e){}openGuest();return}
   if(new URLSearchParams(location.search).get('join')){try{history.replaceState(null,'',location.pathname+(getRef()?'?ref='+getRef():''))}catch(e){}buildJoin();show('v-join');return}
   {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}

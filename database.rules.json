@@ -243,6 +243,12 @@
       }
      }
     }
+   },
+   "trials": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    "$id": {
+     ".write": "auth != null && ((!data.exists() && newData.child('name').isString() && newData.child('phone').isString() && newData.child('status').val() === 'new') || root.child('gym/admins').child(auth.uid).exists())"
+    }
    }
   }
  }
