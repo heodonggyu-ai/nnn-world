@@ -510,7 +510,7 @@ body.tvmode .app{max-width:none;padding:0}
 </section>
 
 <section class="view" id="v-coach" hidden>
-  <div class="row" style="justify-content:space-between"><span class="pill" style="background:var(--ink);color:#fff">코치 모드</span><button class="link" id="coachOut">코치 로그아웃</button></div>
+  <div class="row" style="justify-content:space-between"><button class="link" id="coachHome">← 처음으로</button><span class="pill" style="background:var(--ink);color:#fff">코치 모드</span><button class="link" id="coachOut">코치 로그아웃</button></div>
   <h2 style="font-size:28px">출석 현황</h2>
   <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="cPrev" aria-label="전날">‹</button><b id="cDay" style="font-family:var(--display);font-weight:400;font-size:20px"></b><button class="btn sm ghost" id="cNext" aria-label="다음날">›</button></div>
   <div class="stats" id="cStats" style="grid-template-columns:repeat(3,1fr)"></div>
@@ -1489,7 +1489,7 @@ let padBuf='',padTimer=0;
 function pinSheet(title,ok){
   sheet(`<h2>${esc(title)}</h2><div class="field"><label for="pinIn">관장 PIN</label><input id="pinIn" inputmode="numeric" maxlength="4" type="password"></div><button class="btn red" id="pinOk">확인</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const inp=el.querySelector('#pinIn');setTimeout(()=>inp.focus(),50);
-    const go=async()=>{const okk=await DB.adminLogin(inp.value.trim());if(okk){await DB.meta();close();ok()}else{toast('PIN이 맞지 않아요');inp.value=''}};
+    const go=async()=>{const v=inp.value.trim();if(!/^\d{4}$/.test(v)){toast('PIN 숫자 4자리를 넣어 주세요');return}let okk=false;try{okk=await DB.adminLogin(v)}catch(e){}if(okk){try{await DB.meta()}catch(e){}close();try{await ok()}catch(e){console.error(e);toast('화면을 여는 중 문제가 생겼어요: '+(e&&e.message||e),6000)}}else{toast(!FB_ON()&&FB_ERR!=='preview'?'서버에 연결되지 않아 PIN을 확인할 수 없어요. 인터넷 확인 후 새로고침해 주세요':'PIN이 맞지 않아요',4500);inp.value=''}};
     el.querySelector('#pinOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}});
 }
 $('#goPad').onclick=()=>pinSheet('출석패드 모드 시작',openPad);
@@ -1765,7 +1765,7 @@ function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=
   sheet(`<div class="row" style="align-items:center"><div class="cimg" id="cmF" style="width:96px;height:96px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small num">회원번호 ${m.id} · 가입 ${esc(m.joined||'-')}</div><div class="small">총 출석 ${(m.attend||[]).length}회 · 최근 ${m.last?md(m.last):'-'} · 연속 ${m.streak||0}일</div></div></div>
     <div id="cmCal"></div><button class="btn" data-close>닫기</button>`,el=>{faceInto(el.querySelector('#cmF'),m.id);const draw=()=>{el.querySelector('#cmCal').innerHTML=cal();el.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+ +b.dataset.mv);mon=dstr(f).slice(0,7);draw()})};draw()})}
 $('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
-$('#cSearch').oninput=renderCoach;
+$('#cSearch').oninput=renderCoach;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
 $('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
 
 /* ================= QR 출석 ================= */
