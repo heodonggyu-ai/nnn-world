@@ -382,6 +382,11 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 #chatRoot .ncard .nb{white-space:pre-wrap;font-size:14px}
 #chatRoot .nsec{font-size:13px;color:var(--muted);margin:6px 2px 0}
 .cbadge{display:inline-block;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:var(--red);color:#fff;font-size:12px;text-align:center;padding:0 6px;margin-left:6px;font-style:normal}
+#zoomRoot{position:fixed;inset:0;z-index:99;background:rgba(10,12,18,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+#zoomRoot img{max-width:92vw;max-height:76vh;border-radius:14px;object-fit:contain;background:#222;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#zoomRoot .zc{color:#fff;font-family:var(--display);font-size:18px}
+#zoomRoot .zx{background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:12px;padding:10px 22px;font-size:15px}
+#admFace img,.cimg img,.cface img{cursor:zoom-in}
 #calRoot{position:fixed;inset:0;z-index:95;background:rgba(20,23,31,.45);display:flex;align-items:flex-end;justify-content:center}
 #calRoot .cal{background:#fff;width:100%;max-width:440px;border-radius:18px 18px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(0,0,0,.2)}
 #calRoot .chd{display:flex;gap:6px;align-items:center;margin-bottom:8px}
@@ -766,6 +771,11 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
   <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
   <div class="bring" data-atab="today" id="dueBanner" hidden></div>
+  <div class="card" data-atab="today" id="hrCard" hidden style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--red)">
+    <h3 style="font-size:20px">정지(연기) 신청 <span class="small num" id="hrCnt"></span></h3>
+    <p class="small" style="margin:0">회원이 앱에서 보낸 신청이에요. <b>처리</b>를 누르면 날짜를 고쳐서 승인하거나 거절할 수 있어요.</p>
+    <div id="hrRows"></div>
+  </div>
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--ink)">
     <div class="row"><h3 style="font-size:20px" class="grow">보낼 안내 <span class="small num" id="dueCnt"></span></h3><button class="btn sm ghost" id="tplBtn">안내 문구 설정</button></div>
     <p class="small" style="margin:0">가입 승인 · 등록 완료 · 정지 처리 · 만료 3·2·1일 전 안내가 날짜에 맞춰 여기에 모여요. <b>문자</b>를 누르면 그 회원 대화창이 문구가 채워진 채로 열려요.</p>
@@ -965,7 +975,7 @@ async function fbInit(){
     fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
-const PRIV=['lockers','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
+const PRIV=['lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
 function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
@@ -1765,6 +1775,14 @@ function openCal(inp){const pad=n=>String(n).padStart(2,'0');const v=/^\d{4}-\d{
   r.addEventListener('click',e=>{if(e.target===r)close()});draw()}
 document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('input.dpick');if(i&&!i.disabled){e.preventDefault();i.blur();openCal(i)}});
 
+/* ================= 사진 크게 보기 ================= */
+function zoomImg(src,cap){if(!src)return;const r=document.createElement('div');r.id='zoomRoot';r.setAttribute('role','dialog');r.setAttribute('aria-label','사진 크게 보기');
+  r.innerHTML=`<img src="${src}" alt="${esc(cap||'회원 사진')}"><div class="zc">${esc(cap||'')}</div><button class="zx" aria-label="닫기">닫기</button>`;
+  r.onclick=()=>r.remove();document.body.appendChild(r)}
+document.addEventListener('click',e=>{const im=e.target.closest&&e.target.closest('#admFace img,.cimg img,.cface img,[data-zoom] img,img[data-zoom]');if(!im)return;e.preventDefault();e.stopPropagation();
+  const host=im.closest('[data-cm],.sheet');let cap='';const h2=host&&host.querySelector('h2');if(h2)cap=h2.textContent.trim();else{const b=im.closest('[data-cm]');if(b){const bb=b.querySelector('b');cap=bb?bb.textContent:''}}
+  zoomImg(im.src,cap)},true);
+
 /* ================= 락커 · 캐비넷 ================= */
 const LK_DEF={L:{name:'락커',n:45,price:10000},C:{name:'캐비넷',n:45,price:20000}};
 const LKS={type:'L',data:{},q:''};
@@ -2462,6 +2480,7 @@ function popItems(m){
   if(mem&&mem.end&&A.exp&&st.state==='soon'&&st.left<=+A.expDays&&daily('exp:'+mem.end))out.push({k:'exp:'+mem.end,cls:'auto',tag:st.left?'D-'+st.left:'오늘 종료',title:'회원권이 곧 끝나요',body:`${md(mem.end)}에 등록 기간이 끝나요. 종료일이 지나면 재등록 전까지 출석이 되지 않아요.\n미리 재등록하면 남은 기간 다음 날부터 이어져요.`,pay:'미리 재등록하기'});
   if(mem&&mem.end&&A.expired&&st.state==='expired'&&daily('expd:'+mem.end))out.push({k:'expd:'+mem.end,cls:'imp',tag:'만료',title:'등록 기간이 끝났어요',body:`${md(mem.end)}에 등록 기간이 끝났어요.\n재등록 전까지는 출석패드에서 출석이 되지 않아요.`,pay:'지금 재등록하기'});
   if(mem&&mem.setAt&&A.paid&&st.state!=='expired'&&once('paid:'+mem.setAt)&&dDiff(T,mem.setAt)<=14)out.push({k:'paid:'+mem.setAt,cls:'auto',tag:'등록 완료',title:'등록이 완료됐어요',body:`상품: ${mem.item||planLabel(mem)}\n기간: ${mem.end?md(mem.start)+' ~ '+md(mem.end):'-'}\n운동 요일: ${mem.weekly&&mem.days&&mem.days.length?daysTxt(mem.days)+' (요일 고정)':'자유 이용'}\n정지(연기): ${mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가'):'해당 없음'}`});
+  if(mem&&mem.hold&&A.hold&&mem.hold.end>=T&&once('holdset:'+mem.hold.start+':'+mem.hold.end))out.push({k:'holdset:'+mem.hold.start+':'+mem.hold.end,cls:'auto',tag:'정지 처리',title:'정지(연기)가 처리됐어요',body:`정지 ${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)\n${mdw(dAdd(mem.hold.end,1))}부터 다시 출석할 수 있어요.\n변경된 종료일: ${md(mem.end)}`});
   if(mem&&mem.hold&&A.hold){const L=dDiff(mem.hold.end,T);if(L>=0&&L<=1&&once('hold:'+mem.hold.end))out.push({k:'hold:'+mem.hold.end,cls:'auto',tag:'정지 종료',title:'정지가 곧 끝나요',body:`정지 기간이 ${md(mem.hold.end)}에 끝나요. ${md(dAdd(mem.hold.end,1))}부터 다시 출석할 수 있어요.`})}
   if(mem&&mem.pt&&A.pt&&mem.pt.left>0&&mem.pt.left<=2&&once('pt:'+mem.pt.total+':'+mem.pt.left))out.push({k:'pt:'+mem.pt.total+':'+mem.pt.left,cls:'auto',tag:'PT',title:`PT가 ${mem.pt.left}회 남았어요`,body:'다음 PT 일정과 추가 등록은 관장님께 말씀해 주세요.',pay:'PT 추가 결제'});
   if(A.birthday&&m.birth&&m.birth.slice(5)===T.slice(5)&&once('bd:'+T.slice(0,4)))out.push({k:'bd:'+T.slice(0,4),cls:'auto',tag:'생일',title:`${m.name} 님, 생일 축하해요!`,body:'NNN 복싱이 생일 선물로 100 크레딧을 드려요. 오늘 운동은 더 신나게!',gift:100});
@@ -2818,7 +2837,7 @@ async function renderADash(){const box=$('#adash');if(!box)return;const all=(awa
   box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go,f=b.dataset.f;if(g==='sales'){openSales();return}if(g==='notice'){openNoticeAdmin();return}
     if(g==='mem'){admFilter=f||'all';setATab('mem');renderAdmRows();setTimeout(()=>{const c=$('#admPend').hidden?$('#admFilt'):$('#admPend');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
     setATab('today');setTimeout(()=>{const el=f==='pay'?$('#payRows'):$('#dueRows');el&&el.parentElement.scrollIntoView({behavior:'smooth',block:'start'})},60)});
-  const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};bd('#atb-today',payN+dueN);bd('#atb-mem',pend);try{const [lv,fx]=await Promise.all([hget('hr/leave'),hget('hr/fix')]);let n=0;[lv,fx].forEach(o=>Object.values(o||{}).forEach(c=>Object.values(c||{}).forEach(v=>{if(v&&v.status==='pending')n++})));bd('#atb-staff',n)}catch(e){}}
+  const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};const hrN=renderHoldReqs(all)||0;bd('#atb-today',payN+dueN+hrN);bd('#atb-mem',pend);try{const [lv,fx]=await Promise.all([hget('hr/leave'),hget('hr/fix')]);let n=0;[lv,fx].forEach(o=>Object.values(o||{}).forEach(c=>Object.values(c||{}).forEach(v=>{if(v&&v.status==='pending')n++})));bd('#atb-staff',n)}catch(e){}}
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){
@@ -2845,7 +2864,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     ${lockLineHTML(m)}
     <div class="memobox" id="admMemo"><div class="small">메모 불러오는 중…</div></div>
     ${m.mem&&m.mem.pt&&m.mem.pt.left>0?'<button class="btn ghost" id="admPt">PT 1회 차감 (남은 '+m.mem.pt.left+'회)</button>':''}
-    ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div>${holdPolicy(m.mem)&&!m.mem.hold?'<button class="btn sm ghost" id="admHold">정지 처리</button>':''}</div>`:''}
+    ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div><button class="btn sm ghost" id="admHold">정지·기간 조정</button></div>`:''}
     <div class="qrow"><div class="grow small">${m.gPhone?`<b>보호자</b> ${esc(m.gName||'보호자')} ${esc(m.gPhone)}<br>결제·만료 안내는 보호자에게 가요`:'<b>보호자</b> 없음 (성인 회원)'}</div><button class="btn sm ghost" id="admGuard">${m.gPhone?'수정':'학생으로 지정'}</button></div>
     ${(m.unpaid||[]).length?`<div class="qrow" style="background:#FDECEC;border-radius:10px;padding:8px"><div class="grow small" style="color:#8A1F24"><b>만료 후 출석 ${m.unpaid.length}회</b><br>${m.unpaid.slice(-5).map(u=>md(u.d)+(u.ok?' 승인 출석':' 출석 막힘')).join(' · ')}</div></div>`:''}
     <button class="btn" id="admSend">안내 보내기 (문자·카톡)</button>
@@ -2862,7 +2881,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     if(m.hasFace)FDB.get(m.id).then(src=>{const b=el.querySelector('#admFace');if(b)b.innerHTML=src?`<img src="${src}" alt="${esc(m.name)} 얼굴" style="width:100%;height:100%;object-fit:cover">`:'사진 없음'});
     {const a=el.querySelector('#admApprove');if(a)a.onclick=()=>{close();approveMember(m)}}
     el.querySelector('#admFaceIn').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const d=await faceFromFile(f);if(await FDB.save(m.id,d)){m.hasFace=true;await DB.savePriv(m);el.querySelector('#admFace').innerHTML=`<img src="${d}" alt="" style="width:100%;height:100%;object-fit:cover">`;toast('얼굴 사진을 등록했어요')}else toast('저장하지 못했어요')}catch(err){toast('사진을 열지 못했어요')}};
-    {const h=el.querySelector('#admHold');if(h)h.onclick=()=>{close();openHoldSheet(m,()=>renderAdmRows())}}
+    {const h=el.querySelector('#admHold');if(h)h.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
     el.querySelector('#admSend').onclick=()=>{close();openSendPicker(m)};
     el.querySelector('#admGuard').onclick=()=>{close();openGuardSheet(m)};
     el.querySelector('#admDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (되돌릴 수 없어요)';return}if(await deleteMember(m)){close();renderAdmRows()}};
@@ -3534,6 +3553,7 @@ const dAdd=(d,n)=>{const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+n);retu
 const mAdd=(d,n)=>{const x=new Date(d+'T00:00:00');const day=x.getDate();x.setMonth(x.getMonth()+n);if(x.getDate()<day)x.setDate(0);x.setDate(x.getDate()-1);return dstr(x)};
 const dDiff=(a,b)=>Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/864e5);
 const md=d=>{const x=new Date(d+'T00:00:00');return`${x.getMonth()+1}월 ${x.getDate()}일`};
+const mdw=d=>{const x=new Date(d+'T00:00:00');return`${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]})`};
 function parsePlan(name){name=String(name||'');const mo=+(name.match(/(\d+)\s*개월/)||[])[1]||0;const wk=+(name.match(/주\s*(\d)\s*회/)||[])[1]||0;const pt=+(name.match(/PT\s*(\d+)\s*회/i)||[])[1]||0;
   return{months:mo||(pt?0:1),weekly:wk,pt}}
 function planLabel(mem){if(!mem)return '';const a=[];if(mem.weekly)a.push(`주${mem.weekly}회`);else if(mem.end)a.push('자유이용');if(mem.pt&&mem.pt.total)a.push(`PT ${mem.pt.total}회`);return a.join(' · ')}
@@ -3571,17 +3591,17 @@ function memCardHTML(m,full){
   return`<div class="memc ${st.state}">
     <div class="mtop"><div class="label">내 등록</div><span class="pill">${esc(planLabel(mem)||mem.item||'회원권')}</span></div>
     ${mem.end?`<div class="mrow"><b class="mbig num">${dl}</b><div class="grow"><div class="mbar"><i style="width:${st.state==='expired'?100:st.pct}%"></i></div><div class="small num">${md(mem.start)} ~ ${md(mem.end)}${st.state!=='expired'&&st.state!=='upcoming'?` · ${st.left}일 남음`:''}</div></div></div>`:''}
-    ${week}${ptLeft}
+    ${holdBlock(m)}${week}${ptLeft}
     <div class="mhint ${hk}">${esc(hint)}${w.quota&&st.state!=='expired'?` <span class="num">· 이번 주 ${w.cnt}/${w.quota}</span>`:''}</div>
     ${st.state==='soon'||st.state==='expired'?`<button class="btn red sm" data-pay>${st.state==='expired'?'재등록하기':'미리 재등록하기'}</button>`:''}
     ${full&&mem.days&&mem.days.length?`<div class="small">운동 요일: ${mem.days.map(d=>DAYN[d]).join(' · ')}</div><div class="small" style="color:var(--red)">${esc(WEEKLY_RULE(mem.weekly))}</div>`:''}
-    ${full&&mem.end?`<div class="small">${esc(holdLine(mem))}</div>`:''}
+    ${full&&mem.end?`<div class="small">${esc(holdLine(mem))}</div>${holdReqLine(m)}${canReqHold(m)?'<button class="btn ghost sm" data-holdreq>정지(연기) 신청</button>':''}`:''}
     ${full?'<button class="btn ghost sm" data-rules>이용수칙 보기</button>':''}
     ${full&&mem.item?`<div class="small">등록 상품: ${esc(mem.item)}${mem.paidAt?' · 결제 확인 '+esc(md(mem.paidAt)):''}</div>`:''}
   </div>`;
 }
 function renderMemCard(){if(ME&&isStaff(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
-  if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules)});
+  if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules);el.querySelectorAll('[data-holdreq]').forEach(b=>b.onclick=openHoldReq);el.querySelectorAll('[data-hrc]').forEach(b=>b.onclick=async()=>{ME.holdReq=null;await DB.savePriv(ME);toast('신청을 취소했어요');renderMemCard()})});
 }
 /* 관장: 등록 정보 입력 */
 function openMemEditor(m,pre={},onDone){
@@ -3597,6 +3617,9 @@ function openMemEditor(m,pre={},onDone){
     <div class="field"><span>이용 방식</span><div class="chips" id="meWk">${[0,2,3,4,5].map(n=>`<button type="button" class="chip" data-wk="${n}">${n?'주'+n+'회':'자유이용'}</button>`).join('')}</div></div>
     <div class="field" id="meDaysF"><span>운동 요일 <span class="small" id="meDaysN"></span></span><div class="chips" id="meDays">${WDAYS.map(d=>`<button type="button" class="chip" data-d="${d}">${DAYN[d]}</button>`).join('')}</div><div class="small" style="color:var(--red)">선택한 요일에만 출석할 수 있어요. 빠진 날을 다른 요일로 옮길 수 없어요 (보강은 관장 승인).</div>${pre.days&&pre.days.length?'<div class="small">회원이 결제할 때 고른 요일이 미리 선택돼 있어요.</div>':''}</div>
     <div class="row"><div class="field grow"><label for="mePt">PT 총 횟수</label><input id="mePt" type="number" min="0" value="${st.pt}"></div><div class="field grow"><label for="mePtL">PT 남은 횟수</label><input id="mePtL" type="number" min="0" value="${st.ptLeft}"></div></div>
+    <div class="field" id="meHoldF"><span>정지(연기) 규정 <span class="small" id="meHoldD"></span></span><div class="chips" id="meHold"><button type="button" class="chip" data-ha="def">기본 규정</button><button type="button" class="chip" data-ha="none">정지 없음</button><button type="button" class="chip" data-ha="custom">직접 지정</button></div>
+      <div class="row" id="meHoldC" hidden><div class="field grow"><label for="meHN">횟수</label><input id="meHN" type="number" min="1" max="12" value="${cur.holdAllow&&cur.holdAllow.n?cur.holdAllow.n:1}"></div><div class="field grow"><label for="meHM">최대 일수 (합계)</label><input id="meHM" type="number" min="1" max="365" value="${cur.holdAllow&&cur.holdAllow.max?cur.holdAllow.max:14}"></div></div>
+      ${cur.end?'<button type="button" class="btn ghost sm" id="meAdj">정지·연기 / 기간 조정 (기록 보기)</button>':''}</div>
     <div class="paybox">
       <label class="check" style="margin:0"><input type="checkbox" id="mePayOn" ${pre.pay||pre.newPay?'checked':''}><b>결제 기록하기</b> <span class="small">${pre.pay?'(회원이 앱으로 신청한 결제)':'(매출 통계에 들어가요)'}</span></label>
       <div id="mePayBox">
@@ -3633,6 +3656,10 @@ function openMemEditor(m,pre={},onDone){
     pAmt.oninput=()=>{pAmt.value=fmt(pAmt.value)};el.querySelector('#meItem').addEventListener('change',()=>{if(!pAmt.value)pAmt.value=prodPrice()});
     const pdraw=()=>{pBox.hidden=!pOn.checked;el.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===pm))};
     el.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{pm=b.dataset.pm;pdraw()});pOn.onchange=pdraw;pdraw();
+    let ha=cur.holdAllow&&cur.holdAllow.n!=null?(cur.holdAllow.n>0?'custom':'none'):'def';
+    const drawHA=()=>{el.querySelectorAll('#meHold [data-ha]').forEach(b=>b.classList.toggle('on',b.dataset.ha===ha));el.querySelector('#meHoldC').hidden=ha!=='custom';const p=holdPolicy({end:'x',months:st.months});el.querySelector('#meHoldD').textContent=ha==='def'?(p?'('+p.label+')':'(3개월 미만은 정지 없음)'):''};
+    el.querySelectorAll('#meHold [data-ha]').forEach(b=>b.onclick=()=>{ha=b.dataset.ha;drawHA()});drawHA();el.querySelectorAll('[data-mo]').forEach(b=>b.addEventListener('click',drawHA));
+    {const aj=el.querySelector('#meAdj');if(aj)aj.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
     el.querySelector('#meSave').onclick=async()=>{
       if(pOn.checked&&!pm){toast('결제 방식(카드·현금·계좌이체…)을 골라 주세요');el.querySelector('#mePm').scrollIntoView({block:'center'});return}
       if(st.weekly&&st.days.length!==st.weekly){toast(`운동 요일을 ${st.weekly}개 골라 주세요`);return}
@@ -3641,6 +3668,8 @@ function openMemEditor(m,pre={},onDone){
       if(st.months&&(!startIn.value||!endIn.value||endIn.value<startIn.value)){toast('시작일과 종료일을 확인해 주세요');return}
       const hist=(m.memHist||[]).slice(-9);if(cur.end||cur.pt)hist.push(cur);
       m.mem=clean({item:el.querySelector('#meItem').value.trim(),months:st.months,start:st.months?startIn.value:'',end:st.months?endIn.value:'',weekly:st.months?st.weekly:0,days:st.months&&st.weekly?st.days:[],pt:ptT?{total:ptT,left:ptL}:null,paidAt:pre.paidAt||cur.paidAt||'',setAt:TODAY()});
+      if(ha==='none')m.mem.holdAllow={n:0,max:0};else if(ha==='custom')m.mem.holdAllow={n:clamp(+el.querySelector('#meHN').value||1,1,12),max:clamp(+el.querySelector('#meHM').value||14,1,365)};
+      if((cur.end||cur.pt)&&cur.start&&m.mem.start===cur.start){if(cur.holds)m.mem.holds=cur.holds;if(cur.hold)m.mem.hold=cur.hold}
       m.memHist=hist;await DB.savePriv(m);
       let pr=null;
       if(pOn.checked){const amt=+pAmt.value.replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
@@ -3913,27 +3942,112 @@ const rulesTxt=()=>((local.meta.rules||'').trim()||DEFAULT_RULES);
 function openRules(){sheet(`<h2>이용수칙</h2><div class="terms" style="max-height:none">${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
 
 /* ================= 정지(연기) ================= */
-function holdPolicy(mem){if(!mem||!mem.end)return null;const mo=mem.months||0;if(mo>=6)return{max:30,label:'1회 · 최대 1개월'};if(mo>=3)return{max:14,label:'1회 · 최대 2주'};return null}
-function holdActive(mem){const t=TODAY();return!!(mem&&mem.hold&&t>=mem.hold.start&&t<=mem.hold.end)}
-function holdLine(mem){const p=holdPolicy(mem);if(!p)return '정지(연기) 불가 (3개월 이상 등록 시 가능)';if(mem.hold)return`정지 사용함 · ${md(mem.hold.start)}~${md(mem.hold.end)} (${mem.hold.days}일)`;return`정지 가능 ${p.label} · 미사용`}
-function openHoldSheet(m,onDone){
-  const mem=m.mem,p=holdPolicy(mem);
-  if(!p){toast('3개월 미만 등록은 정지할 수 없어요');return}
-  if(mem.hold){toast('정지는 1회만 가능해요. 이미 사용했어요');return}
-  const tmr=dAdd(TODAY(),1);
-  sheet(`<h2>정지(연기) · ${esc(m.name)}</h2>
-    <div class="mhint warn">${esc(planLabel(mem))} · ${p.label}. 시작일은 내일(${md(tmr)})부터 고를 수 있어요. 지난 날짜로 소급할 수 없어요.</div>
-    <div class="row"><div class="field grow"><label for="hdStart">정지 시작일</label><input id="hdStart" class="dpick" readonly min="${tmr}" max="${mem.end}" value="${tmr}"></div><div class="field grow"><label for="hdDays">정지 일수 (최대 ${p.max}일)</label><input id="hdDays" type="number" min="1" max="${p.max}" value="${p.max}"></div></div>
-    <div class="small" id="hdPrev"></div>
-    <button class="btn red" id="hdSave">정지 처리</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
-    const s=el.querySelector('#hdStart'),d=el.querySelector('#hdDays');
-    const prev=()=>{const n=clamp(+d.value||0,1,p.max);el.querySelector('#hdPrev').textContent=`${md(s.value)} ~ ${md(dAdd(s.value,n-1))} 정지 → 종료일 ${md(mem.end)} → ${md(dAdd(mem.end,n))}`};s.oninput=prev;d.oninput=prev;prev();
-    el.querySelector('#hdSave').onclick=async()=>{const n=+d.value||0;
-      if(s.value<tmr){toast('정지는 내일부터 시작할 수 있어요');return}if(n<1||n>p.max){toast(`정지는 1~${p.max}일만 가능해요`);return}
-      mem.hold={start:s.value,days:n,end:dAdd(s.value,n-1),at:TODAY()};mem.end=dAdd(mem.end,n);await DB.savePriv(m);toast('정지 처리했어요');close();
-      sendAuto(m,'hold');onDone&&onDone(m)};
-  });
-}
+const HOLD_RS=['부상·질병','출장·여행','개인 사정','기타'];
+const EXT_RS=['휴관 보상','부상 보상','이벤트·서비스','기타'];
+function holdList(mem){if(!mem)return[];if(Array.isArray(mem.holds))return mem.holds.filter(Boolean);return mem.hold?[Object.assign({id:'h0',type:'hold',status:'done'},mem.hold)]:[]}
+const holdsDone=mem=>holdList(mem).filter(h=>(h.type||'hold')==='hold'&&h.status!=='cancelled');
+function holdPolicy(mem){if(!mem||!mem.end)return null;const a=mem.holdAllow;
+  if(a&&a.n!=null)return a.n>0?{n:a.n,max:a.max||14,label:`${a.n}회 · 최대 ${a.max||14}일 (관장 지정)`,custom:true}:null;
+  const mo=mem.months||0;if(mo>=6)return{n:1,max:30,label:'1회 · 최대 1개월'};if(mo>=3)return{n:1,max:14,label:'1회 · 최대 2주'};return null}
+function holdUsed(mem){const L=holdsDone(mem);return{n:L.length,days:L.reduce((s,h)=>s+(h.days||0),0)}}
+function holdLeft(mem){const p=holdPolicy(mem);if(!p)return null;const u=holdUsed(mem);return{n:Math.max(0,p.n-u.n),days:Math.max(0,p.max-u.days)}}
+function holdActive(mem){const t=TODAY();return holdsDone(mem).some(h=>t>=h.start&&t<=h.end)}
+function syncHold(mem){const t=TODAY();const L=holdsDone(mem).sort((a,b)=>a.start.localeCompare(b.start));const cur=L.find(h=>t>=h.start&&t<=h.end)||L.find(h=>h.start>t)||L[L.length-1];
+  if(cur)mem.hold={start:cur.start,end:cur.end,days:cur.days,at:cur.at};else delete mem.hold}
+function holdLine(mem){const p=holdPolicy(mem);const u=holdUsed(mem);const L=holdsDone(mem);const last=L.length?` · 최근 ${md(L[L.length-1].start)}~${md(L[L.length-1].end)}`:'';
+  if(!p)return u.n?`정지 ${u.n}회 사용${last}`:'정지(연기) 불가 (3개월 이상 등록 시 가능)';
+  return `정지 규정 ${p.label} · ${u.n}/${p.n}회 사용${u.days?` (${u.days}일)`:''}${last}`}
+const ADJ_T={hold:'정지',extend:'연장',set:'종료일 수정'};
+/* 관장: 정지·연장·종료일 수정 (기록이 남고 취소·조기 복귀 가능) */
+function openAdjSheet(m,pre={},onDone){const mem=m.mem;if(!mem||!mem.end){toast('기간 회원권이 있어야 조정할 수 있어요');return}
+  const rq=pre.req||null;let tab=pre.tab||'hold';const T=TODAY();
+  sheet(`<h2>기간 조정 · ${esc(m.name)}</h2>
+    <div class="mhint">${esc(planLabel(mem)||mem.item||'회원권')} · ${md(mem.start)} ~ <b>${md(mem.end)}</b><br>${esc(holdLine(mem))}</div>
+    ${rq?`<div class="mhint warn"><b>회원 정지 신청</b> · ${md(rq.start)}부터 ${rq.days}일 (${md(rq.start)}~${md(dAdd(rq.start,rq.days-1))})<br>사유: ${esc(rq.reason||'-')}${rq.memo?' · '+esc(rq.memo):''}</div>`:''}
+    <div class="chips" id="adT"><button type="button" class="chip" data-t="hold">정지(연기)</button><button type="button" class="chip" data-t="extend">기간 연장</button><button type="button" class="chip" data-t="set">종료일 직접 수정</button></div>
+    <div id="adBody" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="memsum" id="adPrev"></div>
+    <button class="btn red" id="adSave">적용</button>
+    ${rq?'<button class="btn ghost" id="adRej" style="color:var(--red)">신청 거절</button>':''}
+    <div id="adHist" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const body=el.querySelector('#adBody'),prev=el.querySelector('#adPrev');let rs='';
+    const chipsR=(arr,cur)=>`<div class="chips" id="adR">${arr.map(r=>`<button type="button" class="chip ${r===cur?'on':''}" data-r="${r}">${r}</button>`).join('')}</div>`;
+    const bindR=()=>el.querySelectorAll('#adR [data-r]').forEach(b=>b.onclick=()=>{rs=b.dataset.r;el.querySelectorAll('#adR [data-r]').forEach(x=>x.classList.toggle('on',x===b))});
+    const draw=()=>{el.querySelectorAll('#adT [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const p=holdPolicy(mem),lf=holdLeft(mem);
+      if(tab==='hold'){const s0=rq?rq.start:dAdd(T,1),n0=rq?rq.days:(lf&&lf.days?lf.days:7);rs=rq?(HOLD_RS.includes(rq.reason)?rq.reason:'기타'):'';
+        body.innerHTML=`<div class="small">${p?`규정 ${esc(p.label)} · 남은 정지 <b>${lf.n}회 ${lf.days}일</b>`:'이 회원권은 규정상 정지가 없어요 (관장 재량으로만 가능)'}</div>
+          <div class="row"><div class="field grow"><label for="adS">정지 시작일</label><input id="adS" class="dpick" readonly value="${s0}" max="${mem.end}"></div><div class="field grow"><label for="adN">정지 일수</label><input id="adN" type="number" min="1" max="120" value="${n0}"></div></div>
+          <div class="field"><span>사유</span>${chipsR(HOLD_RS,rs)}</div>
+          <div class="field"><label for="adM">메모 <span class="small">(진단서 확인 등)</span></label><input id="adM" maxlength="100" value="${rq&&rq.memo?esc(rq.memo):''}"></div>
+          <label class="check" id="adExF" hidden style="margin:0"><input type="checkbox" id="adEx"><span><b>규정 예외로 처리</b> <span class="small" id="adExW"></span></span></label>`}
+      else if(tab==='extend'){rs='';body.innerHTML=`<div class="small">휴관·부상 보상이나 이벤트로 기간을 늘려 줄 때 써요. 정지 횟수에 들어가지 않아요.</div>
+          <div class="field"><label for="adN">늘릴 일수</label><input id="adN" type="number" min="1" max="365" value="7"></div><div class="chips">${[3,7,14,30].map(n=>`<button type="button" class="chip" data-q="${n}">+${n}일</button>`).join('')}</div>
+          <div class="field"><span>사유</span>${chipsR(EXT_RS,'')}</div><div class="field"><label for="adM">메모</label><input id="adM" maxlength="100"></div>`}
+      else{rs='';body.innerHTML=`<div class="small">실수 정정이나 특별한 경우에 종료일을 직접 바꿔요. 변경 전·후가 기록에 남아요.</div>
+          <div class="field"><label for="adE">새 종료일</label><input id="adE" class="dpick" readonly value="${mem.end}"></div>
+          <div class="field"><label for="adM">사유</label><input id="adM" maxlength="100" placeholder="예: 등록일 잘못 입력 정정"></div>`}
+      bindR();body.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{body.querySelector('#adN').value=b.dataset.q;calc()});
+      body.querySelectorAll('input').forEach(x=>{x.oninput=calc;x.onchange=calc});calc()};
+    const calc=()=>{const p=holdPolicy(mem),lf=holdLeft(mem);
+      if(tab==='hold'){const s=el.querySelector('#adS').value,n=Math.max(0,+el.querySelector('#adN').value||0);const e=dAdd(s,n-1);const warn=[];
+        if(s<T)warn.push('지난 날짜부터 시작(소급)');if(!p)warn.push('규정상 정지 불가 회원권');else{if(lf.n<1)warn.push(`정지 ${p.n}회 모두 사용`);if(n>lf.days)warn.push(`남은 ${lf.days}일 초과`)}
+        const ov=holdsDone(mem).find(h=>!(e<h.start||s>h.end));if(ov)warn.push('기존 정지 기간과 겹침');
+        el.querySelector('#adExF').hidden=!warn.length;el.querySelector('#adExW').textContent=warn.length?'('+warn.join(' · ')+')':'';
+        prev.innerHTML=n?`<div class="small">정지 ${md(s)} ~ ${md(e)} · ${n}일</div><b class="num">종료일 ${md(mem.end)} → ${md(dAdd(mem.end,n))}</b>`:''}
+      else if(tab==='extend'){const n=Math.max(0,+el.querySelector('#adN').value||0);prev.innerHTML=n?`<b class="num">종료일 ${md(mem.end)} → ${md(dAdd(mem.end,n))}</b> <span class="small">(+${n}일)</span>`:''}
+      else{const e=el.querySelector('#adE').value;const d=dDiff(e,mem.end);prev.innerHTML=`<b class="num">종료일 ${md(mem.end)} → ${md(e)}</b> <span class="small">(${d>0?'+':''}${d}일)</span>`}};
+    el.querySelectorAll('#adT [data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
+    const save=async(mm,msg,kind)=>{syncHold(mm.mem);await DB.savePriv(mm);toast(msg,3000);if(kind)sendAuto(mm,kind);renderAdmRows&&renderAdmRows();renderADash&&renderADash()};
+    el.querySelector('#adSave').onclick=async()=>{const id='a'+Date.now().toString(36);const L=holdList(mem).slice();const memo=(el.querySelector('#adM')||{}).value||'';
+      if(tab==='hold'){const s=el.querySelector('#adS').value,n=+el.querySelector('#adN').value||0;if(!s||n<1){toast('시작일과 일수를 확인해 주세요');return}
+        const exF=el.querySelector('#adExF');if(!exF.hidden&&!el.querySelector('#adEx').checked){toast('규정을 벗어나요. 예외로 처리하려면 체크해 주세요',3500);exF.scrollIntoView({block:'center'});return}
+        if(!rs){toast('사유를 골라 주세요');return}
+        const before=mem.end;L.push(clean({id,type:'hold',start:s,end:dAdd(s,n-1),days:n,reason:rs,memo,at:T,status:'done',exc:!exF.hidden||undefined,req:rq?true:undefined,before,after:dAdd(before,n)}));
+        mem.holds=L;mem.end=dAdd(before,n);if(rq)m.holdReq=Object.assign({},rq,{status:'done',doneAt:T});
+        close();await save(m,`정지 처리 · 종료일 ${md(mem.end)}로 늘었어요`,'hold')}
+      else if(tab==='extend'){const n=+el.querySelector('#adN').value||0;if(n<1){toast('일수를 적어 주세요');return}if(!rs){toast('사유를 골라 주세요');return}
+        const before=mem.end;L.push(clean({id,type:'extend',days:n,reason:rs,memo,at:T,status:'done',before,after:dAdd(before,n)}));mem.holds=L;mem.end=dAdd(before,n);close();await save(m,`${n}일 연장 · 종료일 ${md(mem.end)}`)}
+      else{const e=el.querySelector('#adE').value;if(!e||e<mem.start){toast('종료일을 확인해 주세요');return}if(e===mem.end){toast('바뀐 게 없어요');return}if(!memo.trim()){toast('사유를 적어 주세요');return}
+        const before=mem.end;L.push(clean({id,type:'set',days:dDiff(e,before),reason:memo.trim(),at:T,status:'done',before,after:e}));mem.holds=L;mem.end=e;close();await save(m,`종료일을 ${md(e)}로 바꿨어요`)}
+      onDone&&onDone(m)};
+    const rj=el.querySelector('#adRej');if(rj)rj.onclick=()=>{close();sheet(`<h2>정지 신청 거절</h2><div class="field"><label for="rjW">회원에게 보일 사유</label><input id="rjW" maxlength="80" placeholder="예: 정지는 3개월 이상 등록 시 1회 가능해요"></div><button class="btn red" id="rjOk">거절하기</button><button class="btn ghost" data-close>취소</button>`,(e2,c2)=>{
+      e2.querySelector('#rjOk').onclick=async()=>{m.holdReq=Object.assign({},rq,{status:'rejected',why:e2.querySelector('#rjW').value.trim(),doneAt:T});await DB.savePriv(m);toast('거절했어요. 회원 앱에 사유가 보여요');c2();renderADash();onDone&&onDone(m)}})};
+    // 기록
+    const hist=holdList(mem).slice().reverse();const hb=el.querySelector('#adHist');
+    hb.innerHTML=hist.length?'<div class="label">기간 조정 기록</div>'+hist.map(x=>{const ty=x.type||'hold';const can=x.status!=='cancelled'&&ty!=='set';const act=ty==='hold'&&x.start<=T&&x.end>=T;
+      return `<div class="qrow" style="${x.status==='cancelled'?'opacity:.5':''}"><div class="grow small"><b>${ADJ_T[ty]}</b> ${ty==='hold'?`${md(x.start)}~${md(x.end)} · ${x.days}일`:ty==='extend'?`+${x.days}일`:`${md(x.before)} → ${md(x.after)}`} · ${esc(x.reason||'')}${x.memo?' · '+esc(x.memo):''}${x.exc?' · <span style="color:var(--red)">예외</span>':''}${x.req?' · 회원 신청':''}<br><span class="num">${x.at?md(x.at)+' 처리':''}</span>${x.status==='cancelled'?' · 취소됨':''}${x.early?' · '+md(x.early)+' 조기 복귀':''}</div>${can?`<button class="btn sm ghost" data-ac="${esc(x.id)}">${act?'조기 복귀':'취소'}</button>`:''}</div>`}).join(''):'';
+    hb.querySelectorAll('[data-ac]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}
+      const L=holdList(mem).slice();const x=L.find(y=>y.id===b.dataset.ac);if(!x)return;const ty=x.type||'hold';
+      if(ty==='hold'&&x.start<=T&&x.end>=T){const unused=dDiff(x.end,T)+1;x.days-=unused;x.end=dAdd(T,-1);x.early=T;if(x.days<=0)x.status='cancelled';mem.end=dAdd(mem.end,-unused);mem.holds=L;close();await save(m,`오늘부터 다시 출석 · 남은 ${unused}일을 돌려받아 종료일 ${md(mem.end)}`);openSendSheet(m,'hold',null,`[탕정 엔엔엔복싱] ${toGuard(m,'hold')?(m.gName||'보호자')+'님, '+m.name+' 회원의':m.name+'님,'} 정지가 일찍 끝나 ${mdw(T)}부터 다시 출석할 수 있어요.\n▶ 변경된 종료일: ${mdw(mem.end)}\n다시 만나서 반가워요!`)}
+      else{x.status='cancelled';mem.end=dAdd(mem.end,-(x.days||0));mem.holds=L;close();await save(m,`${ADJ_T[ty]} 취소 · 종료일 ${md(mem.end)}`);if(ty==='hold')openSendSheet(m,'hold',null,`[탕정 엔엔엔복싱] ${toGuard(m,'hold')?(m.gName||'보호자')+'님, '+m.name+' 회원의':m.name+'님,'} ${mdw(x.start)}부터 예정됐던 정지가 취소되었어요. 평소처럼 출석하시면 돼요.\n▶ 종료일: ${mdw(mem.end)}`)}
+      onDone&&onDone(m)});
+    draw()})}
+function openHoldSheet(m,onDone){openAdjSheet(m,{tab:'hold'},onDone)}
+/* 회원: 정지(연기) 신청 */
+function holdBlock(m){const mem=m.mem;if(!mem||!mem.hold)return '';const h=mem.hold,T=TODAY();if(h.end<T)return '';const on=T>=h.start;
+  return `<div class="mhint ${on?'info':'warn'}"><b>${on?'정지 중':'정지 예정'}</b> ${mdw(h.start)} ~ ${mdw(h.end)} (${h.days}일)<br><b>${mdw(dAdd(h.end,1))}부터 다시 출석</b> · 종료일 ${md(mem.end)}</div>`}
+function holdReqLine(m){const r=m.holdReq;if(!r)return '';
+  if(r.status==='pending')return `<div class="mhint info">정지 신청 중 · ${md(r.start)}부터 ${r.days}일 · 관장님 확인 대기 <button class="link" data-hrc>신청 취소</button></div>`;
+  if(r.status==='rejected'&&dDiff(TODAY(),r.doneAt||TODAY())<=7)return `<div class="mhint warn">정지 신청이 반려됐어요${r.why?' · '+esc(r.why):''}</div>`;
+  if(r.status==='done'&&dDiff(TODAY(),r.doneAt||TODAY())<=3)return `<div class="mhint ok">정지 신청이 처리됐어요 · 종료일 ${md(m.mem.end)}</div>`;return ''}
+function canReqHold(m){const mem=m.mem;const st=memStatus(m);if(!mem||!mem.end||!['active','soon','upcoming'].includes(st.state))return false;const lf=holdLeft(mem);return !!(lf&&lf.n>0&&lf.days>0&&!(m.holdReq&&m.holdReq.status==='pending'))}
+function openHoldReq(){const m=ME;const mem=m.mem;const lf=holdLeft(mem),p=holdPolicy(mem);if(!lf){toast('이 회원권은 정지할 수 없어요');return}const tmr=dAdd(TODAY(),1);let rs='';
+  sheet(`<h2>정지(연기) 신청</h2><div class="mhint">${esc(p.label)} · 남은 정지 ${lf.n}회 ${lf.days}일<br>신청하면 관장님이 확인 후 처리해요. 시작일은 내일부터, 지난 날짜는 안 돼요.</div>
+    <div class="row"><div class="field grow"><label for="hrS">시작일</label><input id="hrS" class="dpick" readonly min="${tmr}" max="${mem.end}" value="${tmr}"></div><div class="field grow"><label for="hrN">일수 (최대 ${lf.days}일)</label><input id="hrN" type="number" min="1" max="${lf.days}" value="${lf.days}"></div></div>
+    <div class="field"><span>사유</span><div class="chips" id="hrR">${HOLD_RS.map(r=>`<button type="button" class="chip" data-r="${r}">${r}</button>`).join('')}</div></div>
+    <div class="field"><label for="hrM">자세한 내용 <span class="small">(선택)</span></label><input id="hrM" maxlength="100" placeholder="예: 발목 부상으로 2주 쉬어요"></div>
+    <div class="small" id="hrP" style="font-weight:600"></div>
+    <button class="btn red" id="hrGo">신청하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const s=el.querySelector('#hrS'),n=el.querySelector('#hrN');const pv=()=>{const k=clamp(+n.value||0,1,lf.days);el.querySelector('#hrP').textContent=`${md(s.value)} ~ ${md(dAdd(s.value,k-1))} 정지 → 종료일 ${md(mem.end)} → ${md(dAdd(mem.end,k))} (승인 후 적용)`};s.onchange=pv;n.oninput=pv;pv();
+    el.querySelectorAll('#hrR [data-r]').forEach(b=>b.onclick=()=>{rs=b.dataset.r;el.querySelectorAll('#hrR [data-r]').forEach(x=>x.classList.toggle('on',x===b))});
+    el.querySelector('#hrGo').onclick=async()=>{const k=+n.value||0;if(k<1||k>lf.days){toast(`일수는 1~${lf.days}일이에요`);return}if(!rs){toast('사유를 골라 주세요');return}if(s.value<tmr){toast('시작일은 내일부터예요');return}
+      ME.holdReq={start:s.value,days:k,reason:rs,memo:el.querySelector('#hrM').value.trim(),at:Date.now(),status:'pending'};await DB.savePriv(ME);toast('정지 신청을 보냈어요. 관장님이 확인하면 반영돼요',3500);close();renderMemCard()}})}
+/* 관장 오늘 탭: 정지 신청 목록 */
+function renderHoldReqs(all){const box=$('#hrRows');if(!box)return;const L=all.filter(m=>m.holdReq&&m.holdReq.status==='pending').sort((a,b)=>a.holdReq.at-b.holdReq.at);
+  $('#hrCard').hidden=!L.length;$('#hrCnt').textContent=L.length?L.length+'건':'';
+  box.innerHTML=L.map(m=>{const r=m.holdReq;return `<div class="payrow" style="border-bottom:1px solid var(--mat)"><div class="grow"><b>${esc(m.name)}</b> <span class="small num">${esc(m.id)}</span><div class="small">${md(r.start)}부터 ${r.days}일 · ${esc(r.reason)}${r.memo?' · '+esc(r.memo):''}</div><div class="small">${esc(holdLine(m.mem||{}))}</div></div><button class="btn sm red" data-hr="${esc(m.id)}">처리</button></div>`}).join('');
+  box.querySelectorAll('[data-hr]').forEach(b=>b.onclick=()=>{const m=L.find(x=>x.id===b.dataset.hr);openAdjSheet(m,{tab:'hold',req:m.holdReq},()=>renderADash())});return L.length}
 
 /* ================= 문자·카톡 안내 ================= */
 const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
@@ -3955,10 +4069,13 @@ const TPL_DEFAULT={
 
 [이용수칙]
 {이용수칙}`,
-  hold:`[탕정 엔엔엔복싱] {이름}님, 정지(연기)가 처리되었습니다.
+  hold:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 정지(연기)가 처리되었습니다.
+▶ 정지 시작: {정지시작}
+▶ 다시 출석: {다시시작}부터
 ▶ 정지 기간: {정지기간}
 ▶ 변경된 종료일: {종료일}
-정지는 등록 기간 중 1회만 가능하며 이번에 사용하셨습니다. 정지 기간에는 출석할 수 없습니다.`,
+정지 기간에는 출석이 되지 않습니다. {다시시작}부터 다시 만나요!
+NNN WORLD 앱 내 등록에서도 확인할 수 있어요: {앱주소}`,
   exp:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 기간이 {남은일} 남았습니다. ({종료일} 종료)
 종료일 이후에는 재등록 전까지 출석이 되지 않습니다. 끊김 없이 다니시려면 종료일 전에 결제해 주세요.
 ▶ 입금 계좌: {입금계좌}
@@ -3982,10 +4099,10 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '요일':mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용',
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
     '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:'카운터 결제',
-    '정지기간':mem.hold?`${mem.hold.start} ~ ${mem.hold.end} (${mem.hold.days}일)`:'-','종료일':mem.end||'-',
+    '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
     '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'입금계좌':bankLine(),...extra}}
 function bankLine(){const P=local.meta.pay||{};return P.acct?`${P.bank||''} ${P.acct}${P.holder?' ('+P.holder+')':''}`.trim():'카운터 문의'}
-const G_KINDS=['pay','exp','after','unpaid'];
+const G_KINDS=['pay','hold','exp','after','unpaid'];
 const toGuard=(m,kind)=>!!m.gPhone&&(G_KINDS.includes(kind)||String(kind).startsWith('c:'));
 const msgPhone=(m,kind)=>toGuard(m,kind)?m.gPhone:m.phone;
 function openGuardSheet(m){
