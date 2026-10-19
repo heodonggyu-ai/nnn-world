@@ -611,7 +611,7 @@ body.tvmode .app{max-width:none;padding:0}
     <h3 style="font-size:20px">입구 QR 코드</h3>
     <div class="field"><label for="sUrl">앱 주소</label><input id="sUrl"></div>
     <div><div id="qrbox"></div></div>
-    <p class="small" style="margin:0">출력해서 데스크에 붙여 두세요. 휴대폰으로 찍으면 이 앱 첫 화면이 열려요.</p>
+    <p class="small" style="margin:0">출력해서 데스크에 붙여 두세요. 휴대폰으로 찍으면 <b>가입 신청서가 바로</b> 열려요. 기존 회원은 신청서 위 '← 처음으로'에서 입장하면 돼요.</p>
   </div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:20px">코치 계정</h3>
@@ -1730,7 +1730,7 @@ async function openAdmin(){
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
 }
-function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u,width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
+function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){
   const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
@@ -2914,6 +2914,7 @@ $('#tplBtn').onclick=openTplEditor;
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
+  if(new URLSearchParams(location.search).get('join')){try{history.replaceState(null,'',location.pathname+(getRef()?'?ref='+getRef():''))}catch(e){}buildJoin();show('v-join');return}
   {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
   if(lsGet('nnn_coach')&&!sid){openCoach();return}
