@@ -1542,19 +1542,21 @@ function openInstall(){
   const back=location.href.replace(/[?#].*$/,'');
   if(isStandalone()){toast('이미 홈 화면 앱으로 열려 있어요');return}
   if(inApp()){const kakao=/KAKAOTALK/i.test(UA);
-    sheet(`<h2>홈 화면에 앱 추가</h2><p style="margin:0">지금은 ${kakao?'카카오톡':'앱'} 안의 브라우저라서 홈 화면에 추가할 수 없어요.<br><b>${isAndroid?'크롬':'사파리'}으로 열어서</b> 추가해 주세요.</p>
-      <button class="btn red" id="instExt">${isAndroid?'크롬':'사파리'}으로 열기</button>
+    sheet(`<h2>홈 화면에 앱 추가</h2><p style="margin:0">지금은 ${kakao?'카카오톡':'앱'} 안의 브라우저라서 홈 화면에 추가할 수 없어요.<br><b>${isAndroid?'크롬으로':'사파리로'} 열어서</b> 추가해 주세요.</p>
+      <button class="btn red" id="instExt">${isAndroid?'크롬으로':'사파리로'} 열기</button>
       ${!kakao&&!isAndroid?'<p class="small" style="margin:0">버튼이 안 되면 오른쪽 아래(또는 위) <b>···</b> → <b>Safari로 열기</b>를 눌러 주세요.</p>':''}
       <button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#instExt').onclick=()=>{
         if(kakao)location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(back);
         else if(isAndroid)location.href='intent://'+back.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
         else copyText(back,'주소를')}});return}
   if(INST_EVT){const ev=INST_EVT;sheet(`<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px"><img src="member-icons/icon-192.png" alt="" style="width:72px;height:72px;border-radius:16px"><h2>NNN 복싱 앱 추가</h2><p style="margin:0">아래 버튼을 누르고 <b>설치</b>(또는 <b>추가</b>)를 누르면 홈 화면에 아이콘이 생겨요.</p></div><button class="btn red" id="instGo">홈 화면에 추가하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#instGo').onclick=async()=>{close();try{await ev.prompt();const r=await ev.userChoice;if(r&&r.outcome==='accepted'){INST_EVT=null;try{localStorage.setItem('nnn_inst','done')}catch(e){}}}catch(e){}}});return}
-  const ios=isIOS();const samsung=/SamsungBrowser/i.test(UA);
-  const steps=ios?[['공유 버튼 누르기','화면 아래(아이패드는 위)의 <b>네모에 위쪽 화살표</b> 모양 버튼'],['홈 화면에 추가','목록을 조금 내려서 <b>홈 화면에 추가</b>'],['추가','오른쪽 위 <b>추가</b>를 누르면 끝!']]
+  const ios=isIOS();const samsung=/SamsungBrowser/i.test(UA);const iosChrome=ios&&/CriOS/i.test(UA);
+  const dev=ios?(/iPad|Macintosh/.test(UA)?'아이패드':'아이폰')+(iosChrome?' · 크롬':' · 사파리'):isAndroid?(/SM-|Samsung/i.test(UA)?'갤럭시':'안드로이드')+(samsung?' · 삼성 인터넷':' · 크롬'):'이 기기';
+  const steps=iosChrome?[['공유 버튼 누르기','주소창 오른쪽의 <b>네모에 위쪽 화살표</b> 모양 버튼'],['홈 화면에 추가','목록에서 <b>홈 화면에 추가</b>'],['추가','오른쪽 위 <b>추가</b>를 누르면 끝!']]
+    :ios?[['공유 버튼 누르기','화면 아래(아이패드는 위)의 <b>네모에 위쪽 화살표</b> 모양 버튼'],['홈 화면에 추가','목록을 조금 내려서 <b>홈 화면에 추가</b>'],['추가','오른쪽 위 <b>추가</b>를 누르면 끝!']]
     :samsung?[['메뉴 누르기','화면 아래 오른쪽 <b>≡</b> 버튼'],['현재 페이지 추가','<b>현재 페이지 추가</b> → <b>홈 화면</b>'],['추가','<b>추가</b>를 누르면 끝!']]
     :[['메뉴 누르기','오른쪽 위 <b>⋮</b> 버튼'],['홈 화면에 추가','<b>홈 화면에 추가</b> 또는 <b>앱 설치</b>'],['설치','<b>설치</b>(또는 추가)를 누르면 끝!']];
-  sheet(`<h2>홈 화면에 앱 추가</h2>${ios&&!/Safari/i.test(UA)||ios&&/CriOS|FxiOS|NAVER/i.test(UA)?'<p class="small" style="margin:0;color:var(--red)">아이폰은 <b>사파리</b>에서만 추가할 수 있어요. 사파리로 열어 주세요.</p>':''}
+  sheet(`<h2>홈 화면에 앱 추가</h2><div><span class="pill" style="background:var(--ink);color:#fff">${dev}에 맞춘 방법</span></div>${ios&&!iosChrome&&/FxiOS|NAVER|EdgiOS/i.test(UA)?'<p class="small" style="margin:0;color:var(--red)">이 브라우저에서는 추가가 안 될 수 있어요. <b>사파리</b>로 열어 주세요.</p>':''}
     <div class="ttl">${steps.map((s,i)=>`<div class="qrow"><b class="num" style="width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;flex:0 0 auto">${i+1}</b><div class="grow"><b>${s[0]}</b><div class="small">${s[1]}</div></div></div>`).join('')}</div>
     ${ios?'<p class="small" style="margin:0">아이폰은 홈 화면 앱을 처음 열 때 <b>회원번호와 연락처 뒤 4자리</b>로 한 번 더 입장해 주세요.</p>':''}
     <button class="btn" data-close>알겠어요</button>`)}
@@ -2706,7 +2708,7 @@ function openHoldSheet(m,onDone){
 }
 
 /* ================= 문자·카톡 안내 ================= */
-const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 /* ================= 안내 문구 템플릿 ================= */
 const TPL_DEFAULT={
   welcome:`[탕정 엔엔엔복싱] {이름}님, 가입이 승인되었습니다!
