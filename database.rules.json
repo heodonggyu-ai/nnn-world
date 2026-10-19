@@ -196,6 +196,13 @@
      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
      ".validate": "!newData.exists() || newData.child('name').isString()"
     }
+   },
+   "live": {
+    ".read": "auth != null",
+    "$id": {
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
+     ".validate": "!newData.exists() || (newData.child('at').isNumber() && newData.child('nick').isString())"
+    }
    }
   }
  }

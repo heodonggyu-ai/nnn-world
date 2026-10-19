@@ -1128,7 +1128,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){fixDay(ME);await DB.meta();show('v-world');setTab('map');refreshTop();watchMe();let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
+async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -1188,6 +1188,7 @@ function updWorld(dt){
   // 관장님
   const co=W.coach;const cd=Math.hypot(co.tx-co.x,co.ty-co.y);co.moving=cd>1;if(co.moving){co.x+=(co.tx-co.x)/cd*18*dt;co.y+=(co.ty-co.y)/cd*18*dt}else if(Math.random()<dt*.3){co.tx=rnd(252,300);co.ty=rnd(212,236)}
   W.bagSwing=W.bagSwing.map((v,i)=>Math.sin(W.t*1.4+i)*.04);
+  syncOthers(dt);
   W.float=W.float.filter(f=>(f.life-=dt)>0);
 }
 function floatTxt(x,y,txt){W.float.push({x,y,txt,life:1.1})}
@@ -1232,7 +1233,9 @@ function drawWorld(c){
   W.coins.forEach(k=>ents.push({y:k.y,d:()=>{const w=Math.abs(Math.cos(t*3+k.x))*5+1;ell(c,k.x,k.y-4,w,5,'#E9A91F');ell(c,k.x,k.y-4,w*.5,3,'#FFE58A')}}));
   W.candies.forEach(k=>ents.push({y:k.y,d:()=>{c.save();c.translate(k.x,k.y-5);c.rotate(Math.sin(t*3+k.x)*.3);tri(c,[-8,-3],[-8,3],[-3,0],'#F08A24');tri(c,[8,-3],[8,3],[3,0],'#F08A24');circ(c,0,0,4,'#8B4BD8');c.restore()}}));
   ents.push({y:W.p.y,d:()=>{drawChar(c,W.p.x,W.p.y,1.15,ME.equip,{t,moving:W.p.moving,flip:W.p.flip});c.fillStyle='rgba(29,36,51,.8)';const nm=ME.name;c.font='9px sans-serif';const tw=c.measureText(nm).width+10;rr(c,W.p.x-tw/2,W.p.y-58,tw,13,6);c.fill();c.fillStyle='#fff';c.fillText(nm,W.p.x,W.p.y-51)}});
+  ents.push(...othersEnts(c,t));
   ents.sort((a,b)=>a.y-b.y).forEach(e=>e.d());
+  drawLiveBadge(c);
 
   // 라벨
   c.font='10px "Black Han Sans",sans-serif';
@@ -1245,6 +1248,7 @@ function drawWorld(c){
 $('#map').addEventListener('click',e=>{
   const cv=$('#map'),r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*MW/r.width,y=(e.clientY-r.top)*MH/r.height;
   $('#mapHint').style.opacity=0;
+  {const ho=hitOther(x,y);if(ho){showOther(ho);return}}
   const hitA=W.animals.find(a=>Math.hypot(a.x-x,a.y-10-y)<20);
   if(hitA){go(hitA.x-14,hitA.y,{type:'animal',a:hitA});return}
   if(Math.hypot(W.coach.x-x,W.coach.y-20-y)<22){go(W.coach.x-16,W.coach.y+4,{type:'coach'});return}
@@ -1478,7 +1482,7 @@ async function renderRank(){
 function renderMore(){renderFaceCard();renderMemCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=[...noticesAll().filter(n=>nActive(n)).map(n=>'['+NKIND[n.kind]+'] '+n.title+'\n'+nBody(n)),local.meta.notice].filter(Boolean).join('\n\n');$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
 $('#lvBtn').onclick=openLevels;$('#bragBtn').onclick=()=>openBrag('NNN 복싱\n운동 중!');
 $('#termsBtn').onclick=()=>sheet(`<h2>이용약관</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>닫기</button>`);
-$('#logoutBtn').onclick=()=>{if(meOff){meOff();meOff=null}ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
+$('#logoutBtn').onclick=()=>{stopLive();W.others={};if(meOff){meOff();meOff=null}ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
 
 /* ================= 출석패드 ================= */
 let padBuf='',padTimer=0;
@@ -1577,6 +1581,38 @@ function openShowQR(){const u=joinUrl();const ref=u.includes('ref=');
     <p style="margin:0">${ref?`<b>${esc(ME.name)} 님 초대</b>로 가입돼요. 친구가 등록하면 초대 선물을 받아요!`:'탕정 엔엔엔복싱 가입 신청서가 열려요.'}</p></div>
     <button class="btn ghost" id="sqCopy">링크 복사해서 보내기</button><button class="btn" data-close>닫기</button>`,el=>{qrInto(el.querySelector('#bigQR'),u,Math.min(280,innerWidth-110));el.querySelector('#sqCopy').onclick=async()=>{const txt='탕정 엔엔엔복싱 NNN WORLD 가입하기\n'+u;try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}copyText(txt,'링크를')}})}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-showqr]');if(b){e.preventDefault();openShowQR()}});
+
+/* ================= 실시간 체육관 (출석한 회원이 월드에 등장) ================= */
+const stayMin=()=>+(local.meta.stayMin||120);
+async function liveCheckIn(m){const v={at:Date.now(),nick:maskName(m.name),eq:m.equip,lv:levelOf(m).lv};
+  if(FB_ON()&&!isLocal(m.id)){try{await gref('live/'+m.id).set(clean(v))}catch(e){}}else{local.live=local.live||{};local.live[m.id]=v;persist()}}
+const LIVE={data:{},off:null};
+function startLive(){stopLive();if(FB_ON()){try{const r=gref('live');const hnd=s=>{LIVE.data=s.val()||{}};r.on('value',hnd);LIVE.off=()=>r.off('value',hnd)}catch(e){}}else{LIVE.data=local.live||{}}}
+function stopLive(){if(LIVE.off){LIVE.off();LIVE.off=null}}
+function livePresent(){const now=Date.now(),lim=stayMin()*60000;return Object.entries(LIVE.data||{}).filter(([id,v])=>v&&v.at&&now-v.at<lim&&new Date(v.at).toDateString()===new Date().toDateString())}
+async function pruneLive(){if(!FB_ON())return;try{const o=(await gref('live').get()).val()||{};const lim=Date.now()-20*3600000;for(const [id,v] of Object.entries(o)){if(!v||!v.at||v.at<lim){try{await gref('live/'+id).set(null)}catch(e){}}}}catch(e){}}
+const SPOTS=[{x:58,y:262,pose:['jab','cross'],what:'샌드백'},{x:58,y:330,pose:['jab','cross'],what:'샌드백'},{x:58,y:395,pose:['cross','jab'],what:'샌드백'},
+  {x:150,y:140,pose:['guard','jab','duck'],what:'쉐도우'},{x:205,y:110,pose:['jab','block','duck'],what:'쉐도우'},{x:190,y:170,pose:['guard','cross'],what:'쉐도우'},
+  {x:296,y:300,pose:['jump'],what:'줄넘기'},{x:318,y:330,pose:['jump'],what:'줄넘기'},{x:290,y:440,pose:['idle'],what:'휴식'},{x:312,y:442,pose:['idle'],what:'휴식'},{x:210,y:380,pose:['guard','jab'],what:'스트레칭'}];
+function syncOthers(dt){W.others=W.others||{};const pres=livePresent();const ids=new Set();
+  pres.forEach(([id,v])=>{if(ME&&id===ME.id)return;ids.add(id);let o=W.others[id];
+    if(!o){const fresh=Date.now()-v.at<90000;const s=fresh?null:pick(SPOTS);o=W.others[id]={id,x:fresh?180:s.x,y:fresh?528:s.y,tx:fresh?180:s.x,ty:fresh?480:s.y,eq:v.eq||{char:'boxer'},nick:v.nick||'회원',lv:v.lv||1,at:v.at,stay:fresh?0:rnd(2,8),spot:s,t:Math.random()*5};if(fresh){floatTxt(180,500,(v.nick||'회원')+' 입장!');sfx('coin')}}
+    o.eq=v.eq||o.eq;o.at=v.at;o.lv=v.lv||o.lv});
+  Object.keys(W.others).forEach(id=>{if(!ids.has(id)){const o=W.others[id];if(!o.leaving){o.leaving=true;o.tx=180;o.ty=530}}});
+  Object.values(W.others).forEach(o=>{o.t+=dt;if(o.enter>0)o.enter-=dt;const d=Math.hypot(o.tx-o.x,o.ty-o.y);o.moving=d>1.5;
+    if(o.moving){const sp=45*dt;o.x+=(o.tx-o.x)/d*Math.min(sp,d);o.y+=(o.ty-o.y)/d*Math.min(sp,d);o.flip=o.tx<o.x}
+    else if(o.leaving){delete W.others[o.id]}
+    else{o.stay-=dt;if(o.stay<=0){const used=new Set(Object.values(W.others).filter(x=>x!==o&&x.spot).map(x=>x.spot));const free=SPOTS.filter(s=>!used.has(s));o.spot=pick(free.length?free:SPOTS);o.tx=o.spot.x+rnd(-6,6);o.ty=o.spot.y+rnd(-4,4);o.stay=rnd(7,15)}}})}
+function othersEnts(c,t){return Object.values(W.others||{}).map(o=>({y:o.y,d:()=>{
+  let pose='idle',yo=0;if(!o.moving&&o.spot){const ps=o.spot.pose;const pp=ps[Math.floor((o.t*1.6))%ps.length];if(pp==='jump'){yo=-Math.abs(Math.sin(o.t*7))*5}else pose=pp}
+  c.globalAlpha=o.leaving?.6:1;drawChar(c,o.x,o.y+yo,1,o.eq,{t:o.t,moving:o.moving,flip:o.spot&&o.spot.x<120&&!o.moving?true:o.flip,pose,noFx:true});c.globalAlpha=1;
+  if(yo){c.strokeStyle='#D9343A';c.lineWidth=1.2;c.beginPath();c.ellipse(o.x,o.y-20+yo,13,24,0,0,7);c.stroke()}
+  c.font='9px sans-serif';const nm=o.nick+' Lv.'+o.lv;const tw=c.measureText(nm).width+10;c.fillStyle='rgba(255,255,255,.92)';rr(c,o.x-tw/2,o.y-54,tw,13,6);c.fill();c.fillStyle='#2F2F2F';c.fillText(nm,o.x,o.y-47)}}))}
+function drawLiveBadge(c){const n=Object.values(W.others||{}).filter(o=>!o.leaving).length+(ME&&ME.inAt&&Date.now()-ME.inAt<stayMin()*60000&&ME.last===TODAY()?1:0);
+  const txt=n?`지금 체육관 ${n}명`:'지금 체육관 0명';c.font='11px "Black Han Sans",sans-serif';const w=c.measureText(txt).width+26;
+  c.fillStyle=n?'rgba(43,155,102,.95)':'rgba(47,47,47,.8)';rr(c,8,74,w,20,10);c.fill();circ(c,19,84,3.5,n?`rgba(255,255,255,${.6+.4*Math.sin(W.t*4)})`:'#9A9BA0');c.fillStyle='#fff';c.textAlign='left';c.fillText(txt,27,84.5);c.textAlign='center'}
+function hitOther(x,y){return Object.values(W.others||{}).find(o=>Math.hypot(o.x-x,o.y-20-y)<18)}
+function showOther(o){const m=Math.round((Date.now()-o.at)/60000);floatTxt(o.x,o.y-30,`${o.nick} · ${m<1?'방금':m+'분 전'} 입장`)}
 
 /* ================= 공지 · 자동 알림 ================= */
 const NKIND={normal:'일반',imp:'중요',closed:'휴무'};
@@ -1678,10 +1714,11 @@ function openNoticeDetail(id,all){const n=noticesAll().find(x=>x.id===id);if(!n)
   })}
 function renderAutoCfg(){const A=autoCfg();
   $('#nvAutoRows').innerHTML=AUTO_DEF.map(([k,n,d])=>`<label class="autorow"><input type="checkbox" data-ak="${k}" ${A[k]?'checked':''}><span class="grow"><b>${n}</b><span class="small" style="display:block">${d}</span>${k==='exp'?`<select id="akDays" style="margin-top:6px;border:2px solid var(--line);border-radius:10px;padding:6px">${[3,5,7,10,14].map(x=>`<option value="${x}" ${+A.expDays===x?'selected':''}>종료 ${x}일 전부터</option>`).join('')}</select>`:''}</span></label>`).join('')+
+    `<label class="autorow"><input type="checkbox" checked disabled><span class="grow"><b>NNN WORLD 실시간 체육관</b><span class="small" style="display:block">출석하면 그 회원 캐릭터가 월드 맵에 나타나 운동해요. 출석 후 <select id="akStay" style="border:2px solid var(--line);border-radius:10px;padding:4px">${[60,90,120,150,180].map(x=>`<option value="${x}" ${stayMin()===x?'selected':''}>${x%60?(x/60).toFixed(1):x/60}시간</option>`).join('')}</select> 동안 보여요.</span></span></label>`+
     `<label class="autorow"><input type="checkbox" checked disabled><span class="grow"><b>공지 · 휴무 팝업</b><span class="small" style="display:block">공지 탭에서 올린 공지는 항상 떠요. 휴무 기본 팝업 시작: <select id="akLead" style="border:2px solid var(--line);border-radius:10px;padding:4px">${[3,5,7,10,14].map(x=>`<option value="${x}" ${+A.closedLead===x?'selected':''}>${x}일 전</option>`).join('')}</select></span></span></label>`}
 $('#noticeBtn').onclick=openNoticeAdmin;$('#nvBack').onclick=()=>{show('v-admin');renderNoticeNow()};$('#nvNew').onclick=()=>openNoticeEditor(null);$('#nvTpl').onclick=()=>openTplEditor();
 $$('#nvTabs [data-nt]').forEach(b=>b.onclick=()=>nvTab(b.dataset.nt));
-$('#nvAutoSave').onclick=async()=>{const o={};$$('#nvAutoRows [data-ak]').forEach(c=>o[c.dataset.ak]=c.checked);o.expDays=+$('#akDays').value;o.closedLead=+$('#akLead').value;local.meta.autoPop=o;if(await DB.saveMeta())toast('자동 알림 설정을 저장했어요')};
+$('#nvAutoSave').onclick=async()=>{const o={};$$('#nvAutoRows [data-ak]').forEach(c=>o[c.dataset.ak]=c.checked);o.expDays=+$('#akDays').value;o.closedLead=+$('#akLead').value;local.meta.autoPop=o;local.meta.stayMin=+$('#akStay').value;if(await DB.saveMeta())toast('자동 알림 설정을 저장했어요')};
 
 /* ================= 코치 ================= */
 const COACH={
@@ -1704,10 +1741,10 @@ $('#coachAdd').onclick=async()=>{const n=$('#coachName').value.trim();if(!n){toa
   sheet(`<h2>${esc(n)} 코치 계정</h2><div style="text-align:center;font-family:var(--display);font-size:48px;letter-spacing:.15em" class="num">${code}</div><p class="small" style="margin:0">코치에게 이 6자리 코드를 알려 주세요.<br>코치 폰: NNN WORLD → 처음 화면 아래 <b>코치</b> → 코드 입력</p><button class="btn" id="cCopy">안내 문구 복사</button><button class="btn ghost" data-close>닫기</button>`,el=>{el.querySelector('#cCopy').onclick=()=>copyText(`[NNN 복싱 코치 계정]\n${appBase()}\n처음 화면 아래 '코치' → 코드 ${code}`,'안내를')})};
 $('#goCoach').onclick=()=>{sheet(`<h2>코치 로그인</h2><div class="field"><label for="ccIn">코치 코드 (6자리)</label><input id="ccIn" inputmode="numeric" maxlength="6" type="password"></div><button class="btn red" id="ccOk">들어가기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
   const inp=el.querySelector('#ccIn');setTimeout(()=>inp.focus(),50);
-  const go=async()=>{const r=await COACH.login(inp.value.trim());if(r&&(await COACH.check())){lsSet('nnn_coach',1);close();openCoach()}else{toast('코치 코드가 맞지 않아요');inp.value=''}};
+  const go=async()=>{const r=await COACH.login(inp.value.trim());if(r&&(await COACH.check())){lsSet('nnn_coach',1);close();openCoachMode()}else{toast('코치 코드가 맞지 않아요');inp.value=''}};
   el.querySelector('#ccOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})};
 let CO={day:null,all:[],ros:{}};
-async function openCoach(){const ros=await COACH.roster();if(ros==null){try{localStorage.removeItem('nnn_coach')}catch(e){}toast('코치 계정이 해제됐어요. 관장님께 코드를 다시 받아 주세요',4000);show('v-home');return}
+async function openCoachMode(){const ros=await COACH.roster();if(ros==null){try{localStorage.removeItem('nnn_coach')}catch(e){}toast('코치 계정이 해제됐어요. 관장님께 코드를 다시 받아 주세요',4000);show('v-home');return}
   CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');renderCoach()}
 const faceCache={};
 function faceInto(el,id){if(!el)return;if(faceCache[id]!==undefined){el.innerHTML=faceCache[id]?`<img src="${faceCache[id]}" alt="">`:'사진 없음';return}FDB.get(id).then(s=>{faceCache[id]=s||'';el.innerHTML=s?`<img src="${s}" alt="">`:'사진 없음'})}
@@ -1748,7 +1785,8 @@ async function applyAttend(m,makeup,via){
   const rnotes=await referralOnAttend(m);if(rnotes.length)txt+=' · '+rnotes.join(' · ');
   const bs=checkBadges(m);const lvAfter=levelOf(m);if(lvAfter.lv>lvBefore)txt+=` · 레벨 업! Lv.${lvAfter.lv} ${lvAfter.title}`;
   if(via==='qr')m.qrAtt=(m.qrAtt||[]).concat([TODAY()]).slice(-60);
-  await DB.save(m);if(ME&&ME.id===m.id)ME=m;
+  m.inAt=Date.now();
+  await DB.save(m);if(ME&&ME.id===m.id)ME=m;liveCheckIn(m);
   return{base,bonus,item,txt,bs}}
 let padTokTimer=0,padPoll=0,padSeen=null;
 const newTok=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
@@ -1781,7 +1819,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -1828,7 +1866,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     el.querySelector('#admDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (되돌릴 수 없어요)';return}if(await deleteMember(m)){close();renderAdmRows()}};
     el.querySelector('#admVcf').onclick=()=>download(`NNN_${m.id}_${m.name}.vcf`,vcard(m),'text/vcard')});
 }
-async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');checkBadges(m);await DB.save(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
+async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');checkBadges(m);m.inAt=Date.now();await DB.save(m);liveCheckIn(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
 function vcard(m){return`BEGIN:VCARD\nVERSION:3.0\nFN:NNN ${m.name}(${m.id})\nN:${m.name};;;;\nTEL;TYPE=CELL:${m.phone}\nNOTE:NNN복싱 회원번호 ${m.id} / 가입 ${m.joined}\nEND:VCARD\n`}
 $('#expVcf').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);if(!all.length){toast('내보낼 회원이 없어요');return}download('NNN_회원연락처_'+TODAY()+'.vcf',all.map(vcard).join(''),'text/vcard')};
 $('#expCsv').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);const rows=[['회원번호','이름','연락처','생년월일','성별','목적','경력','유입','참고사항','마케팅수신','가입일','총출석','최근출석','크레딧']].concat(all.map(m=>[m.id,m.name,m.phone,m.birth,m.gender,m.goal.join('/'),m.exp,m.path,m.note,m.agreeMkt?'Y':'N',m.joined,m.attend.length,m.last,m.credits]));
@@ -2973,7 +3011,7 @@ $('#tplBtn').onclick=openTplEditor;
   if(new URLSearchParams(location.search).get('join')){try{history.replaceState(null,'',location.pathname+(getRef()?'?ref='+getRef():''))}catch(e){}buildJoin();show('v-join');return}
   {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
-  if(lsGet('nnn_coach')&&!sid){openCoach();return}
+  if(lsGet('nnn_coach')&&!sid){openCoachMode();return}
   if(hashv==='pad'){pinSheet('출석패드 모드 시작',openPad);show('v-home');return}
   if(sid){const m=await DB.get(sid);if(m){ME=m;enterWorld();return}}
   show('v-home');
