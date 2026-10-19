@@ -222,6 +222,46 @@ body.tvmode .app{max-width:none;padding:0}
 .mapwrap{position:relative;border-radius:6px;overflow:hidden;border:3px solid var(--ink);background:#C9A274}
 #map{display:block;width:100%;touch-action:manipulation}
 .hint{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(29,36,51,.86);color:#fff;border-radius:12px;padding:8px 12px;font-size:13px;pointer-events:none;transition:opacity .4s}
+.misrow{display:flex;gap:8px;margin-bottom:8px}
+.misbtn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:8px 12px;text-align:left;color:var(--ink)}
+.misbtn .mt{font-family:var(--display);font-size:15px;line-height:1.2}
+.misbtn .ms{font-size:12px;color:#6B6E76;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.misbtn .mbar{height:5px;background:var(--mat);border-radius:9px;overflow:hidden;margin-top:4px}.misbtn .mbar i{display:block;height:100%;background:var(--green)}
+.misbtn .mn{font-family:var(--display);font-size:18px;white-space:nowrap}
+.misbtn.done{border-color:var(--green);background:#EEF9F2}
+.bellbtn{flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--ink);color:#fff;border:0;border-radius:14px;font-family:var(--display);font-size:13px}
+.bellbtn svg{width:24px;height:24px}
+.bellbtn.on{background:var(--green)}
+.misitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.misitem input{width:22px;height:22px;flex:0 0 auto;accent-color:var(--green)}
+.misitem.ck{background:#EEF9F2;border-color:#9ED6B8}.misitem.ck .mx{text-decoration:line-through;color:#6B6E76}
+.misitem .mx{flex:1}
+#bellRoot{position:fixed;inset:0;z-index:80;background:#14171F;color:#fff;display:flex;flex-direction:column;overflow-y:auto;-webkit-user-select:none;user-select:none}
+#bellRoot .bhd{display:flex;align-items:center;gap:8px;padding:14px 16px 4px}
+#bellRoot .bhd b{font-family:var(--display);font-size:20px;flex:1}
+#bellRoot .bx{background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:10px;padding:8px 12px;font-size:14px}
+#bellRoot .bface{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 16px;gap:4px;min-height:330px}
+#bellRoot .bph{font-family:var(--display);font-size:26px;letter-spacing:2px}
+#bellRoot .bclock{position:relative;width:min(78vw,330px);aspect-ratio:1}
+#bellRoot .bclock svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#bellRoot .btime{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#bellRoot .btime .btt{font-family:var(--display);font-size:clamp(64px,22vw,104px);line-height:1;font-variant-numeric:tabular-nums}
+#bellRoot .btime .rd{font-family:var(--display);font-size:18px;opacity:.85;margin-top:6px}
+#bellRoot .bnext{font-size:14px;opacity:.75;min-height:20px}
+#bellRoot .bctl{display:flex;gap:10px;padding:8px 16px}
+#bellRoot .bctl button{flex:1;border:0;border-radius:16px;padding:16px 0;font-family:var(--display);font-size:20px}
+#bellRoot .bgo{background:var(--green);color:#fff}#bellRoot .bgo.pause{background:var(--gold);color:#2F2F2F}
+#bellRoot .bsec{background:rgba(255,255,255,.14);color:#fff}
+#bellRoot .bset{padding:6px 16px 20px;display:flex;flex-direction:column;gap:10px}
+#bellRoot .bpre{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+#bellRoot .bpre button{flex:0 0 auto;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:999px;padding:7px 12px;font-size:13px}
+#bellRoot .bpre button.on{background:#fff;color:#14171F;border-color:#fff}
+#bellRoot .bstep{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:12px;padding:6px 8px 6px 14px}
+#bellRoot .bstep span{flex:1;font-size:14px}
+#bellRoot .bstep b{font-family:var(--display);font-size:20px;min-width:66px;text-align:center;font-variant-numeric:tabular-nums}
+#bellRoot .bstep button{width:44px;height:40px;border:0;border-radius:10px;background:rgba(255,255,255,.16);color:#fff;font-size:22px;font-weight:700}
+#bellRoot .btot{font-size:13px;opacity:.7;text-align:center}
+#bellRoot.ph-work{background:#0F3D26}#bellRoot.ph-rest{background:#4A1418}#bellRoot.ph-prep{background:#3D3208}#bellRoot.ph-warn{background:#5A4A06}#bellRoot.ph-done{background:#1D2433}
 .questbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
 .qmini{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:13px;display:flex;gap:6px;align-items:center}
 .qmini.done{background:#E3F4EA;border-color:#A9DDBF}
@@ -449,6 +489,7 @@ body.tvmode .app{max-width:none;padding:0}
     <div data-face style="margin-bottom:10px"></div>
     <div data-mem style="margin-bottom:10px"></div>
     <div class="bring" data-bring hidden style="margin-bottom:10px"></div>
+    <div class="misrow"><button class="misbtn" id="misBtn"></button><button class="bellbtn" id="bellBtn" aria-label="복싱 타임벨"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15V11a6 6 0 0 1 12 0v4l1.5 2.5h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/></svg><span id="bellLbl">타임벨</span></button></div>
     <div class="questbar" id="qbar"></div>
     <div class="mapwrap" style="margin-top:10px">
       <canvas id="map"></canvas>
@@ -666,6 +707,18 @@ body.tvmode .app{max-width:none;padding:0}
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
+  </div>
+  <div class="card" data-atab="ops" id="misAdm" style="display:flex;flex-direction:column;gap:8px">
+    <h3 style="font-size:20px">오늘의 미션 · 운동 루틴</h3>
+    <p class="small" style="margin:0">회원이 출석하면 맵에서 오늘 루틴이 뜨고, 다 체크하면 크레딧을 받아요. <b>3분 × 3R</b>, <b>30초 × 6R</b>처럼 적으면 회원 화면에 타이머 버튼이 생겨 타임벨이 그 설정으로 켜져요.</p>
+    <div class="field"><label for="maSel">요일 / 날짜</label><select id="maSel"></select></div>
+    <div class="field" id="maDateF" hidden><label for="maDate">날짜</label><input type="date" id="maDate"></div>
+    <div class="small" id="maHint"></div>
+    <div class="field"><label for="maTitle">루틴 이름 <span class="small">(예: 기본기 데이)</span></label><input id="maTitle" maxlength="30"></div>
+    <div class="field"><label for="maItems">미션 · 한 줄에 하나 <span class="small">(최대 12개)</span></label><textarea id="maItems" rows="6" placeholder="줄넘기 3분 × 3R&#10;샌드백 3분 × 3R&#10;플랭크 1분 × 3세트"></textarea></div>
+    <div class="field"><label for="maReward">전부 완료 보상 크레딧 <span class="small">(모든 요일 공통)</span></label><input id="maReward" type="number" min="0" max="200" inputmode="numeric"></div>
+    <div class="row" style="gap:8px"><button class="btn red" id="maSave" style="flex:1">저장</button><button class="btn ghost sm" id="maReset">예시 불러오기</button><button class="btn ghost sm" id="maPrev">미리보기</button></div>
+    <div id="maDates" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
   <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:8px">
     <h3 style="font-size:20px">게스트 둘러보기 내용</h3>
@@ -1240,7 +1293,7 @@ function refreshTop(){
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
   avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});
   renderBring();renderMemCard();renderFaceCard();$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`;
-  renderQbar();
+  renderQbar();renderMisCard();
 }
 function questState(){const qs=todaysQuests(ME.id);const d=fixDay(ME);return qs.map(q=>({...q,cur:Math.min(q.n,d.prog[q.k]||0),claimed:d.claimed.includes(q.k)}))}
 function renderQbar(){const qs=questState();$('#qbar').innerHTML=qs.map(q=>`<button class="qmini${q.claimed?' done':''}" data-q="1"><span>${esc(q.txt)}</span><b class="num">${q.claimed?'완료':q.cur+'/'+q.n}</b></button>`).join('');$$('#qbar [data-q]').forEach(b=>b.onclick=openCoach)}
@@ -1261,7 +1314,9 @@ const ST=[
   {id:'tt',x:84,y:30,label:'시간표',r:22,ly:56,go:62},
   {id:'mirror',x:309,y:30,label:'거울 셀카',r:26,ly:56,go:62},
   {id:'counter',x:58,y:458,label:'카운터 · 결제',r:32,ly:418,go:490},
-  {id:'pad',x:180,y:492,label:'출석패드',r:26,ly:452}
+  {id:'pad',x:180,y:492,label:'출석패드',r:26,ly:452},
+  {id:'mis',x:50,y:136,label:'오늘의 미션',r:30,ly:176,go:186},
+  {id:'bell',x:314,y:104,label:'타임벨',r:30,ly:146,go:178}
 ];
 const W={running:false,raf:0,t:0,p:{x:180,y:440,tx:180,ty:440,flip:false},target:null,animals:[],coins:[],candies:[],coach:{x:262,y:226,tx:262,ty:226},bagSwing:[0,0,0],spawnT:0,coinT:0,lastTs:0,float:[]};
 function mapCtx(){const cv=$('#map');const w=cv.clientWidth||340;const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=w*dpr;cv.height=w*(MH/MW)*dpr;cv.style.height=w*(MH/MW)+'px';const c=cv.getContext('2d');c.setTransform(cv.width/MW,0,0,cv.width/MW,0,0);return c}
@@ -1282,7 +1337,13 @@ function reviveWorld(){if(!mapVisible())return;cancelAnimationFrame(W.raf);W.run
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(reviveWorld,120)});
 window.addEventListener('pageshow',()=>setTimeout(reviveWorld,120));
 setInterval(()=>{if(mapVisible()&&(!W.running||performance.now()-W.lastTs>1500))reviveWorld()},1500);
-{const mc=$('#map');mc.addEventListener('contextlost',e=>{e.preventDefault()});mc.addEventListener('contextrestored',()=>reviveWorld())}
+function bindMapCanvas(mc){mc.addEventListener('contextlost',e=>{e.preventDefault();setTimeout(()=>{if(MC&&MC.isContextLost&&MC.isContextLost()){freshMapCanvas();reviveWorld()}},400)});mc.addEventListener('contextrestored',()=>reviveWorld())}
+bindMapCanvas($('#map'));
+function freshMapCanvas(){const old=$('#map');const n=document.createElement('canvas');n.id='map';old.replaceWith(n);bindMapCanvas(n);W.fresh=(W.fresh||0)+1}
+/* 캔버스가 투명해졌는지 1px 확인 (바닥이 항상 꽉 칠해지므로 투명 = 그리기 실패) */
+function mapBlank(){if(!MC)return false;try{const cv=$('#map');if(MC.canvas!==cv)return true;if(MC.isContextLost&&MC.isContextLost())return true;if(!cv||!cv.width||!cv.height)return true;const d=MC.getImageData(1,cv.height-3,1,1).data;return d[3]===0}catch(e){return false}}
+setInterval(()=>{if(!mapVisible()||!W.running||performance.now()-W.lastTs>1500){W.bad=0;return}
+  if(mapBlank()){W.bad=(W.bad||0)+1;if(W.bad===1){reviveWorld()}else if(W.bad>=2){W.bad=0;freshMapCanvas();reviveWorld()}}else W.bad=0},1200);
 function updWorld(dt){
   const p=W.p,dx=p.tx-p.x,dy=p.ty-p.y,dist=Math.hypot(dx,dy);
   p.moving=dist>2;if(p.moving){const sp=120*dt;p.x+=dx/dist*Math.min(sp,dist);p.y+=dy/dist*Math.min(sp,dist);p.flip=dx<0}
@@ -1326,6 +1387,16 @@ function drawWorld(c){
   c.strokeStyle='#D9343A';c.lineWidth=2;c.beginPath();c.ellipse(320,338,9,5,0,0,7);c.stroke();c.beginPath();c.ellipse(320,338,6,3,0,0,7);c.stroke();
   // 출입구 매트
   c.fillStyle='#4A5470';rr(c,140,516,80,20,6);c.fill();c.fillStyle='#fff';c.font='10px sans-serif';c.fillText('WELCOME',180,527);
+  // 오늘의 미션 보드
+  c.fillStyle='#6B4A2B';c.fillRect(24,150,3,18);c.fillRect(73,150,3,18);
+  c.fillStyle='#fff';rr(c,18,108,64,46,4);c.fill();c.strokeStyle='#8A8D96';c.lineWidth=1.5;rr(c,18,108,64,46,4);c.stroke();
+  c.fillStyle='#2E5AAC';c.font='8px "Black Han Sans",sans-serif';c.fillText('TODAY',50,117);
+  {const mi=(typeof misToday==='function'&&ME)?misToday():null,nI=mi?Math.min(4,mi.items.length):3,ck=(ME&&ME.day&&ME.day.d===TODAY()&&ME.day.mis)||[];for(let i=0;i<nI;i++){const yy=125+i*7.2;c.strokeStyle='#2F2F2F';c.lineWidth=.8;c.strokeRect(24,yy-2.5,4.5,4.5);if(ck.includes(i)){c.strokeStyle='#2B9B66';c.lineWidth=1.4;c.beginPath();c.moveTo(24.5,yy);c.lineTo(26,yy+1.6);c.lineTo(29,yy-3);c.stroke()}c.fillStyle='#B9BAC0';c.fillRect(32,yy-1,38-i*5,2)}}
+  // 타임벨
+  c.fillStyle='#4A4D55';c.fillRect(312,116,4,22);ell(c,314,138,12,3,'#2F2F2F');
+  c.fillStyle='#1D2433';rr(c,286,86,56,32,5);c.fill();
+  {const bs=(typeof bellMini==='function')?bellMini():null;c.fillStyle=bs?bs.col:'#3A0C0E';rr(c,290,92,48,20,3);c.fill();c.fillStyle=bs?'#fff':'#FF4A4A';c.font='15px "Black Han Sans",sans-serif';c.fillText(bs?bs.txt:'3:00',314,103)}
+  ell(c,314,82,7,5.5,'#E9A91F');c.fillStyle='#B07A08';c.fillRect(312.5,76,3,3);
   // 할로윈 장식
   if(HW){[[20,520],[340,520],[96,214],[264,214]].forEach(([x,y],i)=>{ell(c,x,y-6,9,7,'#F08A24');c.fillStyle='#3E8A2E';c.fillRect(x-1,y-15,2,4);tri(c,[x-5,y-8],[x-2,y-8],[x-3.5,y-11],'#2B1A0C');tri(c,[x+5,y-8],[x+2,y-8],[x+3.5,y-11],'#2B1A0C');c.globalAlpha=.3+.2*Math.sin(t*4+i);circ(c,x,y-6,4,'#FFE58A');c.globalAlpha=1})}
 
@@ -1358,7 +1429,7 @@ function drawWorld(c){
   // 떠오르는 글자
   W.float.forEach(f=>{c.globalAlpha=Math.min(1,f.life*1.5);c.fillStyle='#1D2433';c.font='12px "Black Han Sans",sans-serif';c.fillText(f.txt,f.x,f.y-20-(1.1-f.life)*24);c.globalAlpha=1});
 }
-$('#map').addEventListener('click',e=>{
+$('.mapwrap').addEventListener('click',e=>{if(e.target.id!=='map')return;
   const cv=$('#map'),r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*MW/r.width,y=(e.clientY-r.top)*MH/r.height;
   $('#mapHint').style.opacity=0;
   {const ho=hitOther(x,y);if(ho){showOther(ho);return}}
@@ -1374,7 +1445,7 @@ $('#map').addEventListener('click',e=>{
 });
 function go(x,y,tg){W.p.tx=clamp(x,12,348);W.p.ty=clamp(y,54,526);W.target=tg}
 function interact(tg){
-  if(tg.type==='st'){({ring:openRing,bag:()=>openGame('bag'),rope:()=>openGame('rope'),rest:openRest,notice:openNotice,pad:openPadInfo,tt:openTimetable,counter:openPay,mirror:openShotUpload})[tg.id]()}
+  if(tg.type==='st'){({ring:openRing,bag:()=>openGame('bag'),rope:()=>openGame('rope'),rest:openRest,notice:openNotice,pad:openPadInfo,tt:openTimetable,counter:openPay,mirror:openShotUpload,mis:openMission,bell:openBell})[tg.id]()}
   if(tg.type==='coach')openCoach();
   if(tg.type==='animal')openAnimal(tg.a);
 }
@@ -1387,11 +1458,11 @@ function openPadInfo(){sheet(`<h2>출석패드</h2><p style="margin:0">체육관
 function openCoach(){
   const qs=questState();const all=qs.every(q=>q.claimed);
   sheet(`<div class="row" style="align-items:flex-end"><canvas id="coachAv" width="160" height="180" style="width:80px;height:90px"></canvas><div class="bubble grow">${esc(pick(TIPS))}</div></div>
-    <h2>오늘의 미션</h2><div id="qlist" style="display:flex;flex-direction:column;gap:8px"></div>
-    <p class="small" style="margin:0">미션 하나에 +15, 세 개 다 하면 보너스 +30.</p><button class="btn" data-close>좋아요!</button>`,(el)=>{
+    <h2>오늘의 게임 퀘스트</h2><div id="qlist" style="display:flex;flex-direction:column;gap:8px"></div>
+    <p class="small" style="margin:0">퀘스트 하나에 +15, 세 개 다 하면 보너스 +30.</p><button class="btn" data-close>좋아요!</button>`,(el)=>{
     avatarTo(el.querySelector('#coachAv'),{char:'boxer',glove:'g_black',trunks:'t_black',shoes:'s_black'},{pose:'guard',h:44});
     const draw=()=>{const qs=questState();el.querySelector('#qlist').innerHTML=qs.map(q=>`<div class="qrow"><div class="grow"><div>${esc(q.txt)}</div><div class="bar"><i style="width:${q.cur/q.n*100}%"></i></div></div>${q.claimed?'<span class="pill">완료</span>':`<button class="btn sm ${q.cur>=q.n?'red':'ghost'}" data-k="${q.k}" ${q.cur>=q.n?'':'disabled'}>받기</button>`}</div>`).join('');
-      el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const d=fixDay(ME);d.claimed.push(b.dataset.k);earn(ME,15,'quest');sfx('good');let msg='+15 크레딧';if(questState().every(q=>q.claimed)){earn(ME,30,'quest');msg='미션 올클리어! +45 크레딧'}toast(msg);saveMe();refreshTop();draw()})};draw()});
+      el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const d=fixDay(ME);d.claimed.push(b.dataset.k);earn(ME,15,'quest');sfx('good');let msg='+15 크레딧';if(questState().every(q=>q.claimed)){earn(ME,30,'quest');msg='퀘스트 올클리어! +45 크레딧'}toast(msg);saveMe();refreshTop();draw()})};draw()});
 }
 function openRest(){
   const d=fixDay(ME);const first=!d.rest;
@@ -1417,6 +1488,166 @@ function openAnimal(a){
       W.animals=W.animals.filter(x=>x!==a);saveMe();refreshTop();close()}});
 }
 $('#sndBtn').onclick=()=>{SND=!SND;$('#sndBtn').textContent=SND?'소리 끄기':'소리 켜기';if(SND)sfx('good')};
+
+/* ================= 오늘의 미션 (관장님이 요일·날짜별로 편집) ================= */
+const WD=['일','월','화','수','목','금','토'];
+const DEFAULT_MIS={
+  1:{title:'기본기 데이',items:['줄넘기 3분 × 3R','쉐도우 3분 × 2R (원투 집중)','샌드백 3분 × 3R','플랭크 1분 × 3세트']},
+  2:{title:'콤비네이션 데이',items:['줄넘기 3분 × 3R','미트 원투-훅 3분 × 3R','샌드백 3분 × 4R','스쿼트 20개 × 3세트']},
+  3:{title:'체력 서킷',items:['줄넘기 2단뛰기 50개','버피 15개 × 3세트','샌드백 러시 30초 × 6R','크런치 30개 × 3세트']},
+  4:{title:'디펜스 데이',items:['줄넘기 3분 × 3R','위빙·더킹 쉐도우 3분 × 3R','샌드백 3분 × 3R','스트레칭 5분']},
+  5:{title:'실전 데이',items:['줄넘기 3분 × 3R','쉐도우 3분 × 2R','매스 스파링 2분 × 3R (희망자)','쿨다운 스트레칭 5분']},
+  6:{title:'자유 운동',items:['줄넘기 3분 × 3R','하고 싶은 운동 30분','스트레칭 5분']},
+  0:{title:'홈트 데이',items:['집에서 쉐도우 3분 × 3R','스쿼트 20개 × 3세트','푸시업 15개 × 3세트']}};
+function misCfg(){return local.meta.missions||{}}
+function misReward(){const r=+misCfg().reward;return r>=0&&misCfg().reward!==undefined?Math.min(200,r):30}
+function misFor(dstr){const C=misCfg();const dt=new Date(dstr+'T12:00:00');const wd=dt.getDay();
+  const o=(C.dates||{})[dstr]||(C.days||{})[wd]||DEFAULT_MIS[wd]||{title:'',items:[]};
+  return {title:o.title||'',items:(o.items||[]).filter(Boolean),special:!!(C.dates||{})[dstr],wd}}
+function misToday(){return misFor(TODAY())}
+function misState(){const d=fixDay(ME);d.mis=d.mis||[];return d}
+function misCanCheck(){return !!(ME&&!isGuest()&&ME.last===TODAY())}
+/* "3분 × 3R", "30초 × 6R" 같은 항목은 타임벨 설정으로 바로 연결 */
+function misBellCfg(s){const m=String(s).match(/(\d+)\s*(분|초)[^\d]*?(\d+)\s*(R|라운드)/i);if(!m)return null;const work=m[2]==='분'?+m[1]*60:+m[1];if(!work||work>1800)return null;const rounds=Math.min(30,+m[3]);return {work,rounds,rest:work<=60?Math.max(10,Math.round(work/2)):60}}
+function renderMisCard(){const b=$('#misBtn');if(!b||!ME)return;const mi=misToday();
+  if(!mi.items.length){b.className='misbtn';b.innerHTML=`<div class="grow" style="min-width:0"><div class="mt">오늘의 미션</div><div class="ms">오늘은 정해진 루틴이 없어요 · 자유 운동!</div></div>`;b.onclick=openMission}
+  else{const d=misState();const n=d.mis.filter(i=>i<mi.items.length).length,N=mi.items.length;const done=n>=N;
+    b.className='misbtn'+(done?' done':'');
+    b.innerHTML=`<div class="grow" style="min-width:0"><div class="mt">오늘의 미션 · ${esc(WD[mi.wd])}요일${mi.title?' '+esc(mi.title):''}</div><div class="ms">${done?'오늘 루틴 완료! 수고했어요':misCanCheck()?esc(mi.items[d.mis.length<N?[...Array(N).keys()].find(i=>!d.mis.includes(i)):0]||''):isStaff(ME)||isGuest()?'회원들이 보는 오늘 루틴이에요':'출석하면 체크할 수 있어요'}</div><div class="mbar"><i style="width:${n/N*100}%"></i></div></div><span class="mn num">${n}/${N}</span>`;
+    b.onclick=openMission;
+    // 출석한 날 처음 맵에 들어오면 한 번 자동으로 보여줘요
+    if(misCanCheck()&&!isStaff(ME)&&!d.misPop&&!done&&!$('#sheetRoot').innerHTML&&!$('#v-world').hidden&&!$('#t-map').hidden&&!$('#bellRoot')){d.misPop=1;saveMe();setTimeout(()=>{if(!$('#sheetRoot').innerHTML)openMission()},700)}}
+  const bl=$('#bellBtn');if(bl){bl.onclick=()=>openBell();bl.classList.toggle('on',!!(TB.st&&TB.st!=='idle'&&TB.st!=='done'))}}
+function openMission(){const mi=misToday();const can=misCanCheck();const R0=misReward();
+  sheet(`<h2 style="margin-bottom:0">오늘의 미션</h2><div class="small">${TODAY().slice(5).replace('-','월 ')}일 ${WD[mi.wd]}요일${mi.special?' · 관장님 특별 미션':''}</div>
+    ${mi.title?`<div class="bubble" style="font-family:var(--display);font-size:18px">${esc(mi.title)}</div>`:''}
+    <div id="misList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div id="misFoot"></div>
+    <div class="row" style="gap:8px"><button class="btn ghost" id="misBell" style="flex:1">타임벨 켜기</button><button class="btn" data-close style="flex:1">닫기</button></div>`,(el,close)=>{
+    const draw=()=>{const d=misState();const N=mi.items.length;
+      el.querySelector('#misList').innerHTML=N?mi.items.map((s,i)=>{const ck=d.mis.includes(i);const bc=misBellCfg(s);return `<label class="misitem${ck?' ck':''}"><input type="checkbox" data-i="${i}" ${ck?'checked':''} ${can?'':'disabled'}><span class="mx">${esc(s)}</span>${bc?`<button class="btn sm ghost" data-bi="${i}" type="button" style="flex:0 0 auto">타이머</button>`:''}</label>`}).join(''):'<p class="small" style="margin:0">오늘은 정해진 루틴이 없어요. 하고 싶은 운동을 자유롭게!</p>';
+      const n=d.mis.filter(i=>i<N).length;
+      el.querySelector('#misFoot').innerHTML=!N?'':!can?`<p class="small" style="margin:0">${isGuest()?'가입하고 출석하면 체크하고 크레딧을 받을 수 있어요.':isStaff(ME)?'회원 화면 미리보기예요. 루틴은 관장 메뉴 → 운영 → 오늘의 미션에서 바꿔요.':'체육관 출석패드에서 출석하면 체크할 수 있어요.'}</p>`:d.misDone?`<p class="small" style="margin:0;color:var(--green)"><b>오늘 루틴 완료!</b> +${R0} 크레딧을 받았어요.</p>`:`<p class="small" style="margin:0">${n}/${N} 완료 · 전부 체크하면 <b>+${R0} 크레딧</b></p>`;
+      el.querySelectorAll('[data-i]').forEach(cb=>cb.onchange=()=>{if(!misCanCheck()){cb.checked=false;return}const i=+cb.dataset.i;const d=misState();
+        if(cb.checked){if(!d.mis.includes(i))d.mis.push(i);sfx('good')}else d.mis=d.mis.filter(x=>x!==i);
+        if(!d.misDone&&mi.items.every((_,k)=>d.mis.includes(k))){d.misDone=1;if(R0)earn(ME,R0,'mission');prog(ME,'mission');sfx('win');toast(`오늘 루틴 완료! ${R0?'+'+R0+' 크레딧':'수고했어요'}`,3000)}
+        saveMe();refreshTop();draw()});
+      el.querySelectorAll('[data-bi]').forEach(bb=>bb.onclick=e=>{e.preventDefault();e.stopPropagation();const c=misBellCfg(mi.items[+bb.dataset.bi]);close();openBell(c)})};
+    draw();el.querySelector('#misBell').onclick=()=>{close();openBell()}})}
+
+/* ================= 복싱 타임벨 ================= */
+const TB={st:'idle',round:1,endAt:0,left:0,paused:false,timer:0,warned:false,lastBeep:-1,worked:0,cfg:null,wl:null,ac:null};
+const BELL_PRESETS=[
+  {k:'pro',n:'프로 3분',work:180,rest:60,rounds:12},
+  {k:'am',n:'아마추어 3R',work:180,rest:60,rounds:3},
+  {k:'two',n:'2분 라운드',work:120,rest:60,rounds:6},
+  {k:'diet',n:'다이어트 1분',work:60,rest:30,rounds:10},
+  {k:'tabata',n:'타바타',work:20,rest:10,rounds:8}];
+function bellCfg(){if(!TB.cfg){let c=null;try{c=JSON.parse(localStorage.getItem('nnn_bell')||'null')}catch(e){}TB.cfg=Object.assign({work:180,rest:60,rounds:3,prep:10,warn:10,mute:false},c||{})}return TB.cfg}
+function bellSave(){try{localStorage.setItem('nnn_bell',JSON.stringify(TB.cfg))}catch(e){}}
+const mmss=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+/* 소리: 실제 링 벨처럼 배음이 어긋난 금속 소리 + 10초 전 딱딱이 */
+function bellAC(){try{TB.ac=TB.ac||new (window.AudioContext||window.webkitAudioContext)();if(TB.ac.state==='suspended')TB.ac.resume();return TB.ac}catch(e){return null}}
+function bellDing(times=1){const ac=bellAC();if(!ac||bellCfg().mute)return;const t0=ac.currentTime+.02;
+  for(let k=0;k<times;k++){const st=t0+k*.42;[[1,.5,2.6],[2.76,.28,1.6],[5.4,.16,1],[8.93,.08,.6]].forEach(([r,g,dur])=>{const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.value=620*r;gn.gain.setValueAtTime(0,st);gn.gain.linearRampToValueAtTime(g*.55,st+.004);gn.gain.exponentialRampToValueAtTime(.0005,st+dur);o.connect(gn);gn.connect(ac.destination);o.start(st);o.stop(st+dur+.05)})}}
+function bellClack(times=3){const ac=bellAC();if(!ac||bellCfg().mute)return;const t0=ac.currentTime+.02;
+  for(let k=0;k<times;k++){const st=t0+k*.2;const len=Math.floor(ac.sampleRate*.05);const buf=ac.createBuffer(1,len,ac.sampleRate);const dd=buf.getChannelData(0);for(let i=0;i<len;i++)dd[i]=(Math.random()*2-1)*Math.pow(1-i/len,4);
+    const s=ac.createBufferSource();s.buffer=buf;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;f.Q.value=2.5;const g=ac.createGain();g.gain.value=1.4;s.connect(f);f.connect(g);g.connect(ac.destination);s.start(st)}}
+function bellBeep(hi){const ac=bellAC();if(!ac||bellCfg().mute)return;const st=ac.currentTime+.01;const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=hi?1320:880;g.gain.setValueAtTime(.12,st);g.gain.exponentialRampToValueAtTime(.001,st+.14);o.connect(g);g.connect(ac.destination);o.start(st);o.stop(st+.16)}
+const bellVib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+async function bellWake(on){try{if(on){if(!TB.wl&&navigator.wakeLock)TB.wl=await navigator.wakeLock.request('screen')}else if(TB.wl){await TB.wl.release();TB.wl=null}}catch(e){TB.wl=null}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TB.st!=='idle'&&TB.st!=='done'&&!TB.paused){TB.wl=null;bellWake(true)}});
+function bellDur(st){const c=bellCfg();return st==='prep'?c.prep:st==='work'?c.work:c.rest}
+function bellEnter(st,at){const c=bellCfg();TB.st=st;TB.warned=false;TB.lastBeep=-1;TB.endAt=at+bellDur(st)*1000;
+  if(st==='work'){bellDing(1);bellVib(400)}
+  else if(st==='rest'){bellDing(3);bellVib([200,120,200,120,200])}
+  else if(st==='done'){bellDing(3);bellVib([300,150,300,150,600]);bellWake(false);bellFinish()}}
+function bellStart(){const c=bellCfg();bellAC();TB.round=1;TB.worked=0;TB.paused=false;
+  if(c.prep>0)bellEnter('prep',Date.now());else bellEnter('work',Date.now());
+  bellWake(true);clearInterval(TB.timer);TB.timer=setInterval(bellTick,100);bellTick()}
+function bellTick(){if(TB.paused||TB.st==='idle'||TB.st==='done')return bellRender();const c=bellCfg();let now=Date.now();
+  // 화면이 꺼졌다 켜져도 실제 시간 기준으로 따라잡아요
+  let guard=0;while(now>=TB.endAt&&guard++<200){const at=TB.endAt;
+    if(TB.st==='prep')bellEnter('work',at);
+    else if(TB.st==='work'){TB.worked++;if(TB.round>=c.rounds){bellEnter('done',at);break}else if(c.rest>0)bellEnter('rest',at);else{TB.round++;bellEnter('work',at)}}
+    else if(TB.st==='rest'){TB.round++;bellEnter('work',at)}}
+  if(TB.st==='done')return bellRender();
+  const left=(TB.endAt-now)/1000;TB.left=left;
+  if(TB.st==='work'&&c.warn>0&&!TB.warned&&left<=c.warn&&bellDur('work')>c.warn+2){TB.warned=true;bellClack(3);bellVib(150)}
+  if((TB.st==='rest'||TB.st==='prep')&&left<=3.05&&left>0){const s=Math.ceil(left);if(s!==TB.lastBeep){TB.lastBeep=s;bellBeep(false)}}
+  bellRender()}
+function bellPause(){if(TB.st==='idle'||TB.st==='done')return;if(!TB.paused){TB.paused=true;TB.left=(TB.endAt-Date.now())/1000;bellWake(false)}else{TB.paused=false;TB.endAt=Date.now()+TB.left*1000;bellAC();bellWake(true)}bellRender()}
+function bellStop(){clearInterval(TB.timer);TB.st='idle';TB.paused=false;bellWake(false);bellRender();renderMisCard()}
+function bellSkip(){if(TB.st==='idle'||TB.st==='done')return;if(TB.paused){TB.paused=false}TB.endAt=Date.now();if(TB.st==='work')TB.worked--;bellTick()}
+function bellFinish(){clearInterval(TB.timer);const c=bellCfg();const tot=TB.worked*c.work;renderMisCard();
+  if(ME&&!isGuest()&&!isStaff(ME)&&tot>=360){const d=fixDay(ME);if(!d.bell){d.bell=1;earn(ME,10,'bell');prog(ME,'bell');saveMe();refreshTop();setTimeout(()=>toast('타임벨 완주! +10 크레딧 (하루 1번)',3000),400)}}}
+/* 맵의 타임벨 화면에 진행 상황 표시 */
+function bellMini(){if(!TB.st||TB.st==='idle')return null;if(TB.st==='done')return {txt:'끝!',col:'#2E5AAC'};const left=TB.paused?TB.left:(TB.endAt-Date.now())/1000;
+  return {txt:mmss(left),col:TB.st==='work'?(left<=bellCfg().warn?'#B08A0A':'#1E8A50'):TB.st==='rest'?'#B32A30':'#8A7A10'}}
+function openBell(preset){const c=bellCfg();if(preset&&(TB.st==='idle'||TB.st==='done')){Object.assign(c,preset);bellSave()}
+  let root=$('#bellRoot');if(!root){root=document.createElement('div');root.id='bellRoot';document.body.appendChild(root)}
+  root.innerHTML=`<div class="bhd"><b>복싱 타임벨</b><button class="bx" id="bMute"></button><button class="bx" id="bClose">맵으로</button></div>
+    <div class="bface"><div class="bph" id="bPh">준비 완료</div>
+      <div class="bclock"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="6"/><circle id="bArc" cx="50" cy="50" r="45" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="282.74" stroke-dashoffset="0"/></svg>
+        <div class="btime"><div class="btt num" id="bTime">3:00</div><div class="rd" id="bRd"></div></div></div>
+      <div class="bnext" id="bNext"></div></div>
+    <div class="bctl"><button class="bsec" id="bReset">리셋</button><button class="bgo" id="bGo">시작</button><button class="bsec" id="bSkip">건너뛰기</button></div>
+    <div class="bset" id="bSet"></div>`;
+  root.querySelector('#bClose').onclick=()=>{root.remove();renderMisCard()};
+  root.querySelector('#bMute').onclick=()=>{c.mute=!c.mute;bellSave();bellRender()};
+  root.querySelector('#bGo').onclick=()=>{if(TB.st==='idle'||TB.st==='done')bellStart();else bellPause()};
+  root.querySelector('#bReset').onclick=()=>{bellStop()};
+  root.querySelector('#bSkip').onclick=bellSkip;
+  bellRenderSet();bellRender();renderMisCard()}
+function bellRenderSet(){const el=$('#bellRoot #bSet');if(!el)return;const c=bellCfg();const on=TB.st==='idle'||TB.st==='done';
+  if(!on){el.innerHTML=`<div class="btot">${c.rounds}라운드 · 운동 ${mmss(c.work)} · 휴식 ${mmss(c.rest)} · 10초 전 딱딱이${c.warn?' '+c.warn+'초':' 끔'}</div><div class="btot">화면은 켜진 채로 유지돼요. 리셋을 누르면 설정을 바꿀 수 있어요.</div>`;return}
+  const tot=c.rounds*c.work+(c.rounds-1)*c.rest+c.prep;
+  el.innerHTML=`<div class="bpre">${BELL_PRESETS.map(p=>`<button data-p="${p.k}" class="${p.work===c.work&&p.rest===c.rest&&p.rounds===c.rounds?'on':''}">${p.n}</button>`).join('')}</div>
+    ${[['rounds','라운드',1,30,1,v=>v+'R'],['work','운동 시간',10,600,0,mmss],['rest','휴식 시간',0,300,0,mmss],['prep','준비 시간',0,30,5,v=>v+'초'],['warn','종료 전 딱딱이',0,30,10,v=>v?v+'초 전':'끔']].map(([k,l,mn,mx,stp,f])=>`<div class="bstep"><span>${l}</span><button data-k="${k}" data-d="-1" data-mn="${mn}" data-mx="${mx}" data-s="${stp}" aria-label="${l} 줄이기">−</button><b>${f(c[k])}</b><button data-k="${k}" data-d="1" data-mn="${mn}" data-mx="${mx}" data-s="${stp}" aria-label="${l} 늘리기">+</button></div>`).join('')}
+    <div class="btot">전체 ${mmss(tot)} · 라운드 시작 '땡' · 라운드 끝 '땡땡땡' · 휴식 끝나기 3초 전 삐삐삐</div>`;
+  el.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const p=BELL_PRESETS.find(x=>x.k===b.dataset.p);Object.assign(c,{work:p.work,rest:p.rest,rounds:p.rounds});bellSave();bellRenderSet();bellRender()});
+  el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,d=+b.dataset.d,mn=+b.dataset.mn,mx=+b.dataset.mx;let s=+b.dataset.s;
+    if(!s){const v=c[k];s=(k==='work'||k==='rest')?(d>0?(v<60?5:v<180?15:30):(v<=60?5:v<=180?15:30)):1}
+    c[k]=Math.max(mn,Math.min(mx,c[k]+d*s));if(k==='rest'&&c[k]>0&&c[k]<5)c[k]=d>0?5:0;bellSave();bellRenderSet();bellRender()})}
+function bellRender(){const root=$('#bellRoot');if(!root)return;const c=bellCfg();const st=TB.st;
+  const left=st==='idle'?c.work:st==='done'?0:TB.paused?TB.left:Math.max(0,(TB.endAt-Date.now())/1000);
+  const dur=st==='idle'?c.work:st==='done'?1:bellDur(st);
+  const warn=st==='work'&&c.warn>0&&left<=c.warn;
+  root.className=st==='idle'?'':'ph-'+(warn?'warn':st);
+  const ph={idle:'준비 완료',prep:'준비',work:warn?'마무리!':'운동',rest:'휴식',done:'수고했어요!'}[st];
+  root.querySelector('#bPh').textContent=TB.paused?'일시정지':ph;
+  root.querySelector('#bTime').textContent=st==='done'?'끝':mmss(left);
+  root.querySelector('#bRd').textContent=st==='idle'?`${c.rounds}라운드`:st==='done'?`${TB.worked}라운드 완료`:`ROUND ${TB.round} / ${c.rounds}`;
+  root.querySelector('#bNext').textContent=st==='work'?(TB.round<c.rounds?`다음: 휴식 ${mmss(c.rest)}`:'마지막 라운드!'):st==='rest'?`다음: ${TB.round+1}라운드 ${mmss(c.work)}`:st==='prep'?'곧 1라운드 시작':st==='done'?'물 마시고 스트레칭 잊지 마세요':'';
+  const arc=root.querySelector('#bArc');arc.style.strokeDashoffset=String(282.74*(1-(st==='idle'?1:Math.max(0,Math.min(1,left/dur)))));
+  arc.style.stroke=st==='rest'?'#FF7A80':warn?'#FFD23F':st==='prep'?'#FFE58A':'#5CE0A0';
+  const go=root.querySelector('#bGo');go.textContent=st==='idle'||st==='done'?'시작':TB.paused?'계속':'일시정지';go.classList.toggle('pause',st!=='idle'&&st!=='done'&&!TB.paused);
+  root.querySelector('#bMute').textContent=c.mute?'소리 꺼짐':'소리 켜짐';
+  const want=(st==='idle'||st==='done')?'set':'run';if(root.dataset.mode!==want){root.dataset.mode=want;bellRenderSet()}}
+
+/* 관장 메뉴 → 운영 → 오늘의 미션 */
+let MIS_SEL=String(new Date().getDay());
+function renderMisAdmin(){const box=$('#misAdm');if(!box)return;const C=misCfg();const dates=Object.keys(C.dates||{}).filter(d=>d>=TODAY()).sort();
+  $('#maSel').innerHTML=[1,2,3,4,5,6,0].map(i=>`<option value="${i}">${WD[i]}요일</option>`).join('')+'<option value="date">특정 날짜 (특별 미션)</option>';$('#maSel').value=MIS_SEL;
+  $('#maDateF').hidden=MIS_SEL!=='date';if(MIS_SEL==='date'&&!$('#maDate').value)$('#maDate').value=TODAY();
+  let o;if(MIS_SEL==='date'){const d=$('#maDate').value;o=(C.dates||{})[d]||{title:'',items:[]}}else o=(C.days||{})[MIS_SEL]||DEFAULT_MIS[MIS_SEL];
+  $('#maTitle').value=o.title||'';$('#maItems').value=(o.items||[]).join('\n');$('#maReward').value=misReward();
+  $('#maDates').innerHTML=dates.length?'<div class="label">예약된 특별 미션</div>'+dates.map(d=>`<div class="qrow"><div class="grow"><b class="num">${d.slice(5)}</b> (${WD[new Date(d+'T12:00:00').getDay()]}) ${esc(C.dates[d].title||'')} <span class="small">${C.dates[d].items.length}개</span></div><button class="btn sm ghost" data-md="${d}">수정</button><button class="btn sm ghost" data-mx="${d}">삭제</button></div>`).join(''):'';
+  $$('#maDates [data-md]').forEach(b=>b.onclick=()=>{MIS_SEL='date';$('#maDate').value=b.dataset.md;renderMisAdmin()});
+  $$('#maDates [data-mx]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}const C=misCfg();delete C.dates[b.dataset.mx];local.meta.missions=C;if(await DB.saveMeta())toast('특별 미션을 지웠어요');renderMisAdmin()});
+  const wd=MIS_SEL==='date'?new Date(($('#maDate').value||TODAY())+'T12:00:00').getDay():+MIS_SEL;
+  $('#maHint').textContent=MIS_SEL==='date'?`이 날짜에는 ${WD[wd]}요일 루틴 대신 이 미션이 보여요.`:`매주 ${WD[wd]}요일에 회원들에게 보여요.`}
+$('#maSel').onchange=()=>{MIS_SEL=$('#maSel').value;renderMisAdmin()};
+$('#maDate').onchange=()=>renderMisAdmin();
+$('#maSave').onclick=async()=>{const C=JSON.parse(JSON.stringify(misCfg()));C.days=C.days||{};C.dates=C.dates||{};
+  const items=$('#maItems').value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,12);const title=$('#maTitle').value.trim().slice(0,30);
+  const rw=Math.max(0,Math.min(200,Math.round(+$('#maReward').value||0)));C.reward=rw;
+  if(MIS_SEL==='date'){const d=$('#maDate').value;if(!d){toast('날짜를 골라 주세요');return}if(!items.length&&!title)delete C.dates[d];else C.dates[d]={title,items}}
+  else C.days[MIS_SEL]={title,items};
+  Object.keys(C.dates).forEach(d=>{if(d<TODAY())delete C.dates[d]});
+  local.meta.missions=C;if(await DB.saveMeta()){toast('오늘의 미션을 저장했어요');renderMisAdmin();if(ME)renderMisCard()}};
+$('#maReset').onclick=()=>{if(MIS_SEL==='date'){$('#maTitle').value='';$('#maItems').value='';return}const o=DEFAULT_MIS[MIS_SEL];$('#maTitle').value=o.title;$('#maItems').value=o.items.join('\n');toast('예시 루틴을 불러왔어요. 저장을 눌러야 적용돼요')};
+$('#maPrev').onclick=()=>{if(!ME){toast('미리보기는 맵에서 볼 수 있어요');return}const d=MIS_SEL==='date'?$('#maDate').value:null;sheet(`<h2>회원 화면 미리보기</h2><div class="bubble" style="font-family:var(--display);font-size:18px">${esc($('#maTitle').value||'(제목 없음)')}</div>${$('#maItems').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>`<label class="misitem"><input type="checkbox" disabled><span class="mx">${esc(s)}</span>${misBellCfg(s)?'<span class="pill">타이머</span>':''}</label>`).join('')}<p class="small" style="margin:0">전부 체크하면 +${Math.round(+$('#maReward').value||0)} 크레딧</p><button class="btn" data-close>닫기</button>`)};
 
 /* ================= 미니게임 ================= */
 let G=null;
@@ -2272,7 +2503,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
