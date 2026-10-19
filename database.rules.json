@@ -117,14 +117,14 @@
    "members": {
     ".read": "auth != null",
     "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())"
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
     }
    },
    "private": {
     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
     "$id": {
-     ".read": "auth != null && root.child('gym/mdev').child($id).child(auth.uid).exists()",
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())"
+     ".read": "auth != null && (root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
     }
    },
    "pays": {
@@ -200,7 +200,7 @@
    "live": {
     ".read": "auth != null",
     "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
      ".validate": "!newData.exists() || (newData.child('at').isNumber() && newData.child('nick').isString())"
     }
    },

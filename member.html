@@ -537,6 +537,7 @@ body.tvmode .app{max-width:none;padding:0}
 
 <section class="view" id="v-coach" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" id="coachHome">← 처음으로</button><span class="pill" style="background:var(--ink);color:#fff">코치 모드</span><button class="link" id="coachOut">코치 로그아웃</button></div>
+  <button class="btn gold" id="cWorld">내 캐릭터로 NNN WORLD 입장 (꾸미기)</button>
   <div class="atabs" id="ctabs"><button data-ct="work" class="on">내 근태</button><button data-ct="leave">휴가</button><button data-ct="mem">회원 출석</button></div>
   <div id="cvWork" style="display:flex;flex-direction:column;gap:12px">
     <div class="card clock"><div class="small" id="ckDate"></div><div id="ckSched" class="small"></div><div class="ckbig num" id="ckNow"></div><div id="ckState"></div><button class="btn red" id="ckBtn">출근하기</button><div class="small" id="ckLoc"></div></div>
@@ -1195,7 +1196,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();syncOwnerBar();setTimeout(syncOwnerBar,1500);if(isOwner(ME))return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
+async function enterWorld(){fixDay(ME);await DB.meta();startLive();show('v-world');setTab('map');refreshTop();watchMe();syncOwnerBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME))return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -1242,7 +1243,7 @@ function worldLoop(now){
   try{drawWorld(MC)}catch(e){if(!W.errD){W.errD=1;console.error('drawWorld',e)}try{MC=mapCtx()}catch(e2){}}
   if(W.running)W.raf=requestAnimationFrame(worldLoop)}
 /* 맵 자동 복구: 화면 복귀·캔버스 초기화·멈춤 감지 */
-function mapVisible(){return document.visibilityState==='visible'&&!$('#v-world').hidden&&!$('#t-map').hidden&&!G}
+function mapVisible(){return document.visibilityState==='visible'&&!$('#v-world').hidden&&!$('#t-map').hidden&&!G&&!$('#gameRoot').innerHTML}
 function reviveWorld(){if(!mapVisible())return;cancelAnimationFrame(W.raf);W.running=false;MC=mapCtx();startWorld()}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(reviveWorld,120)});
 window.addEventListener('pageshow',()=>setTimeout(reviveWorld,120));
@@ -1585,7 +1586,7 @@ async function renderRank(){
   $$('#rkTabs [data-r]').forEach(b=>b.onclick=()=>{rkMode=b.dataset.r;renderRank()});
   $('#rkList').innerHTML='<div class="small">불러오는 중…</div>';
   const mon=TODAY().slice(0,7);
-  const all=(await DB.all()).filter(m=>m&&m.id&&!isOwner(m));
+  const all=(await DB.all()).filter(m=>m&&m.id&&!isStaff(m));
   const invMap=monthStats(all).inv;const val=m=>rkMode==='skill'?skillOf(m)*1e4+(m.attend||[]).length:rkMode==='sns'?((m.sns||{})[mon]||0):rkMode==='inv'?(invMap[m.id]||0):rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
   const unit={inv:'명',att:'회',lv:'XP',bag:'점',rope:'점',shadow:'점',skill:'',sns:'회'}[rkMode];
   const top=all.sort((a,b)=>val(b)-val(a)).slice(0,20);
@@ -1688,7 +1689,7 @@ function autoInstallNudge(){if(isStandalone())return;let s=null;try{s=localStora
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-instgo]');if(b){e.preventDefault();openInstall()}});
 
 /* ================= 가입 QR 보여 주기 ================= */
-const joinUrl=()=>appBase()+'?join=1'+(ME&&ME.id&&ME.id!=='0000'?'&ref='+ME.id:'');
+const joinUrl=()=>appBase()+'?join=1'+(ME&&ME.id&&ME.id!=='0000'&&!isStaff(ME)?'&ref='+ME.id:'');
 function qrInto(box,text,size){if(!box)return;box.innerHTML='';try{new QRCode(box,{text,width:size,height:size,colorDark:'#1C1C1C',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){box.textContent='QR'}}
 function renderHomeQR(){qrInto($('#homeQR'),appBase()+'?join=1',160)}
 function openShowQR(){const u=joinUrl();const ref=u.includes('ref=');
@@ -1701,6 +1702,8 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 /* ================= 관장 캐릭터 ================= */
 const OWNER_ID='owner';
 const isOwner=m=>!!(m&&(m.owner||m.id===OWNER_ID));
+const isCoachRec=m=>!!(m&&(m.coachRec||/^c\d{6}$/.test(m.id||'')));
+const isStaff=m=>isOwner(m)||isCoachRec(m);
 async function enterOwner(){let m=await DB.get(OWNER_ID);
   if(!m){m=blankMember({name:local.meta.ownerName||'관장',phone:'',char:'boxer'},OWNER_ID);m.owner=true;m.demo=true;m.approvedAt=TODAY();m.credits=99999;m.earned=99999;
     m.owned=[...new Set([...m.owned,...ITEMS.map(i=>i.id)])];m.equip={char:'boxer',glove:'g_winning',head:'',shoes:'s_mizuno',trunks:'t_black',belt:''};
@@ -1710,14 +1713,28 @@ async function enterOwner(){let m=await DB.get(OWNER_ID);
   ME=m;lsSet(LS_SESSION,OWNER_ID);enterWorld()}
 $('#ownerGo').onclick=enterOwner;
 function ownerLiveOn(){const v=(LIVE.data||{})[OWNER_ID];return !!(v&&v.until&&Date.now()<v.until)}
-function syncOwnerBar(){const b=$('#ownerBar');if(!b)return;b.hidden=!isOwner(ME);if(b.hidden)return;const on=ownerLiveOn();
+function syncOwnerBar(){const b=$('#ownerBar');if(!b)return;b.hidden=!isStaff(ME);if(b.hidden)return;
+  if(isCoachRec(ME)){const v=(LIVE.data||{})[ME.id];const on=!!(v&&v.until&&Date.now()<v.until);b.querySelector('b').textContent='코치 모드';$('#ownerSt').textContent=on?'출근 중 · 회원 맵에 보여요':'퇴근 · 출근하면 맵에 나타나요';$('#ownerLive').hidden=true;$('#ownerAdm').textContent='출퇴근 · 근태';return}
+  b.querySelector('b').textContent='관장 모드';$('#ownerLive').hidden=false;$('#ownerAdm').textContent='관장 메뉴';const on=ownerLiveOn();
   $('#ownerSt').textContent=on?'회원 맵에 보이는 중':'회원 맵에 안 보임';$('#ownerLive').textContent=on?'퇴근하기':'체육관 출근';$('#ownerLive').className='btn sm '+(on?'ghost':'red')}
 $('#ownerLive').onclick=async()=>{if(!isOwner(ME))return;const on=ownerLiveOn();
   if(on){if(FB_ON()){try{await gref('live/'+OWNER_ID).set(null)}catch(e){}}else{delete (local.live||{})[OWNER_ID];persist()}toast('퇴근! 맵에서 관장님이 사라져요')}
   else{const end=new Date();end.setHours(23,59,0,0);const v={at:Date.now(),until:end.getTime(),nick:'관장님',eq:ME.equip,lv:10,owner:true};
     if(FB_ON()){try{await gref('live/'+OWNER_ID).set(clean(v))}catch(e){toast('저장하지 못했어요');return}}else{local.live=local.live||{};local.live[OWNER_ID]=v;persist();LIVE.data=local.live}toast('출근! 회원들 맵에 관장님이 나타나요')}
   setTimeout(syncOwnerBar,400)};
-$('#ownerAdm').onclick=()=>pinSheet('관장 메뉴',openAdmin);
+$('#ownerAdm').onclick=()=>{if(isCoachRec(ME)){stopLive();openCoachMode();return}pinSheet('관장 메뉴',openAdmin)};
+
+/* ================= 코치 캐릭터 ================= */
+async function enterCoachWorld(){const code=await myCoachCode();if(!code){toast('코치 정보를 읽지 못했어요. 다시 로그인해 주세요');return}const id='c'+code;
+  let m=await DB.get(id);const st=(await hget('staff/'+code))||{};const nm=st.name||(CW.st&&CW.st.name)||'코치';
+  if(!m){m=blankMember({name:nm,phone:'',char:'boxer'},id);m.coachRec=true;m.demo=true;m.approvedAt=TODAY();m.credits=99999;m.earned=99999;m.owned=[...new Set([...m.owned,...ITEMS.map(i=>i.id)])];m.equip={char:'boxer',glove:'g_blue',head:'',shoes:'s_black',trunks:'t_black',belt:''};
+    await DB.save(m);await DB.savePriv(m);toast('코치 캐릭터를 만들었어요. 장비는 모두 열려 있어요!',3500)}
+  else{let ch=false;const all=ITEMS.map(i=>i.id);if(all.some(x=>!m.owned.includes(x))){m.owned=[...new Set([...m.owned,...all])];ch=true}if(m.name!==nm&&nm!=='코치'){m.name=nm;ch=true}if(ch){await DB.save(m);await DB.savePriv(m)}}
+  ME=m;lsSet(LS_SESSION,id);enterWorld()}
+async function coachLive(on){const code=CW.code||await myCoachCode();if(!code)return;const id='c'+code;
+  if(!on){await hset('live/'+id,null);return}
+  const m=await DB.get(id);const end=new Date();end.setHours(23,59,0,0);const nm=(CW.st&&CW.st.name)||'코치';
+  await hset('live/'+id,{at:Date.now(),until:end.getTime(),nick:nm,eq:(m&&m.equip)||{char:'boxer',glove:'g_blue',trunks:'t_black',shoes:'s_black'},lv:10,coach:true})}
 
 /* ================= 백업 · 복구 ================= */
 const BK_KEEP=30;
@@ -1792,7 +1809,7 @@ const SPOTS=[{x:58,y:262,pose:['jab','cross'],what:'샌드백'},{x:58,y:330,pose
 function syncOthers(dt){W.others=W.others||{};const pres=livePresent();const ids=new Set();
   pres.forEach(([id,v])=>{if(ME&&id===ME.id)return;ids.add(id);let o=W.others[id];
     if(!o){const fresh=Date.now()-v.at<90000;const s=fresh?null:pick(SPOTS);o=W.others[id]={id,x:fresh?180:s.x,y:fresh?528:s.y,tx:fresh?180:s.x,ty:fresh?480:s.y,eq:v.eq||{char:'boxer'},nick:v.nick||'회원',lv:v.lv||1,at:v.at,stay:fresh?0:rnd(2,8),spot:s,t:Math.random()*5};if(fresh){floatTxt(180,500,(v.nick||'회원')+' 입장!');sfx('coin')}}
-    o.eq=v.eq||o.eq;o.at=v.at;o.lv=v.lv||o.lv;o.owner=!!v.owner});
+    o.eq=v.eq||o.eq;o.at=v.at;o.lv=v.lv||o.lv;o.owner=!!v.owner;o.coach=!!v.coach});
   Object.keys(W.others).forEach(id=>{if(!ids.has(id)){const o=W.others[id];if(!o.leaving){o.leaving=true;o.tx=180;o.ty=530}}});
   Object.values(W.others).forEach(o=>{o.t+=dt;if(o.enter>0)o.enter-=dt;const d=Math.hypot(o.tx-o.x,o.ty-o.y);o.moving=d>1.5;
     if(o.moving){const sp=45*dt;o.x+=(o.tx-o.x)/d*Math.min(sp,d);o.y+=(o.ty-o.y)/d*Math.min(sp,d);o.flip=o.tx<o.x}
@@ -1802,13 +1819,14 @@ function othersEnts(c,t){return Object.values(W.others||{}).map(o=>({y:o.y,d:()=
   let pose='idle',yo=0;if(!o.moving&&o.spot){const ps=o.spot.pose;const pp=ps[Math.floor((o.t*1.6))%ps.length];if(pp==='jump'){yo=-Math.abs(Math.sin(o.t*7))*5}else pose=pp}
   c.globalAlpha=o.leaving?.6:1;drawChar(c,o.x,o.y+yo,1,o.eq,{t:o.t,moving:o.moving,flip:o.spot&&o.spot.x<120&&!o.moving?true:o.flip,pose,noFx:true});c.globalAlpha=1;
   if(yo){c.strokeStyle='#D9343A';c.lineWidth=1.2;c.beginPath();c.ellipse(o.x,o.y-20+yo,13,24,0,0,7);c.stroke()}
+  if(o.coach){c.font='10px "Black Han Sans",sans-serif';const nm=/코치$/.test(o.nick)?o.nick:o.nick+' 코치';const tw=c.measureText(nm).width+14;c.fillStyle='#2E5AAC';rr(c,o.x-tw/2,o.y-58,tw,15,7);c.fill();c.fillStyle='#fff';c.fillText(nm,o.x,o.y-50);return}
   if(o.owner){c.font='10px "Black Han Sans",sans-serif';const nm='관장님';const tw=c.measureText(nm).width+14;c.fillStyle='#E9A91F';rr(c,o.x-tw/2,o.y-58,tw,15,7);c.fill();c.fillStyle='#2F2F2F';c.fillText(nm,o.x,o.y-50);c.fillStyle='#fff';rr(c,o.x+tw/2-2,o.y-74,14,12,4);c.fill();c.fillStyle='#D9343A';c.fillText(questState().some(q=>q.cur>=q.n&&!q.claimed)?'!':'?',o.x+tw/2+5,o.y-68);return}
   c.font='9px sans-serif';const nm=o.nick+' Lv.'+o.lv;const tw=c.measureText(nm).width+10;c.fillStyle='rgba(255,255,255,.92)';rr(c,o.x-tw/2,o.y-54,tw,13,6);c.fill();c.fillStyle='#2F2F2F';c.fillText(nm,o.x,o.y-47)}}))}
 function drawLiveBadge(c){const n=Object.values(W.others||{}).filter(o=>!o.leaving).length+((ME&&ME.inAt&&Date.now()-ME.inAt<stayMin()*60000&&ME.last===TODAY())||(isOwner(ME)&&ownerLiveOn())?1:0);
   const txt=n?`지금 체육관 ${n}명`:'지금 체육관 0명';c.font='11px "Black Han Sans",sans-serif';const w=c.measureText(txt).width+26;
   c.fillStyle=n?'rgba(43,155,102,.95)':'rgba(47,47,47,.8)';rr(c,8,74,w,20,10);c.fill();circ(c,19,84,3.5,n?`rgba(255,255,255,${.6+.4*Math.sin(W.t*4)})`:'#9A9BA0');c.fillStyle='#fff';c.textAlign='left';c.fillText(txt,27,84.5);c.textAlign='center'}
 function hitOther(x,y){return Object.values(W.others||{}).find(o=>Math.hypot(o.x-x,o.y-20-y)<18)}
-function showOther(o){if(o.owner){openCoach();return}const m=Math.round((Date.now()-o.at)/60000);floatTxt(o.x,o.y-30,`${o.nick} · ${m<1?'방금':m+'분 전'} 입장`)}
+function showOther(o){if(o.owner){openCoach();return}if(o.coach){floatTxt(o.x,o.y-30,(/코치$/.test(o.nick)?o.nick:o.nick+' 코치')+'님 · 질문은 편하게!');return}const m=Math.round((Date.now()-o.at)/60000);floatTxt(o.x,o.y-30,`${o.nick} · ${m<1?'방금':m+'분 전'} 입장`)}
 
 /* ================= 공지 · 자동 알림 ================= */
 const NKIND={normal:'일반',imp:'중요',closed:'휴무'};
@@ -1842,7 +1860,7 @@ function popItems(m){
   if(A.birthday&&m.birth&&m.birth.slice(5)===T.slice(5)&&once('bd:'+T.slice(0,4)))out.push({k:'bd:'+T.slice(0,4),cls:'auto',tag:'생일',title:`${m.name} 님, 생일 축하해요!`,body:'NNN 복싱이 생일 선물로 100 크레딧을 드려요. 오늘 운동은 더 신나게!',gift:100});
   if(A.comeback&&m.last&&dDiff(T,m.last)>=14&&st.state!=='expired'&&once('cb:'+m.last))out.push({k:'cb:'+m.last,cls:'auto',tag:'보고 싶어요',title:`${dDiff(T,m.last)}일째 못 봤어요`,body:'샌드백이 기다리고 있어요. 이번 주에 한 번 나와서 몸 풀어요!'});
   if(A.today&&mem&&mem.weekly&&(mem.days||[]).includes(new Date().getDay())&&m.last!==T&&st.state!=='expired'&&daily('td:'+T)){let line='';try{line=ttStatus().line}catch(e){}out.push({k:'td:'+T,cls:'auto',tag:'운동하는 날',title:'오늘은 운동하는 날이에요',body:`주${mem.weekly}회권 운동 요일이에요.${line?'\n'+line:''}`})}
-  {const e=curExam();if(e&&e.pop!==false&&!isOwner(m)&&TODAY()<=(e.until||e.date)&&examElig(m).ok&&!(m.examApply&&m.examApply.eid===e.id)&&daily('exam:'+e.id))out.push({k:'exam:'+e.id,cls:'imp',tag:'승급심사',title:`${e.title||'승급심사'} 응시 가능!`,body:`${md(e.date)} (${DAYN[new Date(e.date+'T00:00:00').getDay()]}) ${e.time||''}\n레벨 ${skillOf(m)} → 레벨 ${skillOf(m)+1} ${SKL[skillOf(m)+1]} 도전!\n심사 항목: ${EXAM_ITEMS[skillOf(m)+1].map(x=>x[0]).join(' · ')}\n신청 마감 ${md(e.until||e.date)} · 내 정보 → 승급심사에서 신청`,exam:true})}
+  {const e=curExam();if(e&&e.pop!==false&&!isStaff(m)&&TODAY()<=(e.until||e.date)&&examElig(m).ok&&!(m.examApply&&m.examApply.eid===e.id)&&daily('exam:'+e.id))out.push({k:'exam:'+e.id,cls:'imp',tag:'승급심사',title:`${e.title||'승급심사'} 응시 가능!`,body:`${md(e.date)} (${DAYN[new Date(e.date+'T00:00:00').getDay()]}) ${e.time||''}\n레벨 ${skillOf(m)} → 레벨 ${skillOf(m)+1} ${SKL[skillOf(m)+1]} 도전!\n심사 항목: ${EXAM_ITEMS[skillOf(m)+1].map(x=>x[0]).join(' · ')}\n신청 마감 ${md(e.until||e.date)} · 내 정보 → 승급심사에서 신청`,exam:true})}
   {const h=(m.skillHist||[]).slice(-1)[0];if(h&&once('exr:'+h.eid))out.push({k:'exr:'+h.eid,cls:h.pass?'auto':'',tag:h.pass?'승급 합격':'승급심사 결과',title:h.pass?`축하해요! 레벨 ${h.to} · ${SKL[h.to]}`:`${h.score}점 · 다음 달에 다시 도전!`,body:(h.pass?`${h.score}점으로 합격! +300 크레딧\n`:`합격까지 ${EXAM_PASS-h.score}점 남았어요.\n`)+(h.fb?'관장님 한마디: '+h.fb:''),cert:h.pass?h:null})}
   return out}
 let popBusy=false;
@@ -1927,7 +1945,7 @@ const COACH={
   async check(){if(!FB_ON())return true;try{await gref('roster').get();return true}catch(e){return false}},
   async list(){if(!FB_ON())return local.coachcodes||{};try{return(await gref('coachcodes').get()).val()||{}}catch(e){return{}}},
   async add(name){const code=String(Math.floor(100000+Math.random()*900000));const v={name,at:Date.now()};if(!FB_ON()){local.coachcodes=local.coachcodes||{};local.coachcodes[code]=v;persist();return code}
-    try{await gref('coachcodes/'+code).set(v);return code}catch(e){toast('만들지 못했어요. 보안 규칙을 새로 붙여 넣었는지 확인해 주세요',4000);return null}},
+    try{await gref('coachcodes/'+code).set(v);try{await gref('staff/'+code).set({name,role:'coach',leaveTotal:15,since:TODAY(),sched:{}})}catch(e){}return code}catch(e){toast('만들지 못했어요. 보안 규칙을 새로 붙여 넣었는지 확인해 주세요',4000);return null}},
   async del(code){if(!FB_ON()){delete local.coachcodes[code];persist();return}try{await gref('coachcodes/'+code).set(null)}catch(e){}},
   async roster(){if(!FB_ON())return Object.fromEntries(Object.values(local.members).map(m=>[m.id,{name:m.name}]));try{return(await gref('roster').get()).val()||{}}catch(e){return null}}
 };
@@ -1965,7 +1983,7 @@ function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=
   sheet(`<div class="row" style="align-items:center"><div class="cimg" id="cmF" style="width:96px;height:96px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small num">회원번호 ${m.id} · 가입 ${esc(m.joined||'-')}</div><div class="small">총 출석 ${(m.attend||[]).length}회 · 최근 ${m.last?md(m.last):'-'} · 연속 ${m.streak||0}일</div></div></div>
     <div id="cmCal"></div><button class="btn" data-close>닫기</button>`,el=>{faceInto(el.querySelector('#cmF'),m.id);const draw=()=>{el.querySelector('#cmCal').innerHTML=cal();el.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+ +b.dataset.mv);mon=dstr(f).slice(0,7);draw()})};draw()})}
 $('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
-$('#cSearch').oninput=renderCoach;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
+$('#cSearch').oninput=renderCoach;$('#cWorld').onclick=enterCoachWorld;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
 $('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
 
 /* ================= 코치 인사 · 근태 ================= */
@@ -2038,7 +2056,7 @@ $('#ckBtn').onclick=async()=>{const b=$('#ckBtn');b.disabled=true;const T=TODAY(
   const gl=local.meta.gymLoc;let pos=null,flag='',d=null;
   if(gl){b.textContent='위치 확인 중…';pos=await getPos();if(!pos)flag='noloc';else{d=distM(pos,gl);if(d>gl.r+Math.min(pos.acc||0,40))flag='outside'}}
   const save=async note=>{const now=Date.now();if(isIn){Object.assign(rec,{in:now,inD:d,flag:flag||'',note:note||''})}else{Object.assign(rec,{out:now,outD:d});if(flag){rec.flag=rec.flag||flag;rec.note=[rec.note,note].filter(Boolean).join(' / ')}}
-    if(await hset(`hr/att/${CW.code}/${T}`,rec)){sfx('win');toast(isIn?`출근 ${hm(now)} · 오늘도 화이팅!`:`퇴근 ${hm(now)} · 수고하셨어요!`,3000)}renderCoachHR()};
+    if(await hset(`hr/att/${CW.code}/${T}`,rec)){coachLive(isIn).catch(()=>{});sfx('win');toast(isIn?`출근 ${hm(now)} · 오늘도 화이팅!`:`퇴근 ${hm(now)} · 수고하셨어요!`,3000)}renderCoachHR()};
   if(flag){sheet(`<h2>${flag==='outside'?'체육관 밖이에요':'위치를 확인하지 못했어요'}</h2><p style="margin:0">${flag==='outside'?`체육관에서 약 <b>${d}m</b> 떨어져 있어요.`:'휴대폰 위치 권한이 꺼져 있거나 신호가 약해요.'} 그래도 ${isIn?'출근':'퇴근'}을 기록하려면 사유를 적어 주세요. 관장님 화면에 '${flag==='outside'?'위치 밖':'위치 확인 안 됨'}'으로 표시돼요.</p>
     <div class="field"><label for="ckNote">사유</label><input id="ckNote" placeholder="예: 외부 PT 출장, 위치 권한 오류"></div><button class="btn red" id="ckSave">사유 남기고 기록</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{el.querySelector('#ckSave').onclick=()=>{const n=el.querySelector('#ckNote').value.trim();if(!n){toast('사유를 적어 주세요');return}close();save(n)}});renderCoachHR();return}
   save('')};
@@ -2062,8 +2080,9 @@ $('#lvNew').onclick=()=>{let type='annual';sheet(`<h2>휴가 신청</h2><div cla
     if(await hset(`hr/leave/${CW.code}/l${Date.now().toString(36)}`,v)){toast('휴가를 신청했어요. 관장님 승인을 기다려 주세요',3500);close();renderCoachHR()}}})};
 /* ---- 관장: 코치 탭 ---- */
 const SF={mon:TODAY().slice(0,7)};
-async function loadStaffAll(){const [codes,staff,att,lv,fx]=await Promise.all([COACH.list(),hget('staff'),hget('hr/att'),hget('hr/leave'),hget('hr/fix')]);
+async function loadStaffAll(){let [codes,staff,att,lv,fx]=await Promise.all([COACH.list(),hget('staff'),hget('hr/att'),hget('hr/leave'),hget('hr/fix')]);
   const ids=[...new Set([...Object.keys(codes||{}),...Object.keys(staff||{})])];
+  for(const k of Object.keys(codes||{})){if(!(staff||{})[k]){const v={name:codes[k].name,role:'coach',leaveTotal:15,since:TODAY(),sched:{}};staff=staff||{};staff[k]=v;hset('staff/'+k,v)}}
   return ids.map(code=>({code,active:!!(codes||{})[code],st:Object.assign({name:((codes||{})[code]||{}).name||'(삭제된 계정)'},(staff||{})[code]||{}),att:(att||{})[code]||{},lvs:(lv||{})[code]||{},fix:(fx||{})[code]||{}}))}
 async function renderStaffAdmin(){if(!$('#sfList'))return;const L=await loadStaffAll();SF.L=L;const T=TODAY();
   $('#sfToday').innerHTML=L.filter(x=>x.active).map(x=>{const r=x.att[T],s=dayStatus(x.st,r,x.lvs,T),sc=schedOf(x.st,T);return`<div class="hrrow"><b class="grow">${esc(x.st.name)} <span class="small">${sc?sc.s+'~'+sc.e:'일정 없음'}</span></b><span class="small num">${r&&r.in?hm(r.in)+' ~ '+(r.out?hm(r.out):''):''}</span>${hrPill(s)}</div>`}).join('')||'<div class="small">코치 계정을 먼저 만들어 주세요 (아래 코치 계정).</div>';
@@ -2949,7 +2968,7 @@ function memCardHTML(m,full){
     ${full&&mem.item?`<div class="small">등록 상품: ${esc(mem.item)}${mem.paidAt?' · 결제 확인 '+esc(md(mem.paidAt)):''}</div>`:''}
   </div>`;
 }
-function renderMemCard(){if(ME&&isOwner(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
+function renderMemCard(){if(ME&&isStaff(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
   if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full');el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules)});
 }
 /* 관장: 등록 정보 입력 */
@@ -3047,7 +3066,7 @@ function examCardHTML(m){const e=curExam(),s=skillOf(m),el=examElig(m),ap=e&&m.e
       ${ap?'<span class="mhint ok">응시 신청 완료! 심사 날 체육관에서 만나요.</span>':s>=7?'':el.ok&&TODAY()<=(e.until||e.date)?'<button class="btn red sm" data-exapply>응시 신청하기</button>':`<span class="small" style="color:var(--muted)">${TODAY()>(e.until||e.date)?'신청이 마감됐어요':'아직 응시 자격이 안 돼요 · '+esc(el.why)}</span>`}`:'<div class="small">다음 심사 일정은 공지로 알려 드려요.</div>'}
     ${last?`<div class="small">지난 심사 ${md(last.date)}: <b>${last.score}점 ${last.pass?'합격':'보류'}</b>${last.fb?' · '+esc(last.fb):''}</div>`:''}
   </div>`}
-function renderExamCard(){if(!ME||isOwner(ME)){$$('[data-exam]').forEach(e=>e.innerHTML='');return}$$('[data-exam]').forEach(el=>{el.innerHTML=examCardHTML(ME);const b=el.querySelector('[data-exapply]');if(b)b.onclick=async()=>{const e=curExam();if(!e)return;ME.examApply={eid:e.id,at:Date.now(),to:skillOf(ME)+1};await DB.save(ME);sfx('win');toast(`승급심사 신청 완료! ${md(e.date)}에 만나요`,3500);renderExamCard()}})}
+function renderExamCard(){if(!ME||isStaff(ME)){$$('[data-exam]').forEach(e=>e.innerHTML='');return}$$('[data-exam]').forEach(el=>{el.innerHTML=examCardHTML(ME);const b=el.querySelector('[data-exapply]');if(b)b.onclick=async()=>{const e=curExam();if(!e)return;ME.examApply={eid:e.id,at:Date.now(),to:skillOf(ME)+1};await DB.save(ME);sfx('win');toast(`승급심사 신청 완료! ${md(e.date)}에 만나요`,3500);renderExamCard()}})}
 /* 관장 */
 async function renderExamAdmin(){const e=curExam();const all=(await DB.all()).filter(m=>!m.demo);const apps=e?all.filter(m=>m.examApply&&m.examApply.eid===e.id):[];
   $('#exN').textContent=e?`신청 ${apps.length}명`:'';
@@ -3102,7 +3121,7 @@ const SNS_BONUS=30;
 const QUOTES=['오늘도 한 라운드 끝!','땀은 거짓말 안 한다','어제의 나를 이겼다','가드 올리고, 끝까지','원투 원투, 오늘도 출석','복싱은 사랑입니다','다이어트는 주먹으로'];
 const instaHandle=()=>{const u=local.meta.insta||'';const mm=u.match(/instagram\.com\/([^/?#]+)/i);return mm?mm[1]:''};
 function snsCaption(o){const mon=Number(monKey().slice(5));const hd=instaHandle();
-  return [o.quote,'',o.counted?`${mon}월 오운완 DAY ${o.day}`:'',`📍 탕정 엔엔엔복싱${hd?' @'+hd:''}`,ME&&ME.id&&!isOwner(ME)?`👊 같이 운동해요! NNN WORLD 초대코드 ${ME.id}`:'',ME&&!isOwner(ME)?joinUrl():appBase()+'?join=1','','#오운완 #탕정복싱 #엔엔엔복싱 #NNNBOXING #아산복싱 #탕정 #복싱 #복싱스타그램 #운동기록 #복싱다이어트'].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n').trim()}
+  return [o.quote,'',o.counted?`${mon}월 오운완 DAY ${o.day}`:'',`📍 탕정 엔엔엔복싱${hd?' @'+hd:''}`,ME&&ME.id&&!isStaff(ME)?`👊 같이 운동해요! NNN WORLD 초대코드 ${ME.id}`:'👊 같이 운동해요! NNN WORLD',ME&&!isStaff(ME)?joinUrl():appBase()+'?join=1','','#오운완 #탕정복싱 #엔엔엔복싱 #NNNBOXING #아산복싱 #탕정 #복싱 #복싱스타그램 #운동기록 #복싱다이어트'].filter((x,i,a)=>x!==''||a[i-1]!=='').join('\n').trim()}
 function openSnsStudio(im,o={}){const S={fmt:o.fmt||'feed',tpl:o.tpl||'classic',char:o.char!==false,invite:true,date:true,quote:pick(QUOTES),counted:!!o.counted,day:o.day||owanCount(ME)};
   const F={feed:[1080,1350,'피드 4:5'],story:[1080,1920,'스토리 9:16'],sq:[1080,1080,'정사각']},TP={classic:'클래식',ring:'링 프레임',stat:'기록 카드',mini:'심플',none:'사진 그대로'};
   sheet(`<div class="studio" style="display:flex;flex-direction:column;gap:8px"><h2>SNS 자랑 카드</h2><canvas id="snC"></canvas>
@@ -3136,14 +3155,14 @@ function openSnsStudio(im,o={}){const S={fmt:o.fmt||'feed',tpl:o.tpl||'classic',
       if(S.tpl==='mini'){drawLogo(c,W-150,H-150,110,'#fff');c.textAlign='left';c.fillStyle='rgba(255,255,255,.95)';c.font='46px "Black Han Sans",sans-serif';c.shadowColor='rgba(0,0,0,.5)';c.shadowBlur=12;c.fillText(S.quote,44,H-70);if(S.date){c.font='30px "Gowun Dodum",sans-serif';c.fillText(date+' · #오운완',44,H-126)}c.shadowBlur=0}
       if(S.char){const cx=S.tpl==='stat'?W-140:S.tpl==='mini'?W-140:W-150,cy=S.tpl==='stat'?ph-40:S.tpl==='mini'?H-200:H-90-(S.tpl==='ring'?pad:0);c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.arc(cx,cy-95,125,0,Math.PI*2);c.fill();drawChar(c,cx,cy+18,4.6,ME.equip,{t:1,pose:'guard',noFx:true})}
       if(S.invite&&qrC){const qs=150,qx=S.tpl==='stat'?W-qs-40:36+(S.tpl==='ring'?pad:0),qy=S.tpl==='stat'?ph+20:S.tpl==='classic'?150:S.tpl==='ring'?pad+100:40;
-        c.fillStyle='#fff';rr(c,qx-10,qy-10,qs+20,qs+62,14);c.fill();c.drawImage(qrC,qx,qy,qs,qs);c.fillStyle='#2F2F2F';c.textAlign='center';c.font='24px "Black Han Sans",sans-serif';c.fillText(isOwner(ME)?'NNN WORLD 가입':'초대코드 '+ME.id,qx+qs/2,qy+qs+38)}
+        c.fillStyle='#fff';rr(c,qx-10,qy-10,qs+20,qs+62,14);c.fill();c.drawImage(qrC,qx,qy,qs,qs);c.fillStyle='#2F2F2F';c.textAlign='center';c.font='24px "Black Han Sans",sans-serif';c.fillText(isStaff(ME)?'NNN WORLD 가입':'초대코드 '+ME.id,qx+qs/2,qy+qs+38)}
       el.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===S.fmt));el.querySelectorAll('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===S.tpl))};
     const capUpd=()=>{cap.value=snsCaption(S)};
     el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.fmt=b.dataset.f;draw()});el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.tpl=b.dataset.t;draw()});
     el.querySelector('#snCh').onchange=e=>{S.char=e.target.checked;draw()};el.querySelector('#snIv').onchange=e=>{S.invite=e.target.checked;draw()};el.querySelector('#snDt').onchange=e=>{S.date=e.target.checked;draw()};
     const q=el.querySelector('#snQ');q.oninput=()=>{S.quote=q.value.slice(0,24);draw();capUpd()};el.querySelector('#snQr').onclick=()=>{S.quote=pick(QUOTES.filter(x=>x!==S.quote));q.value=S.quote;draw();capUpd()};
     draw();capUpd();
-    const bonus=()=>{if(!ME||isOwner(ME))return;ME.sns=ME.sns||{};ME.sns[monKey()]=(ME.sns[monKey()]||0)+1;if(ME.snsDay!==TODAY()){ME.snsDay=TODAY();ME.credits+=SNS_BONUS;ME.earned+=SNS_BONUS;toast(`홍보해 줘서 고마워요! +${SNS_BONUS} 크레딧`,3000);sfx('win')}saveMe();refreshTop()};
+    const bonus=()=>{if(!ME||isStaff(ME))return;ME.sns=ME.sns||{};ME.sns[monKey()]=(ME.sns[monKey()]||0)+1;if(ME.snsDay!==TODAY()){ME.snsDay=TODAY();ME.credits+=SNS_BONUS;ME.earned+=SNS_BONUS;toast(`홍보해 줘서 고마워요! +${SNS_BONUS} 크레딧`,3000);sfx('win')}saveMe();refreshTop()};
     const blob=()=>new Promise(r=>cv.toBlob(r,'image/jpeg',.92));
     el.querySelector('#snShare').onclick=async()=>{const b=await blob();const file=new File([b],'nnn_owan.jpg',{type:'image/jpeg'});try{navigator.clipboard&&navigator.clipboard.writeText(cap.value).catch(()=>{})}catch(e){}
       if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:cap.value});bonus()}catch(e){if(!e||e.name!=='AbortError')toast('공유하지 못했어요. 이미지 저장 후 올려 주세요')}}
