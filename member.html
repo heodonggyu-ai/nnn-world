@@ -1354,6 +1354,8 @@ $('#joinForm').onsubmit=async e=>{
   if(stu&&gPhone.replace(/\D/g,'').length<10){$('#jStu').checked=true;syncGuard();toast('학생은 보호자 연락처를 꼭 적어 주세요');$('#jGPhone').focus();return}
   if(!JOIN_FACE){toast('본인 얼굴 사진을 찍어 주세요');$('#faceBox').scrollIntoView({block:'center'});return}
   if(!$('#ag1').checked||!$('#ag2').checked||!$('#ag4').checked||!$('#ag5').checked){toast('필수 항목에 모두 동의해 주세요');return}
+  {const prev=(()=>{try{return JSON.parse(localStorage.getItem('nnn_joined')||'[]')}catch(e){return[]}})();const same=prev.find(p=>p.name===name&&p.phone===phone.replace(/\D/g,''));
+    if(same&&!window._joinDupOk){sheet(`<h2>이미 가입했어요</h2><p style="margin:0">${esc(name)}님은 이 폰에서 <b class="num">회원번호 ${esc(same.id)}</b>로 가입했어요. 다시 가입하면 회원번호가 두 개가 돼요.</p><button class="btn red" id="jdLogin">회원번호 ${esc(same.id)}로 로그인</button><button class="btn ghost" data-close>닫기</button><p class="small" style="margin:0">번호를 잃어버렸거나 다시 가입해야 하면 카운터에 말씀해 주세요.</p>`,(el,close)=>{el.querySelector('#jdLogin').onclick=()=>{close();show('v-login');try{$('#lId').value=same.id}catch(e){}}});return}}
   $('#joinBtn').disabled=true;
   try{
     if(!FB_ON()){const all=await DB.all();if(all.some(m=>(m.phone||'').replace(/\D/g,'')===phone.replace(/\D/g,''))){toast('이미 가입된 연락처예요. 데스크에 문의해 주세요',3200);return}}
@@ -1363,7 +1365,7 @@ $('#joinForm').onsubmit=async e=>{
     const m=blankMember({name,phone,birth:$('#jBirth').value,gender:$('#jGender').value,goal:$$('#jGoal .chip.on').map(c=>c.textContent),exp:$('#jExp').value,path:$('#jPath').value,note:$('#jNote').value.trim(),mkt:$('#ag3').checked,char:starterPick},id);
     const rf=($('#jRef').value||'').trim();if(stu){m.student=true;m.gPhone=gPhone;m.gName=$('#jGRel').value}
     if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
-    m.hasFace=true;await DB.save(m);await DB.savePriv(m);if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}}if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref')}catch(e){}lsSet(LS_SESSION,id);
+    m.hasFace=true;await DB.save(m);await DB.savePriv(m);if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}}if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref');const pv=JSON.parse(localStorage.getItem('nnn_joined')||'[]');pv.push({id,name,phone:phone.replace(/\D/g,''),at:Date.now()});localStorage.setItem('nnn_joined',JSON.stringify(pv.slice(-10)))}catch(e){}lsSet(LS_SESSION,id);
     showDone();
   }finally{$('#joinBtn').disabled=false}
 };
@@ -2911,6 +2913,7 @@ $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){
   const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
   const MEMOS=(await hget('memos'))||{};
+  const DUPC={};all.forEach(m=>{const k=String(m.phone||'').replace(/\D/g,'')+'|'+String(m.name||'').replace(/\s+/g,'');if(k.length>2)DUPC[k]=(DUPC[k]||0)+1});const isDup=m=>DUPC[String(m.phone||'').replace(/\D/g,'')+'|'+String(m.name||'').replace(/\s+/g,'')]>1;
   let PAYS=[];if(q){try{PAYS=await DB.pays()}catch(e){}}
   const nz=s=>String(s||'').toLowerCase().replace(/\s+/g,'');const qn=nz(q),qd=q.replace(/\D/g,'');const HIT={};
   const srch=m=>{if(!q)return true;
@@ -2921,7 +2924,7 @@ async function renderAdmRows(){
     return false};
   renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&srch(m));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
   $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]'))return;admDetail(r.dataset.d)});
   clearTimeout(window._adT);window._adT=setTimeout(renderADash,300);
   $$('#admRows [data-ap]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
@@ -3104,12 +3107,15 @@ function openPay(){if(isGuest()){guestBlock('결제는 가입 후에 할 수 있
     };
     amtIn.oninput=()=>{const v=amt();amtIn.value=v?v.toLocaleString():'';body()};
     items();tabs();body();
-    el.querySelector('#pDone').onclick=async()=>{
+    el.querySelector('#pDone').onclick=async(ev)=>{
+      const btn=ev.currentTarget;if(btn.dataset.busy)return;
+      const pp=ME&&ME.payPend;if(pp&&Date.now()-pp.at<7*864e5&&!window.PAY_FORCE){
+        sheet(`<h2>이미 결제 확인을 기다리고 있어요</h2><div class="memsum"><b>${esc(pp.item)}</b><div class="small num">${new Date(pp.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})} 신청 · 관장님 확인 전</div></div><p class="small" style="margin:0">같은 결제를 또 보내면 관장님 화면에 두 번 올라가요. 관장님이 확인하면 자동으로 정리돼요.</p><button class="btn red" data-close>기다릴게요</button><button class="btn ghost" id="pdMore">다른 결제를 추가로 보내기 (락커 등)</button>`,(e2,c2)=>{e2.querySelector('#pdMore').onclick=()=>{c2();window.PAY_FORCE=1;openPay();toast('추가로 보낼 결제를 골라 주세요')}});return}
       const nm=ME?ME.name:(el.querySelector('#pName').value.trim());
       if(!nm){toast('이름을 적어 주세요');return}
       if(wk()){if(pdays.length!==wk()){toast(`운동 요일을 ${wk()}개 골라 주세요`);return}if(!el.querySelector('#pRule').checked){toast('요일 고정 안내를 확인하고 체크해 주세요');return}}
       const rec={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),mid:ME?ME.id:'',name:nm,item:item!=null?P.products[item].n:'직접 입력',amount:amt(),method,at:new Date().toISOString(),status:'pending',...(wk()?{days:pdays.slice()}:{})};
-      await DB.addPay(rec);sfx('win');close();
+      btn.dataset.busy=1;window.PAY_FORCE=0;await DB.addPay(rec);if(ME){ME.payPend={id:rec.id,item:rec.item,at:Date.now()};await DB.save(ME)}sfx('win');close();
       sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><span style="width:70px;display:block">${logoSVG('#2F2F2F',false)}</span><h2>결제 알림을 보냈어요</h2>
         <div class="small">${esc(rec.item)} · ${rec.amount?won(rec.amount):'금액 미입력'} · ${PAYM[method]}</div><p style="margin:0">관장님이 확인하면 등록이 마무리돼요. 감사합니다!</p></div><button class="btn" data-close>확인</button>`);
     };
@@ -3121,13 +3127,16 @@ async function renderPays(){
   const list=(await DB.pays()).sort((a,b)=>b.at.localeCompare(a.at));const pend=list.filter(x=>x.status==='pending');
   $('#payCnt').textContent=pend.length?`확인 대기 ${pend.length}건`:'';setTimeout(renderADash,0);
   const rows=[...pend,...list.filter(x=>x.status!=='pending').slice(0,15)];
-  $('#payRows').innerHTML=rows.map(x=>`<div class="payrow"><div class="grow"><b>${esc(x.name)}</b> <span class="small num">${esc(x.mid)}</span><div class="small num">${esc(x.item)} · ${x.amount?won(x.amount):'금액 미입력'} · ${payName(x.method)}${x.days&&x.days.length?' · 요일 '+daysTxt(x.days):''} · ${x.at.slice(5,10).replace('-','/')} ${new Date(x.at).toTimeString().slice(0,5)}</div></div>${x.status==='pending'?`<button class="btn sm red" data-ok="${x.id}">확인</button><button class="btn sm ghost" data-no="${x.id}">취소</button>`:`<span class="pill">${x.status==='done'?'확인됨':'취소'}</span>`}</div>`).join('')||'<div class="small" style="padding:8px 0">아직 결제 알림이 없어요.</div>';
-  $$('#payRows [data-ok]').forEach(b=>b.onclick=()=>setPay(b.dataset.ok,'done'));
+  const dupK=x=>(x.mid||x.name)+'|'+x.item;const seen={};pend.slice().sort((a,b)=>a.at.localeCompare(b.at)).forEach(x=>{const k=dupK(x);if(seen[k])x._dup=1;else seen[k]=1});
+  $('#payRows').innerHTML=rows.map(x=>`<div class="payrow"${x._dup?' style="background:#FFF3C9"':''}><div class="grow"><b>${esc(x.name)}</b> <span class="small num">${esc(x.mid)}</span>${x._dup?' <span class="pill fire">중복 신청</span>':''}<div class="small num">${esc(x.item)} · ${x.amount?won(x.amount):'금액 미입력'} · ${payName(x.method)}${x.days&&x.days.length?' · 요일 '+daysTxt(x.days):''} · ${x.at.slice(5,10).replace('-','/')} ${new Date(x.at).toTimeString().slice(0,5)}</div></div>${x.status==='pending'?`<button class="btn sm red" data-ok="${x.id}">확인</button><button class="btn sm ghost" data-no="${x.id}">취소</button>`:`<span class="pill">${x.status==='done'?'확인됨':'취소'}</span>`}</div>`).join('')||'<div class="small" style="padding:8px 0">아직 결제 알림이 없어요.</div>';
+  $$('#payRows [data-ok]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.ok);if(x&&x._dup&&b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='중복이에요! 그래도 확인';toast('같은 회원이 같은 상품을 먼저 보낸 신청이 있어요. 중복이면 [취소]를 눌러 주세요',4000);return}b.disabled=true;setPay(b.dataset.ok,'done')});
   $$('#payRows [data-no]').forEach(b=>b.onclick=()=>setPay(b.dataset.no,'cancel'));
 }
-async function setPay(id,st){const x=local.pays[id];if(!x)return;x.status=st;x.doneAt=new Date().toISOString();
+const SETPAY_BUSY={};
+async function clearPayPend(mid,pid){if(!mid)return;try{const m=await DB.get(mid);if(m&&m.payPend&&(!pid||m.payPend.id===pid)){delete m.payPend;await DB.save(m)}}catch(e){}}
+async function setPay(id,st){const x=local.pays[id];if(!x)return;if(x.status!=='pending'){toast('이미 처리된 결제예요');renderPays();return}if(SETPAY_BUSY[id])return;SETPAY_BUSY[id]=1;setTimeout(()=>delete SETPAY_BUSY[id],4000);delete x._dup;x.status=st;x.doneAt=new Date().toISOString();
   if(st==='done'){x.saleDate=TODAY();const pl=parsePlan(x.item);x.months=pl.months;x.weekly=pl.weekly;x.pt=pl.pt;let pm=null;if(x.mid){try{pm=await DB.get(x.mid)}catch(e){}}x.kind=pm&&(pm.mem||(pm.memHist&&pm.memHist.length))?'renew':'new'}
-  await DB.addPay(x);
+  await DB.addPay(x);clearPayPend(x.mid,x.id);
   if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY(),days:x.days||[],pay:x},async m2=>{if(!m2.approvedAt){m2.approvedAt=TODAY();await DB.savePriv(m2)}renderAdmRows();sendAuto(m2,'pay',x)})}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
   renderPays()}
 function readImg(input,cb){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(f)}
@@ -4316,7 +4325,13 @@ const FDB={
 let JOIN_FACE='';
 async function faceFromFile(f){const im=await loadImg(f);const S=320,cv=document.createElement('canvas');cv.width=S;cv.height=S;const c=cv.getContext('2d');
   const k=Math.max(S/im.width,S/im.height),w=im.width*k,h=im.height*k;c.drawImage(im,(S-w)/2,(S-h)/2,w,h);return cv.toDataURL('image/jpeg',.72)}
-async function approveMember(m){m.approvedAt=TODAY();await DB.savePriv(m);toast(m.name+' 님 가입 승인');renderAdmRows();
+const APPROVING={};const nzName=s=>String(s||'').replace(/\s+/g,'');
+async function approveMember(m){{const cur=await DB.get(m.id);if(cur&&cur.approvedAt){toast(m.name+' 님은 이미 승인했어요');renderAdmRows();return}}if(APPROVING[m.id])return;if(!m._dupOk){const ph=String(m.phone||'').replace(/\D/g,'');const dup=(await DB.all()).filter(x=>!x.demo&&x.id!==m.id&&ph&&String(x.phone||'').replace(/\D/g,'')===ph&&nzName(x.name)===nzName(m.name));
+    if(dup.length){sheet(`<h2>이미 가입된 사람 같아요</h2><p style="margin:0"><b>${esc(m.name)}</b> (${esc(m.phone)})님은 이미 ${dup.map(d=>`<b class="num">${esc(d.id)}</b>${d.approvedAt?' (승인됨)':' (대기)'}`).join(', ')}로 가입돼 있어요. 가입 버튼을 여러 번 눌렀을 가능성이 커요.</p>
+      <button class="btn red" id="dpDel">이 신청(${esc(m.id)}) 삭제</button><button class="btn ghost" id="dpOk">다른 사람이 맞아요 · 그래도 승인</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+      el.querySelector('#dpDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요';return}if(await deleteMember(m)!==false){toast(m.name+' 님 중복 신청('+m.id+')을 지웠어요');close();renderAdmRows()}};
+      el.querySelector('#dpOk').onclick=()=>{close();m._dupOk=1;approveMember(m)}});return}}
+  delete m._dupOk;APPROVING[m.id]=1;setTimeout(()=>delete APPROVING[m.id],5000);m.approvedAt=TODAY();await DB.savePriv(m);toast(m.name+' 님 가입 승인');renderAdmRows();
   if(m.mem&&(m.mem.end||m.mem.pt)){sendAuto(m,'welcome');return}
   let pays=[];try{pays=(await DB.pays()).filter(x=>x.mid===m.id&&x.status==='pending').sort((a,b)=>(b.at||'').localeCompare(a.at||''))}catch(e){}
   const p=pays[0];
