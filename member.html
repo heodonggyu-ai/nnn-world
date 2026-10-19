@@ -354,6 +354,20 @@ body.tvmode .app{max-width:none;padding:0}
 
 .toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;z-index:90;font-size:14px;max-width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .memtable{overflow-x:auto}
+input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232F2F2F' stroke-width='2'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E") no-repeat right 10px center/18px;padding-right:34px}
+#calRoot{position:fixed;inset:0;z-index:95;background:rgba(20,23,31,.45);display:flex;align-items:flex-end;justify-content:center}
+#calRoot .cal{background:#fff;width:100%;max-width:440px;border-radius:18px 18px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(0,0,0,.2)}
+#calRoot .chd{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+#calRoot .chd select{flex:1;font-size:17px;padding:10px 8px;border:2px solid var(--line);border-radius:10px;background:#fff;font-family:var(--display)}
+#calRoot .chd button{width:44px;height:44px;border:0;border-radius:10px;background:var(--mat);font-size:18px}
+#calRoot .cg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+#calRoot .cg .wd{font-size:12px;color:var(--muted);padding:2px 0}
+#calRoot .cg .wd:first-child,#calRoot .cg button.su{color:var(--red)}#calRoot .cg .wd:last-child,#calRoot .cg button.sa{color:#2F6FD6}
+#calRoot .cg button{height:44px;border:0;border-radius:10px;background:transparent;font-size:16px;font-variant-numeric:tabular-nums;color:var(--ink)}
+#calRoot .cg button.td{box-shadow:inset 0 0 0 2px var(--line)}
+#calRoot .cg button.on{background:var(--ink);color:#fff!important}
+#calRoot .cg button:disabled{opacity:.25}
+#calRoot .cft{display:flex;gap:8px;margin-top:10px}#calRoot .cft button{flex:1}
 .mlist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
 .mrow{display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer}
 .mrow .mi{flex:1;min-width:0}
@@ -1659,6 +1673,28 @@ $('#maSave').onclick=async()=>{const C=JSON.parse(JSON.stringify(misCfg()));C.da
   local.meta.missions=C;if(await DB.saveMeta()){toast('오늘의 미션을 저장했어요');renderMisAdmin();if(ME)renderMisCard()}};
 $('#maReset').onclick=()=>{if(MIS_SEL==='date'){$('#maTitle').value='';$('#maItems').value='';return}const o=DEFAULT_MIS[MIS_SEL];$('#maTitle').value=o.title;$('#maItems').value=o.items.join('\n');toast('예시 루틴을 불러왔어요. 저장을 눌러야 적용돼요')};
 $('#maPrev').onclick=()=>{if(!ME){toast('미리보기는 맵에서 볼 수 있어요');return}const d=MIS_SEL==='date'?$('#maDate').value:null;sheet(`<h2>회원 화면 미리보기</h2><div class="bubble" style="font-family:var(--display);font-size:18px">${esc($('#maTitle').value||'(제목 없음)')}</div>${$('#maItems').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>`<label class="misitem"><input type="checkbox" disabled><span class="mx">${esc(s)}</span>${misBellCfg(s)?'<span class="pill">타이머</span>':''}</label>`).join('')}<p class="small" style="margin:0">전부 체크하면 +${Math.round(+$('#maReward').value||0)} 크레딧</p><button class="btn" data-close>닫기</button>`)};
+
+/* ================= 날짜 고르기 (연·월 고르면 바로 날짜 달력) ================= */
+function openCal(inp){const pad=n=>String(n).padStart(2,'0');const v=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value:TODAY();let Y=+v.slice(0,4),M=+v.slice(5,7)-1;
+  const mn=inp.getAttribute('min')||'',mx=inp.getAttribute('max')||'';const cy=new Date().getFullYear();
+  const r=document.createElement('div');r.id='calRoot';document.body.appendChild(r);
+  const lbl=(inp.closest('.field')&&inp.closest('.field').querySelector('label'))?inp.closest('.field').querySelector('label').childNodes[0].textContent.trim():'날짜';
+  const close=()=>r.remove();
+  const draw=()=>{const first=new Date(Y,M,1).getDay(),nd=new Date(Y,M+1,0).getDate();let cells='';
+    for(let i=0;i<first;i++)cells+='<span></span>';
+    for(let d=1;d<=nd;d++){const ds=`${Y}-${pad(M+1)}-${pad(d)}`;const wd=(first+d-1)%7;cells+=`<button type="button" data-ds="${ds}" class="${wd===0?'su':wd===6?'sa':''}${ds===inp.value?' on':''}${ds===TODAY()?' td':''}" ${(mn&&ds<mn)||(mx&&ds>mx)?'disabled':''}>${d}</button>`}
+    const ys=[];for(let y=cy-5;y<=cy+5;y++)ys.push(y);if(!ys.includes(Y))ys.push(Y),ys.sort();
+    r.innerHTML=`<div class="cal" role="dialog" aria-label="${esc(lbl)} 고르기"><div class="small" style="margin:0 2px 6px">${esc(lbl)}</div>
+      <div class="chd"><button type="button" data-mv="-1" aria-label="이전 달">◀</button><select id="calY" aria-label="연도">${ys.map(y=>`<option value="${y}" ${y===Y?'selected':''}>${y}년</option>`).join('')}</select><select id="calM" aria-label="월">${[...Array(12).keys()].map(m=>`<option value="${m}" ${m===M?'selected':''}>${m+1}월</option>`).join('')}</select><button type="button" data-mv="1" aria-label="다음 달">▶</button></div>
+      <div class="cg">${'일월화수목금토'.split('').map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div>
+      <div class="cft"><button type="button" class="btn ghost sm" id="calT">오늘</button><button type="button" class="btn sm" id="calX">닫기</button></div></div>`;
+    r.querySelector('#calY').onchange=e=>{Y=+e.target.value;draw()};r.querySelector('#calM').onchange=e=>{M=+e.target.value;draw()};
+    r.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{M+=+b.dataset.mv;if(M<0){M=11;Y--}if(M>11){M=0;Y++}draw()});
+    r.querySelectorAll('[data-ds]').forEach(b=>b.onclick=()=>pick(b.dataset.ds));
+    r.querySelector('#calT').onclick=()=>{const t=TODAY();if((mn&&t<mn)||(mx&&t>mx)){Y=+t.slice(0,4);M=+t.slice(5,7)-1;draw();return}pick(t)};r.querySelector('#calX').onclick=close};
+  const pick=ds=>{inp.value=ds;close();inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))};
+  r.addEventListener('click',e=>{if(e.target===r)close()});draw()}
+document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('input.dpick');if(i&&!i.disabled){e.preventDefault();i.blur();openCal(i)}});
 
 /* ================= 미니게임 ================= */
 let G=null;
@@ -3299,7 +3335,7 @@ function openMemEditor(m,pre={},onDone){
   sheet(`<h2>등록 정보 · ${esc(m.name)}</h2>
     <div class="field"><label for="meItem">상품</label><input id="meItem" value="${esc(st.item)}"></div>
     <div class="field"><span>등록 개월수</span><div class="chips" id="meMo">${[1,2,3,6,12].map(n=>`<button type="button" class="chip" data-mo="${n}">${n}개월</button>`).join('')}<button type="button" class="chip" data-mo="0">없음(PT만)</button><label class="chip" style="display:inline-flex;align-items:center;gap:4px">직접 <input id="meMoN" type="number" min="1" max="36" placeholder="?" style="width:40px;border:0;border-bottom:2px solid var(--ink);border-radius:0;padding:0 2px;background:transparent;text-align:center" value="${[0,1,2,3,6,12].includes(st.months)?'':st.months}">개월</label></div></div>
-    <div class="row"><div class="field grow"><label for="meStart">시작일</label><input id="meStart" type="date" value="${st.start}"></div><div class="field grow"><label for="meEnd">종료일 <span class="small">(직접 고쳐도 돼요)</span></label><input id="meEnd" type="date"></div></div>
+    <div class="row"><div class="field grow"><label for="meStart">시작일</label><input id="meStart" class="dpick" readonly value="${st.start}"></div><div class="field grow"><label for="meEnd">종료일 <span class="small">(직접 고쳐도 돼요)</span></label><input id="meEnd" class="dpick" readonly></div></div>
     <div class="row" id="meAdj" style="gap:6px"><span class="small">종료일 조정</span><button type="button" class="chip" data-adj="-7">-7일</button><button type="button" class="chip" data-adj="-1">-1일</button><button type="button" class="chip" data-adj="1">+1일</button><button type="button" class="chip" data-adj="7">+7일</button><button type="button" class="chip" data-adj="m1">+1개월</button></div>
     <div id="meSum" class="memsum"></div>
     <div class="field"><span>이용 방식</span><div class="chips" id="meWk">${[0,2,3,4,5].map(n=>`<button type="button" class="chip" data-wk="${n}">${n?'주'+n+'회':'자유이용'}</button>`).join('')}</div></div>
@@ -3309,7 +3345,7 @@ function openMemEditor(m,pre={},onDone){
       <label class="check" style="margin:0"><input type="checkbox" id="mePayOn" ${pre.pay||pre.newPay?'checked':''}><b>결제 기록하기</b> <span class="small">${pre.pay?'(회원이 앱으로 신청한 결제)':'(매출 통계에 들어가요)'}</span></label>
       <div id="mePayBox">
         <div class="chips" id="mePm">${Object.entries(SALEM).map(([k,n])=>`<button type="button" class="chip" data-pm="${k}">${n}</button>`).join('')}</div>
-        <div class="row"><div class="field grow"><label for="mePAmt">결제 금액 (원)</label><input id="mePAmt" inputmode="numeric" placeholder="예: 330,000"></div><div class="field grow"><label for="mePDate">결제일</label><input id="mePDate" type="date" value="${TODAY()}"></div></div>
+        <div class="row"><div class="field grow"><label for="mePAmt">결제 금액 (원)</label><input id="mePAmt" inputmode="numeric" placeholder="예: 330,000"></div><div class="field grow"><label for="mePDate">결제일</label><input id="mePDate" class="dpick" readonly value="${TODAY()}"></div></div>
       </div>
     </div>
     <button class="btn red" id="meSave">등록 정보 저장</button>${cur.end||cur.pt?'<button class="btn ghost" id="meClear">등록 정보 지우기</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
@@ -3629,7 +3665,7 @@ function openHoldSheet(m,onDone){
   const tmr=dAdd(TODAY(),1);
   sheet(`<h2>정지(연기) · ${esc(m.name)}</h2>
     <div class="mhint warn">${esc(planLabel(mem))} · ${p.label}. 시작일은 내일(${md(tmr)})부터 고를 수 있어요. 지난 날짜로 소급할 수 없어요.</div>
-    <div class="row"><div class="field grow"><label for="hdStart">정지 시작일</label><input id="hdStart" type="date" min="${tmr}" max="${mem.end}" value="${tmr}"></div><div class="field grow"><label for="hdDays">정지 일수 (최대 ${p.max}일)</label><input id="hdDays" type="number" min="1" max="${p.max}" value="${p.max}"></div></div>
+    <div class="row"><div class="field grow"><label for="hdStart">정지 시작일</label><input id="hdStart" class="dpick" readonly min="${tmr}" max="${mem.end}" value="${tmr}"></div><div class="field grow"><label for="hdDays">정지 일수 (최대 ${p.max}일)</label><input id="hdDays" type="number" min="1" max="${p.max}" value="${p.max}"></div></div>
     <div class="small" id="hdPrev"></div>
     <button class="btn red" id="hdSave">정지 처리</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const s=el.querySelector('#hdStart'),d=el.querySelector('#hdDays');
