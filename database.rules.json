@@ -263,6 +263,10 @@
      ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
      ".validate": "!newData.exists() || (newData.child('title').isString() && newData.child('at').isNumber())"
     }
+   },
+   "memos": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
    }
   }
  }

@@ -403,6 +403,15 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .mrow .ms{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
 .mrow .mb{display:flex;gap:6px;flex:0 0 auto}
 .mrow.pend{background:#FFF6EE}
+.memo-pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;background:#FFF3C9;color:#7A5A00;border-radius:999px;padding:1px 7px}
+.memobox{background:#FFFBEA;border:1px solid #F0DE9A;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.memobox .mh{display:flex;align-items:center;gap:8px}.memobox .mh b{flex:1}
+.memobox .mm{border-top:1px dashed #E8D58E;padding-top:6px;font-size:14px;white-space:pre-wrap;word-break:break-word}
+.memobox .mm:first-of-type{border-top:0;padding-top:0}
+.memobox .mt2{font-size:11px;color:#8A7A44;display:flex;gap:6px;align-items:center;margin-top:2px}
+.memobox .mt2 button{border:0;background:none;color:#8A7A44;text-decoration:underline;font-size:11px;padding:0}
+.memobox textarea{width:100%;border:2px solid #E8D58E;border-radius:10px;padding:8px 10px;font:inherit;font-size:15px;background:#fff;resize:vertical}
+.mtag{font-size:11px;border-radius:6px;padding:0 5px;background:#fff;border:1px solid #E8D58E}
 .memtable table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
 .memtable th,.memtable td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;white-space:nowrap}
 .memtable th{font-weight:400;color:var(--muted)}
@@ -1725,6 +1734,20 @@ function openCal(inp){const pad=n=>String(n).padStart(2,'0');const v=/^\d{4}-\d{
   r.addEventListener('click',e=>{if(e.target===r)close()});draw()}
 document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest('input.dpick');if(i&&!i.disabled){e.preventDefault();i.blur();openCal(i)}});
 
+/* ================= 관장 메모 (회원에게 안 보임 · 관장만) ================= */
+const MTAG={pay:'결제',mem:'등록',etc:'기타'};
+async function memoAdd(mid,text,tag='etc'){text=String(text||'').trim().slice(0,500);if(!text)return false;const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);return hset(`memos/${mid}/${id}`,{text,tag,at:Date.now()})}
+function memoBox(el,m){const box=el.querySelector('#admMemo');if(!box)return;let adding=false;
+  const draw=async()=>{const all=Object.entries((await hget('memos/'+m.id))||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.at-a.at);
+    box.innerHTML=`<div class="mh"><b>관장 메모 <span class="small">(회원·코치에게 안 보여요)</span></b><button class="btn sm ghost" id="mmAdd" type="button">${adding?'취소':'+ 메모'}</button></div>
+      ${adding?`<div class="chips" id="mmTag">${Object.entries(MTAG).map(([k,v],i)=>`<button type="button" class="chip ${i===0?'on':''}" data-t="${k}">${v}</button>`).join('')}</div><textarea id="mmTxt" rows="3" maxlength="500" placeholder="예: 카드 결제 후 1만원 현금 추가 예정 / 다음 달 10일에 잔금"></textarea><button class="btn sm red" id="mmSave" type="button">메모 저장</button>`:''}
+      ${all.length?all.map(x=>`<div class="mm">${esc(x.text)}<div class="mt2"><span class="mtag">${MTAG[x.tag]||'기타'}</span>${new Date(x.at).getFullYear()}.${new Date(x.at).getMonth()+1}.${new Date(x.at).getDate()}<button type="button" data-mx="${x.id}">지우기</button></div></div>`).join(''):(adding?'':'<div class="small">결제·등록하면서 생긴 일을 적어 두세요.</div>')}`;
+    box.querySelector('#mmAdd').onclick=()=>{adding=!adding;draw().then(()=>{const ta=box.querySelector('#mmTxt');if(ta)ta.focus()})};
+    box.querySelectorAll('#mmTag [data-t]').forEach(b=>b.onclick=()=>box.querySelectorAll('#mmTag [data-t]').forEach(x=>x.classList.toggle('on',x===b)));
+    const sv=box.querySelector('#mmSave');if(sv)sv.onclick=async()=>{const tg=(box.querySelector('#mmTag .on')||{}).dataset;if(await memoAdd(m.id,box.querySelector('#mmTxt').value,tg?tg.t:'etc')){adding=false;toast('메모를 저장했어요');draw();renderAdmRows()}};
+    box.querySelectorAll('[data-mx]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 지워져요';return}if(await hset(`memos/${m.id}/${b.dataset.mx}`,null)){draw();renderAdmRows()}})};
+  draw()}
+
 /* ================= 코치 대화방 · 직원 공지 ================= */
 const CH={role:null,name:'',msgs:{},notes:{},tab:'chat',off:[],sel:null};
 const chatRead=k=>{try{return +localStorage.getItem('nnn_chat_'+k)||0}catch(e){return 0}};
@@ -2194,7 +2217,7 @@ const BK_KEEP=30;
 async function bkCollect(faces){const out={app:'NNN WORLD',ver:1,at:new Date().toISOString()};
   if(!FB_ON()){out.members={};out.private={};Object.values(local.members||{}).forEach(m=>{const s=splitM(m);out.members[m.id]=s.pub;out.private[m.id]=s.prv});out.pays=local.pays||{};const {pin,...mt}=local.meta;out.meta=mt;if(faces)out.faces=local.faces||{};return out}
   const g=async p=>{try{return(await gref(p).get()).val()||{}}catch(e){return{}}};
-  out.members=await g('members');out.private=await g('private');out.pays=await g('pays');out.meta=await g('meta');out.coachcodes=await g('coachcodes');out.roster=await g('roster');if(faces)out.faces=await g('faces');return out}
+  out.members=await g('members');out.private=await g('private');out.pays=await g('pays');out.meta=await g('meta');out.coachcodes=await g('coachcodes');out.roster=await g('roster');out.memos=await g('memos');if(faces)out.faces=await g('faces');return out}
 const bkCount=b=>({mem:Object.keys(b.members||{}).length,reg:Object.values(b.private||{}).filter(p=>p&&p.mem).length,pay:Object.keys(b.pays||{}).length});
 async function autoSnapshot(){if(!FB_ON()||!IS_ADMIN)return;const key=TODAY();
   try{const ex=(await gref('backups/'+key+'/at').get()).val();if(ex)return;const b=await bkCollect(false);if(!Object.keys(b.members).length)return;await gref('backups/'+key).set(clean(b));
@@ -2243,6 +2266,7 @@ async function doRestore(b,o){const n={m:0,p:0,t:0};const fill=o.mode==='fill';
     try{const nx=(await gref('nextId').get()).val()||1000;const mx=Math.max(nx,...Object.keys(b.members).map(Number).filter(x=>x>0));let cur=nx;while(cur<mx){await gref('nextId').set(cur+1);cur++}}catch(e){}}
   if(o.doP){const cur=await get('pays');for(const [k,v] of Object.entries(b.pays||{})){if(fill&&cur[k])continue;if(JSON.stringify(cur[k])===JSON.stringify(v))continue;await gref('pays/'+k).set(clean(v));n.p++}}
   if(o.doT&&b.meta){const {pin,nextId,...mt}=b.meta;const cur=await get('meta');await gref('meta').set(clean(fill?Object.assign({},mt,cur):mt));n.t=1;
+    if(b.memos){for(const [k,v] of Object.entries(b.memos)){try{if(!fill||!Object.keys((await get('memos/'+k))||{}).length)await gref('memos/'+k).set(v)}catch(e){}}}
     if(b.coachcodes){for(const [k,v] of Object.entries(b.coachcodes)){try{if(!fill||!(await get('coachcodes'))[k])await gref('coachcodes/'+k).set(v)}catch(e){}}}}
   if(o.doF&&b.faces){for(const [k,v] of Object.entries(b.faces)){try{if(fill&&(await gref('faces/'+k).get()).val())continue;await gref('faces/'+k).set(v)}catch(e){}}}
   return n}
@@ -2669,9 +2693,10 @@ function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').valu
 $('#sUrl').oninput=drawQR;
 async function renderAdmRows(){
   const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
+  const MEMOS=(await hget('memos'))||{};
   renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&(!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').includes(q)));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div></div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div></div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
   $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]'))return;admDetail(r.dataset.d)});
   clearTimeout(window._adT);window._adT=setTimeout(renderADash,300);
   $$('#admRows [data-ap]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
@@ -2687,6 +2712,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
     <button class="btn" id="admAtt" ${m.last===TODAY()?'disabled':''}>오늘 출석 처리</button>
     <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div></div><button class="btn sm red" id="admMem">${m.mem?'수정':'입력'}</button></div>
+    <div class="memobox" id="admMemo"><div class="small">메모 불러오는 중…</div></div>
     ${m.mem&&m.mem.pt&&m.mem.pt.left>0?'<button class="btn ghost" id="admPt">PT 1회 차감 (남은 '+m.mem.pt.left+'회)</button>':''}
     ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div>${holdPolicy(m.mem)&&!m.mem.hold?'<button class="btn sm ghost" id="admHold">정지 처리</button>':''}</div>`:''}
     <div class="qrow"><div class="grow small">${m.gPhone?`<b>보호자</b> ${esc(m.gName||'보호자')} ${esc(m.gPhone)}<br>결제·만료 안내는 보호자에게 가요`:'<b>보호자</b> 없음 (성인 회원)'}</div><button class="btn sm ghost" id="admGuard">${m.gPhone?'수정':'학생으로 지정'}</button></div>
@@ -2699,6 +2725,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
     el.querySelector('#admAtt').onclick=async()=>{close();padBuf=m.id;await doAttendAdmin(m.id)};
+    memoBox(el,m);
     el.querySelector('#admMem').onclick=()=>{close();openMemEditor(m,{},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})};
     {const pb=el.querySelector('#admPt');if(pb)pb.onclick=async()=>{m.mem.pt.left--;await DB.savePriv(m);toast(`PT 차감 · 남은 ${m.mem.pt.left}회`);close();renderAdmRows()}}
     if(m.hasFace)FDB.get(m.id).then(src=>{const b=el.querySelector('#admFace');if(b)b.innerHTML=src?`<img src="${src}" alt="${esc(m.name)} 얼굴" style="width:100%;height:100%;object-fit:cover">`:'사진 없음'});
@@ -3446,6 +3473,7 @@ function openMemEditor(m,pre={},onDone){
         <div class="row"><div class="field grow"><label for="mePAmt">결제 금액 (원)</label><input id="mePAmt" inputmode="numeric" placeholder="예: 330,000"></div><div class="field grow"><label for="mePDate">결제일</label><input id="mePDate" class="dpick" readonly value="${TODAY()}"></div></div>
       </div>
     </div>
+    <div class="field"><label for="meMemo">결제·등록 메모 <span class="small">(관장만 보여요 · 회원 상세에 쌓여요)</span></label><textarea id="meMemo" rows="2" maxlength="500" placeholder="예: 학생 할인 적용 / 계좌이체 다음 주 입금 약속 / 영수증 요청"></textarea></div>
     <button class="btn red" id="meSave">등록 정보 저장</button>${cur.end||cur.pt?'<button class="btn ghost" id="meClear">등록 정보 지우기</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const endIn=el.querySelector('#meEnd'),startIn=el.querySelector('#meStart');
     const moN=el.querySelector('#meMoN');
@@ -3487,6 +3515,7 @@ function openMemEditor(m,pre={},onDone){
       if(pOn.checked){const amt=+pAmt.value.replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
         if(pre.pay){pr=pre.pay;Object.assign(pr,{method:pm,amount:amt,saleDate:pd,item:m.mem.item||pr.item,months:m.mem.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0});await DB.addPay(clean(pr));if(local.pays)local.pays[pr.id]=pr}
         else{pr={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:m.id,name:m.name,item:m.mem.item||planLabel(m.mem),amount:amt,method:pm,status:'done',source:'admin',saleDate:pd,at:new Date().toISOString(),doneAt:new Date().toISOString(),months:m.mem.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0,kind:(cur.end||cur.pt||(m.memHist||[]).length>1)?'renew':'new'};await DB.addPay(clean(pr))}}
+      {const mt=el.querySelector('#meMemo').value.trim();if(mt)await memoAdd(m.id,mt,pOn.checked?'pay':'mem')}
       toast(m.name+' 님 등록 정보'+(pr?'와 결제('+payName(pm)+')':'')+'를 저장했어요');close();onDone&&onDone(m,pr)};
     const cl=el.querySelector('#meClear');if(cl)cl.onclick=async()=>{m.memHist=(m.memHist||[]).concat([cur]).slice(-10);m.mem=null;await DB.savePriv(m);toast('등록 정보를 지웠어요');close();onDone&&onDone(m)};
   });
