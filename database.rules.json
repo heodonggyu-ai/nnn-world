@@ -369,6 +369,15 @@
       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && root.child('gym/mdev').child($id).child(auth.uid).exists()) || (!data.exists() && newData.exists() && (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val()))"
      }
     }
+   },
+   "hourly": {
+    ".read": "auth != null",
+    "$d": {
+     "$h": {
+      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
+      ".validate": "newData.isNumber()"
+     }
+    }
    }
   }
  }
