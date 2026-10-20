@@ -334,6 +334,18 @@
        ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())",
        ".validate": "!newData.exists() || newData.child('url').val().beginsWith('https://')"
       }
+     },
+     "talk": {
+      "$k": {
+       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (!data.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && (newData.child('by').val() === root.child('gym/spar').child($pid).child('post/by').val() || newData.child('by').val() === root.child('gym/spar').child($pid).child('post/to/id').val())))",
+       ".validate": "!newData.exists() || (newData.child('date').isString() && newData.child('time').isString())"
+      }
+     },
+     "ok": {
+      "$m": {
+       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ($m === root.child('gym/spar').child($pid).child('post/by').val() || $m === root.child('gym/spar').child($pid).child('post/to/id').val())))",
+       ".validate": "!newData.exists() || newData.isString()"
+      }
      }
     }
    },
