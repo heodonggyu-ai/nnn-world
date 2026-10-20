@@ -741,6 +741,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <button class="btn gold" id="cWorld">내 캐릭터로 NNN WORLD 입장 (꾸미기)</button>
   <button class="btn" id="cChat">코치 대화방 · 공지<i class="cbadge" id="cChatN" hidden></i></button>
   <button class="btn ghost" id="cSpar">회원 스파링 확인 · 코치 피드백</button>
+  <button class="btn ghost" id="cWho">지금 체육관 · 맵 접속자 보기</button>
   <button class="btn ghost" id="cVoice">회원 의견함<i class="cbadge" id="cVoiceN" hidden></i></button>
   <div class="atabs" id="ctabs"><button data-ct="work" class="on">내 근태</button><button data-ct="leave">휴가</button><button data-ct="mem">회원 출석</button></div>
   <div id="cvWork" style="display:flex;flex-direction:column;gap:12px">
@@ -832,6 +833,10 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
   <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
   <div class="bring" data-atab="today" id="dueBanner" hidden></div>
+  <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px">
+    <div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">지금 누가 있나요</h3><button class="btn sm ghost" id="whoRef">새로고침</button></div>
+    <div id="whoAdm" style="display:flex;flex-direction:column;gap:6px"><div class="small">불러오는 중…</div></div>
+  </div>
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px">
     <div class="row" style="align-items:center"><div class="grow"><h3 style="font-size:20px">회원 의견함 <span class="small num" id="vsCnt" style="color:var(--red)"></span></h3><div class="small" id="vsSub">회원이 남긴 건의·칭찬·불편 사항이에요</div></div><button class="btn sm red" id="vsOpen">열기</button></div>
   </div>
@@ -1487,7 +1492,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{refreshTop()}catch(e){console.error('refreshTop',e)}watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)||isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
+async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)||isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -1652,6 +1657,7 @@ function drawWorld(c){
 $('.mapwrap').addEventListener('click',e=>{if(e.target.id!=='map')return;
   const cv=$('#map'),r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*MW/r.width,y=(e.clientY-r.top)*MH/r.height;
   $('#mapHint').style.opacity=0;
+  if(x<200&&y>70&&y<98&&liveCfg().map){openWho();return}
   {const ho=hitOther(x,y);if(ho){showOther(ho);return}}
   const hitA=W.animals.find(a=>Math.hypot(a.x-x,a.y-10-y)<20);
   if(hitA){go(hitA.x-14,hitA.y,{type:'animal',a:hitA});return}
@@ -1919,6 +1925,31 @@ function playArcade(g){if(!g)return;stopWorld();let r=$('#arcRoot');if(r)r.remov
   r.querySelector('#arcX').onclick=()=>{r.remove();if(!$('#v-world').hidden&&!$('#t-map').hidden)startWorld()};
   r.querySelector('#arcNew').onclick=()=>{try{window.open(g.href,'_blank','noopener')}catch(e){location.href=g.href}};
   if(ME&&!isGuest()&&!isStaff(ME)){const d=fixDay(ME);d.arc=d.arc||[];if(!d.arc.length){earn(ME,10,'arcade');toast(g.name+' 첫 플레이! +10 크레딧',2500);refreshTop()}if(!d.arc.includes(g.id))d.arc.push(g.id);prog(ME,'arcade');saveMe()}}
+
+/* ================= 지금 누가 있나요 (체육관 출석 · 맵 접속) ================= */
+const agoTxt=at=>{const m=Math.max(0,Math.round((Date.now()-at)/60000));return m<1?'방금':m<60?m+'분 전':Math.floor(m/60)+'시간 '+(m%60)+'분 전'};
+const hhmm=at=>{const d=new Date(at);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+async function whoData(){let live=LIVE.data,on=WC.on;if(!LIVE.off||isStaff(ME||{})){live=(await hget('live'))||{}}if(!WC.offOn||isStaff(ME||{})){on=(await hget('online'))||{}}
+  const now=Date.now(),lim=stayMin()*60000,td=new Date().toDateString();
+  const gym=Object.entries(live||{}).filter(([id,v])=>v&&v.at&&(v.until?now<v.until:now-v.at<lim)&&new Date(v.at).toDateString()===td&&id!=='0000').map(([id,v])=>Object.assign({id},v)).sort((a,b)=>b.at-a.at);
+  const app=Object.entries(on||{}).filter(([id,v])=>v&&v.at&&now-v.at<75000&&id!=='0000').map(([id,v])=>Object.assign({id},v)).sort((a,b)=>(a.nick||'').localeCompare(b.nick||''));
+  return{gym,app}}
+async function whoNames(ids){const out={};const inCoach=!$('#v-coach').hidden;if(inCoach||(ME&&isCoachRec(ME))){try{const ros=await COACH.roster()||{};ids.forEach(id=>{if(ros[id])out[id]=ros[id].name})}catch(e){}return out}if(!isStaff(ME||{})&&$('#v-admin').hidden)return out;
+  await Promise.all(ids.map(async id=>{if(/^c\d+$/.test(id)||id===OWNER_ID)return;try{const m=await DB.get(id);if(m)out[id]=m.name}catch(e){}}));return out}
+function whoRow(x,nm,kind,staffView){const role=x.owner?'관장님':x.coach?'코치':'';const name=staffView&&nm[x.id]?nm[x.id]:(x.owner?'관장님':x.nick||'회원');
+  return `<div class="qrow" style="align-items:center">${staffView&&!role?`<div class="cimg" data-wf="${esc(x.id)}" style="width:40px;height:40px;font-size:9px">사진</div>`:`<canvas width="80" height="88" data-wa="${esc(x.id)}" style="width:40px;height:44px;flex:0 0 auto"></canvas>`}
+    <div class="grow"><b>${esc(name)}</b>${role&&!x.owner?` <span class="pill" style="background:#2E5AAC;color:#fff">${role}</span>`:''}${staffView&&!role?` <span class="small num">${esc(x.id)}</span>`:''}<div class="small">${kind==='gym'?(x.until?'출근 중':`${hhmm(x.at)} 출석 · ${agoTxt(x.at)}`):`앱 접속 중${x.lv?' · Lv.'+x.lv:''}`}</div></div></div>`}
+function whoHTML(d,nm,staffView){const inGym=new Set(d.gym.map(x=>x.id));const appOnly=d.app.filter(x=>!inGym.has(x.id));
+  return `<div class="label">체육관에 있는 사람 <b class="num">${d.gym.filter(x=>!x.owner&&!x.coach).length}</b>명${d.gym.some(x=>x.owner||x.coach)?' + 관장·코치':''}</div>
+    ${d.gym.length?d.gym.map(x=>whoRow(x,nm,'gym',staffView)).join(''):'<div class="small">지금 체육관에 출석한 사람이 없어요</div>'}
+    <div class="label" style="margin-top:6px">앱(맵)에 들어와 있는 사람 <b class="num">${d.app.length}</b>명</div>
+    ${appOnly.length?appOnly.map(x=>whoRow(x,nm,'app',staffView)).join(''):'<div class="small">'+(d.app.length?'모두 체육관에 있어요':'지금 맵에 들어온 사람이 없어요')+'</div>'}
+    <div class="small" style="color:var(--muted)">출석 후 ${stayMin()>=60?Math.round(stayMin()/6)/10+'시간':stayMin()+'분'} 동안 '체육관에 있는 사람'으로 보여요.</div>`}
+function whoPaint(root,d,staffView){root.querySelectorAll('[data-wa]').forEach(cv=>{const x=d.gym.concat(d.app).find(y=>y.id===cv.dataset.wa);try{avatarTo(cv,(x&&x.eq)||{char:'boxer'},{h:46,noFx:true})}catch(e){}});if(staffView)root.querySelectorAll('[data-wf]').forEach(el=>faceInto(el,el.dataset.wf))}
+async function openWho(){const d=await whoData();const sv=isStaff(ME||{});const nm=sv?await whoNames(d.gym.concat(d.app).map(x=>x.id)):{};
+  sheet(`<h2>지금 누가 있나요?</h2><div id="whoBox" style="display:flex;flex-direction:column;gap:6px">${whoHTML(d,nm,sv)}</div>${sv?'':'<p class="small" style="margin:0">회원 이름은 가려서 보여요. 캐릭터를 맵에서 누르면 인사할 수 있어요.</p>'}<button class="btn ghost" data-close>닫기</button>`,(el)=>whoPaint(el,d,sv))}
+async function renderWhoAdmin(){const box=$('#whoAdm');if(!box)return;const d=await whoData();const nm=await whoNames(d.gym.concat(d.app).map(x=>x.id));box.innerHTML=whoHTML(d,nm,true);whoPaint(box,d,true)}
+setInterval(()=>{const v=$('#v-admin');if(v&&!v.hidden&&$('#whoAdm')&&!$('#whoAdm').closest('[data-atab]').hidden)renderWhoAdmin()},30000);
 
 /* ================= 인사 주고받기 ================= */
 const GREETS=['👋 안녕하세요!','🔥 오늘도 화이팅!','💪 같이 운동해요','🙏 수고하셨어요','🥊 스파링 한 판?','😄 반가워요'];
@@ -2271,6 +2302,7 @@ $('#spStaff').onclick=openSparStaff;
 async function fillLiveAdmin(){const C=liveCfg();[['lsMap','map'],['lsHome','home'],['lsToday','today'],['lsChart','chart'],['lsCrowd','crowd']].forEach(([i,k])=>{$('#'+i).checked=!!C[k];$('#'+i).onchange=async()=>{local.meta.liveShow=Object.assign(liveCfg(),{[k]:$('#'+i).checked});if(await DB.saveMeta()){toast('저장했어요');fillLiveAdmin()}}});
   $('#lsStay').textContent=(stayMin()>=60?Math.round(stayMin()/60*10)/10+'시간':stayMin()+'분');if(!LIVE.off)startLive();$('#lsPrev').innerHTML='<div class="small" style="margin-bottom:4px">미리보기</div>'+liveCardHTML(await hourlyLoad(true))}
 $('#vsOpen').onclick=()=>openVoiceStaff();
+$('#whoRef').onclick=renderWhoAdmin;
 $('#voiceBtn').onclick=()=>openVoice();
 $('#spMin').onchange=async()=>{local.meta.sparMin=+$('#spMin').value;if(await DB.saveMeta())toast('저장했어요')};
 $('#spAuto').onchange=async()=>{local.meta.sparAuto=$('#spAuto').checked;if(await DB.saveMeta())toast('저장했어요')};
@@ -2897,12 +2929,12 @@ function crowdOf(n){return n<=3?['한산해요','#2B9B66']:n<=8?['적당해요',
 function liveCardHTML(hr){const C=liveCfg();const n=liveMembers().length,st=liveStaff().length;const tot=Object.values(hr||{}).reduce((s,v)=>s+(+v||0),0);const [cl,cc]=crowdOf(n);
   const hs=[];for(let h=6;h<=23;h++)hs.push([h,+(hr||{})[h]||0]);const mx=Math.max(1,...hs.map(x=>x[1]));const nowH=new Date().getHours();
   return `<div class="livec"><div class="lvh"><span class="dot ${n?'on':''}"></span><b>지금 체육관 <span class="num">${n}</span>명 운동 중</b>${C.crowd?`<span class="crowd" style="background:${cc}">${cl}</span>`:''}</div>
-    <div class="small">${C.today?`오늘 출석 <b class="num">${tot}</b>명`:''}${st?`${C.today?' · ':''}${liveStaff().some(([i,v])=>v.owner)?'관장님':''}${liveStaff().some(([i,v])=>v.coach)?(liveStaff().some(([i,v])=>v.owner)?'·':'')+'코치':''} 근무 중`:''}</div>
+    <div class="small" style="display:flex;gap:4px"><span class="grow">${C.today?`오늘 출석 <b class="num">${tot}</b>명`:''}${st?`${C.today?' · ':''}${liveStaff().some(([i,v])=>v.owner)?'관장님':''}${liveStaff().some(([i,v])=>v.coach)?(liveStaff().some(([i,v])=>v.owner)?'·':'')+'코치':''} 근무 중`:''}</span><span style="color:var(--ink);font-weight:600">누가 있나요 ›</span></div>
     ${C.chart?`<div class="lvchart" aria-label="오늘 시간대별 출석">${hs.map(([h,v])=>`<i title="${h}시 ${v}명" class="${h===nowH?'now':''}" style="height:${Math.max(3,v/mx*100)}%"></i>`).join('')}</div><div class="lvax"><span>6시</span><span>12시</span><span>18시</span><span>23시</span></div>`:''}</div>`}
 async function renderLiveCards(){const C=liveCfg();const hr=await hourlyLoad();const html=liveCardHTML(hr);
-  const hb=$('#homeLive');if(hb){hb.hidden=!C.home;if(C.home)hb.innerHTML=html}
+  const hb=$('#homeLive');if(hb){hb.hidden=!C.home;if(C.home){hb.innerHTML=html;hb.onclick=()=>{if(FB_ON())openWho()}}}
   const gb=$('#guestLive');if(gb){gb.hidden=!C.home;if(C.home)gb.innerHTML=html}
-  const mb=$('#mapLive');if(mb){mb.hidden=!C.map||!C.chart;if(!mb.hidden)mb.innerHTML=html}}
+  const mb=$('#mapLive');if(mb){mb.hidden=!C.map||!C.chart;if(!mb.hidden){mb.innerHTML=html;mb.onclick=openWho}}}
 setInterval(()=>{if(!$('#v-home').hidden||!$('#v-guest').hidden||(!$('#v-world').hidden&&!$('#t-map').hidden))renderLiveCards()},30000);
 function startLive(){stopLive();if(FB_ON()){try{const r=gref('live');const hnd=s=>{LIVE.data=s.val()||{}};r.on('value',hnd);LIVE.off=()=>r.off('value',hnd)}catch(e){}}else{LIVE.data=local.live||{}}}
 function stopLive(){if(LIVE.off){LIVE.off();LIVE.off=null}}
@@ -3089,7 +3121,7 @@ function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=
   sheet(`<div class="row" style="align-items:center"><div class="cimg" id="cmF" style="width:96px;height:96px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small num">회원번호 ${m.id} · 가입 ${esc(m.joined||'-')}</div><div class="small">총 출석 ${(m.attend||[]).length}회 · 최근 ${m.last?md(m.last):'-'} · 연속 ${m.streak||0}일</div></div></div>
     <div id="cmCal"></div><button class="btn" data-close>닫기</button>`,el=>{faceInto(el.querySelector('#cmF'),m.id);const draw=()=>{el.querySelector('#cmCal').innerHTML=cal();el.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+ +b.dataset.mv);mon=dstr(f).slice(0,7);draw()})};draw()})}
 $('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
-$('#cSearch').oninput=renderCoach;$('#cWorld').onclick=enterCoachWorld;$('#cChat').onclick=()=>openChat('coach');$('#cVoice').onclick=()=>openVoiceStaff();$('#cSpar').onclick=openSparStaff;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
+$('#cSearch').oninput=renderCoach;$('#cWorld').onclick=enterCoachWorld;$('#cChat').onclick=()=>openChat('coach');$('#cVoice').onclick=()=>openVoiceStaff();$('#cWho').onclick=async()=>{const d=await whoData();const nm=await whoNames(d.gym.concat(d.app).map(x=>x.id));sheet(`<h2>지금 누가 있나요?</h2><div style="display:flex;flex-direction:column;gap:6px">${whoHTML(d,nm,true)}</div><button class="btn ghost" data-close>닫기</button>`,el=>whoPaint(el,d,true))};$('#cSpar').onclick=openSparStaff;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
 $('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
 
 /* ================= 코치 인사 · 근태 ================= */
@@ -3301,7 +3333,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
