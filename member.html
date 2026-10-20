@@ -4750,12 +4750,21 @@ const TPL_DEFAULT={
 
 [이용수칙]
 {이용수칙}`,
-  pay:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 정보를 안내드립니다.
+  pay:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 정보 및 이용수칙 안내드립니다.
+{재안내}
+
 ▶ 상품: {상품}
 ▶ 기간: {기간}
 ▶ 운동 요일: {요일}
 ▶ 정지(연기): {정지규정}
 ▶ 결제: {결제}
+
+- 새로운 회원관리 앱 출시 안내 -
+▶ NNN WORLD 앱 (출석·등록 기간 확인)
+{로그인주소}
+회원번호: {회원번호}
+비밀번호: 가입 때 적은 휴대폰 번호 뒤 4자리예요.
+{학부모안내}휴대폰 홈 화면에 추가해 두면 앱처럼 쓸 수 있어요.
 
 [이용수칙]
 {이용수칙}`,
@@ -4790,7 +4799,7 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
     '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
     '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
-    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'입금계좌':bankLine(),...extra}}
+    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'재안내':m.legacy?'회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!':'','로그인주소':appBase()+'?m='+(m.id||''),'학부모안내':m.gPhone?'학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요.\n':'','입금계좌':bankLine(),...extra}}
 function bankLine(){const P=local.meta.pay||{};return P.acct?`${P.bank||''} ${P.acct}${P.holder?' ('+P.holder+')':''}`.trim():'카운터 문의'}
 const G_KINDS=['pay','hold','exp','after','unpaid'];
 const toGuard=(m,kind)=>!!m.gPhone&&(G_KINDS.includes(kind)||String(kind).startsWith('c:'));
@@ -4802,13 +4811,13 @@ function openGuardSheet(m){
     el.querySelector('#gSave').onclick=async()=>{const p=normPhone(el.querySelector('#gPh').value);if(p.replace(/\D/g,'').length<10){toast('연락처를 정확히 적어 주세요');return}m.gPhone=p;m.gName=el.querySelector('#gRel').value;m.student=true;await DB.savePriv(m);toast('보호자 연락처를 저장했어요');close();renderAdmRows();renderDue()};
     const d=el.querySelector('#gDel');if(d)d.onclick=async()=>{m.gPhone='';m.gName='';m.student=false;await DB.savePriv(m);toast('지웠어요');close();renderAdmRows();renderDue()}})}
 function fillTpl(text,m,pay){const v=msgVars(m,pay);return String(text).replace(/\{([^{}]+)\}/g,(a,k)=>k in v?v[k]:a)}
-const LEGACY_NOTE='※ 안내: 체육관 회원 관리 프로그램을 새 앱(NNN WORLD)으로 바꾸면서 기존 회원님들의 등록 정보를 다시 입력하고 안내드리고 있어요. 새로 결제되거나 등록 내용이 바뀐 것이 아니니 걱정하지 않으셔도 돼요!';
+const LEGACY_NOTE='회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!';
 function appInfoBlock(m){const g=!!m.gPhone;return `▶ NNN WORLD 앱 (출석·등록 기간 확인)\n${appBase()}?m=${m.id}\n회원번호 ${m.id} · 비밀번호는 가입 때 적은 휴대폰 번호 뒤 4자리예요.${g?'\n학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요.':''}\n휴대폰 홈 화면에 추가해 두면 앱처럼 쓸 수 있어요.`}
 function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpls().find(x=>x.id===kind.slice(2));return c?fillTpl(c.text,m,pay):''}
-  let tx=fillTpl(tplOf(kind),m,pay);
+  const raw=tplOf(kind);let tx=fillTpl(raw,m,pay).replace(/\n[ \t]*\n([ \t]*\n)+/g,'\n\n').replace(/^([^\n]*)\n\n(▶)/m,'$1\n\n$2');
   if(kind==='pay'||kind==='welcome'){
-    if(m.legacy&&!tx.includes('새 앱(NNN WORLD)')){const nl=tx.indexOf('\n');tx=nl>0?tx.slice(0,nl+1)+LEGACY_NOTE+'\n'+tx.slice(nl+1):LEGACY_NOTE+'\n'+tx}
-    if(!tx.includes('?m='+m.id)){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}}
+    if(m.legacy&&!raw.includes('{재안내}')&&!/프로그램을 (교체|바꾸)|새 앱\(NNN WORLD\)/.test(tx)){const nl=tx.indexOf('\n');tx=nl>0?tx.slice(0,nl+1)+LEGACY_NOTE+'\n'+tx.slice(nl+1):LEGACY_NOTE+'\n'+tx}
+    if(!tx.includes('?m='+m.id)&&!raw.includes('{로그인주소}')){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}}
   return tx}
 const customTpls=()=>Array.isArray(local.meta.tplCustom)?local.meta.tplCustom:[];
 const kindName=k=>String(k).startsWith('c:')?((customTpls().find(x=>x.id===k.slice(2))||{}).name||'직접 만든 안내'):(TPL_NAME[k]||'안내');
@@ -4933,7 +4942,7 @@ async function renderDue(){
 function openTplEditor(){
   const rc=remindCfg();let cus=customTpls().map(x=>({...x}));
   sheet(`<h2>안내 문구 설정</h2>
-    <div class="small">자동으로 채워지는 칸: {이름} {회원번호} {상품} {기간} {요일} {정지규정} {결제} {정지기간} {종료일} {남은일} {앱주소} {약관주소} {이용수칙}</div>
+    <div class="small">자동으로 채워지는 칸: {이름} {회원번호} {상품} {기간} {요일} {정지규정} {결제} {정지기간} {종료일} {남은일} {앱주소} {약관주소} {이용수칙} {받는분} {재안내} {로그인주소} {학부모안내} {정지시작} {다시시작}</div>
     <div class="label">만료 전 안내 보낼 날</div>
     <div class="chips"><label class="chip"><input type="checkbox" id="rD7" ${rc.d7?'checked':''}> 7일 전</label><label class="chip"><input type="checkbox" id="rD3" ${rc.d3?'checked':''}> 3일 전</label><label class="chip"><input type="checkbox" id="rD2" ${rc.d2?'checked':''}> 2일 전</label><label class="chip"><input type="checkbox" id="rD1" ${rc.d1?'checked':''}> 1일 전</label><label class="chip"><input type="checkbox" id="rD0" ${rc.d0?'checked':''}> 종료일 당일</label><label class="chip"><input type="checkbox" id="rAf" ${rc.after?'checked':''}> 만료 다음 날</label></div>
     <div class="label">기본 안내</div>
