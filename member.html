@@ -1550,7 +1550,27 @@ async function bioEnroll(m,pin){
   if(!cred)throw new Error('no cred');
   const L=bioList().filter(r=>r.id!==m.id);L.push({id:m.id,name:m.name||'',cid:b64u(cred.rawId),k:bioHide(pin),at:Date.now()});lsSet(LS_BIO,L.slice(-5));
   try{localStorage.removeItem('nnn_bio_no_'+m.id)}catch(e){}}
+setTimeout(()=>{try{bioAvail()}catch(e){}},0);
 function bioRemove(id){lsSet(LS_BIO,bioList().filter(r=>r.id!==id))}
+/* 관장·코치용: 이 기기에 하나씩 */
+const LS_BIOS='nnn_bio_staff';
+const bioStaff=role=>{const v=lsGet(LS_BIOS)||{};return v[role]&&v[role].cid?v[role]:null};
+function bioStaffSet(role,rec){const v=lsGet(LS_BIOS)||{};if(rec)v[role]=rec;else delete v[role];lsSet(LS_BIOS,v)}
+async function bioMakeCred(uid,name){const cred=await navigator.credentials.create({publicKey:{challenge:bioRand(),rp:{name:'NNN WORLD'},
+    user:{id:new TextEncoder().encode(uid),name,displayName:name},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+    authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});
+  if(!cred)throw new Error('no cred');return b64u(cred.rawId)}
+async function bioCheck(cid){try{await navigator.credentials.get({publicKey:{challenge:bioRand(),allowCredentials:[{type:'public-key',id:unb64u(cid),transports:['internal']}],userVerification:'required',timeout:60000}});return true}
+  catch(e){toast(e&&e.name==='NotAllowedError'?`${bioWord()} 확인이 취소됐어요. 다시 누르거나 직접 입력해 주세요`:`${bioRo()} 확인할 수 없어요. 직접 입력해 주세요`,3500);return false}}
+function bioStaffBtn(role,label){return `<button class="btn red" data-biostaff style="display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M9 10v1M15 10v1M12 10v3h-1M9.5 16c1.5 1 3.5 1 5 0"/></svg>${esc(label)}</button><div class="small" style="text-align:center;margin:-2px 0 2px">또는 직접 입력</div>`}
+function bioStaffOffer(role,secret,name,n=0){(async()=>{if(bioStaff(role)||!(await bioAvail())||lsGet('nnn_bio_no_'+role))return;
+  if($('#sheetRoot').innerHTML.trim()){if(n<40)setTimeout(()=>bioStaffOffer(role,secret,name,n+1),3000);return}
+  const who=role==='admin'?'관장 메뉴':'코치 로그인';
+  sheet(`<h2>다음부터 ${who}도 ${bioRo()} 들어올까요?</h2><p class="small" style="margin:0">${role==='admin'?'PIN':'코치 코드'}를 치지 않고 ${bioRo()} 바로 들어갈 수 있어요. 얼굴·지문 정보는 이 휴대폰 안에만 있어요.</p>
+    <p class="small" style="margin:0">이 기기를 다른 사람과 같이 쓰면 켜지 마세요. ${isIOS()?'':'갤럭시는 이 폰에 등록된 다른 사람 지문으로도 열려요.'}</p>
+    <button class="btn red" id="bsYes">${bioRo()} 켜기</button><button class="btn ghost" data-close>다음에</button><button class="link" id="bsNo">다시 묻지 않기</button>`,(el,close)=>{
+    el.querySelector('#bsYes').onclick=async()=>{try{const cid=await bioMakeCred('nnn-'+role,role==='admin'?'NNN 관장':'NNN 코치 '+(name||''));bioStaffSet(role,{cid,k:bioHide(secret),name:name||'',at:Date.now()});try{localStorage.removeItem('nnn_bio_no_'+role)}catch(e){}close();toast(`이제 ${who}에 ${bioRo()} 들어올 수 있어요`)}catch(e){toast(e&&e.name==='NotAllowedError'?'취소됐어요':'이 기기에서는 설정할 수 없어요',3500)}};
+    el.querySelector('#bsNo').onclick=()=>{lsSet('nnn_bio_no_'+role,1);close()}})})()}
 async function bioLogin(rec,btn){
   if(btn)btn.disabled=true;
   try{
@@ -2890,10 +2910,11 @@ $('#logoutBtn').onclick=()=>{stopLive();W.others={};if(meOff){meOff();meOff=null
 /* ================= 출석패드 ================= */
 let padBuf='',padTimer=0;
 function pinSheet(title,ok){
-  sheet(`<h2>${esc(title)}</h2><div class="field"><label for="pinIn">관장 PIN</label><input id="pinIn" inputmode="numeric" maxlength="4" type="password"></div><button class="btn red" id="pinOk">확인</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
-    const inp=el.querySelector('#pinIn');setTimeout(()=>inp.focus(),50);
-    const go=async()=>{const v=inp.value.trim();if(!/^\d{4}$/.test(v)){toast('PIN 숫자 4자리를 넣어 주세요');return}if(!(await fbWait()))return;let okk=false;try{okk=await DB.adminLogin(v)}catch(e){}if(okk){try{await DB.meta()}catch(e){}close();try{await ok()}catch(e){console.error(e);toast('화면을 여는 중 문제가 생겼어요: '+(e&&e.message||e),6000)}}else{toast(!FB_ON()&&FB_ERR!=='preview'?'서버에 연결되지 않아 PIN을 확인할 수 없어요. 인터넷 확인 후 새로고침해 주세요':'PIN이 맞지 않아요',4500);inp.value=''}};
-    el.querySelector('#pinOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}});
+  const bs=bioStaff('admin');
+  sheet(`<h2>${esc(title)}</h2>${bs&&BIO_AV?bioStaffBtn('admin','관장님 '+bioWord()+' 확인'):''}<div class="field"><label for="pinIn">관장 PIN</label><input id="pinIn" inputmode="numeric" maxlength="4" type="password"></div><button class="btn red" id="pinOk">확인</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const inp=el.querySelector('#pinIn');if(!(bs&&BIO_AV))setTimeout(()=>inp.focus(),50);
+    const go=async(fromBio)=>{const v=fromBio||inp.value.trim();if(!/^\d{4}$/.test(v)){toast('PIN 숫자 4자리를 넣어 주세요');return}if(!(await fbWait()))return;let okk=false;try{okk=await DB.adminLogin(v)}catch(e){}if(okk){try{await DB.meta()}catch(e){}close();if(!fromBio&&title==='관장 메뉴')setTimeout(()=>bioStaffOffer('admin',v),1500);try{await ok()}catch(e){console.error(e);toast('화면을 여는 중 문제가 생겼어요: '+(e&&e.message||e),6000)}}else if(fromBio&&FB_ON()){bioStaffSet('admin',null);toast('PIN이 바뀌어서 얼굴 확인이 꺼졌어요. 새 PIN으로 한 번 들어와 주세요',4500)}else{toast(!FB_ON()&&FB_ERR!=='preview'?'서버에 연결되지 않아 PIN을 확인할 수 없어요. 인터넷 확인 후 새로고침해 주세요':'PIN이 맞지 않아요',4500);inp.value=''}};
+    el.querySelector('#pinOk').onclick=()=>go();const bb=el.querySelector('[data-biostaff]');if(bb)bb.onclick=async()=>{bb.disabled=true;try{if(await bioCheck(bs.cid)){const v=bioShow(bs.k);if(!v)return;await go(v)}}finally{bb.disabled=false}};inp.onkeydown=e=>{if(e.key==='Enter')go()}});
 }
 $('#goPad').onclick=()=>pinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>pinSheet('출석패드 종료',()=>show('v-home'));
@@ -3307,10 +3328,10 @@ async function renderCoaches(){const box=$('#coachRows');if(!box)return;const o=
   box.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}await COACH.del(b.dataset.cdel);toast('코치 계정을 지웠어요');renderCoaches()})}
 $('#coachAdd').onclick=async()=>{const n=$('#coachName').value.trim();if(!n){toast('코치 이름을 적어 주세요');return}const code=await COACH.add(n);if(!code)return;$('#coachName').value='';renderCoaches();
   sheet(`<h2>${esc(n)} 코치 계정</h2><div style="text-align:center;font-family:var(--display);font-size:48px;letter-spacing:.15em" class="num">${code}</div><p class="small" style="margin:0">코치에게 이 6자리 코드를 알려 주세요.<br>코치 폰: NNN WORLD → 처음 화면 아래 <b>코치</b> → 코드 입력</p><button class="btn" id="cCopy">안내 문구 복사</button><button class="btn ghost" data-close>닫기</button>`,el=>{el.querySelector('#cCopy').onclick=()=>copyText(`[NNN 복싱 코치 계정]\n${appBase()}\n처음 화면 아래 '코치' → 코드 ${code}`,'안내를')})};
-$('#goCoach').onclick=()=>{sheet(`<h2>코치 로그인</h2><div class="field"><label for="ccIn">코치 코드 (6자리)</label><input id="ccIn" inputmode="numeric" maxlength="6" type="password"></div><button class="btn red" id="ccOk">들어가기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
-  const inp=el.querySelector('#ccIn');setTimeout(()=>inp.focus(),50);
-  const go=async()=>{if(!(await fbWait()))return;const r=await COACH.login(inp.value.trim());if(r&&(await COACH.check())){lsSet('nnn_coach',1);close();openCoachMode()}else{toast('코치 코드가 맞지 않아요');inp.value=''}};
-  el.querySelector('#ccOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})};
+$('#goCoach').onclick=()=>{const bs=bioStaff('coach');sheet(`<h2>코치 로그인</h2>${bs&&BIO_AV?bioStaffBtn('coach',(bs.name?bs.name.replace(/\s*코치$/,'')+' 코치 ':'')+bioRo()+' 들어가기'):''}<div class="field"><label for="ccIn">코치 코드 (6자리)</label><input id="ccIn" inputmode="numeric" maxlength="6" type="password"></div><button class="btn red" id="ccOk">들어가기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+  const inp=el.querySelector('#ccIn');if(!(bs&&BIO_AV))setTimeout(()=>inp.focus(),50);
+  const go=async(fromBio)=>{if(!(await fbWait()))return;const code=fromBio||inp.value.trim();const r=await COACH.login(code);if(r&&(await COACH.check())){lsSet('nnn_coach',1);close();await openCoachMode();if(!fromBio){let nm='';try{const c=await myCoachCode();nm=FB_ON()?((await gref('staff/'+c+'/name').get()).val()||''):(((local.coachcodes||{})[c]||{}).name||'')}catch(e){}setTimeout(()=>bioStaffOffer('coach',code,nm),1500)}}else if(fromBio){bioStaffSet('coach',null);toast('코치 코드가 바뀌어서 얼굴 로그인이 꺼졌어요. 새 코드로 한 번 들어와 주세요',4000)}else{toast('코치 코드가 맞지 않아요');inp.value=''}};
+  el.querySelector('#ccOk').onclick=()=>go();const bb=el.querySelector('[data-biostaff]');if(bb)bb.onclick=async()=>{bb.disabled=true;try{if(await bioCheck(bs.cid))await go(bioShow(bs.k))}finally{bb.disabled=false}};inp.onkeydown=e=>{if(e.key==='Enter')go()}})};
 let CO={day:null,all:[],ros:{}};
 async function openCoachMode(){const ros=await COACH.roster();if(ros==null){try{localStorage.removeItem('nnn_coach')}catch(e){}toast('코치 계정이 해제됐어요. 관장님께 코드를 다시 받아 주세요',4000);show('v-home');return}
   CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');setCTab('work');chatBadge('coach');voiceStaffBadge()}
