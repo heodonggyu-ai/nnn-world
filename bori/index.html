@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>보리보리쌀</title>
+<meta name="theme-color" content="#FFF6D8">
+<link rel="icon" href="../shared/img/samsaek.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 폰이 술래 손이 되는 보리보리쌀. 여럿이 손가락을 가운데 쌀그릇에 올리고, 위에 뜨는 말에 반응해요 */
+:root{
+  --paper:#FFF6D8; --card:#FFFDF7; --ink:#24363B; --mute:#6E7563; --line:rgba(36,54,59,.16);
+  --barley:#D9A441; --rice:#FFFFFF; --bowl:#B5562F; --bowl-2:#8F3F20; --skin:#F6C9A3; --skin-2:#E3A57B;
+  --red:#E8453C; --leaf:#3E8E5E; --sun:#FFD23F;
+  --f-display:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --f-body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overscroll-behavior:none}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-x:hidden;
+  background-image:radial-gradient(rgba(36,54,59,.07) 1.5px,transparent 1.6px);background-size:18px 18px}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--barley);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+.wrap{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+.card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 rgba(36,54,59,.25);padding:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:58px;border:2.5px solid var(--ink);border-radius:18px;
+  background:var(--barley);color:var(--ink);font-family:var(--f-display);font-size:22px;box-shadow:0 5px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.soft{background:#fff}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.top .grow{flex:1;min-width:0}
+.icon{width:44px;height:44px;border-radius:14px;border:2.5px solid var(--ink);background:#fff;font-size:18px;display:grid;place-items:center;flex:0 0 auto;text-decoration:none;color:var(--ink)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.label{font-family:var(--f-display);font-size:16px;color:var(--mute);margin:0 0 8px}
+
+/* 시작 */
+.logo{text-align:center;margin:6px 0 16px}
+.logo h1{font-size:44px;line-height:1}
+.logo h1 b{font-weight:400;color:var(--red)}
+.logo p{margin:8px 0 0;color:var(--mute);font-size:15px;line-height:1.5}
+.grains{font-size:30px;letter-spacing:4px;margin-bottom:6px}
+.rules{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px;line-height:1.4}
+.rules li{display:flex;gap:8px;align-items:flex-start}
+.rules li span{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--f-display);font-size:14px;display:grid;place-items:center}
+.ex{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.ex i{font-style:normal;font-family:var(--f-display);font-size:15px;padding:2px 9px;border-radius:999px;border:2px solid var(--ink);background:#fff}
+.ex i.go{background:var(--red);color:#fff}
+.best{text-align:center;font-size:14px;color:var(--mute)}
+
+/* 게임 */
+.status{font-family:var(--f-display);font-size:15px;color:var(--mute)}
+.word{height:clamp(96px,17vh,140px);display:grid;place-items:center;font-family:var(--f-display);font-size:clamp(70px,22vw,110px);line-height:1;color:var(--ink);text-align:center}
+.word span{display:inline-block;animation:say .28s cubic-bezier(.2,1.6,.4,1)}
+.word.small{font-size:clamp(24px,7vw,32px);color:var(--mute);line-height:1.25}
+.word.go{color:var(--red)}
+@keyframes say{from{transform:scale(.4);opacity:0}}
+.arena{flex:1;position:relative;min-height:300px;display:grid;place-items:center;touch-action:none}
+.bowl{width:min(78vw,340px,44vh);aspect-ratio:1;border-radius:50%;position:relative;touch-action:none;
+  background:radial-gradient(circle at 50% 42%,#fff 0 30%,#F4EEDD 55%,#E3D7B8 72%,var(--bowl) 73%,var(--bowl-2) 100%);
+  border:3px solid var(--ink);box-shadow:0 8px 0 rgba(36,54,59,.3),inset 0 -10px 0 rgba(0,0,0,.12)}
+.bowl::before{content:"";position:absolute;inset:18%;border-radius:50%;
+  background:radial-gradient(ellipse 5px 3px at 20% 30%,var(--barley) 98%,transparent),radial-gradient(ellipse 5px 3px at 70% 25%,var(--barley) 98%,transparent),radial-gradient(ellipse 5px 3px at 45% 70%,var(--barley) 98%,transparent),radial-gradient(ellipse 5px 3px at 80% 60%,var(--barley) 98%,transparent),radial-gradient(ellipse 5px 3px at 30% 55%,#E9DFC6 98%,transparent),radial-gradient(ellipse 5px 3px at 60% 45%,#E9DFC6 98%,transparent);opacity:.9}
+.bowl .hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-family:var(--f-display);font-size:clamp(18px,5vw,22px);color:var(--ink);padding:22%;line-height:1.3;pointer-events:none}
+.bowl .hint b{font-weight:400;display:block;font-size:clamp(40px,12vw,56px);color:var(--red)}
+.hand{position:absolute;top:50%;width:34%;max-width:150px;pointer-events:none;transition:transform .5s cubic-bezier(.5,0,.75,0);z-index:3}
+.hand svg{width:100%;display:block;overflow:visible}
+.hand.l{left:-12%;transform:translateY(-50%) rotate(-12deg)}
+.hand.r{right:-12%;transform:translateY(-50%) scaleX(-1) rotate(-12deg)}
+.arena.shut .hand.l{transform:translateY(-50%) translateX(98%) rotate(0deg)}
+.arena.shut .hand.r{transform:translateY(-50%) translateX(-98%) scaleX(-1) rotate(0deg)}
+.arena.wiggle .hand.l{animation:wigL .36s ease-in-out infinite}
+.arena.wiggle .hand.r{animation:wigR .36s ease-in-out infinite}
+@keyframes wigL{50%{transform:translateY(-50%) translateX(10%) rotate(-6deg)}}
+@keyframes wigR{50%{transform:translateY(-50%) translateX(-10%) scaleX(-1) rotate(-6deg)}}
+.fing{position:absolute;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+  font-family:var(--f-display);font-size:14px;color:#fff;pointer-events:none;z-index:2;box-shadow:0 0 0 6px rgba(255,255,255,.55);transition:opacity .2s}
+.fing.late{opacity:.35;border-style:dashed}
+.fing.up{opacity:.55}
+.fing.safe{background:var(--leaf)!important;opacity:1;z-index:4}
+.fing.caught{background:var(--red)!important;opacity:1;z-index:4;animation:squash .3s}
+.fing.fooled{background:#7d7d7d!important;opacity:1;z-index:4}
+@keyframes squash{50%{transform:scale(1.25)}}
+.fing i{font-style:normal;position:absolute;top:100%;margin-top:4px;white-space:nowrap;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:8px;padding:1px 6px;font-size:13px}
+.count{font-family:var(--f-display);font-size:clamp(80px,26vw,120px);color:var(--red);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
+
+/* 결과 */
+.over{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:16px;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);background:rgba(36,54,59,.25)}
+.res{max-width:480px;width:100%;animation:up .3s cubic-bezier(.2,1.2,.4,1)}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.res h2{font-size:clamp(28px,8vw,36px);text-align:center}
+.res p{text-align:center;margin:4px 0 12px;color:var(--mute);font-size:15px;line-height:1.45}
+.list{display:grid;gap:6px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px;padding:7px 12px;border:2px solid var(--line);border-radius:14px;background:#fff;font-size:16px}
+.row .dot{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--ink);flex:0 0 auto}
+.row b{font-family:var(--f-display);font-weight:400}
+.row .r{margin-left:auto;font-size:14px;color:var(--mute);font-variant-numeric:tabular-nums}
+.big{font-size:64px;text-align:center;line-height:1}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:21;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.word span,.res,.fing{animation:none!important}}
+</style>
+</head>
+<body>
+
+<section id="setup" class="wrap">
+  <div class="top"><a class="icon" id="back" href="../" aria-label="NNN 월드로">←</a><div class="grow"></div><button class="icon snd" aria-label="소리 켜고 끄기">🔊</button></div>
+  <div class="logo"><div class="grains">🌾🍚🌾</div><h1>보리보리<b>쌀</b></h1><p>폰이 술래 손이에요.<br>쌀그릇에 손가락을 올리고, <b>"쌀!"</b> 할 때만 쏙 빼세요!</p></div>
+  <div class="stack">
+    <div class="card">
+      <div class="label">이렇게 해요</div>
+      <ol class="rules">
+        <li><span>1</span><div>모두 화면 가운데 <b>쌀그릇</b>에 손가락 하나씩 올려요. (혼자도 돼요)</div></li>
+        <li><span>2</span><div>위에 <b>"보리"</b>가 나오면 그대로 버텨요. 먼저 빼면 <b>속은 거예요!</b></div></li>
+        <li><span>3</span><div><b>"쌀!"</b>이 나오면 손이 닫히기 전에 쏙 빼요. 늦으면 잡혀요.</div></li>
+        <li><span>4</span><div>2판부터는 가짜 말도 나와요. 소리만 듣다간 속아요!
+          <div class="ex"><i>보리</i><i>살!</i><i>쌈!</i><i>보쌈!</i><i class="go">쌀!</i></div></div></li>
+        <li><span>5</span><div>살아남은 사람만 다음 판. 판마다 손이 빨라져요. 마지막 한 명이 우승!</div></li>
+      </ol>
+    </div>
+    <button class="btn" id="start">🍚 시작하기</button>
+    <div class="best" id="bestTxt"></div>
+  </div>
+</section>
+
+<section id="play" class="wrap" hidden>
+  <div class="top"><div class="grow status" id="status">1판</div><button class="icon snd" aria-label="소리 켜고 끄기">🔊</button><button class="icon" id="quit" aria-label="그만하기">✕</button></div>
+  <div class="word small" id="word"><span>손가락을 쌀그릇에<br>올려 주세요</span></div>
+  <div class="arena" id="arena">
+    <div class="bowl" id="bowl"><div class="hint" id="hint"><div><b id="hintN">0</b>명 올림</div></div></div>
+    <div class="hand l"><svg viewBox="0 0 160 120"><use href="#handArt"/></svg></div>
+    <div class="hand r"><svg viewBox="0 0 160 120"><use href="#handArt"/></svg></div>
+  </div>
+</section>
+
+<div id="res" class="over" hidden><div class="res card" id="resCard"></div></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="handArt">
+    <path d="M8 46 C8 22 40 14 80 16 L132 20 C146 21 148 38 134 40 L104 42 L138 46 C152 48 152 66 138 67 L106 69 L134 74 C148 76 146 93 132 93 L104 92 L124 98 C136 102 132 118 118 116 L60 112 C26 110 8 92 8 70 Z"
+      fill="#F6C9A3" stroke="#24363B" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M60 30 C70 6 96 2 102 14 C106 22 92 30 82 34" fill="#F6C9A3" stroke="#24363B" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M104 42 L84 43 M106 69 L84 69 M104 92 L84 91" stroke="#E3A57B" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</defs></svg>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const store={get(k,d){try{const v=localStorage.getItem('nnnbori.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('nnnbori.'+k,JSON.stringify(v))}catch(e){}}};
+if(window.top!==window)$('#back').hidden=true;
+const COLORS=['#E8453C','#2E5AAC','#3E8E5E','#8E5BD8','#FF7A2F','#E2557A','#1F9AA5','#6B4E2E','#C9A100','#444'];
+const CNAME=['빨강','파랑','초록','보라','주황','분홍','청록','갈색','노랑','검정'];
+const FAKES=['살!','쌈!','보쌈!','쌍!','쌀쌀?'];
+let SOUND=store.get('sound',true),BEST=store.get('best',0);
+function renderSound(){document.querySelectorAll('.snd').forEach(b=>b.textContent=SOUND?'🔊':'🔇')}
+document.querySelectorAll('.snd').forEach(b=>b.onclick=()=>{SOUND=!SOUND;store.set('sound',SOUND);renderSound();audio()});
+function renderBest(){$('#bestTxt').textContent=BEST?`혼자 하기 최고 기록: ${BEST}판 연속 생존`:''}
+renderSound();renderBest();
+
+/* ---------- 소리 ---------- */
+let AC=null;
+function audio(){if(!SOUND)return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){AC=null}return AC}
+function tone(f,dur,type='square',vol=.12,when=0,slide){const a=audio();if(!a)return;const t=a.currentTime+when,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02)}
+function noise(dur,vol=.4,freq=2500){const a=audio();if(!a)return;const len=a.sampleRate*dur,buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+  const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=buf;f.type='bandpass';f.frequency.value=freq;g.gain.value=vol;s.connect(f).connect(g).connect(a.destination);s.start()}
+const sfx={
+  bori(){tone(392,.13,'triangle',.22);tone(330,.16,'triangle',.22,.15)},
+  ssal(){noise(.12,.5,3200);tone(880,.09,'square',.12)}, // 가짜 말도 똑같은 소리! 눈으로 봐야 해요
+  count(){tone(660,.08,'triangle',.18)},
+  slam(){noise(.25,.7,500);tone(120,.25,'sine',.4,0,60)},
+  safe(){tone(784,.08,'triangle',.18);tone(1047,.12,'triangle',.18,.07)},
+  fooled(){tone(180,.3,'sawtooth',.14,0,100)},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.18,'triangle',.18,i*.11))}
+};
+const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+
+/* ---------- 상태 ---------- */
+const S={phase:'off',fingers:new Map(),seq:0,round:1,expect:0,solo:false,streak:0,timers:[],stableT:0,t0:0,win:900};
+const T=(fn,ms)=>{const id=setTimeout(fn,ms);S.timers.push(id);return id};
+const clearT=()=>{S.timers.forEach(clearTimeout);S.timers=[]};
+const arena=$('#arena'),bowl=$('#bowl');
+function show(id){['setup','play'].forEach(s=>$('#'+s).hidden=s!==id);window.scrollTo(0,0)}
+function setWord(t,cls){const w=$('#word');w.className='word'+(cls?' '+cls:'');w.innerHTML=`<span>${t}</span>`}
+const inFingers=()=>[...S.fingers.values()].filter(f=>f.st==='in');
+
+function startGame(){audio();S.round=1;S.expect=0;S.streak=0;S.solo=false;S.played=false;show('play');waitFingers()}
+function waitFingers(){
+  clearT();S.phase='wait';S.fingers.clear();renderFingers();arena.classList.remove('shut','wiggle');
+  $('#hint').hidden=false;updateWait();
+}
+function updateWait(){
+  const n=S.fingers.size;$('#hintN').textContent=n;
+  $('#status').textContent=S.solo?`혼자 하기 · ${S.streak}판 연속 생존`:`${S.round}판${S.expect?` · ${S.expect}명 남음`:''}`;
+  if(!n){setWord(S.expect>1?`살아남은 ${S.expect}명만<br>손가락 올려요`:'손가락을 쌀그릇에<br>올려 주세요','small');return}
+  setWord(S.expect&&n!==S.expect?`${S.expect}명이 올려야 해요<br>(지금 ${n}명)`:'좋아요! 그대로…<br>곧 시작해요','small');
+  clearTimeout(S.stableT);
+  if(!S.expect||n===S.expect||S.solo)S.stableT=setTimeout(()=>{if(S.phase==='wait'&&S.fingers.size)countdown()},1400);
+}
+function countdown(){
+  S.phase='count';$('#hint').hidden=true;
+  if(!S.played){S.solo=S.fingers.size===1;S.expect=S.fingers.size}
+  // 판마다 빨라져요: 쌀 반응 시간 0.9초 → 최소 0.38초
+  const lv=S.solo?S.streak:S.round-1;S.win=Math.max(380,900-lv*70);
+  $('#status').textContent=S.solo?`혼자 하기 · ${S.streak}판 연속 생존 · 반응 ${(S.win/1000).toFixed(2)}초`:`${S.round}판 · ${S.fingers.size}명 · 반응 ${(S.win/1000).toFixed(2)}초`;
+  let c=3;const step=()=>{if(S.phase!=='count')return;if(c===0){callWords();return}setWord(`<b class="count">${c}</b>`);sfx.count();c--;T(step,600)};step();
+}
+function callWords(){
+  S.phase='call';S.played=true;arena.classList.add('wiggle');
+  const lv=S.solo?S.streak:S.round-1,fakes=lv>=1;
+  const n=R(2,5+Math.min(3,lv)),words=[];
+  for(let i=0;i<n;i++)words.push(fakes&&Math.random()<.28&&i>0?pick(FAKES):'보리');
+  words.push('쌀!');
+  let i=0;
+  const next=()=>{
+    if(S.phase!=='call')return;
+    const w=words[i++];
+    if(w==='쌀!'){ssal();return}
+    setWord(w,w==='보리'?'':'');w==='보리'?sfx.bori():sfx.ssal();
+    let gap=Math.max(360,720-lv*35)+R(-120,220);if(Math.random()<.18)gap+=R(500,900); // 가끔 뜸들이기
+    T(next,gap);
+  };
+  next();
+}
+function ssal(){
+  S.phase='ssal';S.t0=performance.now();setWord('쌀!','go');sfx.ssal();buzz(40);
+  arena.classList.remove('wiggle');
+  document.querySelectorAll('.hand').forEach(h=>h.style.transitionDuration=S.win+'ms');
+  arena.classList.add('shut');
+  T(resolve,S.win);
+}
+function resolve(){
+  if(S.phase!=='ssal')return;S.phase='done';
+  let caught=0;for(const f of S.fingers.values())if(f.st==='in'){f.st='caught';caught++}
+  if(caught){sfx.slam();buzz([200,60,200])}
+  renderFingers();T(showResult,700);
+}
+
+/* ---------- 손가락 ---------- */
+let colorI=0;
+bowl.addEventListener('pointerdown',e=>{
+  e.preventDefault();audio();
+  const r=bowl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  if(Math.hypot(e.clientX-cx,e.clientY-cy)>r.width/2+6)return;
+  try{bowl.setPointerCapture(e.pointerId)}catch(_){}
+  if(S.phase==='wait'){const used=new Set([...S.fingers.values()].map(f=>f.c));let c=0;while(used.has(c))c++;
+    S.fingers.set(e.pointerId,{x:e.clientX-r.left,y:e.clientY-r.top,c:c%COLORS.length,st:'in'});renderFingers();updateWait()}
+});
+function lift(e){
+  const f=S.fingers.get(e.pointerId);if(!f)return;
+  if(S.phase==='wait'){S.fingers.delete(e.pointerId);renderFingers();updateWait();return}
+  if(S.phase==='count'){S.fingers.delete(e.pointerId);renderFingers();clearT();S.phase='wait';$('#hint').hidden=false;
+    if(!S.played){S.expect=0;S.solo=false}updateWait();return} // 시작 전엔 벌칙 없이 다시 대기
+  if(f.st!=='in')return;
+  if(S.phase==='call'){f.st='fooled';sfx.fooled();buzz(80);renderFingers();if(!inFingers().length){clearT();S.phase='done';arena.classList.remove('wiggle');T(showResult,600)}return}
+  if(S.phase==='ssal'){f.st='safe';f.rt=performance.now()-S.t0;sfx.safe();renderFingers();if(!inFingers().length){clearT();S.phase='done';T(showResult,500)}}
+}
+bowl.addEventListener('pointerup',lift);bowl.addEventListener('pointercancel',lift);
+document.addEventListener('contextmenu',e=>{if(!$('#play').hidden)e.preventDefault()});
+function renderFingers(){
+  bowl.querySelectorAll('.fing').forEach(el=>el.remove());
+  for(const f of S.fingers.values()){const d=document.createElement('div');d.className='fing '+(f.st==='in'?'':f.st);d.style.left=f.x+'px';d.style.top=f.y+'px';d.style.background=COLORS[f.c];
+    d.innerHTML=f.st==='safe'?'살았다<i>'+(f.rt/1000).toFixed(2)+'초</i>':f.st==='caught'?'잡혔다':f.st==='fooled'?'속았다':CNAME[f.c];bowl.appendChild(d)}
+}
+
+/* ---------- 결과 ---------- */
+function showResult(){
+  arena.classList.remove('wiggle');
+  const all=[...S.fingers.values()].sort((a,b)=>a.c-b.c),safe=all.filter(f=>f.st==='safe').sort((a,b)=>a.rt-b.rt);
+  const rows=all.map(f=>`<div class="row"><span class="dot" style="background:${COLORS[f.c]}"></span><b>${CNAME[f.c]}</b><span class="r">${f.st==='safe'?'🟢 살았다 · '+(f.rt/1000).toFixed(2)+'초':f.st==='caught'?'🔴 잡혔다 (늦었어요)':'⚪ 속았다 (먼저 뺐어요)'}</span></div>`).join('');
+  let html;
+  if(S.solo){
+    if(safe.length){S.streak++;if(S.streak>BEST){BEST=S.streak;store.set('best',BEST)}
+      html=`<div class="big">🍚</div><h2>살았다! ${S.streak}판 연속</h2><p>${(safe[0].rt/1000).toFixed(2)}초 만에 뺐어요. 다음 판은 더 빨라져요!</p><button class="btn" id="go">다음 판</button>`}
+    else{const f=all[0];
+      html=`<div class="big">${f.st==='caught'?'✊':'😵'}</div><h2>${f.st==='caught'?'잡혔다!':'속았다!'}</h2><p>${S.streak}판 연속 생존 · 최고 기록 ${BEST}판</p><div class="stack"><button class="btn" id="re">다시 하기</button><button class="btn soft" id="home">처음으로</button></div>`}
+  }else if(safe.length===1){
+    const w=safe[0];
+    html=`<div class="big">🏆</div><h2><span style="color:${COLORS[w.c]}">${CNAME[w.c]}</span> 손가락 우승!</h2><p>${S.round}판 만에 끝났어요. 마지막까지 안 속고 안 잡혔어요!</p><div class="list">${rows}</div><div class="stack"><button class="btn" id="re">새 게임</button><button class="btn soft" id="home">처음으로</button></div>`;
+    sfx.win();confetti();
+  }else if(!safe.length){
+    html=`<div class="big">😂</div><h2>아무도 못 살았어요!</h2><p>이번 판은 없던 걸로. 같은 사람들이 다시 해요.</p><div class="list">${rows}</div><button class="btn" id="go">이번 판 다시</button>`;
+  }else{
+    S.expect=safe.length;
+    html=`<h2>${safe.length}명 살아남았어요!</h2><p>잡히거나 속은 사람은 빠지고, <b>살아남은 ${safe.length}명</b>만 다시 손가락을 올려요.<br>제일 빠른 손: <b style="color:${COLORS[safe[0].c]}">${CNAME[safe[0].c]}</b> ${(safe[0].rt/1000).toFixed(2)}초</p><div class="list">${rows}</div><button class="btn" id="go">다음 판 (${S.round+1}판)</button>`;
+  }
+  $('#resCard').innerHTML=html;$('#res').hidden=false;
+  const go=$('#go'),re=$('#re'),home=$('#home');
+  if(go)go.onclick=()=>{$('#res').hidden=true;if(!S.solo&&safe.length>1)S.round++;waitFingers()};
+  if(re)re.onclick=()=>{$('#res').hidden=true;startGame()};
+  if(home)home.onclick=()=>{$('#res').hidden=true;quit()};
+}
+function confetti(){const c=document.createElement('div');c.className='confetti';const cols=['#E8453C','#FFD23F','#3E8E5E','#D9A441','#fff'];
+  for(let i=0;i<60;i++){const d=document.createElement('i');d.style.left=Math.random()*100+'%';d.style.background=pick(cols);d.style.animationDuration=(1.8+Math.random()*1.8)+'s';d.style.animationDelay=Math.random()*.6+'s';c.appendChild(d)}
+  document.body.appendChild(c);setTimeout(()=>c.remove(),4500)}
+function quit(){clearT();clearTimeout(S.stableT);S.phase='off';S.fingers.clear();renderFingers();renderBest();show('setup')}
+$('#quit').onclick=quit;
+$('#start').onclick=startGame;
+// 앱을 나갔다 오면 이번 판은 다시
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&['count','call','ssal'].includes(S.phase)){clearT();$('#res').hidden=true;waitFingers()}});
+</script>
+</body>
+</html>
