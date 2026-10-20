@@ -4840,7 +4840,12 @@ async function markSent(m,kind,ch='manual',text=''){
   m.sent=m.sent||{};m.sent[sentKey(m,kind).replace(/[.#$\[\]/]/g,'_')]=TODAY();
   const log=Array.isArray(m.sentLog)?m.sentLog.slice(-29):[];log.push({at:Date.now(),kind,name:kindName(kind),ch,text:String(text).slice(0,1500)});m.sentLog=log;
   await DB.savePriv(m)}
-const wasSent=(m,kind)=>!!(m.sent&&m.sent[sentKey(m,kind).replace(/[.#$\[\]/]/g,'_')]);
+function logSent(m,kind){const L=Array.isArray(m.sentLog)?m.sentLog:(m.sentLog?Object.values(m.sentLog):[]);if(!L.length)return false;const mem=m.mem||{};let since='';
+  if(kind==='pay')since=mem.paidAt||mem.setAt||mem.start||'';
+  else if(kind==='hold'){const h=mem.hold||{};since=(typeof h.at==='string'&&/^\d{4}-/.test(h.at))?h.at:(h.start?dAdd(h.start,-14):'')}
+  else if(kind==='exp'||kind==='after'||kind==='unpaid')since=mem.end?dAdd(mem.end,-10):'';
+  return L.some(e=>e&&e.kind===kind&&(!since||!e.at||dstr(new Date(e.at))>=since))}
+const wasSent=(m,kind)=>!!(m.sent&&m.sent[sentKey(m,kind).replace(/[.#$\[\]/]/g,'_')])||logSent(m,kind);
 function smsHref(m,text,kind){const num=String((kind?msgPhone(m,kind):m.phone)||'').replace(/[^\d]/g,'');return`sms:${num}${isIOS()?'&':'?'}body=${encodeURIComponent(text)}`}
 async function kakaoShare(text){try{if(navigator.share){await navigator.share({text});return true}}catch(e){if(e&&e.name==='AbortError')return false}copyText(text,'안내문을');return true}
 function openSendSheet(m,kind,pay,txt0){
