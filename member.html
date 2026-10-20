@@ -1395,8 +1395,18 @@ function normPhone(p){const d=String(p).replace(/\D/g,'');if(d.length===11)retur
 function download(name,text,type){try{const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}catch(e){toast('다운로드를 시작하지 못했어요')}}
 
 /* 소리 */
-let AC=null,SND=false;
-function sfx(type){if(!SND)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);const n=AC.currentTime;
+let AC=null,SND=(()=>{try{return localStorage.getItem('nnn_snd')!=='0'}catch(e){return true}})();
+/* ===== 소리 공통: 아이폰 무음 스위치·백그라운드 대비 ===== */
+function getAC(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state!=='running'){AC.resume().catch(()=>{})}return AC}catch(e){return null}}
+const SILENT_WAV='data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+let KEEP=null;
+function audioUnlock(){try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  const ac=getAC();if(ac){try{const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0)}catch(e){}}
+  /* 예전 iOS: 무음 오디오를 같이 재생하면 무음 스위치를 켜 둬도 효과음이 나요 */
+  try{if(!KEEP){KEEP=new Audio(SILENT_WAV);KEEP.loop=true;KEEP.setAttribute('playsinline','');KEEP.volume=0.01}if(KEEP.paused){const p=KEEP.play();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+['touchstart','pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,audioUnlock,{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&AC&&AC.state!=='running'){AC.resume().catch(()=>{})}});
+function sfx(type){if(!SND)return;try{if(!getAC())return;const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);const n=AC.currentTime;
   const P={hit:[160,.08,'square'],good:[660,.12,'triangle'],bad:[110,.2,'sawtooth'],coin:[990,.1,'sine'],jump:[440,.06,'triangle'],win:[523,.35,'triangle']}[type]||[440,.1,'sine'];
   o.type=P[2];o.frequency.setValueAtTime(P[0],n);if(type==='coin'||type==='win')o.frequency.exponentialRampToValueAtTime(P[0]*1.6,n+P[1]);g.gain.setValueAtTime(.15,n);g.gain.exponentialRampToValueAtTime(.001,n+P[1]);o.start(n);o.stop(n+P[1]+.02)}catch(e){}}
 
@@ -1726,7 +1736,8 @@ $('#dgLoad').onclick=async()=>{const o=(await hget('diag'))||{};const L=[];Objec
   $('#dgBox').innerHTML=L.slice(0,40).map(d=>`<div class="qrow" style="align-items:flex-start"><div class="grow small"><b>${esc(d.id)}</b> · ${new Date(d.at).toLocaleString('ko-KR')} · <b>${esc(d.reason)}</b><br>${esc((d.ua||'').replace(/Mozilla\/5\.0 \(|\) AppleWebKit.*?\)/g,''))}<br>화면 ${d.vw}×${d.vh} · 맵 ${d.cw}×${d.ch} (${d.w}×${d.h}) · dpr ${d.dpr} · loop ${d.run?'on':'off'} ${d.age}ms · lost ${d.lost?'Y':'N'} · 재생성 ${d.fresh} · ${esc(d.ver||'')}${(d.errs||[]).length?'<br><span style="color:var(--red)">'+d.errs.map(esc).join('<br>')+'</span>':''}</div><button class="btn sm ghost" data-dgx="${esc(d.id)}/${esc(d.k)}">삭제</button></div>`).join('')||'<div class="small">기록이 없어요 👍</div>';
   $$('#dgBox [data-dgx]').forEach(b=>b.onclick=async()=>{if(await hset('diag/'+b.dataset.dgx,null))$('#dgLoad').click()})};
 $('#mapFix').onclick=e=>{e.stopPropagation();hardFixMap()};$('#mapFixLink').onclick=()=>{MAPFAIL.sent=0;sendDiag('user-report');hardFixMap()};
-$('#sndBtn').onclick=()=>{SND=!SND;$('#sndBtn').textContent=SND?'소리 끄기':'소리 켜기';if(SND)sfx('good')};
+$('#sndBtn').textContent=SND?'소리 끄기':'소리 켜기';
+$('#sndBtn').onclick=()=>{SND=!SND;try{localStorage.setItem('nnn_snd',SND?'1':'0')}catch(e){}$('#sndBtn').textContent=SND?'소리 끄기':'소리 켜기';audioUnlock();if(SND)sfx('good');else toast('효과음을 껐어요 (타임벨 소리는 타임벨 화면에서 따로 켜고 꺼요)')};
 
 /* ================= 오늘의 미션 (관장님이 요일·날짜별로 편집) ================= */
 const WD=['일','월','화','수','목','금','토'];
@@ -1786,7 +1797,7 @@ function bellCfg(){if(!TB.cfg){let c=null;try{c=JSON.parse(localStorage.getItem(
 function bellSave(){try{localStorage.setItem('nnn_bell',JSON.stringify(TB.cfg))}catch(e){}}
 const mmss=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 /* 소리: 실제 링 벨처럼 배음이 어긋난 금속 소리 + 10초 전 딱딱이 */
-function bellAC(){try{TB.ac=TB.ac||new (window.AudioContext||window.webkitAudioContext)();if(TB.ac.state==='suspended')TB.ac.resume();return TB.ac}catch(e){return null}}
+function bellAC(){const ac=getAC();TB.ac=ac;return ac}
 function bellDing(times=1){const ac=bellAC();if(!ac||bellCfg().mute)return;const t0=ac.currentTime+.02;
   for(let k=0;k<times;k++){const st=t0+k*.42;[[1,.5,2.6],[2.76,.28,1.6],[5.4,.16,1],[8.93,.08,.6]].forEach(([r,g,dur])=>{const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.value=620*r;gn.gain.setValueAtTime(0,st);gn.gain.linearRampToValueAtTime(g*.55,st+.004);gn.gain.exponentialRampToValueAtTime(.0005,st+dur);o.connect(gn);gn.connect(ac.destination);o.start(st);o.stop(st+dur+.05)})}}
 function bellClack(times=3){const ac=bellAC();if(!ac||bellCfg().mute)return;const t0=ac.currentTime+.02;
@@ -1801,7 +1812,7 @@ function bellEnter(st,at){const c=bellCfg();TB.st=st;TB.warned=false;TB.lastBeep
   if(st==='work'){bellDing(1);bellVib(400)}
   else if(st==='rest'){bellDing(3);bellVib([200,120,200,120,200])}
   else if(st==='done'){bellDing(3);bellVib([300,150,300,150,600]);bellWake(false);bellFinish()}}
-function bellStart(){const c=bellCfg();bellAC();TB.round=1;TB.worked=0;TB.paused=false;
+function bellStart(){const c=bellCfg();audioUnlock();bellAC();TB.round=1;TB.worked=0;TB.paused=false;
   if(c.prep>0)bellEnter('prep',Date.now());else bellEnter('work',Date.now());
   bellWake(true);clearInterval(TB.timer);TB.timer=setInterval(bellTick,100);bellTick()}
 function bellTick(){if(TB.paused||TB.st==='idle'||TB.st==='done')return bellRender();const c=bellCfg();let now=Date.now();
