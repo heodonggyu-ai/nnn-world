@@ -1019,6 +1019,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
     <div class="field"><label for="sNotice">공지</label><textarea id="sNotice" rows="4"></textarea></div>
     <div class="field"><label for="sKakao">카카오톡 채널 주소</label><input id="sKakao" placeholder="http://pf.kakao.com/_xxxxx"></div>
     <div class="field"><label for="sPhone">체육관 전화번호</label><input id="sPhone" placeholder="041-000-0000"></div>
+    <div class="field"><label for="sPush">출석 알림 서버 주소 <span class="small">(Cloudflare Worker 주소)</span></label><div class="row" style="gap:6px"><input id="sPush" class="grow" placeholder="https://nnn-push.○○○.workers.dev" inputmode="url" autocapitalize="off"><button type="button" class="btn sm ghost" id="sPushTest">연결 확인</button></div><div class="small">비워 두면 앱을 열어 둔 동안에만 출석 알림이 가요.</div></div>
     <div class="field"><label for="sTerms">이용약관</label><textarea id="sTerms" rows="6"></textarea></div>
     <div class="field"><label for="sRules">이용수칙 <span class="small">(가입 승인·등록 안내 문자에 함께 나가요)</span></label><textarea id="sRules" rows="8"></textarea></div>
     <div class="field"><label for="sProd">결제 상품 <span class="small">(한 줄에 "이름 | 금액")</span></label><textarea id="sProd" rows="5" placeholder="1개월 회원권 | 150000"></textarea></div>
@@ -1603,6 +1604,26 @@ $('#bioBtn').onclick=async()=>{if(!ME)return;
       try{await bioEnroll(ME,pin);close();toast(`이제 ${bioRo()} 들어올 수 있어요`);bioSyncBtn()}catch(e){toast(e&&e.name==='NotAllowedError'?'취소됐어요':'이 휴대폰에서는 설정할 수 없어요',3500)}}})};
 
 
+
+/* ===== 진짜 푸시 알림 (앱을 닫아 둬도) — 관장님 Cloudflare Worker 경유 ===== */
+const pushBase=()=>String((local.meta&&local.meta.pushUrl)||'').trim().replace(/\/+$/,'');
+const pushCan=()=>!!(pushBase()&&'serviceWorker' in navigator&&'PushManager' in window&&window.isSecureContext);
+async function fbToken(){try{const u=firebase.auth().currentUser;return u?await u.getIdToken():''}catch(e){return ''}}
+async function pushReg(){let r=await navigator.serviceWorker.getRegistration('./member');if(!r){try{r=await navigator.serviceWorker.register('member-sw.js',{scope:'./member'})}catch(e){}}if(!r)return null;try{await navigator.serviceWorker.ready}catch(e){}return r}
+async function pushSubscribe(id){if(!pushCan()||!FB_ON())return false;try{if(Notification.permission!=='granted')return false;
+  const r=await pushReg();if(!r)return false;const kr=await fetch(pushBase()+'/vapid');const {key}=await kr.json();if(!key)return false;
+  let sub=await r.pushManager.getSubscription();
+  if(sub&&sub.options&&sub.options.applicationServerKey){const a=new Uint8Array(sub.options.applicationServerKey);if(b64u(a)!==key){try{await sub.unsubscribe()}catch(e){}sub=null}}
+  if(!sub)sub=await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:unb64u(key)});
+  const res=await fetch(pushBase()+'/sub',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token:await fbToken(),sub:sub.toJSON()})});
+  if(res.ok){lsSet('nnn_push_'+id,1);return true}}catch(e){console.warn('push sub',e)}return false}
+async function pushUnsubscribe(id){try{if(localStorage.getItem('nnn_push_'+id)==null)return;localStorage.removeItem('nnn_push_'+id);if(!pushCan())return;const r=await pushReg();const sub=r&&await r.pushManager.getSubscription();
+  if(sub){await fetch(pushBase()+'/unsub',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token:await fbToken(),endpoint:sub.endpoint})}).catch(()=>{});
+    const others=Object.keys(localStorage).some(k=>k.startsWith('nnn_push_'));if(!others)await sub.unsubscribe()}}catch(e){}}
+async function pushNotifyAtt(id,test){if(!pushBase()||!FB_ON())return null;try{const r=await fetch(pushBase()+'/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token:await fbToken(),test:!!test}),keepalive:true});return await r.json()}catch(e){return null}}
+$('#sPushTest').onclick=async()=>{const u=$('#sPush').value.trim().replace(/\/+$/,'');if(!/^https:\/\//.test(u)){toast('https:// 로 시작하는 주소를 넣어 주세요');return}
+  try{const r=await fetch(u+'/vapid');const j=await r.json();if(j.key){toast('연결됐어요! 아래 저장을 눌러 주세요',3500);return}}catch(e){}toast('연결되지 않아요. 주소와 KV 연결(SUBS)을 확인해 주세요',4500)};
+
 /* ================= 출석 확인 · 보호자 출석 알림 ================= */
 const attAlarmOn=id=>!!lsGet('nnn_attalarm_'+id);
 const attTimeOf=(m,d)=>((m.attT||{})[d])||'';
@@ -1625,24 +1646,26 @@ function renderAttMe(){$$('[data-attme]').forEach(el=>{
   el.innerHTML=attMeHTML(ME,full);
   el.querySelectorAll('[data-attal]').forEach(b=>b.onclick=attAlarmToggle);
   el.querySelectorAll('[data-attlog]').forEach(b=>b.onclick=()=>{setTab('more');setTimeout(()=>{const c=document.querySelector('[data-attme="full"]');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},120)});
-  el.querySelectorAll('[data-attest]').forEach(b=>b.onclick=()=>attAlarmFire(ME,attTimeOf(ME,TODAY())||new Date().toTimeString().slice(0,5),true))})}
+  el.querySelectorAll('[data-attest]').forEach(b=>b.onclick=()=>attTest())})}
+async function attTest(){if(lsGet('nnn_push_'+ME.id)){const r=await pushNotifyAtt(ME.id,true);if(r&&r.sent){toast('알림 서버에서 시험 알림을 보냈어요. 잠시 뒤 휴대폰 알림이 와요',4000);return}if(r&&r.dup){toast('방금 보냈어요. 2분 뒤 다시 해 주세요');return}}attAlarmFire(ME,new Date().toTimeString().slice(0,5),true)}
 async function attAlarmToggle(){if(!ME)return;const k='nnn_attalarm_'+ME.id;
-  if(attAlarmOn(ME.id)){try{localStorage.removeItem(k)}catch(e){}toast('출석 알림을 껐어요');renderAttMe();return}
+  if(attAlarmOn(ME.id)){try{localStorage.removeItem(k)}catch(e){}pushUnsubscribe(ME.id);toast('출석 알림을 껐어요');renderAttMe();return}
   try{audioUnlock()}catch(e){}try{getAC()}catch(e){}
   let perm='unsupported';try{if('Notification' in window){perm=Notification.permission;if(perm==='default')perm=await Notification.requestPermission()}}catch(e){}
-  lsSet(k,1);lsSet('nnn_attseen_'+ME.id,(ME.attend||[]).includes(TODAY())?TODAY():'');renderAttMe();
+  lsSet(k,1);const pushOk=perm==='granted'?await pushSubscribe(ME.id):false;lsSet('nnn_attseen_'+ME.id,(ME.attend||[]).includes(TODAY())?TODAY():'');renderAttMe();
   const inst=window.matchMedia&&matchMedia('(display-mode: standalone)').matches||navigator.standalone;
   sheet(`<h2>🔔 출석 알림을 켰어요</h2><p style="margin:0">${esc(ME.name||'')}${ME.student?' 학생':' 님'}이 출석하면 이 휴대폰이 진동과 소리로 알려 드려요.</p>
     ${perm==='denied'?`<p class="small" style="margin:0;color:var(--red)">휴대폰 알림이 꺼져 있어서, 앱을 열어 둔 동안에만 진동·소리로 알려요. 설정 → ${isIOS()?'알림 → NNN WORLD':'애플리케이션 → 브라우저(또는 NNN WORLD) → 알림'}에서 켜 주세요.</p>`:''}
     ${!inst?`<p class="small" style="margin:0">홈 화면에 앱을 추가해 두면 알림이 더 잘 와요.</p><button class="btn ghost sm" data-instgo data-inst>홈 화면에 앱 추가</button>`:''}
-    <p class="small" style="margin:0">알아두세요: 휴대폰이 앱을 완전히 닫아 두면 알림이 늦거나 오지 않을 수 있어요. 그럴 땐 앱을 열면 바로 '오늘 출석'이 보여요.</p>
-    <button class="btn red" id="attTry">알림 시험해 보기</button><button class="btn ghost" data-close>확인</button>`,(el)=>{el.querySelector('#attTry').onclick=()=>attAlarmFire(ME,new Date().toTimeString().slice(0,5),true)})}
+    ${pushOk?'<p class="small" style="margin:0;color:#1E6B45"><b>앱을 닫아 둬도 알림이 와요.</b></p>':`<p class="small" style="margin:0">알아두세요: ${!inst&&isIOS()?'아이폰은 홈 화면에 앱을 추가한 뒤 거기서 다시 켜야 앱을 닫아 둬도 알림이 와요. 지금은 ':''}앱을 완전히 닫아 두면 알림이 늦거나 오지 않을 수 있어요. 그럴 땐 앱을 열면 바로 '오늘 출석'이 보여요.</p>`}
+    <button class="btn red" id="attTry">알림 시험해 보기</button><button class="btn ghost" data-close>확인</button>`,(el)=>{el.querySelector('#attTry').onclick=()=>attTest()})}
 function attChime(){try{audioUnlock()}catch(e){}const ac=getAC();if(!ac)return;const n=ac.currentTime;
   [[880,0],[1175,.18],[1568,.36],[880,.8],[1175,.98],[1568,1.16]].forEach(([f,t])=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(0.0001,n+t);g.gain.exponentialRampToValueAtTime(0.5,n+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,n+t+0.5);o.start(n+t);o.stop(n+t+0.55)})}
 async function attAlarmFire(m,tm,test){const who=(m.name||'')+(m.student?' 학생':' 님');const title=test?'[시험] NNN 출석 알림':'NNN 출석 알림';const body=`${who}이 ${tm?tm+'에 ':''}탕정 엔엔엔복싱에 출석했어요 🥊`;
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,800])}catch(e){}attChime();
   let shown=false;try{if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){const r=await navigator.serviceWorker.getRegistration('./member');if(r){await r.showNotification(title,{body,tag:'att-'+m.id,renotify:true,vibrate:[400,150,400,150,800],icon:'member-icons/v2/icon-192.png',badge:'member-icons/v2/icon-192.png',data:{url:location.href.split('#')[0]}});shown=true}else{new Notification(title,{body,tag:'att-'+m.id});shown=true}}}catch(e){}
   if(document.visibilityState==='visible'||!shown){sheet(`<div style="text-align:center;font-size:54px">🥊</div><h2 style="text-align:center">${esc(who)} 출석!</h2><p style="text-align:center;margin:0">${tm?`<b class="num" style="font-size:26px">${esc(tm)}</b><br>`:''}탕정 엔엔엔복싱에 도착해서 출석했어요</p><button class="btn red" data-close>확인</button>`)}}
+function pushRefresh(){try{if(ME&&attAlarmOn(ME.id)&&pushCan()&&'Notification' in window&&Notification.permission==='granted'){const k='nnn_pushchk_'+ME.id;if(lsGet(k)!==TODAY()){lsSet(k,TODAY());pushSubscribe(ME.id)}}}catch(e){}}
 function attAlarmCheck(v){if(!ME||v.id&&v.id!==ME.id)return;const id=ME.id;if(!attAlarmOn(id))return;const T=TODAY();
   const has=Array.isArray(v.attend)?v.attend.includes(T):(v.attend&&Object.values(v.attend).includes(T));if(!has&&v.last!==T)return;
   if(lsGet('nnn_attseen_'+id)===T)return;lsSet('nnn_attseen_'+id,T);attAlarmFire(Object.assign({},ME,v),attTimeOf(v,T))}
@@ -3195,7 +3218,7 @@ async function doRestore(b,o){const n={m:0,p:0,t:0};const fill=o.mode==='fill';
 
 /* ================= 실시간 체육관 (출석한 회원이 월드에 등장) ================= */
 const stayMin=()=>+(local.meta.stayMin||120);
-async function liveCheckIn(m){const v={at:Date.now(),nick:maskName(m.name),eq:m.equip,lv:levelOf(m).lv};bumpHourly();
+async function liveCheckIn(m){try{pushNotifyAtt(m.id)}catch(e){}const v={at:Date.now(),nick:maskName(m.name),eq:m.equip,lv:levelOf(m).lv};bumpHourly();
   if(FB_ON()&&!isLocal(m.id)){try{await gref('live/'+m.id).set(clean(v))}catch(e){}}else{local.live=local.live||{};local.live[m.id]=v;persist()}}
 const LIVE={data:{},off:null};
 /* 실시간 출석 인원 */
@@ -3614,7 +3637,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
   await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
-  $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
+  $('#sNotice').value=M.notice;try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
   {let k='today';try{k=localStorage.getItem('nnn_atab')||'today'}catch(e){}setATab(k)}renderADash();
@@ -3700,7 +3723,7 @@ $('#saveSet').onclick=async()=>{
   const pin=$('#sPin').value.trim();if((pin||!FB_ON())&&!/^\d{4}$/.test(pin)){toast('PIN은 숫자 4자리로 적어 주세요');return}
   if(pin&&FB_ON()&&!(await DB.setAdminPin(pin))){toast('PIN을 바꾸지 못했어요');return}
   Object.assign(local.meta.pay,{bank:$('#sBank').value.trim(),acct:$('#sAcct').value.trim(),holder:$('#sHolder').value.trim(),onnuriNote:$('#sOnNote').value.trim(),products:$('#sProd').value.split('\n').map(l=>l.split('|')).filter(a=>a[0].trim()).map(a=>({n:a[0].trim(),p:(a[1]||'').replace(/\D/g,'')}))});
-  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),bringDays:$('#sBring').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),terms:$('#sTerms').value,rules:$('#sRules').value.trim(),...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
+  Object.assign(local.meta,{notice:$('#sNotice').value,kakao:$('#sKakao').value.trim(),blog:$('#sBlog').value.trim(),bringDays:$('#sBring').value.trim(),insta:$('#sInsta').value.trim(),gymPhone:$('#sPhone').value.trim(),pushUrl:$('#sPush').value.trim().replace(/\/+$/,''),terms:$('#sTerms').value,rules:$('#sRules').value.trim(),...(FB_ON()?{}:{pin}),appUrl:$('#sUrl').value.trim()});
   const saved=await DB.saveMeta();if(!saved){toast('이 화면에서는 저장이 안 돼요. GitHub 주소에서 열거나 서버를 연결해 주세요',4500);return}if(FB_ON()){try{const chk=(await gref('meta').get()).val();toast(chk&&chk.notice===local.meta.notice?'서버에 저장 확인됨 · 모든 기기에 반영':'저장했지만 확인이 안 돼요. 새로 고침 후 다시 확인해 주세요',3500)}catch(e){toast('저장 확인 실패')}}else toast('이 기기에만 저장했어요 (서버 미연결)',3500)};
 
 /* ================= 로고 ================= */
@@ -4416,7 +4439,7 @@ function memCardHTML(m,full){
   </div>`;
 }
 function renderMemCard(){if(ME&&isStaff(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
-  if(!ME)return;try{renderAttMe()}catch(e){}$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules);el.querySelectorAll('[data-holdreq]').forEach(b=>b.onclick=openHoldReq);el.querySelectorAll('[data-hrc]').forEach(b=>b.onclick=async()=>{ME.holdReq=null;await DB.savePriv(ME);toast('신청을 취소했어요');renderMemCard()})});
+  if(!ME)return;try{renderAttMe()}catch(e){}try{pushRefresh()}catch(e){}$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules);el.querySelectorAll('[data-holdreq]').forEach(b=>b.onclick=openHoldReq);el.querySelectorAll('[data-hrc]').forEach(b=>b.onclick=async()=>{ME.holdReq=null;await DB.savePriv(ME);toast('신청을 취소했어요');renderMemCard()})});
 }
 /* 관장: 등록 정보 입력 */
 function openMemEditor(m,pre={},onDone){
