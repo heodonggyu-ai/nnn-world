@@ -78,6 +78,7 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 .tags i{font-style:normal;font-size:12px;background:#EAF6FB;border-radius:999px;padding:3px 9px;color:var(--ink)}
 .combo{background:repeating-linear-gradient(-45deg,#E2504A 0 22px,#D2433E 22px 44px)}
 .crash{background:repeating-linear-gradient(90deg,#4F7FC1 0 26px,#456FAD 26px 52px)}
+.bomb{background:radial-gradient(circle at 50% 50%,#FF9A52 0 30%,#FF7A2F 31% 60%,#E8453C 61%)}
 .soon{filter:saturate(.75)}
 footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-height:1.6}
 .hi{margin:2px 4px 0}.hi h2{font-size:28px;overflow-wrap:anywhere}
@@ -142,7 +143,8 @@ const $=s=>document.querySelector(s);
 const GAMES=[
   {id:'forest',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 탕정역부터 한들물빛도시, 설화·연화, 세교까지 실제 지도처럼 넓은 동네를 돌고, 학교와 집, 엔엔엔복싱에도 들어가요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','학교 탐험','엄마 미션','핼러윈 이벤트'],note:'캐릭터 꾸미기 상점과 친구 초대코드는 밍뉴의숲 안에 있어요. 위쪽 노란 동전을 누르면 상점, 아래 <b>친구</b> 버튼을 누르면 초대코드!'},
   {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',art:'NNN<br>콤보 러시',cls:'combo',tags:['복싱','랭킹']},
-  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']}
+  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']},
+  {id:'bomb',name:'폭탄 돌리기',desc:'폰 하나를 옆사람에게 넘기며 해요. 폭탄을 받으면 암산 문제를 맞히고 빨리 넘기기! 터질 때 들고 있으면 탈락.',href:'bomb/',art:'💣<br>폭탄 돌리기',cls:'bomb',tags:['여럿이 한 폰','암산','파티']}
 ];
 let mode='new',ME=null,AV=null,TRY=null,TAB='base',SEL=null;
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
