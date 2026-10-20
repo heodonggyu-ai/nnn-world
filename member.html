@@ -2141,7 +2141,7 @@ function sparCard(s,me){const p=s.post,k=SPK[p.kind]||SPK.mass;const [st,sc]=spa
     ${s.match&&!s.chal?`<div class="small">상대: <b>${esc(s.match.nick)}</b> Lv.${s.match.lv||1}</div>`:''}
     <div class="row" style="align-items:center"><span class="spst ${sc} grow">${st}</span><button class="btn sm ${sparMine(s,me)||p.status==='cancel'?'ghost':'red'}" data-so="${esc(s.id)}">${sparMine(s,me)?'관리':'보기'}</button></div></div>`}
 async function openSparBoard(tab){if(!ME)return;if(isGuest()){guestBlock('스파링 매칭은 가입 후에 할 수 있어요');return}if(isStaff(ME)){openSparStaff();return}
-  await sparLoad();tab=tab||'sched';const me=ME.id;const T=TODAY();
+  await sparLoad();tab=tab||'sched';const me=ME.id;const T=TODAY();const PROFS=tab==='open'?((await hget('spprof'))||{}):{};
   const all=sparList().sort((a,b)=>(a.post.date+a.post.time).localeCompare(b.post.date+b.post.time));
   const open=all.filter(s=>!s.chal&&s.post.date>=T&&s.post.status!=='cancel'&&!s.match&&s.post.by!==me);
   const sched=all.filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date>=T&&!(s.staff&&s.staff.ok===false));
@@ -2150,10 +2150,11 @@ async function openSparBoard(tab){if(!ME)return;if(isGuest()){guestBlock('스파
   const hist=all.filter(s=>s.post.date<T&&s.match&&s.post.status!=='cancel').reverse().slice(0,30);
   sheet(`<h2>스파링 매칭</h2>
     <div class="mhint warn">스파링은 <b>관장님·코치가 있을 때 링에서만</b> 해요. 마우스피스·헤드기어 필수, 학생은 학생끼리만 매칭돼요.${sparAuto()?'':' 매칭되면 관장님이 확인 후 확정해요.'}</div>
-    <div class="chips" id="spT"><button class="chip ${tab==='sched'?'on':''}" data-t="sched">스파링 일정 ${sched.length?'('+sched.length+')':''}</button><button class="chip ${tab==='open'?'on':''}" data-t="open">상대 찾기 ${open.length?'('+open.length+')':''}</button><button class="chip ${tab==='mine'?'on':''}" data-t="mine">내 스파링${waitN?' 🔴'+waitN:''}</button><button class="chip ${tab==='hist'?'on':''}" data-t="hist">영상·피드백</button></div>
-    <div id="spBody" style="display:flex;flex-direction:column;gap:8px">${tab==='sched'?(sched.map(s=>sparSchedRow(s,me)).join('')||'<div class="small">아직 잡힌 스파링 일정이 없어요. 도전장을 보내 보세요!</div>'):tab==='open'?(open.map(s=>sparCard(s,me)).join('')||'<div class="small">지금 모집 중인 스파링이 없어요. 직접 올려 보세요!</div>'):tab==='mine'?(mine.map(s=>sparCard(s,me)).join('')||'<div class="small">내 스파링이 없어요.</div>'):(hist.map(s=>sparCard(s,me)).join('')||'<div class="small">아직 끝난 스파링이 없어요.</div>')}</div>
+    <div class="chips" id="spT"><button class="chip ${tab==='sched'?'on':''}" data-t="sched">스파링 일정 ${sched.length?'('+sched.length+')':''}</button><button class="chip ${tab==='open'?'on':''}" data-t="open">상대 찾기</button><button class="chip ${tab==='mine'?'on':''}" data-t="mine">내 스파링${waitN?' 🔴'+waitN:''}</button><button class="chip ${tab==='hist'?'on':''}" data-t="hist">영상·피드백</button></div>
+    <div id="spBody" style="display:flex;flex-direction:column;gap:8px">${tab==='sched'?(sched.map(s=>sparSchedRow(s,me)).join('')||'<div class="small">아직 잡힌 스파링 일정이 없어요. 도전장을 보내 보세요!</div>'):tab==='open'?(lfgHTML(PROFS,me)+'<div class="label" style="margin-top:6px">날짜를 정해 올린 모집 글</div>'+(open.map(s=>sparCard(s,me)).join('')||'<div class="small">지금 모집 중인 글이 없어요.</div>')):tab==='mine'?(mine.map(s=>sparCard(s,me)).join('')||'<div class="small">내 스파링이 없어요.</div>'):(hist.map(s=>sparCard(s,me)).join('')||'<div class="small">아직 끝난 스파링이 없어요.</div>')}</div>
     <div class="row" style="gap:8px"><button class="btn red" id="spChal" style="flex:1">🥊 도전장 보내기</button><button class="btn" id="spNew" style="flex:1">상대 구하는 글</button></div><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelector('#spChal').onclick=()=>sparPickRival();
+    if(tab==='open')lfgBind(el,PROFS,me);
     el.querySelectorAll('#spT [data-t]').forEach(b=>b.onclick=()=>openSparBoard(b.dataset.t));
     el.querySelectorAll('[data-so]').forEach(b=>b.onclick=()=>openSparPost(b.dataset.so));
     el.querySelector('#spNew').onclick=()=>sparNew()})}
@@ -2207,6 +2208,60 @@ async function openSparPost(id){await sparLoad();const s=sparGet(id)||{};if(!s.p
 function sparSchedRow(s,me){const p=s.post,k=SPK[p.kind]||SPK.mass;const d=new Date(p.date+'T00:00:00');const conf=sparAuto()||(s.staff&&s.staff.ok);const today=p.date===TODAY();
   return `<button class="spc" data-so="${esc(s.id)}" style="text-align:left;font:inherit;color:inherit;${today?'border-color:var(--red);':''}"><div class="sph"><b>${esc(p.nick)} <span style="color:var(--red)">VS</span> ${esc(s.match.nick)}</b><span class="spk ${k[2]}">${k[0]}</span></div>
     <div class="small"><b class="num">${today?'오늘 ':''}${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(p.time)}</b> · ${p.rounds}라운드 · <span class="spst ${conf?'ok':'w'}">${conf?'확정':'관장님 확인 전'}</span>${sparMine(s,me)?' · <b>내 경기</b>':''}</div></button>`}
+/* 스파링 상대 찾기 (게임 매칭처럼 내 프로필을 올려 두기) */
+const SP_WCLS=[['플라이',52],['밴텀',56],['페더',60],['라이트',64],['웰터',69],['미들',75],['라이트헤비',81],['헤비',999]];
+const wcIdx=w=>{w=+w||0;if(!w)return -1;return SP_WCLS.findIndex(c=>w<=c[1])};
+const wclsName=w=>{const i=wcIdx(w);return i<0?'체급 미입력':SP_WCLS[i][0]+'급'};
+const SP_EXPL=['입문 (3개월 미만)','초급 (3개월~1년)','중급 (1~3년)','상급 (3년 이상)','선수 출신'];
+const SP_STANCE={o:'오소독스',s:'사우스포',x:'스위치'};
+const SP_SLOTS={am:'오전',pm:'오후',ev:'저녁',nt:'밤'};
+let LFGF='all';
+function lfgActive(p){return p&&p.looking&&Date.now()-(p.at||0)<14*864e5}
+function lfgScore(me,p){if(!me)return 0;let s=0;const a=wcIdx(me.w),b=wcIdx(p.w);if(a>=0&&b>=0)s+=Math.abs(a-b)*3;s+=Math.abs((+me.exp||0)-(+p.exp||0))*2;s+=Math.abs((me.sk||1)-(p.sk||1));return s}
+function lfgCard(id,p,mine,score){const d=(p.days||[]).map(x=>DAYN[x]).join('·');
+  return `<div class="spc" style="${mine?'border-color:var(--gold);background:#FFFBEA':''}"><div class="sph"><b>${mine?'내 프로필':esc(p.nick)} <span class="small">Lv.${p.lv||1} · 심사 ${p.sk||1}레벨</span></b><span class="spk k2">${esc(wclsName(p.w))}</span></div>
+    <div class="small">${p.h?p.h+'cm':''}${p.h&&p.w?' · ':''}${p.w?p.w+'kg':''}${p.stance?' · '+SP_STANCE[p.stance]:''} · ${esc(SP_EXPL[+p.exp||0])}</div>
+    <div class="small">원하는 강도: <b>${(SPK[p.kind]||SPK.mass)[0]}</b>${d?' · '+d:''}${(p.slots||[]).length?' '+p.slots.map(x=>SP_SLOTS[x]).join('/'):''}</div>
+    ${p.note?`<div class="small">"${esc(p.note)}"</div>`:''}
+    <div class="row" style="align-items:center"><span class="small grow" style="color:var(--muted)">${mine?(lfgActive(p)?'상대 찾는 중 · 14일 동안 보여요':'지금은 숨겨져 있어요'):(score!=null&&score<=3?'<b style="color:var(--green)">잘 맞는 상대!</b>':'')}</span>${mine?'<button class="btn sm ghost" id="lfgEdit">수정</button>':`<button class="btn sm red" data-lfgc="${esc(id)}">도전장</button>`}</div></div>`}
+function lfgHTML(P,me){const my=P[me];const st=isStu(ME);
+  let L=Object.entries(P).filter(([id,p])=>id!==me&&lfgActive(p)&&!!p.stu===st);
+  const myP=my||null;
+  if(LFGF==='wc'&&myP)L=L.filter(([id,p])=>Math.abs(wcIdx(p.w)-wcIdx(myP.w))<=1);
+  if(LFGF==='lv')L=L.filter(([id,p])=>Math.abs((p.sk||1)-skillOf(ME))<=1);
+  L.sort((a,b)=>lfgScore(myP,a[1])-lfgScore(myP,b[1]));
+  return `<div class="label">스파링 상대 찾는 중 <b class="num">${L.length}</b>명</div>
+    ${my?lfgCard(me,my,true):`<div class="spc" style="border-style:dashed"><b>내 스파링 프로필을 올려 보세요</b><div class="small">체급·키·몸무게·경력을 올려 두면, 게임 매칭처럼 비슷한 상대가 나를 찾아 도전장을 보내요.</div><button class="btn sm red" id="lfgEdit">프로필 올리기</button></div>`}
+    ${my?`<button class="btn sm ${lfgActive(my)?'ghost':'gold'}" id="lfgTog">${lfgActive(my)?'상대 찾기 그만하기 (숨기기)':'다시 상대 찾기 켜기'}</button>`:''}
+    <div class="chips">${[['all','전체'],['wc','비슷한 체급'],['lv','비슷한 레벨']].map(([k,v])=>`<button class="chip ${LFGF===k?'on':''}" data-lf="${k}">${v}</button>`).join('')}</div>
+    ${L.map(([id,p])=>lfgCard(id,p,false,myP?lfgScore(myP,p):null)).join('')||'<div class="small">조건에 맞는 상대가 아직 없어요. 프로필을 올려 두면 다른 회원이 나를 찾을 수 있어요.</div>'}`}
+function lfgBind(el,P,me){const e=el.querySelector('#lfgEdit');if(e)e.onclick=()=>sparProfileEdit(P[me]);
+  const tg=el.querySelector('#lfgTog');if(tg)tg.onclick=async()=>{const on=!lfgActive(P[me]);if(await hset('spprof/'+me,Object.assign({},P[me],{looking:on,at:Date.now(),lv:levelOf(ME).lv,sk:skillOf(ME)}))){toast(on?'상대 찾기를 켰어요':'숨겼어요');openSparBoard('open')}};
+  el.querySelectorAll('[data-lf]').forEach(b=>b.onclick=()=>{LFGF=b.dataset.lf;if(LFGF==='wc'&&!P[me]){toast('내 프로필에 몸무게를 넣으면 비슷한 체급을 찾아 줘요')}openSparBoard('open')});
+  el.querySelectorAll('[data-lfgc]').forEach(b=>b.onclick=()=>{const p=P[b.dataset.lfgc];sparChallenge({id:b.dataset.lfgc,nick:p.nick,lv:p.lv||1})})}
+function sparProfileEdit(cur){cur=cur||{};const why=skillOf(ME)<sparMinSkill()?`심사 ${sparMinSkill()}레벨부터 스파링할 수 있어요`:!['active','soon'].includes(memStatus(ME).state)?'등록 기간 중인 회원만 올릴 수 있어요':'';if(why){toast(why,3000);return}
+  let kind=cur.kind||'mass',stance=cur.stance||'o',exp=+cur.exp||0,days=(cur.days||[]).slice(),slots=(cur.slots||['ev']).slice();
+  sheet(`<h2>내 스파링 프로필</h2><p class="small" style="margin:0">다른 회원에게 보여요. 이름은 가려지고(${esc(ME.nick||maskName(ME.name))}), 연락처는 절대 나오지 않아요.</p>
+    <div class="row"><div class="field grow"><label for="sfH">키 (cm)</label><input id="sfH" type="number" inputmode="numeric" min="100" max="220" value="${cur.h||''}"></div><div class="field grow"><label for="sfW">몸무게 (kg)</label><input id="sfW" type="number" inputmode="decimal" min="25" max="200" value="${cur.w||''}"></div></div>
+    <div class="small" id="sfWc" style="font-weight:600"></div>
+    <div class="field"><span>복싱 경력</span><div class="chips" id="sfE">${SP_EXPL.map((x,i)=>`<button type="button" class="chip ${i===exp?'on':''}" data-e="${i}">${x}</button>`).join('')}</div></div>
+    <div class="field"><span>스탠스</span><div class="chips" id="sfS">${Object.entries(SP_STANCE).map(([k,v])=>`<button type="button" class="chip ${k===stance?'on':''}" data-s="${k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><span>원하는 강도</span><div class="chips" id="sfK">${Object.entries(SPK).map(([k,v])=>`<button type="button" class="chip ${k===kind?'on':''}" data-k="${k}">${v[0]}</button>`).join('')}</div></div>
+    <div class="field"><span>가능한 요일 <span class="small">(여러 개)</span></span><div class="chips" id="sfD">${[1,2,3,4,5,6].map(d=>`<button type="button" class="chip ${days.includes(d)?'on':''}" data-d="${d}">${DAYN[d]}</button>`).join('')}</div></div>
+    <div class="field"><span>가능한 시간대</span><div class="chips" id="sfT">${Object.entries(SP_SLOTS).map(([k,v])=>`<button type="button" class="chip ${slots.includes(k)?'on':''}" data-t="${k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><label for="sfN">한마디 <span class="small">(선택)</span></label><input id="sfN" maxlength="60" value="${esc(cur.note||'')}" placeholder="예: 잽·스텝 위주로 가볍게 맞춰 봐요"></div>
+    <label class="check" style="margin:0"><input type="checkbox" id="sfOk" ${cur.at?'checked':''}><span>관장님·코치 입회, 보호장비 착용, 상대 배려를 약속해요</span></label>
+    <button class="btn red" id="sfGo">상대 찾기 시작</button>${cur.at?'<button class="btn ghost" id="sfDel" style="color:var(--red)">프로필 지우기</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const wc=()=>{const w=+el.querySelector('#sfW').value;el.querySelector('#sfWc').textContent=w?`체급: ${wclsName(w)}`:''};el.querySelector('#sfW').oninput=wc;wc();
+    const one=(sel,set)=>el.querySelectorAll(sel).forEach(b=>b.onclick=()=>{set(b);el.querySelectorAll(sel).forEach(x=>x.classList.toggle('on',x===b))});
+    one('#sfE [data-e]',b=>exp=+b.dataset.e);one('#sfS [data-s]',b=>stance=b.dataset.s);one('#sfK [data-k]',b=>kind=b.dataset.k);
+    el.querySelectorAll('#sfD [data-d]').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;days=days.includes(d)?days.filter(x=>x!==d):days.concat(d).sort();b.classList.toggle('on',days.includes(d))});
+    el.querySelectorAll('#sfT [data-t]').forEach(b=>b.onclick=()=>{const k=b.dataset.t;slots=slots.includes(k)?slots.filter(x=>x!==k):slots.concat(k);b.classList.toggle('on',slots.includes(k))});
+    const dl=el.querySelector('#sfDel');if(dl)dl.onclick=async()=>{if(await hset('spprof/'+ME.id,null)){toast('프로필을 지웠어요');close();openSparBoard('open')}};
+    el.querySelector('#sfGo').onclick=async()=>{const h=+el.querySelector('#sfH').value||0,w=+el.querySelector('#sfW').value||0;if(!w){toast('몸무게를 넣어 주세요 (체급 계산용)');return}if(!el.querySelector('#sfOk').checked){toast('약속에 체크해 주세요');return}
+      const note=chatClean(el.querySelector('#sfN').value);if(chatBlocked(note)){toast('연락처·링크는 적을 수 없어요');return}
+      const rec=clean({nick:ME.nick||maskName(ME.name),lv:levelOf(ME).lv,sk:skillOf(ME),stu:isStu(ME)||undefined,h:h||undefined,w:Math.round(w*10)/10,exp,stance,kind,days,slots,note,looking:true,at:Date.now()});
+      if(await hset('spprof/'+ME.id,rec)){toast('상대 찾기를 시작했어요! 맞는 회원이 도전장을 보낼 수 있어요',3500);close();openSparBoard('open')}}})}
 /* 도전장 */
 async function sparPickRival(){const why=skillOf(ME)<sparMinSkill()?`심사 ${sparMinSkill()}레벨부터 스파링할 수 있어요`:!['active','soon'].includes(memStatus(ME).state)?'등록 기간 중인 회원만 도전할 수 있어요':'';if(why){toast(why,3000);return}
   const all=(await DB.all()).filter(m=>m&&m.id!==ME.id&&!isStaff(m)&&!m.demo&&m.id!=='0000');

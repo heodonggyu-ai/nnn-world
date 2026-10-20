@@ -390,6 +390,13 @@
       ".validate": "newData.isNumber()"
      }
     }
+   },
+   "spprof": {
+    ".read": "auth != null",
+    "$m": {
+     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($m).child(auth.uid).exists())",
+     ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
+    }
    }
   }
  }
