@@ -958,6 +958,9 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
     <div id="lkDue"></div>
   </div>
   <div class="card" data-atab="set" style="display:flex;flex-direction:column;gap:8px">
+    <div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">보안 규칙 점검</h3><button class="btn sm red" id="rcRun">점검하기</button></div>
+    <p class="small" style="margin:0">Firebase에 최신 보안 규칙이 제대로 들어갔는지 기능별로 확인해요.</p>
+    <div id="rcBox" style="display:flex;flex-direction:column;gap:4px"></div>
     <div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">맵 오류 기록</h3><button class="btn sm ghost" id="dgLoad">불러오기</button></div>
     <p class="small" style="margin:0">회원 폰에서 맵이 안 보이면 자동으로 기록돼요 (폰 종류·화면 크기·오류). 문제 원인을 찾는 데 써요.</p>
     <div id="dgBox" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto"></div>
@@ -1704,6 +1707,12 @@ function openAnimal(a){
       checkBadges(ME).forEach(b=>toast('배지 획득: '+b.name+' (+30)',2800));
       W.animals=W.animals.filter(x=>x!==a);saveMe();refreshTop();close()}});
 }
+$('#rcRun').onclick=async()=>{if(!FB_ON()){toast('서버에 연결된 상태에서만 점검할 수 있어요');return}const box=$('#rcBox');box.innerHTML='<div class="small">점검 중…</div>';
+  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups']];
+  const out=[];for(const [n,p] of T){let ok=false;try{await Promise.race([gref(p).limitToFirst?gref(p).limitToFirst(1).get():gref(p).get(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),8000))]);ok=true}catch(e){ok=false}out.push([n,ok])}
+  let wok=false;try{await gref('hourly/_check/0').set(null);wok=true}catch(e){}
+  const bad=out.filter(x=>!x[1]).length;
+  box.innerHTML=`<div class="mhint ${bad?'warn':'ok'}"><b>${bad?`${bad}개 항목이 아직 막혀 있어요 · 최신 규칙을 다시 붙여넣어 주세요`:'최신 보안 규칙이 잘 들어가 있어요 ✅'}</b></div>`+out.map(([n,ok])=>`<div class="small" style="display:flex;justify-content:space-between"><span>${n}</span><b style="color:${ok?'var(--green)':'var(--red)'}">${ok?'정상':'막힘'}</b></div>`).join('')+`<div class="small" style="display:flex;justify-content:space-between"><span>쓰기 권한(관장)</span><b style="color:${wok?'var(--green)':'var(--red)'}">${wok?'정상':'막힘'}</b></div>`};
 $('#dgLoad').onclick=async()=>{const o=(await hget('diag'))||{};const L=[];Object.entries(o).forEach(([id,x])=>Object.entries(x||{}).forEach(([k,v])=>L.push(Object.assign({id,k},v))));L.sort((a,b)=>b.at-a.at);
   $('#dgBox').innerHTML=L.slice(0,40).map(d=>`<div class="qrow" style="align-items:flex-start"><div class="grow small"><b>${esc(d.id)}</b> · ${new Date(d.at).toLocaleString('ko-KR')} · <b>${esc(d.reason)}</b><br>${esc((d.ua||'').replace(/Mozilla\/5\.0 \(|\) AppleWebKit.*?\)/g,''))}<br>화면 ${d.vw}×${d.vh} · 맵 ${d.cw}×${d.ch} (${d.w}×${d.h}) · dpr ${d.dpr} · loop ${d.run?'on':'off'} ${d.age}ms · lost ${d.lost?'Y':'N'} · 재생성 ${d.fresh} · ${esc(d.ver||'')}${(d.errs||[]).length?'<br><span style="color:var(--red)">'+d.errs.map(esc).join('<br>')+'</span>':''}</div><button class="btn sm ghost" data-dgx="${esc(d.id)}/${esc(d.k)}">삭제</button></div>`).join('')||'<div class="small">기록이 없어요 👍</div>';
   $$('#dgBox [data-dgx]').forEach(b=>b.onclick=async()=>{if(await hset('diag/'+b.dataset.dgx,null))$('#dgLoad').click()})};
