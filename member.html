@@ -1080,7 +1080,7 @@ const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
 const PRIV=['lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
-function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
+function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(m.mem){if(!Array.isArray(m.mem.days))m.mem.days=m.mem.days?Object.values(m.mem.days):[];if(m.mem.holds&&!Array.isArray(m.mem.holds))m.mem.holds=Object.values(m.mem.holds)}if(m.memHist&&!Array.isArray(m.memHist))m.memHist=Object.values(m.memHist);if(m.unpaid&&!Array.isArray(m.unpaid))m.unpaid=Object.values(m.unpaid);if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
 let IS_ADMIN=false;
 const DB={
@@ -1223,7 +1223,9 @@ function blankMember(f,id){
     owned:['c_'+f.char,'g_red','s_basic','t_black'],equip:{char:f.char,glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},
     attend:[],streak:0,maxStreak:0,last:'',best:{bag:0,rope:0,shadow:0},plays:0,friends:[],badges:[],candy:0,day:{}}
 }
-function fixDay(m){if(!m.day||m.day.d!==TODAY())m.day={d:TODAY(),game:0,coins:0,candies:0,prog:{},claimed:[],rest:0};return m.day}
+function fixDay(m){if(!m.day||m.day.d!==TODAY())m.day={d:TODAY(),game:0,coins:0,candies:0,prog:{},claimed:[],rest:0};
+  /* 서버(Firebase)는 빈 {}·[]를 저장하지 않아서, 다시 불러오면 빠져 있을 수 있어요 → 항상 채워 두기 */
+  const d=m.day;if(!d.prog||typeof d.prog!=='object')d.prog={};if(!Array.isArray(d.claimed))d.claimed=d.claimed?Object.values(d.claimed):[];if(d.mis&&!Array.isArray(d.mis))d.mis=Object.values(d.mis);if(d.arc&&!Array.isArray(d.arc))d.arc=Object.values(d.arc);['game','coins','candies','rest'].forEach(k=>{if(typeof d[k]!=='number')d[k]=+d[k]||0});return d}
 function look(m){return m.equip}
 const GAME_CAP=80, COIN_CAP=20, CANDY_CAP=30;
 function earn(m,amt,src){
@@ -1501,8 +1503,9 @@ function refreshTop(){
   $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
   avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});
-  renderBring();renderMemCard();renderFaceCard();renderFamCard();$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`;
-  renderQbar();renderMisCard();setTimeout(renderLiveCards,200);
+  const safe=(n,f)=>{try{const r=f();if(r&&r.catch)r.catch(e=>console.error(n,e))}catch(e){console.error(n,e);try{ERRLOG.push(n+': '+e.message)}catch(_){}}};
+  safe('bring',renderBring);safe('mem',renderMemCard);safe('face',renderFaceCard);safe('fam',renderFamCard);safe('cap',()=>{$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`});
+  safe('qbar',renderQbar);safe('mis',renderMisCard);setTimeout(()=>safe('live',renderLiveCards),200);
 }
 function questState(){const qs=todaysQuests(ME.id);const d=fixDay(ME);return qs.map(q=>({...q,cur:Math.min(q.n,d.prog[q.k]||0),claimed:d.claimed.includes(q.k)}))}
 function renderQbar(){const qs=questState();$('#qbar').innerHTML=qs.map(q=>`<button class="qmini${q.claimed?' done':''}" data-q="1"><span>${esc(q.txt)}</span><b class="num">${q.claimed?'완료':q.cur+'/'+q.n}</b></button>`).join('');$$('#qbar [data-q]').forEach(b=>b.onclick=openCoach)}
