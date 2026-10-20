@@ -1097,7 +1097,7 @@ async function fbInit(){
     fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
-const PRIV=['lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
+const PRIV=['legacy','lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
 function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(m.mem){if(!Array.isArray(m.mem.days))m.mem.days=m.mem.days?Object.values(m.mem.days):[];if(m.mem.holds&&!Array.isArray(m.mem.holds))m.mem.holds=Object.values(m.mem.holds)}if(m.memHist&&!Array.isArray(m.memHist))m.memHist=Object.values(m.memHist);if(m.unpaid&&!Array.isArray(m.unpaid))m.unpaid=Object.values(m.unpaid);if(m.sentLog&&!Array.isArray(m.sentLog))m.sentLog=Object.values(m.sentLog);if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
@@ -4074,7 +4074,8 @@ function renderSNS(){$$('[data-sns]').forEach(el=>el.innerHTML=snsHTML())}
 
 /* ================= 친구 초대 ================= */
 const REF_BONUS_JOIN=100,REF_BONUS_ATT=200,REF_BONUS_REG=500,BUDDY_BONUS=30;
-const appBase=()=>((local.meta.appUrl||'').trim()||location.href.split(/[?#]/)[0]);
+const APP_URL_DEF='https://heodonggyu-ai.github.io/nnn-world/member.html';
+const appBase=()=>((local.meta.appUrl||'').trim()||(/^https?:/.test(location.protocol)&&!/claude|localhost|127\.0/.test(location.hostname)?location.href.split(/[?#]/)[0]:APP_URL_DEF));
 const inviteLink=id=>appBase()+'?ref='+encodeURIComponent(id);
 function getRef(){try{const q=new URLSearchParams(location.search).get('ref');if(q){localStorage.setItem('nnn_ref',q);return q}return localStorage.getItem('nnn_ref')||''}catch(e){return ''}}
 async function showInviteBanner(){
@@ -4301,6 +4302,7 @@ function openMemEditor(m,pre={},onDone){
       <div class="row" id="meHoldC" hidden><div class="field grow"><label for="meHN">횟수</label><input id="meHN" type="number" min="1" max="12" value="${cur.holdAllow&&cur.holdAllow.n?cur.holdAllow.n:1}"></div><div class="field grow"><label for="meHM">최대 일수 (합계)</label><input id="meHM" type="number" min="1" max="365" value="${cur.holdAllow&&cur.holdAllow.max?cur.holdAllow.max:14}"></div></div>
       ${cur.end?'<button type="button" class="btn ghost sm" id="meAdj">정지·연기 / 기간 조정 (기록 보기)</button>':''}</div>
     <div class="paybox">
+      <label class="check" style="margin:0 0 6px"><input type="checkbox" id="meLegacy" ${m.legacy!=null?(m.legacy?'checked':''):(!(m.memHist||[]).length&&!cur.end&&!pre.pay?'checked':'')}><span><b>기존 회원 (새 프로그램으로 옮겨 등록)</b> <span class="small">· 안내 문자에 "새 앱으로 바꾸면서 다시 안내드려요" 설명이 붙어요</span></span></label>
       <label class="check" style="margin:0"><input type="checkbox" id="mePayOn" ${pre.pay||pre.newPay?'checked':''}><b>결제 기록하기</b> <span class="small">${pre.pay?'(회원이 앱으로 신청한 결제)':'(매출 통계에 들어가요)'}</span></label>
       <div id="mePayBox">
         <div id="meFam"></div>
@@ -4358,6 +4360,7 @@ function openMemEditor(m,pre={},onDone){
       m.mem=clean({item:el.querySelector('#meItem').value.trim(),months:st.months,start:st.months?startIn.value:'',end:st.months?endIn.value:'',weekly:st.months?st.weekly:0,days:st.months&&st.weekly?st.days:[],pt:ptT?{total:ptT,left:ptL}:null,paidAt:pre.paidAt||cur.paidAt||'',setAt:TODAY()});
       if(ha==='none')m.mem.holdAllow={n:0,max:0};else if(ha==='custom')m.mem.holdAllow={n:clamp(+el.querySelector('#meHN').value||1,1,12),max:clamp(+el.querySelector('#meHM').value||14,1,365)};
       if((cur.end||cur.pt)&&cur.start&&m.mem.start===cur.start){if(cur.holds)m.mem.holds=cur.holds;if(cur.hold)m.mem.hold=cur.hold}
+      {const lg=el.querySelector('#meLegacy');if(lg)m.legacy=lg.checked}
       m.memHist=hist;await DB.savePriv(m);
       let pr=null;
       if(pOn.checked){const amt=+pAmt.value.replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
@@ -4743,12 +4746,11 @@ const isIOS=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test
 const TPL_DEFAULT={
   welcome:`[탕정 엔엔엔복싱] {이름}님, 가입이 승인되었습니다!
 ▶ 회원번호: {회원번호} (입구 출석패드에 입력)
-▶ NNN WORLD: {앱주소}
 ▶ 이용약관 전문: {약관주소}
 
 [이용수칙]
 {이용수칙}`,
-  pay:`[탕정 엔엔엔복싱] {이름}님, 등록이 완료되었습니다.
+  pay:`[탕정 엔엔엔복싱] {받는분}, {이름} 회원의 등록 정보를 안내드립니다.
 ▶ 상품: {상품}
 ▶ 기간: {기간}
 ▶ 운동 요일: {요일}
@@ -4786,7 +4788,7 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '상품':mem.item||planLabel(mem)||'회원권','기간':mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-'),
     '요일':mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용',
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
-    '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:'카운터 결제',
+    '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
     '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
     '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'입금계좌':bankLine(),...extra}}
 function bankLine(){const P=local.meta.pay||{};return P.acct?`${P.bank||''} ${P.acct}${P.holder?' ('+P.holder+')':''}`.trim():'카운터 문의'}
@@ -4800,7 +4802,14 @@ function openGuardSheet(m){
     el.querySelector('#gSave').onclick=async()=>{const p=normPhone(el.querySelector('#gPh').value);if(p.replace(/\D/g,'').length<10){toast('연락처를 정확히 적어 주세요');return}m.gPhone=p;m.gName=el.querySelector('#gRel').value;m.student=true;await DB.savePriv(m);toast('보호자 연락처를 저장했어요');close();renderAdmRows();renderDue()};
     const d=el.querySelector('#gDel');if(d)d.onclick=async()=>{m.gPhone='';m.gName='';m.student=false;await DB.savePriv(m);toast('지웠어요');close();renderAdmRows();renderDue()}})}
 function fillTpl(text,m,pay){const v=msgVars(m,pay);return String(text).replace(/\{([^{}]+)\}/g,(a,k)=>k in v?v[k]:a)}
-function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpls().find(x=>x.id===kind.slice(2));return c?fillTpl(c.text,m,pay):''}return fillTpl(tplOf(kind),m,pay)}
+const LEGACY_NOTE='※ 안내: 체육관 회원 관리 프로그램을 새 앱(NNN WORLD)으로 바꾸면서 기존 회원님들의 등록 정보를 다시 입력하고 안내드리고 있어요. 새로 결제되거나 등록 내용이 바뀐 것이 아니니 걱정하지 않으셔도 돼요!';
+function appInfoBlock(m){const g=!!m.gPhone;return `▶ NNN WORLD 앱 (출석·등록 기간 확인)\n${appBase()}?m=${m.id}\n회원번호 ${m.id} · 비밀번호는 가입 때 적은 휴대폰 번호 뒤 4자리예요.${g?'\n학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요.':''}\n휴대폰 홈 화면에 추가해 두면 앱처럼 쓸 수 있어요.`}
+function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpls().find(x=>x.id===kind.slice(2));return c?fillTpl(c.text,m,pay):''}
+  let tx=fillTpl(tplOf(kind),m,pay);
+  if(kind==='pay'||kind==='welcome'){
+    if(m.legacy&&!tx.includes('새 앱(NNN WORLD)')){const nl=tx.indexOf('\n');tx=nl>0?tx.slice(0,nl+1)+LEGACY_NOTE+'\n'+tx.slice(nl+1):LEGACY_NOTE+'\n'+tx}
+    if(!tx.includes('?m='+m.id)){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}}
+  return tx}
 const customTpls=()=>Array.isArray(local.meta.tplCustom)?local.meta.tplCustom:[];
 const kindName=k=>String(k).startsWith('c:')?((customTpls().find(x=>x.id===k.slice(2))||{}).name||'직접 만든 안내'):(TPL_NAME[k]||'안내');
 function sentKey(m,kind){const mem=m.mem||{};
@@ -5049,6 +5058,7 @@ $('#logQ').oninput=()=>renderSendLog();
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
   if(lsGet('nnn_coach')&&!sid){openCoachMode();return}
   if(hashv==='pad'){pinSheet('출석패드 모드 시작',openPad);show('v-home');return}
+  {const qm=new URLSearchParams(location.search).get('m');if(qm&&/^\d{3,6}$/.test(qm)&&!sid&&!userMoved()){try{history.replaceState(null,'',location.pathname)}catch(e){}show('v-login');$('#lId').value=qm;setTimeout(()=>{toast(`회원번호 ${qm} · 비밀번호(휴대폰 뒤 4자리)를 넣어 주세요`,4000);try{$('#lPw').focus()}catch(e){}},300);return}}
   if(userMoved())return;
   if(sid){const m=await DB.get(sid);if(m&&!userMoved()){ME=m;enterWorld();return}}
   if(!userMoved())show('v-home');
