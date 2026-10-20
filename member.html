@@ -520,6 +520,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <div class="ev" id="hwBanner" hidden><b>할로윈 이벤트</b><span>11월 7일까지 한정 캐릭터 · 맵에서 사탕 줍기</span></div>
   <div class="refban" id="refBanner" hidden><canvas width="96" height="96"></canvas><div class="grow"><b id="refWho"></b><div class="small">지금 가입하면 초대 선물 100 크레딧을 더 받아요</div></div></div>
   <button class="btn red" id="goJoin">처음 왔어요 · 가입 신청</button>
+  <div id="bioHome" style="display:flex;flex-direction:column;gap:10px" hidden></div>
   <button class="btn" id="goLogin">회원번호로 입장</button>
   <button class="btn gold" id="goGuest">게스트로 구경하기</button>
   <button class="btn ghost sm" data-instgo data-inst>휴대폰 홈 화면에 앱 추가</button>
@@ -609,6 +610,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 <section class="view" id="v-login" hidden>
   <div class="row"><button class="link" data-back>← 처음으로</button></div>
   <h2 style="font-size:28px">회원 입장</h2>
+  <div id="bioLogin" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px" hidden></div>
   <form id="loginForm" class="card" style="display:flex;flex-direction:column;gap:12px">
     <div class="field"><label for="lId">회원번호</label><input id="lId" inputmode="numeric" placeholder="1001" autocomplete="username"></div>
     <div class="field"><label for="lPw">연락처 뒤 4자리</label><input id="lPw" inputmode="numeric" maxlength="4" type="password" autocomplete="current-password"></div>
@@ -708,6 +710,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
       <button class="btn ghost sm" id="termsBtn">이용약관 보기</button>
       <button class="btn ghost sm" data-showqr>가입 QR 보여 주기</button>
       <button class="btn ghost sm" data-instgo data-inst>홈 화면에 앱 추가</button>
+      <button class="btn ghost sm" id="bioBtn" hidden>얼굴로 로그인 설정</button>
       <button class="btn ghost sm" id="logoutBtn">로그아웃</button>
     </div>
   </div>
@@ -1441,7 +1444,7 @@ function sfx(type){if(!SND)return;try{if(!getAC())return;const o=AC.createOscill
 
 /* ================= 화면 전환 ================= */
 let ME=null;
-function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
+function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'||id==='v-login'){try{bioRender()}catch(e){}}if(id==='v-world'){try{bioSyncBtn()}catch(e){}}if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
 $$('[data-back]').forEach(b=>b.onclick=()=>show('v-home'));
 $('#hwBanner').hidden=!HW;
 
@@ -1518,11 +1521,64 @@ $('#goLogin').onclick=()=>show('v-login');
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const id=$('#lId').value.trim(),pw=$('#lPw').value.trim();const sb=$('#loginForm [type=submit]');if(sb)sb.disabled=true;let okw=false;try{okw=await fbWait()}finally{if(sb)sb.disabled=false}if(!okw)return;
   if(!(await DB.loginMember(id,pw))){toast('회원번호나 연락처 뒤 4자리가 맞지 않아요');return}
   const m=await DB.get(id);if(!m){toast('회원 정보를 불러오지 못했어요');return}
-  ME=m;lsSet(LS_SESSION,id);enterWorld()};
+  ME=m;lsSet(LS_SESSION,id);enterWorld();setTimeout(()=>bioOffer(m,pw),1800)};
 $('#demoBtn').onclick=async()=>{
   let m=local.members['0000'];
   if(!m){m=blankMember({name:'체험 복서',phone:'010-0000-0000',char:'cat'},'0000');m.credits=1500;m.earned=1500;m.xp=1800;m.xpv=2;m.attend=['2026-10-14','2026-10-15','2026-10-16','2026-10-17'];m.streak=4;m.maxStreak=4;m.last='2026-10-17';m.friends=['cat','rabbit'];m.best={bag:260,rope:24,shadow:150};m.owned.push('g_blue','h_red');m.equip.head='h_red';m.badges=['att1'];m.demo=true;local.members['0000']=m;persist()}
   ME=m;lsSet(LS_SESSION,'0000');enterWorld()};
+
+
+/* ================= 얼굴(생체)로 로그인 — 휴대폰 Face ID·지문, 얼굴 정보는 폰 밖으로 안 나감 ================= */
+const LS_BIO='nnn_bio';
+const bioList=()=>{const v=lsGet(LS_BIO);return Array.isArray(v)?v.filter(r=>r&&r.id&&r.cid):[]};
+const bioFind=id=>bioList().find(r=>r.id===id);
+const bioRo=()=>bioWord()==='Face ID'?'Face ID로':'얼굴·지문으로';
+const bioWord=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)?'Face ID':'얼굴·지문';
+const b64u=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64u=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};
+const bioRand=()=>crypto.getRandomValues(new Uint8Array(32));
+const bioHide=p=>btoa(String(p).split('').reverse().join('')+'|nnn');
+const bioShow=k=>{try{return atob(k).split('|')[0].split('').reverse().join('')}catch(e){return ''}};
+let BIO_AV=null;
+async function bioAvail(){if(BIO_AV!==null)return BIO_AV;BIO_AV=false;
+  try{if(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable)BIO_AV=!!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){}return BIO_AV}
+async function bioEnroll(m,pin){
+  const cred=await navigator.credentials.create({publicKey:{challenge:bioRand(),rp:{name:'NNN WORLD'},
+    user:{id:new TextEncoder().encode('nnn-'+m.id),name:'NNN '+m.id,displayName:(m.name||'회원')+' ('+m.id+')'},
+    pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+    authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});
+  if(!cred)throw new Error('no cred');
+  const L=bioList().filter(r=>r.id!==m.id);L.push({id:m.id,name:m.name||'',cid:b64u(cred.rawId),k:bioHide(pin),at:Date.now()});lsSet(LS_BIO,L.slice(-5));
+  try{localStorage.removeItem('nnn_bio_no_'+m.id)}catch(e){}}
+function bioRemove(id){lsSet(LS_BIO,bioList().filter(r=>r.id!==id))}
+async function bioLogin(rec,btn){
+  if(btn)btn.disabled=true;
+  try{
+    try{await navigator.credentials.get({publicKey:{challenge:bioRand(),allowCredentials:[{type:'public-key',id:unb64u(rec.cid),transports:['internal']}],userVerification:'required',timeout:60000}})}
+    catch(e){toast(e&&e.name==='NotAllowedError'?`${bioWord()} 확인이 취소됐어요. 다시 누르거나 회원번호로 들어와 주세요`:`${bioRo()} 로그인할 수 없어요. 회원번호로 들어와 주세요`,3500);return}
+    let okw=false;try{okw=await fbWait()}catch(e){}if(!okw)return;
+    if(!(await DB.loginMember(rec.id,bioShow(rec.k)))){bioRemove(rec.id);bioRender();toast('연락처가 바뀌어서 얼굴 로그인이 꺼졌어요. 회원번호로 한 번 들어와 주세요',4000);show('v-login');$('#lId').value=rec.id;return}
+    const m=await DB.get(rec.id);if(!m){toast('회원 정보를 불러오지 못했어요');return}
+    ME=m;lsSet(LS_SESSION,rec.id);toast(`${m.name||''} 님, 반가워요!`);enterWorld();
+  }finally{if(btn)btn.disabled=false}}
+function bioBtnsHTML(){return bioList().map((r,i)=>`<button class="btn red" data-bio="${i}" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M9 10v1M15 10v1M12 10v3h-1M9.5 16c1.5 1 3.5 1 5 0"/></svg>${esc(r.name||r.id)} 님 ${bioRo()} 입장</button>`).join('')}
+async function bioRender(){const L=bioList();const ok=L.length&&await bioAvail();
+  ['#bioHome','#bioLogin'].forEach(sel=>{const box=$(sel);if(!box)return;box.hidden=!ok;box.innerHTML=ok?bioBtnsHTML():'';
+    box.querySelectorAll('[data-bio]').forEach(b=>b.onclick=()=>bioLogin(L[+b.dataset.bio],b))})}
+async function bioSyncBtn(){const b=$('#bioBtn');if(!b)return;const ok=ME&&!ME.demo&&await bioAvail();b.hidden=!ok;if(ok)b.textContent=bioFind(ME.id)?`${bioWord()} 로그인 끄기`:`${bioRo()} 로그인 켜기`}
+function bioOffer(m,pin,n=0){(async()=>{if(!m||m.demo||!ME||ME.id!==m.id||bioFind(m.id)||!(await bioAvail()))return;if(lsGet('nnn_bio_no_'+m.id))return;if($('#sheetRoot').innerHTML.trim()){if(n<40)setTimeout(()=>bioOffer(m,pin,n+1),3000);return}
+  sheet(`<h2>다음부터 ${bioRo()} 들어올까요?</h2><p class="small" style="margin:0">회원번호와 비밀번호를 치지 않고, 휴대폰 잠금 풀 때처럼 ${bioWord()}만으로 들어올 수 있어요. 얼굴·지문 정보는 이 휴대폰 안에만 있고 체육관으로 보내지지 않아요.</p>
+    <button class="btn red" id="bioYes">${bioRo()} 로그인 켜기</button><button class="btn ghost" data-close>다음에</button><button class="link" id="bioNo">다시 묻지 않기</button>`,(el,close)=>{
+    el.querySelector('#bioYes').onclick=async()=>{try{await bioEnroll(m,pin);close();toast(`이제 ${bioRo()} 들어올 수 있어요`);bioSyncBtn()}catch(e){toast(e&&e.name==='NotAllowedError'?'취소됐어요. 내 정보 탭에서 언제든 다시 켤 수 있어요':'이 휴대폰에서는 설정할 수 없어요',3500)}};
+    el.querySelector('#bioNo').onclick=()=>{lsSet('nnn_bio_no_'+m.id,1);close()}})})()}
+$('#bioBtn').onclick=async()=>{if(!ME)return;
+  if(bioFind(ME.id)){bioRemove(ME.id);toast(`${bioWord()} 로그인을 껐어요`);bioSyncBtn();return}
+  sheet(`<h2>${bioRo()} 로그인 켜기</h2><p class="small" style="margin:0">확인을 위해 비밀번호(가입 때 적은 휴대폰 번호 뒤 4자리)를 한 번만 입력해 주세요.</p>
+    <div class="field"><label for="bioPw">휴대폰 번호 뒤 4자리</label><input id="bioPw" inputmode="numeric" maxlength="4" type="password" autocomplete="current-password"></div>
+    <button class="btn red" id="bioSet">켜기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    el.querySelector('#bioSet').onclick=async()=>{const pin=el.querySelector('#bioPw').value.trim();if(!/^\d{4}$/.test(pin)){toast('숫자 4자리를 입력해 주세요');return}
+      let ok=false;try{ok=await DB.loginMember(ME.id,pin)}catch(e){}if(!ok){toast('비밀번호가 맞지 않아요');return}
+      try{await bioEnroll(ME,pin);close();toast(`이제 ${bioRo()} 들어올 수 있어요`);bioSyncBtn()}catch(e){toast(e&&e.name==='NotAllowedError'?'취소됐어요':'이 휴대폰에서는 설정할 수 없어요',3500)}}})};
 
 let saveT=0;function saveMe(){clearTimeout(saveT);saveT=setTimeout(()=>ME&&DB.save(ME),300)}
 
