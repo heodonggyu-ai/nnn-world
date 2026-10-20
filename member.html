@@ -414,6 +414,16 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .mrow .ms{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
 .mrow .mb{display:flex;gap:6px;flex:0 0 auto}
 .mrow.pend{background:#FFF6EE}
+.vcard{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--ink);color:var(--ink);font:inherit}
+.vpost{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.vpost .vh{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.vpost .vt{white-space:pre-wrap;word-break:break-word;font-size:15px}
+.vcat{font-size:11px;border-radius:999px;padding:2px 8px;font-weight:600}
+.vc-idea{background:#E6EEFB;color:#2E5AAC}.vc-good{background:#E6F4EC;color:#1E6B45}.vc-bad{background:#FDE2E3;color:#8A1F24}.vc-q{background:#FFF1CC;color:#7A5A00}.vc-etc{background:var(--mat);color:#555}
+.vreply{background:#F4F7FD;border-left:3px solid #2E5AAC;border-radius:8px;padding:8px 10px;font-size:14px;white-space:pre-wrap}
+.vreply b{color:#2E5AAC}
+.vst{font-size:11px;font-weight:700}.vst.new{color:var(--red)}.vst.seen{color:#B4400C}.vst.done{color:var(--green)}
+.vlike{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;font-size:13px}.vlike.on{background:#FDE2E3;border-color:#F2B8BA;color:#8A1F24}
 .wchat{margin-top:8px;background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
 .wchat .wch{display:flex;align-items:center;gap:6px;font-size:13px}.wchat .wch b{flex:1;font-family:var(--display);font-weight:400;font-size:15px}
 .wchat .wch .on{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:2px}
@@ -656,6 +666,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
     <div data-face style="margin-top:12px"></div>
     <div data-mem="full" style="margin-top:12px"></div>
     <div data-fam="full" style="margin-top:12px"></div>
+    <button class="card vcard" id="voiceBtn" style="margin-top:12px"><div class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:19px">의견함 · 건의함</b><div class="small">관장님·코치에게 하고 싶은 말, 칭찬, 불편한 점을 남겨요</div></div><i class="cbadge" id="voiceN" hidden></i><span style="font-size:22px">›</span></button>
     <div data-exam style="margin-top:12px"></div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
       <div class="label">내 정보</div>
@@ -719,6 +730,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <button class="btn gold" id="cWorld">내 캐릭터로 NNN WORLD 입장 (꾸미기)</button>
   <button class="btn" id="cChat">코치 대화방 · 공지<i class="cbadge" id="cChatN" hidden></i></button>
   <button class="btn ghost" id="cSpar">회원 스파링 확인 · 코치 피드백</button>
+  <button class="btn ghost" id="cVoice">회원 의견함<i class="cbadge" id="cVoiceN" hidden></i></button>
   <div class="atabs" id="ctabs"><button data-ct="work" class="on">내 근태</button><button data-ct="leave">휴가</button><button data-ct="mem">회원 출석</button></div>
   <div id="cvWork" style="display:flex;flex-direction:column;gap:12px">
     <div class="card clock"><div class="small" id="ckDate"></div><div id="ckSched" class="small"></div><div class="ckbig num" id="ckNow"></div><div id="ckState"></div><button class="btn red" id="ckBtn">출근하기</button><div class="small" id="ckLoc"></div></div>
@@ -809,6 +821,9 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
   <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
   <div class="bring" data-atab="today" id="dueBanner" hidden></div>
+  <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px">
+    <div class="row" style="align-items:center"><div class="grow"><h3 style="font-size:20px">회원 의견함 <span class="small num" id="vsCnt" style="color:var(--red)"></span></h3><div class="small" id="vsSub">회원이 남긴 건의·칭찬·불편 사항이에요</div></div><button class="btn sm red" id="vsOpen">열기</button></div>
+  </div>
   <div class="card" data-atab="today" id="hrCard" hidden style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--red)">
     <h3 style="font-size:20px">정지(연기) 신청 <span class="small num" id="hrCnt"></span></h3>
     <p class="small" style="margin:0">회원이 앱에서 보낸 신청이에요. <b>처리</b>를 누르면 날짜를 고쳐서 승인하거나 거절할 수 있어요.</p>
@@ -1611,7 +1626,7 @@ function interact(tg){
 }
 
 /* --- 시트들 --- */
-function openNotice(){sheet(`<h2>체육관 공지</h2><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>${snsHTML()}<button class="btn" data-close>닫기</button>`)}
+function openNotice(){sheet(`<h2>체육관 공지</h2><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>${snsHTML()}<button class="btn ghost" id="ntVoice">관장님께 의견 남기기 · 건의함</button><button class="btn" data-close>닫기</button>`,(el,close)=>{el.querySelector('#ntVoice').onclick=()=>{close();openVoice()}})}
 function openPadInfo(){sheet(`<h2>출석패드</h2><p style="margin:0">체육관 입구 출석패드에 회원번호 <b class="num">${esc(ME.id)}</b>를 입력하면 출석 완료!</p>
   <div class="qrow"><div class="grow">기본 출석</div><b class="num">+50</b></div><div class="qrow"><div class="grow">연속 출석 보너스 (하루마다)</div><b class="num">+10 · 최대 +50</b></div><div class="qrow"><div class="grow">출석 룰렛</div><b>최대 +100 · 깜짝 장비</b></div>
   <p class="small" style="margin:0">오늘 출석: ${ME.last===TODAY()?'완료':'아직'}</p><button class="btn" data-close>확인</button>`)}
@@ -1912,6 +1927,70 @@ async function renderChatAdmin(){const box=$('#caBox');if(!box)return;const [msg
   // 3일 지난 대화 정리
   const lim=Date.now()-3*864e5;for(const [k,v] of Object.entries(msgs||{}))if(!v||v.at<lim)await hset('wchat/'+k,null)}
 
+/* ================= 의견함 · 건의함 ================= */
+const VCAT={idea:'건의',good:'칭찬',bad:'불편',q:'질문',etc:'기타'};
+const VST={new:'접수',seen:'확인 중',done:'답변 완료'};
+const vtime=at=>new Date(at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'});
+async function voiceLoad(scope){const pub=(await hget('voice/pub'))||{};let prv={};
+  if(scope==='staff')prv=(await hget('voice/prv'))||{};else if(ME&&!isGuest())prv={[ME.id]:(await hget('voice/prv/'+ME.id))||{}};
+  const P=Object.entries(pub).map(([id,v])=>Object.assign({id,pub:true},v));const Q=[];Object.entries(prv).forEach(([mid,o])=>Object.entries(o||{}).forEach(([id,v])=>Q.push(Object.assign({id,mid,pub:false},v))));
+  return P.concat(Q).filter(x=>x&&x.at).sort((a,b)=>b.at-a.at)}
+const vPath=x=>x.pub?`voice/pub/${x.id}`:`voice/prv/${x.mid||x.by}/${x.id}`;
+function vCard(x,staff){const me=ME&&ME.id;const mine=x.by===me;const lk=Object.keys(x.likes||{}).length;const liked=!!(x.likes&&x.likes[me]);
+  const who=staff?`${esc(x.nick||'회원')} <span class="num">${esc(x.by)}</span>${x.anon?' (익명 공개)':''}`:x.anon&&!mine?'익명 회원':mine?'나':esc(x.nick||'회원');
+  return `<div class="vpost"><div class="vh"><span class="vcat vc-${x.cat||'etc'}">${VCAT[x.cat]||'기타'}</span><span>${x.pub?'전체 공개':'관장·코치만'}</span><span>· ${who}</span><span>· ${vtime(x.at)}</span><span class="grow"></span><span class="vst ${x.st||'new'}">${VST[x.st||'new']}</span></div>
+    <div class="vt">${esc(x.text)}</div>
+    ${x.reply?`<div class="vreply"><b>${esc(x.reply.by||'관장')} 답변</b> <span class="small">${vtime(x.reply.at)}</span>\n${esc(x.reply.text)}</div>`:''}
+    <div class="row" style="gap:6px;align-items:center">${x.pub?`<button class="vlike ${liked?'on':''}" data-vl="${esc(x.id)}" ${staff||!me||isGuest()?'disabled':''}>공감 ${lk}</button>`:''}<span class="grow"></span>
+      ${staff?`<button class="btn sm red" data-vr="${esc(x.id)}">${x.reply?'답변 고치기':'답변하기'}</button>${x.pub?`<button class="btn sm ghost" data-vd="${esc(x.id)}">숨기기</button>`:''}`:mine?`<button class="btn sm ghost" data-vd="${esc(x.id)}">삭제</button>`:''}</div></div>`}
+async function voiceBadge(){if(!ME||isGuest()||isStaff(ME))return;const L=(await voiceLoad()).filter(x=>x.by===ME.id&&x.reply&&x.reply.at>(+(()=>{try{return localStorage.getItem('nnn_vseen_'+ME.id)}catch(e){return 0}})()||0));const b=$('#voiceN');if(b){b.textContent=L.length?'답변 '+L.length:'';b.hidden=!L.length}}
+async function openVoice(tab){if(!ME)return;if(isGuest()){guestBlock('의견은 가입 후에 남길 수 있어요');return}if(isStaff(ME)){openVoiceStaff();return}
+  tab=tab||'pub';const all=await voiceLoad();const me=ME.id;
+  const L=tab==='pub'?all.filter(x=>x.pub&&!x.hide):all.filter(x=>x.by===me);
+  try{localStorage.setItem('nnn_vseen_'+me,String(Date.now()))}catch(e){}voiceBadge();
+  sheet(`<h2>의견함 · 건의함</h2><p class="small" style="margin:0">관장님·코치에게 하고 싶은 말을 남겨요. <b>관장·코치만</b> 보게 하거나 <b>전체 공개</b>로 올릴 수 있어요.</p>
+    <button class="btn red" id="vNew">의견 남기기</button>
+    <div class="chips"><button class="chip ${tab==='pub'?'on':''}" data-vt="pub">전체 공개 글</button><button class="chip ${tab==='mine'?'on':''}" data-vt="mine">내가 쓴 글</button></div>
+    <div style="display:flex;flex-direction:column;gap:8px">${L.map(x=>vCard(x,false)).join('')||`<div class="small">${tab==='pub'?'아직 공개된 글이 없어요.':'아직 남긴 의견이 없어요.'}</div>`}</div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelectorAll('[data-vt]').forEach(b=>b.onclick=()=>openVoice(b.dataset.vt));
+    el.querySelector('#vNew').onclick=()=>voiceNew();
+    el.querySelectorAll('[data-vl]').forEach(b=>b.onclick=async()=>{const x=L.find(y=>y.id===b.dataset.vl);const on=!(x.likes&&x.likes[me]);if(await hset(`voice/pub/${x.id}/likes/${me}`,on?true:null))openVoice(tab)});
+    el.querySelectorAll('[data-vd]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제';return}const x=L.find(y=>y.id===b.dataset.vd);if(await hset(vPath(x),null)){toast('삭제했어요');openVoice(tab)}})})}
+function voiceNew(){let cat='idea',pub=false;
+  sheet(`<h2>의견 남기기</h2>
+    <div class="field"><span>어떤 내용인가요?</span><div class="chips" id="vnC">${Object.entries(VCAT).map(([k,v])=>`<button type="button" class="chip ${k===cat?'on':''}" data-c="${k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><label for="vnT">내용 <span class="small">(500자까지)</span></label><textarea id="vnT" rows="5" maxlength="500" placeholder="예: 샤워실 온수가 가끔 약해요 / 토요일 수업 시간이 늘었으면 좋겠어요 / 김코치님 덕분에 잽이 늘었어요!"></textarea></div>
+    <div class="field"><span>누가 볼 수 있나요?</span><div class="chips" id="vnV"><button type="button" class="chip on" data-v="prv">관장·코치에게만</button><button type="button" class="chip" data-v="pub">전체 공개</button></div><div class="small" id="vnVd">관장님과 코치만 읽어요. 다른 회원에게는 보이지 않아요.</div></div>
+    <label class="check" id="vnAF" hidden style="margin:0"><input type="checkbox" id="vnA"><span>다른 회원에게는 이름 숨기기 (익명) <span class="small">· 관장·코치는 누가 썼는지 알아요</span></span></label>
+    <button class="btn red" id="vnGo">보내기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    el.querySelectorAll('#vnC [data-c]').forEach(b=>b.onclick=()=>{cat=b.dataset.c;el.querySelectorAll('#vnC [data-c]').forEach(x=>x.classList.toggle('on',x===b))});
+    el.querySelectorAll('#vnV [data-v]').forEach(b=>b.onclick=()=>{pub=b.dataset.v==='pub';el.querySelectorAll('#vnV [data-v]').forEach(x=>x.classList.toggle('on',x===b));el.querySelector('#vnAF').hidden=!pub;
+      el.querySelector('#vnVd').textContent=pub?'모든 회원이 읽고 공감할 수 있어요. 관장님 답변도 같이 보여요.':'관장님과 코치만 읽어요. 다른 회원에게는 보이지 않아요.'});
+    el.querySelector('#vnGo').onclick=async e=>{const raw=el.querySelector('#vnT').value.trim();if(raw.length<5){toast('조금 더 자세히 적어 주세요');return}
+      if(pub&&chatBlocked(raw)){toast('전체 공개 글에는 전화번호·링크를 적을 수 없어요');return}
+      e.target.disabled=true;const text=pub?String(raw).split('\n').map(l=>chatClean(l)).join('\n').slice(0,500):raw.slice(0,500);
+      const id='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);const rec=clean({by:ME.id,nick:ME.nick||maskName(ME.name),anon:pub&&el.querySelector('#vnA').checked||undefined,cat,text,at:Date.now(),st:'new'});
+      if(await hset(pub?`voice/pub/${id}`:`voice/prv/${ME.id}/${id}`,rec)){toast(pub?'전체 공개로 올렸어요':'관장님·코치에게 보냈어요. 답변이 오면 여기서 볼 수 있어요',3500);close();openVoice(pub?'pub':'mine')}else e.target.disabled=false}})}
+/* 관장·코치 */
+async function voiceStaffBadge(){const L=await voiceLoad('staff');const n=L.filter(x=>(x.st||'new')==='new'&&!x.hide).length;
+  const a=$('#vsCnt');if(a)a.textContent=n?`새 글 ${n}`:'';const c=$('#cVoiceN');if(c){c.textContent=n;c.hidden=!n}
+  const s=$('#vsSub');if(s){const l=L.find(x=>!x.hide);s.textContent=l?`${VCAT[l.cat]||''} · ${l.text.slice(0,30)}`:'회원이 남긴 건의·칭찬·불편 사항이에요'}return n}
+async function openVoiceStaff(f){f=f||'all';const all=(await voiceLoad('staff')).filter(x=>!x.hide);
+  const L=all.filter(x=>f==='all'||(f==='new'?(x.st||'new')!=='done':f==='pub'?x.pub:!x.pub));const who=isOwner(ME)||!ME?'관장':(ME.name+' 코치');
+  sheet(`<h2>회원 의견함</h2>
+    <div class="chips">${[['all','전체'],['new','답변 전'],['prv','관장·코치만'],['pub','전체 공개']].map(([k,v])=>`<button class="chip ${k===f?'on':''}" data-vf="${k}">${v}</button>`).join('')}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">${L.map(x=>vCard(x,true)).join('')||'<div class="small">해당하는 글이 없어요.</div>'}</div>
+    <button class="btn ghost" data-close>닫기</button>`,(el)=>{
+    el.querySelectorAll('[data-vf]').forEach(b=>b.onclick=()=>openVoiceStaff(b.dataset.vf));
+    // 열어본 새 글은 '확인 중'으로
+    L.filter(x=>(x.st||'new')==='new').forEach(x=>hset(vPath(x)+'/st','seen'));
+    el.querySelectorAll('[data-vr]').forEach(b=>b.onclick=()=>{const x=L.find(y=>y.id===b.dataset.vr);
+      sheet(`<h2>답변하기</h2><div class="vpost"><div class="vt">${esc(x.text)}</div></div><div class="field"><label for="vrT">답변 ${x.pub?'<span class="small">(모든 회원에게 보여요)</span>':'<span class="small">(작성한 회원만 봐요)</span>'}</label><textarea id="vrT" rows="5" maxlength="500">${esc((x.reply&&x.reply.text)||'')}</textarea></div>
+        <button class="btn red" id="vrGo">답변 저장</button><button class="btn ghost" data-close>취소</button>`,(e2,c2)=>{e2.querySelector('#vrGo').onclick=async()=>{const tx=e2.querySelector('#vrT').value.trim();if(!tx){toast('답변을 적어 주세요');return}
+          if(await hset(vPath(x)+'/reply',{text:tx,by:who,at:Date.now()})){await hset(vPath(x)+'/st','done');toast('답변했어요. 회원 앱 의견함에 표시돼요',3000);c2();openVoiceStaff(f);voiceStaffBadge()}}})});
+    el.querySelectorAll('[data-vd]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 숨겨요';return}const x=L.find(y=>y.id===b.dataset.vd);if(await hset(vPath(x)+'/hide',true)){toast('숨겼어요');openVoiceStaff(f)}})})}
+
 /* ================= 스파링 매칭 ================= */
 const SPK={mass:['매스 스파링','가볍게 · 터치 위주','k1'],tech:['기술 스파링','70% · 기술 연습','k2'],real:['실전 스파링','100% · 경기처럼','k3']};
 const SP={data:{},off:null};
@@ -2115,6 +2194,8 @@ async function renderLockers(){await lkLoad();const C=lkCfg();const ty=LKS.type;
   $$('#lkDue [data-lsms]').forEach(b=>b.onclick=async()=>{const x=due[+b.dataset.lsms];const m=await DB.get(x.r.mid);if(!m){toast('회원 정보를 찾지 못했어요');return}location.href=smsHref(m,lkMsg(x.k,x.no,x.r),'exp')})}
 $('#lkSearch').oninput=()=>renderLockers();
 $('#spStaff').onclick=openSparStaff;
+$('#vsOpen').onclick=()=>openVoiceStaff();
+$('#voiceBtn').onclick=()=>openVoice();
 $('#spMin').onchange=async()=>{local.meta.sparMin=+$('#spMin').value;if(await DB.saveMeta())toast('저장했어요')};
 $('#spAuto').onchange=async()=>{local.meta.sparAuto=$('#spAuto').checked;if(await DB.saveMeta())toast('저장했어요')};
 $('#caOff').onchange=async()=>{local.meta.chatOff=$('#caOff').checked;if(await DB.saveMeta())toast($('#caOff').checked?'대화를 껐어요':'대화를 켰어요')};
@@ -2481,7 +2562,7 @@ async function renderRank(){
 }
 
 /* ================= 내 정보 ================= */
-function renderMore(){renderFaceCard();renderMemCard();renderExamCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=[...noticesAll().filter(n=>nActive(n)).map(n=>'['+NKIND[n.kind]+'] '+n.title+'\n'+nBody(n)),local.meta.notice].filter(Boolean).join('\n\n');$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
+function renderMore(){voiceBadge();renderFaceCard();renderMemCard();renderExamCard();$('#blogOk').checked=!!ME.blogOk;renderSNS();renderInvite();{const L=levelOf(ME);$('#mNext').textContent=L.next?`Lv.${L.next}까지 XP ${L.needXp.toLocaleString()}${L.needAtt?` · 출석 ${L.needAtt}회`:''}`:'최고 레벨';}$('#noticeTxt').textContent=[...noticesAll().filter(n=>nActive(n)).map(n=>'['+NKIND[n.kind]+'] '+n.title+'\n'+nBody(n)),local.meta.notice].filter(Boolean).join('\n\n');$('#mId').textContent=ME.id;$('#mAtt').textContent=ME.attend.length+'회';$('#mJoin').textContent=ME.joined;kakaoLink($('#kakaoBtn2'))}
 $('#lvBtn').onclick=openLevels;$('#bragBtn').onclick=()=>openBrag('NNN 복싱\n운동 중!');
 $('#termsBtn').onclick=()=>sheet(`<h2>이용약관</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>닫기</button>`);
 $('#logoutBtn').onclick=()=>{stopLive();W.others={};if(meOff){meOff();meOff=null}ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}show('v-home')};
@@ -2894,7 +2975,7 @@ $('#goCoach').onclick=()=>{sheet(`<h2>코치 로그인</h2><div class="field"><l
   el.querySelector('#ccOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})};
 let CO={day:null,all:[],ros:{}};
 async function openCoachMode(){const ros=await COACH.roster();if(ros==null){try{localStorage.removeItem('nnn_coach')}catch(e){}toast('코치 계정이 해제됐어요. 관장님께 코드를 다시 받아 주세요',4000);show('v-home');return}
-  CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');setCTab('work');chatBadge('coach')}
+  CO.ros=ros;CO.all=(await DB.all()).filter(m=>!m.demo);CO.all.forEach(m=>{if(ros[m.id])m.name=ros[m.id].name});CO.day=CO.day||TODAY();show('v-coach');setCTab('work');chatBadge('coach');voiceStaffBadge()}
 const faceCache={};
 function faceInto(el,id){if(!el)return;if(faceCache[id]!==undefined){el.innerHTML=faceCache[id]?`<img src="${faceCache[id]}" alt="">`:'사진 없음';return}FDB.get(id).then(s=>{faceCache[id]=s||'';el.innerHTML=s?`<img src="${s}" alt="">`:'사진 없음'})}
 function renderCoach(){const d=CO.day;const x=new Date(d+'T00:00:00');$('#cDay').textContent=`${md(d)} (${DAYN[x.getDay()]})${d===TODAY()?' · 오늘':''}`;$('#cNext').disabled=d>=TODAY();
@@ -2914,7 +2995,7 @@ function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=
   sheet(`<div class="row" style="align-items:center"><div class="cimg" id="cmF" style="width:96px;height:96px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small num">회원번호 ${m.id} · 가입 ${esc(m.joined||'-')}</div><div class="small">총 출석 ${(m.attend||[]).length}회 · 최근 ${m.last?md(m.last):'-'} · 연속 ${m.streak||0}일</div></div></div>
     <div id="cmCal"></div><button class="btn" data-close>닫기</button>`,el=>{faceInto(el.querySelector('#cmF'),m.id);const draw=()=>{el.querySelector('#cmCal').innerHTML=cal();el.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+ +b.dataset.mv);mon=dstr(f).slice(0,7);draw()})};draw()})}
 $('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
-$('#cSearch').oninput=renderCoach;$('#cWorld').onclick=enterCoachWorld;$('#cChat').onclick=()=>openChat('coach');$('#cSpar').onclick=openSparStaff;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
+$('#cSearch').oninput=renderCoach;$('#cWorld').onclick=enterCoachWorld;$('#cChat').onclick=()=>openChat('coach');$('#cVoice').onclick=()=>openVoiceStaff();$('#cSpar').onclick=openSparStaff;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
 $('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
 
 /* ================= 코치 인사 · 근태 ================= */
@@ -3126,7 +3207,7 @@ function resetPad(){$('#padInput').hidden=false;$('#padRes').hidden=true}
 /* ================= 관장 메뉴 ================= */
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();

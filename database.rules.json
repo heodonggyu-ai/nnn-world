@@ -336,6 +336,31 @@
       }
      }
     }
+   },
+   "voice": {
+    "pub": {
+     ".read": "auth != null",
+     "$id": {
+      ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (!data.exists() && newData.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && !newData.child('reply').exists() && !newData.child('hide').exists()) || (data.exists() && !newData.exists() && root.child('gym/mdev').child(data.child('by').val()).child(auth.uid).exists()))",
+      ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('at').isNumber())",
+      "likes": {
+       "$m": {
+        ".write": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
+        ".validate": "!newData.exists() || newData.val() === true"
+       }
+      }
+     }
+    },
+    "prv": {
+     ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+     "$m": {
+      ".read": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
+      "$id": {
+       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ((!data.exists() && newData.exists() && newData.child('by').val() === $m && !newData.child('reply').exists()) || (data.exists() && !newData.exists()))))",
+       ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('at').isNumber())"
+      }
+     }
+    }
    }
   }
  }
