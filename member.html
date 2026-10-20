@@ -2125,11 +2125,11 @@ document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest
 const GHUB='https://heodonggyu-ai.github.io/nnn-world/';
 const ARCADE=[
   {id:'forest',name:'밍뉴의숲',desc:'동네에 숨은 동물 친구들을 찾아 데려와 키워요. 학교·집·엔엔엔복싱에도 들어가요.',href:GHUB+'forest/',img:GHUB+'shared/img/forest-cover.jpg',col:'#3E8A2E',art:'밍뉴의<br>숲',tags:['동물 키우기','친구와 같이']},
-  {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',col:'#D9343A',art:'NNN<br>콤보 러시',tags:['복싱','랭킹']},
-  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:GHUB+'crash/',col:'#2E5AAC',art:'꽝!<br>크래시 드라이브',tags:['자동차','3D','미션']},
-  {id:'bomb',name:'폭탄 돌리기',desc:'폰 하나를 돌려가며 암산 문제를 맞히고 폭탄을 넘겨요. 터질 때 들고 있으면 탈락!',href:GHUB+'bomb/',col:'#E8622F',art:'💣<br>폭탄 돌리기',tags:['여럿이 한 폰','암산']},
-  {id:'dice',name:'욕심 주사위',desc:'한 번 더 굴릴까, 멈출까? 1이 나오면 꽝! 혼자면 관장봇과 대결.',href:GHUB+'dice/',col:'#2F7A55',art:'🎲<br>욕심 주사위',tags:['주사위','눈치싸움']},
-  {id:'bori',name:'보리보리쌀',desc:'쌀그릇에 손가락을 올리고 "쌀!"에만 쏙 빼요. 가짜 말에 속지 마세요!',href:GHUB+'bori/',col:'#C99A2E',art:'🌾<br>보리보리쌀',tags:['반응속도','여럿이 한 폰']}];
+  {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',img:GHUB+'shared/img/combo-cover.jpg',col:'#D9343A',art:'NNN<br>콤보 러시',tags:['복싱','랭킹']},
+  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:GHUB+'crash/',img:GHUB+'shared/img/crash-cover.jpg',col:'#2E5AAC',art:'꽝!<br>크래시 드라이브',tags:['자동차','3D','미션']},
+  {id:'bomb',name:'폭탄 돌리기',desc:'폰 하나를 돌려가며 암산 문제를 맞히고 폭탄을 넘겨요. 터질 때 들고 있으면 탈락!',href:GHUB+'bomb/',img:GHUB+'shared/img/bomb-cover.jpg',col:'#E8622F',art:'💣<br>폭탄 돌리기',tags:['여럿이 한 폰','암산']},
+  {id:'dice',name:'욕심 주사위',desc:'한 번 더 굴릴까, 멈출까? 1이 나오면 꽝! 혼자면 관장봇과 대결.',href:GHUB+'dice/',img:GHUB+'shared/img/dice-cover.jpg',col:'#2F7A55',art:'🎲<br>욕심 주사위',tags:['주사위','눈치싸움']},
+  {id:'bori',name:'보리보리쌀',desc:'쌀그릇에 손가락을 올리고 "쌀!"에만 쏙 빼요. 가짜 말에 속지 마세요!',href:GHUB+'bori/',img:GHUB+'shared/img/bori-cover.jpg',col:'#C99A2E',art:'🌾<br>보리보리쌀',tags:['반응속도','여럿이 한 폰']}];
 function openArcade(){sheet(`<h2>게임장</h2><p class="small" style="margin:0">관장님이 직접 만든 게임들이에요. 하루 처음 한 판은 <b>+10 크레딧</b>!</p>
   <div style="display:flex;flex-direction:column;gap:10px">${ARCADE.map(g=>`<button class="qrow" data-ag="${g.id}" style="border:0;text-align:left;padding:0;overflow:hidden;align-items:stretch;background:#fff">
     <div style="width:96px;flex:0 0 auto;background:${g.col};${g.img?`background-image:url('${g.img}');background-size:cover;background-position:center;`:''}display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:15px;line-height:1.1;text-align:center;padding:8px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${g.art||''}</div>
