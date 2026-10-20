@@ -629,7 +629,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
     <div class="mapwrap" style="margin-top:10px">
       <canvas id="map"></canvas>
       <button id="mapFix" hidden style="position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:3;background:var(--red);color:#fff;border:0;border-radius:14px;padding:14px 18px;font-family:var(--display);font-size:16px;box-shadow:0 6px 20px rgba(0,0,0,.25)">맵 다시 불러오기</button>
-      <div class="hint" id="mapHint">바닥을 누르면 이동해요. 샌드백·줄넘기·링·휴식 구역으로 가 보세요.</div>
+      <div class="hint" id="mapHint">바닥을 누르면 이동해요. 다른 회원 캐릭터를 누르면 인사할 수 있어요!</div>
     </div>
     <div id="mapLive" hidden style="margin-top:8px"></div>
     <div class="sparbar"><button class="btn" id="sparBtn">스파링 매칭<i class="cbadge" id="sparN" hidden></i></button></div>
@@ -1911,6 +1911,25 @@ function playArcade(g){if(!g)return;stopWorld();let r=$('#arcRoot');if(r)r.remov
   r.querySelector('#arcNew').onclick=()=>{try{window.open(g.href,'_blank','noopener')}catch(e){location.href=g.href}};
   if(ME&&!isGuest()&&!isStaff(ME)){const d=fixDay(ME);d.arc=d.arc||[];if(!d.arc.length){earn(ME,10,'arcade');toast(g.name+' 첫 플레이! +10 크레딧',2500);refreshTop()}if(!d.arc.includes(g.id))d.arc.push(g.id);prog(ME,'arcade');saveMe()}}
 
+/* ================= 인사 주고받기 ================= */
+const GREETS=['👋 안녕하세요!','🔥 오늘도 화이팅!','💪 같이 운동해요','🙏 수고하셨어요','🥊 스파링 한 판?','😄 반가워요'];
+function openGreet(o){if(!ME)return;const mins=Math.round((Date.now()-(o.at||Date.now()))/60000);const where=o.online?'앱에 접속 중':`${mins<1?'방금':mins+'분 전'} 체육관 입장`;
+  sheet(`<div class="row" style="align-items:center;gap:12px"><canvas id="grAv" width="120" height="132" style="width:60px;height:66px"></canvas><div class="grow"><h2 style="margin:0">${esc(o.nick)}</h2><div class="small">Lv.${o.lv||1} · ${where}</div></div></div>
+    ${isGuest()?'<p class="small" style="margin:0">가입하면 회원들과 인사를 주고받을 수 있어요.</p>':chatOff()||chatMuted(ME.id)?'<p class="small" style="margin:0">지금은 인사를 보낼 수 없어요.</p>':`<div class="label">인사 보내기</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${GREETS.map((g,i)=>`<button class="btn ghost" data-gr="${i}">${g}</button>`).join('')}</div>`}
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{try{avatarTo(el.querySelector('#grAv'),o.eq||{char:'boxer'},{h:46,noFx:true})}catch(e){}
+    el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=async()=>{close();await sendGreet(o.id,o.nick,GREETS[+b.dataset.gr])})})}
+async function sendGreet(toId,toNick,text){if(!ME||isGuest())return;if(Date.now()-WC.last<3000){toast('조금 천천히 보내 주세요');return}WC.last=Date.now();
+  const k=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const m=clean({id:ME.id,nick:isOwner(ME)?'관장님':isCoachRec(ME)?ME.name+' 코치':(ME.nick||maskName(ME.name)),text:`@${toNick} ${text}`.slice(0,60),to:toId,at:Date.now(),st:isStaff(ME)||undefined});
+  W.bub[ME.id]={text:m.text,until:Date.now()+7000};
+  if(await hset('wchat/'+k,m)){sfx('good');const o=(W.others||{})[toId];if(o)floatTxt(o.x,o.y-40,'👋');
+    if(!isStaff(ME)){const d=fixDay(ME);d.greet=(d.greet||0)+1;if(d.greet===1){earn(ME,5,'greet');toast('오늘 첫 인사! +5 크레딧',2500);saveMe();refreshTop()}else toast(toNick+'님에게 인사했어요')}else toast(toNick+'님에게 인사했어요');
+    if(!FB_ON()){WC.msgs=Object.values(lget('wchat')||{}).sort((a,b)=>a.at-b.at);renderWChat()}}}
+function greetInbox(newMsgs){if(!ME)return;const mine=newMsgs.filter(x=>x.to===ME.id&&x.id!==ME.id);if(!mine.length)return;const g=mine[mine.length-1];
+  if($('#sheetRoot').innerHTML||$('#v-world').hidden){toast(`${g.nick}님이 인사했어요: ${g.text.replace(/^@\S+\s/,'')}`,4000);return}
+  sfx('coin');sheet(`<h2>${esc(g.nick)}님이 인사했어요</h2><div class="bubble" style="font-size:18px">${esc(g.text.replace(/^@\S+\s/,''))}</div>${isGuest()?'':`<div class="label">답장하기</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${GREETS.map((x,i)=>`<button class="btn ghost" data-rg="${i}">${x}</button>`).join('')}</div>`}<button class="btn ghost" data-close>나중에</button>`,(el,close)=>{
+    el.querySelectorAll('[data-rg]').forEach(b=>b.onclick=async()=>{close();await sendGreet(g.id,g.nick,GREETS[+b.dataset.rg])})})}
+
 /* ================= 체육관 대화 (맵) ================= */
 const WC={msgs:[],off:null,offOn:null,on:{},last:0,seen:0,hb:0};
 W.bub={};
@@ -1923,7 +1942,7 @@ const chatMuted=id=>!!(local.meta&&local.meta.chatMute&&local.meta.chatMute[id])
 function onlinePresent(){const now=Date.now();return Object.entries(WC.on||{}).filter(([id,v])=>v&&v.at&&now-v.at<75000&&(!ME||id!==ME.id))}
 function startSocial(){stopSocial();if(!FB_ON()){WC.msgs=Object.values(lget('wchat')||{});renderWChat();return}
   try{let r=gref('wchat');if(r.limitToLast)r=r.limitToLast(60);const fn=s=>{const v=s.val()||{};WC.msgs=Object.entries(v).map(([k,x])=>Object.assign({k},x)).filter(x=>x&&x.at).sort((a,b)=>a.at-b.at);
-      const now=Date.now();WC.msgs.forEach(m=>{if(m.at>WC.seen&&now-m.at<20000)W.bub[m.id]={text:m.text,until:now+7000}});if(WC.msgs.length)WC.seen=Math.max(WC.seen,WC.msgs[WC.msgs.length-1].at);renderWChat()};
+      const now=Date.now();const fresh=WC.msgs.filter(m=>m.at>WC.seen&&now-m.at<20000);fresh.forEach(m=>{W.bub[m.id]={text:m.text,until:now+7000}});if(WC.init)try{greetInbox(fresh)}catch(e){}WC.init=1;if(WC.msgs.length)WC.seen=Math.max(WC.seen,WC.msgs[WC.msgs.length-1].at);renderWChat()};
     r.on('value',fn);WC.off=()=>{try{r.off('value',fn)}catch(e){}}}catch(e){}
   try{const r2=gref('online');const fn2=s=>{WC.on=s.val()||{};renderWChat()};r2.on('value',fn2);WC.offOn=()=>{try{r2.off('value',fn2)}catch(e){}}}catch(e){}
   clearInterval(WC.hb);WC.hb=setInterval(beatOnline,25000);beatOnline();sparBadge()}
@@ -1936,7 +1955,7 @@ window.addEventListener('pagehide',()=>{try{if(ME&&FB_ON()&&!isGuest())gref('onl
 function wcName(m){return m.id===(ME&&ME.id)?'나':m.nick||'회원'}
 function renderWChat(){const box=$('#wchat');if(!box||!ME)return;const n=onlinePresent().length+1;
   $('#wcOn').innerHTML=`<span class="on"></span>지금 앱 ${n}명`;
-  const L=WC.msgs.slice(-4);$('#wcLog').innerHTML=L.length?L.map(m=>`<div class="${m.id===ME.id?'me':m.st?'st':''}"><b>${esc(wcName(m))}</b>${esc(m.text)}</div>`).join(''):'<div class="small">아직 대화가 없어요. 먼저 인사해 보세요!</div>';
+  const L=WC.msgs.slice(-4);$('#wcLog').innerHTML=L.length?L.map(m=>`<div class="${m.id===ME.id?'me':m.st?'st':''}"${m.to===ME.id?' style="background:#FFF6DA;border-radius:6px"':''}><b>${esc(wcName(m))}</b>${esc(m.text)}</div>`).join(''):'<div class="small">아직 대화가 없어요. 먼저 인사해 보세요!</div>';
   const off=chatOff(),gu=isGuest(),mu=chatMuted(ME.id);
   $('#wcInRow').hidden=off||gu||mu;$('#wcQ').hidden=off||gu||mu;
   if(off||gu||mu){$('#wcLog').insertAdjacentHTML('beforeend',`<div class="small" style="color:var(--muted)">${off?'관장님이 대화를 잠시 꺼 두었어요':gu?'가입하면 대화에 참여할 수 있어요':'관장님이 대화를 잠시 제한했어요'}</div>`)}
@@ -2903,7 +2922,7 @@ function drawLiveBadge(c){if(!liveCfg().map)return;const n=Object.values(W.other
   const tot=liveCfg().today?Object.values(HR.d||{}).reduce((s,v)=>s+(+v||0),0):0;const txt=`지금 체육관 ${n}명`+(tot?` · 오늘 ${tot}명`:'');c.font='11px "Black Han Sans",sans-serif';const w=c.measureText(txt).width+26;
   c.fillStyle=n?'rgba(43,155,102,.95)':'rgba(47,47,47,.8)';rr(c,8,74,w,20,10);c.fill();circ(c,19,84,3.5,n?`rgba(255,255,255,${.6+.4*Math.sin(W.t*4)})`:'#9A9BA0');c.fillStyle='#fff';c.textAlign='left';c.fillText(txt,27,84.5);c.textAlign='center'}
 function hitOther(x,y){return Object.values(W.others||{}).find(o=>Math.hypot(o.x-x,o.y-20-y)<18)}
-function showOther(o){if(o.owner){openCoach();return}if(o.coach){floatTxt(o.x,o.y-30,(/코치$/.test(o.nick)?o.nick:o.nick+' 코치')+'님 · 질문은 편하게!');return}const m=Math.round((Date.now()-o.at)/60000);floatTxt(o.x,o.y-30,`${o.nick} · ${m<1?'방금':m+'분 전'} 입장`)}
+function showOther(o){if(o.owner){openCoach();return}if(o.coach){floatTxt(o.x,o.y-30,(/코치$/.test(o.nick)?o.nick:o.nick+' 코치')+'님 · 질문은 편하게!');return}openGreet(o)}
 
 /* ================= 공지 · 자동 알림 ================= */
 const NKIND={normal:'일반',imp:'중요',closed:'휴무'};
