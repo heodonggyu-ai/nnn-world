@@ -361,6 +361,14 @@
       }
      }
     }
+   },
+   "diag": {
+    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+    "$id": {
+     "$k": {
+      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && root.child('gym/mdev').child($id).child(auth.uid).exists()) || (!data.exists() && newData.exists() && (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val()))"
+     }
+    }
    }
   }
  }
