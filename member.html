@@ -637,6 +637,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
   <div class="tab" id="t-map">
     <div data-face style="margin-bottom:10px"></div>
     <div data-mem style="margin-bottom:10px"></div>
+    <div data-attme style="margin-bottom:10px"></div>
     <div data-fam style="margin-bottom:10px"></div>
     <div class="bring" data-bring hidden style="margin-bottom:10px"></div>
     <div class="misrow"><button class="misbtn" id="misBtn"></button><button class="bellbtn" id="bellBtn" aria-label="복싱 타임벨"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15V11a6 6 0 0 1 12 0v4l1.5 2.5h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/><path d="M12 3v2"/></svg><span id="bellLbl">타임벨</span></button></div>
@@ -690,6 +691,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
     <div class="card"><div class="label">공지</div><div id="noticeTxt" style="white-space:pre-wrap;margin-top:6px"></div></div>
     <div data-face style="margin-top:12px"></div>
     <div data-mem="full" style="margin-top:12px"></div>
+    <div data-attme="full" style="margin-top:12px"></div>
     <div data-fam="full" style="margin-top:12px"></div>
     <button class="card vcard" id="voiceBtn" style="margin-top:12px"><div class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:19px">의견함 · 건의함</b><div class="small">관장님·코치에게 하고 싶은 말, 칭찬, 불편한 점을 남겨요</div></div><i class="cbadge" id="voiceN" hidden></i><span style="font-size:22px">›</span></button>
     <div data-exam style="margin-top:12px"></div>
@@ -1600,13 +1602,58 @@ $('#bioBtn').onclick=async()=>{if(!ME)return;
       let ok=false;try{ok=await DB.loginMember(ME.id,pin)}catch(e){}if(!ok){toast('비밀번호가 맞지 않아요');return}
       try{await bioEnroll(ME,pin);close();toast(`이제 ${bioRo()} 들어올 수 있어요`);bioSyncBtn()}catch(e){toast(e&&e.name==='NotAllowedError'?'취소됐어요':'이 휴대폰에서는 설정할 수 없어요',3500)}}})};
 
+
+/* ================= 출석 확인 · 보호자 출석 알림 ================= */
+const attAlarmOn=id=>!!lsGet('nnn_attalarm_'+id);
+const attTimeOf=(m,d)=>((m.attT||{})[d])||'';
+function attMeHTML(m,full){const T=TODAY();const on=attAlarmOn(m.id);const att=Array.isArray(m.attend)?m.attend:[];const today=att.includes(T);const tt=attTimeOf(m,T);
+  const nm=esc(m.name||'');const who=m.student?`${nm} 학생`:`${nm} 님`;
+  const head=`<div class="row" style="align-items:center;gap:12px"><div style="width:46px;height:46px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:24px;background:${today?'#E6F4EC':'var(--mat)'};color:${today?'#1E6B45':'var(--muted,#888)'}">${today?'✓':'·'}</div>
+    <div class="grow"><div class="label">오늘 출석</div><b style="font-size:19px">${today?`${who} ${tt?esc(tt)+'에 ':''}출석했어요`:`${who} 아직 출석 전이에요`}</b></div></div>`;
+  if(!full)return `<div class="card" style="display:flex;flex-direction:column;gap:8px">${head}<div class="row" style="gap:8px"><button class="btn sm ghost grow" data-attlog>출석 기록 보기</button><button class="btn sm ${on?'ghost':'gold'} grow" data-attal>${on?'🔔 출석 알림 켜짐':'출석 알림 받기'}</button></div></div>`;
+  const mon=T.slice(0,7);const monN=att.filter(d=>d.startsWith(mon)).length;
+  const recent=att.slice().sort().reverse().slice(0,10);
+  return `<div class="card" style="display:flex;flex-direction:column;gap:10px">${head}
+    <div class="row"><span class="grow small">이번 달 출석</span><b class="num">${monN}회</b></div>
+    <div style="display:flex;flex-direction:column;gap:2px">${recent.length?recent.map(d=>{const x=new Date(d+'T00:00:00');return `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--mat)"><span class="grow num">${md(d)} (${DAYN[x.getDay()]})${d===T?' · 오늘':''}</span><b class="num">${esc(attTimeOf(m,d)||'출석')}</b></div>`}).join(''):'<div class="small">아직 출석 기록이 없어요</div>'}</div>
+    <div class="memsum" style="display:flex;flex-direction:column;gap:8px"><b>${on?'🔔 이 휴대폰으로 출석 알림을 받고 있어요':'보호자 출석 알림'}</b>
+      <div class="small">${on?`${who}이 체육관 출석패드에 회원번호를 찍으면 이 휴대폰이 진동·소리로 알려 드려요.`:'학부모님 휴대폰에서 켜 두면, 자녀가 체육관에 도착해 출석할 때 진동·소리로 알려 드려요. 문자는 가지 않아요.'}</div>
+      <button class="btn sm ${on?'ghost':'gold'}" data-attal>${on?'출석 알림 끄기':'이 휴대폰으로 출석 알림 받기'}</button>${on?'<button class="btn sm ghost" data-attest>알림 시험해 보기</button>':''}</div></div>`}
+function renderAttMe(){$$('[data-attme]').forEach(el=>{
+  if(!ME||isStaff(ME)||ME.demo||(typeof isGuest==='function'&&isGuest(ME))){el.innerHTML='';return}
+  const full=el.dataset.attme==='full';if(!full&&!ME.student&&!attAlarmOn(ME.id)){el.innerHTML='';return}
+  el.innerHTML=attMeHTML(ME,full);
+  el.querySelectorAll('[data-attal]').forEach(b=>b.onclick=attAlarmToggle);
+  el.querySelectorAll('[data-attlog]').forEach(b=>b.onclick=()=>{setTab('more');setTimeout(()=>{const c=document.querySelector('[data-attme="full"]');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},120)});
+  el.querySelectorAll('[data-attest]').forEach(b=>b.onclick=()=>attAlarmFire(ME,attTimeOf(ME,TODAY())||new Date().toTimeString().slice(0,5),true))})}
+async function attAlarmToggle(){if(!ME)return;const k='nnn_attalarm_'+ME.id;
+  if(attAlarmOn(ME.id)){try{localStorage.removeItem(k)}catch(e){}toast('출석 알림을 껐어요');renderAttMe();return}
+  try{audioUnlock()}catch(e){}try{getAC()}catch(e){}
+  let perm='unsupported';try{if('Notification' in window){perm=Notification.permission;if(perm==='default')perm=await Notification.requestPermission()}}catch(e){}
+  lsSet(k,1);lsSet('nnn_attseen_'+ME.id,(ME.attend||[]).includes(TODAY())?TODAY():'');renderAttMe();
+  const inst=window.matchMedia&&matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  sheet(`<h2>🔔 출석 알림을 켰어요</h2><p style="margin:0">${esc(ME.name||'')}${ME.student?' 학생':' 님'}이 출석하면 이 휴대폰이 진동과 소리로 알려 드려요.</p>
+    ${perm==='denied'?`<p class="small" style="margin:0;color:var(--red)">휴대폰 알림이 꺼져 있어서, 앱을 열어 둔 동안에만 진동·소리로 알려요. 설정 → ${isIOS()?'알림 → NNN WORLD':'애플리케이션 → 브라우저(또는 NNN WORLD) → 알림'}에서 켜 주세요.</p>`:''}
+    ${!inst?`<p class="small" style="margin:0">홈 화면에 앱을 추가해 두면 알림이 더 잘 와요.</p><button class="btn ghost sm" data-instgo data-inst>홈 화면에 앱 추가</button>`:''}
+    <p class="small" style="margin:0">알아두세요: 휴대폰이 앱을 완전히 닫아 두면 알림이 늦거나 오지 않을 수 있어요. 그럴 땐 앱을 열면 바로 '오늘 출석'이 보여요.</p>
+    <button class="btn red" id="attTry">알림 시험해 보기</button><button class="btn ghost" data-close>확인</button>`,(el)=>{el.querySelector('#attTry').onclick=()=>attAlarmFire(ME,new Date().toTimeString().slice(0,5),true)})}
+function attChime(){try{audioUnlock()}catch(e){}const ac=getAC();if(!ac)return;const n=ac.currentTime;
+  [[880,0],[1175,.18],[1568,.36],[880,.8],[1175,.98],[1568,1.16]].forEach(([f,t])=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(0.0001,n+t);g.gain.exponentialRampToValueAtTime(0.5,n+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,n+t+0.5);o.start(n+t);o.stop(n+t+0.55)})}
+async function attAlarmFire(m,tm,test){const who=(m.name||'')+(m.student?' 학생':' 님');const title=test?'[시험] NNN 출석 알림':'NNN 출석 알림';const body=`${who}이 ${tm?tm+'에 ':''}탕정 엔엔엔복싱에 출석했어요 🥊`;
+  try{navigator.vibrate&&navigator.vibrate([400,150,400,150,800])}catch(e){}attChime();
+  let shown=false;try{if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){const r=await navigator.serviceWorker.getRegistration('./member');if(r){await r.showNotification(title,{body,tag:'att-'+m.id,renotify:true,vibrate:[400,150,400,150,800],icon:'member-icons/v2/icon-192.png',badge:'member-icons/v2/icon-192.png',data:{url:location.href.split('#')[0]}});shown=true}else{new Notification(title,{body,tag:'att-'+m.id});shown=true}}}catch(e){}
+  if(document.visibilityState==='visible'||!shown){sheet(`<div style="text-align:center;font-size:54px">🥊</div><h2 style="text-align:center">${esc(who)} 출석!</h2><p style="text-align:center;margin:0">${tm?`<b class="num" style="font-size:26px">${esc(tm)}</b><br>`:''}탕정 엔엔엔복싱에 도착해서 출석했어요</p><button class="btn red" data-close>확인</button>`)}}
+function attAlarmCheck(v){if(!ME||v.id&&v.id!==ME.id)return;const id=ME.id;if(!attAlarmOn(id))return;const T=TODAY();
+  const has=Array.isArray(v.attend)?v.attend.includes(T):(v.attend&&Object.values(v.attend).includes(T));if(!has&&v.last!==T)return;
+  if(lsGet('nnn_attseen_'+id)===T)return;lsSet('nnn_attseen_'+id,T);attAlarmFire(Object.assign({},ME,v),attTimeOf(v,T))}
+
 let saveT=0;function saveMe(){clearTimeout(saveT);saveT=setTimeout(()=>ME&&DB.save(ME),300)}
 
 /* ================= 월드 ================= */
 let meOff=null;
 function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id))return;const id=ME.id;
   const r1=gref('members/'+id),r2=gref('private/'+id);
-  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
+  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
 async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)||isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
@@ -4369,7 +4416,7 @@ function memCardHTML(m,full){
   </div>`;
 }
 function renderMemCard(){if(ME&&isStaff(ME)){$$('[data-mem]').forEach(el=>el.innerHTML='');return}
-  if(!ME)return;$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules);el.querySelectorAll('[data-holdreq]').forEach(b=>b.onclick=openHoldReq);el.querySelectorAll('[data-hrc]').forEach(b=>b.onclick=async()=>{ME.holdReq=null;await DB.savePriv(ME);toast('신청을 취소했어요');renderMemCard()})});
+  if(!ME)return;try{renderAttMe()}catch(e){}$$('[data-mem]').forEach(el=>{el.innerHTML=memCardHTML(ME,el.dataset.mem==='full')+myLockerHTML(ME);el.querySelectorAll('[data-pay]').forEach(b=>b.onclick=openPay);el.querySelectorAll('[data-rules]').forEach(b=>b.onclick=openRules);el.querySelectorAll('[data-holdreq]').forEach(b=>b.onclick=openHoldReq);el.querySelectorAll('[data-hrc]').forEach(b=>b.onclick=async()=>{ME.holdReq=null;await DB.savePriv(ME);toast('신청을 취소했어요');renderMemCard()})});
 }
 /* 관장: 등록 정보 입력 */
 function openMemEditor(m,pre={},onDone){
@@ -4887,7 +4934,7 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
     '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
     '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
-    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'재안내':m.legacy?'회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!':'','로그인주소':appBase()+'?m='+(m.id||''),'학부모안내':m.gPhone?'학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요.\n':'','입금계좌':bankLine(),...extra}}
+    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'재안내':m.legacy?'회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!':'','로그인주소':appBase()+'?m='+(m.id||''),'학부모안내':m.gPhone?'학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요. 내 정보 탭에서 \'출석 알림 받기\'를 켜 두시면 자녀가 출석할 때 휴대폰으로 알려 드려요.\n':'','입금계좌':bankLine(),...extra}}
 function bankLine(){const P=local.meta.pay||{};return P.acct?`${P.bank||''} ${P.acct}${P.holder?' ('+P.holder+')':''}`.trim():'카운터 문의'}
 const G_KINDS=['pay','hold','exp','after','unpaid'];
 const toGuard=(m,kind)=>!!m.gPhone&&(G_KINDS.includes(kind)||String(kind).startsWith('c:'));
