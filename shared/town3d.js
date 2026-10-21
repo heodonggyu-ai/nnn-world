@@ -185,7 +185,7 @@ function build(THREE,scene,opts={}){
   for(let y=0;y<OUT_H;y++)for(let x=0;x<MW;x++){if(inSkip(x,y))continue;const t=tileAt(x,y);if(t===TR)trees.push([x,y]);else if(t===RO)rocks.push([x,y]);else if(t===BU)bushes.push([x,y]);else if(t===HE)hedges.push([x,y]);else if(t===FE)fences.push([x,y])}
   const ts=S/8;// 나무 크기는 1칸 크기에 맞춰요
   {const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.35*ts,.45*ts,3*ts,6),new THREE.MeshLambertMaterial({color:0x8a5a34}),trees.length);
-   const can=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(2.6*ts,1),new THREE.MeshLambertMaterial({color:0xffffff}),trees.length*3);
+   const can=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(2.6*ts,0),new THREE.MeshLambertMaterial({color:0xffffff}),trees.length*3);
    const PALC=['#4FA35A','#5DB565','#3E8E4A','#6BBF6A','#479B52'];let ci=0;
    trees.forEach(([x,y],i)=>{const p=W(x+.5,y+.5),s=.85+h2(x,y,4)*.4;M4.compose(V.set(p.x,1.5*ts*s,p.z),Q.identity(),SC.set(s,s,s));trunk.setMatrixAt(i,M4);
      for(let k=0;k<3;k++){const a=h2(x,y,k+20)*6.28,r=k?1.3*ts*s:0;const s2=s*(k?.8:1.05);M4.compose(V.set(p.x+Math.cos(a)*r,(k?3.8:4.8)*ts*s,p.z+Math.sin(a)*r),Q.identity(),SC.set(s2,s2*.92,s2));can.setMatrixAt(ci,M4);can.setColorAt(ci,CO.set(PALC[Math.floor(h2(x,y,k+30)*PALC.length)]));ci++}});

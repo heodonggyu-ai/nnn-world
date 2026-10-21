@@ -398,6 +398,29 @@
      ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
     }
    }
+  },
+  "arena": {
+   "$code": {
+    ".read": "auth != null",
+    ".validate": "$code.matches(/^[0-9]{6}$/)",
+    "info": {
+     ".write": "auth != null && (!data.exists() || root.child('arena').child($code).child('p').child(auth.uid).exists())"
+    },
+    "p": {
+     "$uid": {
+      ".write": "auth != null && auth.uid === $uid",
+      ".validate": "!newData.exists() || (newData.child('n').isString() && newData.child('n').val().length <= 8)"
+     }
+    },
+    "bots": {
+     ".write": "auth != null && root.child('arena').child($code).child('p').child(auth.uid).exists()"
+    },
+    "ev": {
+     "$e": {
+      ".write": "auth != null && root.child('arena').child($code).child('p').child(auth.uid).exists()"
+     }
+    }
+   }
   }
  }
 }
