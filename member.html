@@ -930,6 +930,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="card" data-atab="mem" style="display:flex;flex-direction:column;gap:10px">
     <div class="row"><h3 style="font-size:20px" class="grow">회원 <span class="small num" id="admCnt"></span></h3>
       <button class="btn sm ghost" id="expVcf">연락처(.vcf)</button><button class="btn sm ghost" id="expCsv">엑셀(.csv)</button></div>
+      <button class="btn sm gold" id="impBtn">다른 프로그램에서 회원·기간 가져오기 (엑셀·복사 붙여넣기)</button>
     <div class="bring" id="admPend" hidden></div>
     <div class="stats" id="admStats"></div>
     <div class="chips" id="admFilt"></div>
@@ -2729,6 +2730,80 @@ async function lkBadge(){try{await lkLoad();const C=lkCfg();let n=0;['L','C'].fo
 
 /* ================= 관장 메모 (회원에게 안 보임 · 관장만) ================= */
 const MTAG={pay:'결제',mem:'등록',etc:'기타'};
+
+/* ================= 다른 회원관리 프로그램(원알엠 등)에서 가져오기 ================= */
+let XLSXP=null;function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(XLSXP)return XLSXP;XLSXP=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=()=>ok(window.XLSX);sc.onerror=()=>{XLSXP=null;no(new Error('엑셀 읽기 도구를 불러오지 못했어요'))};document.head.appendChild(sc)});return XLSXP}
+const IMP_F=[['name','이름',/^(회원)?(이름|성명|회원명|고객명|name)$/i],['phone','연락처',/(연락처|휴대폰|핸드폰|전화|phone|hp)/i],['item','상품',/(상품|이용권|회원권|수강권|프로그램|종목|item)/i],['period','기간(시작~종료)',/^(이용)?기간$|이용\s*기간|등록\s*기간/],['start','시작일',/(시작|개시)/],['end','종료일',/(종료|만료|마감|끝)/],['amount','결제 금액',/(금액|결제액|가격|판매가|매출|amount)/i],['method','결제 수단',/(결제\s*(수단|방법|방식)|수단|카드\/현금)/],['paid','결제일',/(결제일|등록일|구매일|판매일|결제\s*날짜)/],['memo','메모',/(메모|비고|특이|note)/i],['birth','생년월일',/(생년|생일|birth)/i],['gender','성별',/성별/],['pt','PT 남은 횟수',/(잔여|남은\s*횟수|PT)/i],['locker','락커',/(락커|사물함|라커)/]];
+function impDate(v){if(v==null||v==='')return '';if(typeof v==='number'&&v>20000&&v<80000){const d=new Date(Math.round((v-25569)*864e5));return d.toISOString().slice(0,10)}
+  let s=String(v).trim();let m=s.match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  m=s.match(/^(\d{2})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})$/);if(m)return `20${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  m=s.match(/^(\d{4})(\d{2})(\d{2})$/);if(m)return `${m[1]}-${m[2]}-${m[3]}`;return ''}
+function impPeriod(v){const s=String(v||'');const ds=[...s.matchAll(/(\d{2,4}\s*[.\-\/년]\s*\d{1,2}\s*[.\-\/월]\s*\d{1,2})/g)].map(x=>impDate(x[1])).filter(Boolean);return{start:ds[0]||'',end:ds[1]||''}}
+function impMethod(v){const s=String(v||'');if(/아산/.test(s))return 'asan';if(/온누리|상품권/.test(s))return 'onnuri';if(/이체|계좌|무통장|송금/.test(s))return 'bank';if(/현금/.test(s))return 'cash';if(/카드|card/i.test(s))return 'card';return s?'etc':''}
+function impRows(text){const L=String(text).replace(/\r/g,'').split('\n').filter(l=>l.trim());const sep=L.some(l=>l.includes('\t'))?'\t':',';
+  return L.map(l=>{if(sep===','){const out=[];let cur='',q=false;for(const ch of l){if(ch==='"'){q=!q;continue}if(ch===','&&!q){out.push(cur);cur='';continue}cur+=ch}out.push(cur);return out.map(x=>x.trim())}return l.split('\t').map(x=>x.trim())})}
+function impHeader(rows){for(let i=0;i<Math.min(rows.length,15);i++){const r=rows[i].map(x=>String(x||''));if(r.some(c=>IMP_F[0][2].test(c.replace(/\s/g,'')))&&r.some(c=>/(연락처|휴대폰|핸드폰|전화|기간|종료|상품|이용권)/.test(c)))return i}return 0}
+function impGuess(head){const map={};head.forEach((h,i)=>{const t=String(h||'').replace(/\s+/g,' ').trim();for(const [k,,re] of IMP_F){if(map[k]==null&&re.test(t.replace(/\s/g,''))&&!(k==='pt'&&/(상품|이용권)/.test(t))){map[k]=i;break}}});return map}
+function impBuild(rows,hi,map,opt,all){const T=TODAY();const by={};const byName={};all.forEach(m=>{const d=String(m.phone||'').replace(/\D/g,'');if(d.length>=8)by[d.slice(-8)]=m;const n=String(m.name||'').replace(/\s/g,'');(byName[n]=byName[n]||[]).push(m)});
+  const g=(r,k)=>map[k]!=null?r[map[k]]:'';const groups={};const bad=[];
+  rows.slice(hi+1).forEach((r,ri)=>{const name=String(g(r,'name')||'').trim();if(!name||/^(합계|총|계)$/.test(name))return;const ph=String(g(r,'phone')||'').replace(/\D/g,'');
+    let start=impDate(g(r,'start')),end=impDate(g(r,'end'));if(map.period!=null&&(!start||!end)){const pp=impPeriod(g(r,'period'));start=start||pp.start;end=end||pp.end}
+    const item=String(g(r,'item')||'').trim();const amount=+String(g(r,'amount')||'').replace(/[^\d\-]/g,'')||0;const paid=impDate(g(r,'paid'));const method=impMethod(g(r,'method'));
+    const ptRaw=String(g(r,'pt')||'');const ptLeft=/\d/.test(ptRaw)?+ptRaw.replace(/\D/g,''):null;
+    const rec={row:ri+hi+2,name,ph,item,start,end,amount,paid,method,memo:String(g(r,'memo')||'').trim(),birth:impDate(g(r,'birth')),gender:/여/.test(String(g(r,'gender')))?'F':/남/.test(String(g(r,'gender')))?'M':'',ptLeft,locker:String(g(r,'locker')||'').trim()};
+    if(!end&&!item){bad.push({...rec,why:'기간·상품이 없어요'});return}
+    const key=ph.length>=8?ph.slice(-8):'n:'+name.replace(/\s/g,'');(groups[key]=groups[key]||[]).push(rec)});
+  const out=[];for(const [key,recs] of Object.entries(groups)){recs.sort((a,b)=>(a.end||'').localeCompare(b.end||'')||(a.paid||'').localeCompare(b.paid||''));const last=recs[recs.length-1];
+    let m=key.startsWith('n:')?null:by[key];if(!m){const c=byName[last.name.replace(/\s/g,'')]||[];if(c.length===1&&(!last.ph||!c[0].phone))m=c[0]}
+    const expired=last.end&&last.end<T;let act;
+    if(expired&&!opt.expired)act='skip-exp';else if(m){const ce=m.mem&&m.mem.end||'';act=ce&&last.end&&ce>=last.end&&!opt.overwrite?'skip-same':'update'}else act=opt.create?(last.ph.length>=10?'create':'skip-nophone'):'skip-nomem';
+    out.push({key,recs,last,m,act})}
+  return{list:out.sort((a,b)=>a.last.name.localeCompare(b.last.name,'ko')),bad}}
+const IMP_ACT={update:['기존 회원에 넣기','#1E6B45'],create:['새 회원 만들기','#2E5AAC'],'skip-same':['건너뜀 · 이미 같거나 더 긴 기간','#888'],'skip-exp':['건너뜀 · 이미 끝난 회원','#888'],'skip-nomem':['건너뜀 · 앱에 없는 회원','#888'],'skip-nophone':['건너뜀 · 연락처 없음','#B07A08']};
+function openImport(){let rows=null,hi=0,map={},data=null;const opt={create:true,expired:false,overwrite:false,pays:true};
+  sheet(`<h2>다른 프로그램에서 가져오기</h2>
+    <p class="small" style="margin:0">원알엠 같은 회원관리 프로그램의 <b>회원 목록</b>을 엑셀로 내려받아 올리거나, 목록 화면을 드래그해서 <b>복사 → 아래 칸에 붙여넣기</b> 하세요. 연락처로 앱 회원과 자동으로 짝지어 등록 기간·결제 정보를 넣어요.</p>
+    <div class="row" style="gap:8px"><label class="btn ghost sm grow" style="text-align:center" for="impFile">엑셀·CSV 파일 고르기</label><input id="impFile" type="file" accept=".xlsx,.xls,.csv,.txt" hidden></div>
+    <textarea id="impPaste" rows="4" style="min-height:96px;width:100%;box-sizing:border-box" placeholder="여기에 붙여넣기 (표를 복사해서 길게 눌러 붙여넣기)"></textarea>
+    <div id="impMap"></div><div id="impPrev"></div>
+    <button class="btn red" id="impGo" disabled>가져오기</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const $e=q=>el.querySelector(q);
+    const setRows=r=>{rows=r.filter(x=>x.some(c=>String(c||'').trim()));if(!rows.length){toast('읽을 내용이 없어요');return}hi=impHeader(rows);map=impGuess(rows[hi]);drawMap();preview()};
+    $e('#impFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{if(/\.(xlsx|xls)$/i.test(f.name)){const X=await loadXLSX();const wb=X.read(await f.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];setRows(X.utils.sheet_to_json(ws,{header:1,raw:true,defval:''}))}else setRows(impRows(await f.text()))}catch(err){toast(String(err.message||err),4000)}};
+    $e('#impPaste').oninput=()=>{const t=$e('#impPaste').value;if(t.trim().split('\n').length>=2)setRows(impRows(t))};
+    function drawMap(){const head=rows[hi];const opts=['<option value="">(없음)</option>',...head.map((h,i)=>`<option value="${i}">${esc(String(h||'열'+(i+1))).slice(0,20)}</option>`)].join('');
+      $e('#impMap').innerHTML=`<div class="memsum" style="display:flex;flex-direction:column;gap:6px"><b>칸 맞추기 <span class="small">(자동으로 골랐어요. 틀리면 바꿔 주세요)</span></b>${IMP_F.map(([k,lab])=>`<div class="row" style="gap:8px;align-items:center"><span class="small" style="width:96px">${lab}</span><select class="grow" data-mk="${k}">${opts}</select></div>`).join('')}
+        <label class="check" style="margin:0"><input type="checkbox" data-o="create" ${opt.create?'checked':''}><span>앱에 아직 없는 회원은 새로 만들기 <span class="small">(회원번호 자동, 비밀번호=휴대폰 뒤 4자리)</span></span></label>
+        <label class="check" style="margin:0"><input type="checkbox" data-o="pays" ${opt.pays?'checked':''}><span>결제 금액·결제일이 있으면 매출 기록에도 넣기</span></label>
+        <label class="check" style="margin:0"><input type="checkbox" data-o="expired" ${opt.expired?'checked':''}><span>이미 기간이 끝난 회원도 가져오기</span></label>
+        <label class="check" style="margin:0"><input type="checkbox" data-o="overwrite" ${opt.overwrite?'checked':''}><span>앱에 이미 같거나 더 긴 기간이 있어도 덮어쓰기</span></label></div>`;
+      el.querySelectorAll('[data-mk]').forEach(s=>{s.value=map[s.dataset.mk]!=null?String(map[s.dataset.mk]):'';s.onchange=()=>{if(s.value==='')delete map[s.dataset.mk];else map[s.dataset.mk]=+s.value;preview()}});
+      el.querySelectorAll('[data-o]').forEach(c=>c.onchange=()=>{opt[c.dataset.o]=c.checked;preview()})}
+    async function preview(){const all=(await DB.all()).filter(m=>!m.demo);data=impBuild(rows,hi,map,opt,all);const L=data.list;const n=k=>L.filter(x=>x.act===k).length;const go=n('update')+n('create');
+      $e('#impPrev').innerHTML=`<div class="memsum"><b>${L.length}명 읽음</b><div class="small">기존 회원에 넣기 <b>${n('update')}</b> · 새로 만들기 <b>${n('create')}</b> · 건너뜀 <b>${L.length-go}</b>${data.bad.length?` · 읽지 못한 줄 ${data.bad.length}`:''}</div></div>
+        <div style="max-height:46vh;overflow:auto;display:flex;flex-direction:column">${L.map(x=>{const a=IMP_ACT[x.act];const r=x.last;return `<div class="hrrow" style="align-items:flex-start"><div class="grow" style="min-width:0"><b>${esc(r.name)}</b> <span class="small num">${r.ph?esc(normPhone(r.ph)):'번호 없음'}${x.m?' → '+esc(x.m.id):''}</span><div class="small num">${esc(r.item||'')}${r.start||r.end?' · '+(r.start?md(r.start):'?')+' ~ '+(r.end?md(r.end):'?'):''}${r.amount?' · '+r.amount.toLocaleString()+'원':''}${x.recs.length>1?` · 기록 ${x.recs.length}건`:''}</div></div><span class="small" style="color:${a[1]};white-space:nowrap">${a[0]}</span></div>`}).join('')}
+        ${data.bad.slice(0,5).map(b=>`<div class="small" style="color:#B07A08">${b.row}번째 줄 ${esc(b.name)}: ${b.why}</div>`).join('')}</div>`;
+      $e('#impGo').disabled=!go;$e('#impGo').textContent=go?`${go}명 가져오기`:'가져올 회원이 없어요'}
+    $e('#impGo').onclick=async()=>{const b=$e('#impGo');if(!data)return;const todo=data.list.filter(x=>x.act==='update'||x.act==='create');if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=`정말 ${todo.length}명을 가져올까요? 한 번 더 눌러 주세요`;return}
+      b.disabled=true;let done=0,made=0,pays=0,fail=0;
+      let ex={};if(opt.pays){try{(await DB.pays()).forEach(p=>{if(p&&p.impKey)ex[p.impKey]=1})}catch(e){}}
+      for(const x of todo){try{let m=x.m;
+          if(x.act==='create'){const id=await DB.newId();const r0=x.last;m=blankMember({name:r0.name,phone:normPhone(r0.ph),birth:r0.birth,gender:r0.gender,char:'boxer'},id);m.approvedAt=TODAY();m.joined=TODAY();m.legacy=true;m.importedAt=TODAY();
+            if(FB_ON()){try{await gref('mpin/'+id).set(r0.ph.slice(-4))}catch(e){}try{await gref('roster/'+id).set({name:r0.name})}catch(e){}}made++}
+          else m=await DB.get(m.id)||m;
+          const toMem=r=>{const p=parsePlan(r.item);const mo=p.months||(r.start&&r.end?Math.max(1,Math.round(dDiff(r.end,r.start)/30)):0);return clean({item:r.item||planLabel({months:mo}),months:mo,start:r.start||'',end:r.end||'',weekly:p.weekly||0,days:[],pt:p.pt?{total:p.pt,left:r.ptLeft!=null?Math.min(r.ptLeft,p.pt):p.pt}:null,paidAt:r.paid||'',setAt:TODAY(),imported:true})};
+          const last=x.last;const hist=(m.memHist||[]).slice(-9);if(m.mem&&(m.mem.end||m.mem.pt))hist.push(m.mem);
+          x.recs.slice(0,-1).forEach(r=>{if(r.end&&!hist.some(h=>h.end===r.end))hist.push(toMem(r))});
+          m.mem=toMem(last);m.memHist=hist.slice(-10);if(m.legacy==null)m.legacy=true;
+          if(x.act==='create'){await DB.save(m)}await DB.savePriv(m);
+          if(last.memo)try{await memoAdd(m.id,'[가져옴] '+last.memo,'mem')}catch(e){}
+          if(opt.pays)for(const r of x.recs){if(!r.amount)continue;const ik=['imp',r.ph||r.name,r.paid||r.start,r.amount].join(':');if(ex[ik])continue;ex[ik]=1;
+            await DB.addPay(clean({id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),mid:m.id,name:m.name,item:r.item||planLabel(toMem(r)),amount:r.amount,method:r.method||'etc',status:'done',source:'import',impKey:ik,saleDate:r.paid||r.start||TODAY(),at:new Date().toISOString(),doneAt:new Date().toISOString(),months:toMem(r).months,weekly:toMem(r).weekly,pt:toMem(r).pt?toMem(r).pt.total:0,kind:'new'}));pays++}
+          done++;b.textContent=`가져오는 중… ${done}/${todo.length}`}catch(e){console.error(e);fail++}}
+      toast(`${done}명 가져왔어요 (새 회원 ${made}명 · 결제 기록 ${pays}건)${fail?` · 실패 ${fail}명`:''}`,5000);close();try{renderAdmRows();renderADash()}catch(e){}};
+  })}
+$('#impBtn').onclick=openImport;
+
 async function memoAdd(mid,text,tag='etc'){text=String(text||'').trim().slice(0,500);if(!text)return false;const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);return hset(`memos/${mid}/${id}`,{text,tag,at:Date.now()})}
 function memoBox(el,m){const box=el.querySelector('#admMemo');if(!box)return;let adding=false;
   const draw=async()=>{const all=Object.entries((await hget('memos/'+m.id))||{}).map(([id,v])=>({id,...v})).sort((a,b)=>b.at-a.at);
