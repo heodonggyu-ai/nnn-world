@@ -131,6 +131,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .tabtip{display:flex;gap:10px;align-items:flex-start;background:#FFF7DD;border:2px solid #F0C64A;border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:13.5px;line-height:1.45}.tabtip b{display:block;font-size:14.5px}.tabtip button{margin-left:auto;border:0;background:none;font-size:18px;line-height:1;padding:2px 4px;color:#7a6420}
 
 .imp-pill{display:inline-block;font-size:11px;border-radius:8px;padding:2px 6px;background:#E3ECFA;color:#2E5AAC;margin-left:4px;white-space:nowrap}.imp-pill.create{background:#E6F4EC;color:#1E6B45}.imp-pill.fail{background:#FDE2E3;color:#8A1F24}
+#rkTabs{display:flex;flex-direction:column;gap:6px;overflow:visible}.rkgrp{display:flex;gap:8px;align-items:flex-start}.rkg{flex:0 0 64px;font-size:12px;color:#666;padding-top:8px;font-weight:700}.rkchips{display:flex;flex-wrap:wrap;gap:6px}.rkchips .chip{padding:6px 10px;font-size:13px}
 .memc{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .memc.soon{border-color:var(--gold)}.memc.expired{border-color:var(--red)}.memc.none{border-style:dashed;border-color:var(--line)}
 .mtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -2164,9 +2165,9 @@ function openArcade(){sheet(`<h2>게임장</h2><p class="small" style="margin:0"
 function playArcade(g){if(!g)return;stopWorld();let r=$('#arcRoot');if(r)r.remove();r=document.createElement('div');r.id='arcRoot';
   r.innerHTML=`<div class="arch"><b>${esc(g.name)}</b><button id="arcNew" aria-label="새 창으로 열기">새 창</button><button id="arcX">맵으로</button></div><iframe src="${g.href}" title="${esc(g.name)}" allow="fullscreen; autoplay; accelerometer; gyroscope; microphone" allowfullscreen></iframe>`;
   document.body.appendChild(r);
-  r.querySelector('#arcX').onclick=()=>{r.remove();if(!$('#v-world').hidden&&!$('#t-map').hidden)startWorld()};
+  r.querySelector('#arcX').onclick=()=>{r.remove();try{syncGameStats()}catch(e){}if(!$('#v-world').hidden&&!$('#t-map').hidden)startWorld()};
   r.querySelector('#arcNew').onclick=()=>{try{window.open(g.href,'_blank','noopener')}catch(e){location.href=g.href}};
-  if(ME&&!isGuest()&&!isStaff(ME)){const d=fixDay(ME);d.arc=d.arc||[];if(!d.arc.length){earn(ME,10,'arcade');toast(g.name+' 첫 플레이! +10 크레딧',2500);refreshTop()}if(!d.arc.includes(g.id))d.arc.push(g.id);prog(ME,'arcade');saveMe()}}
+  if(ME&&!isGuest()&&!isStaff(ME)){const d=fixDay(ME);d.arc=d.arc||[];if(!d.arc.length){earn(ME,10,'arcade');toast(g.name+' 첫 플레이! +10 크레딧',2500);refreshTop()}if(!d.arc.includes(g.id))d.arc.push(g.id);ME.arcN=(ME.arcN||0)+1;prog(ME,'arcade');saveMe()}}
 
 /* ================= 지금 누가 있나요 (체육관 출석 · 맵 접속) ================= */
 const agoTxt=at=>{const m=Math.max(0,Math.round((Date.now()-at)/60000));return m<1?'방금':m<60?m+'분 전':Math.floor(m/60)+'시간 '+(m%60)+'분 전'};
@@ -3185,18 +3186,39 @@ function renderDex(){
 
 /* ================= 랭킹 ================= */
 let rkMode='att';
-async function renderRank(){
-  const modes=[['att','이달 출석왕'],['inv','이달 추천왕'],['lv','레벨'],['skill','승급 레벨'],['sns','이달 홍보왕'],['bag','샌드백'],['rope','줄넘기'],['shadow','쉐도우']];
-  $('#rkTabs').innerHTML=modes.map(([k,n])=>`<button class="chip ${k===rkMode?'on':''}" data-r="${k}">${n}</button>`).join('');
+/* 게임장 기록: 게임들이 같은 주소(nnn-world)라 이 기기에 남긴 최고 기록을 읽어 내 회원 기록에 올려요 */
+const lsRaw=k=>{try{const v=localStorage.getItem(k);return v==null?null:JSON.parse(v)}catch(e){return null}};
+function readGameStats(){const g={};
+  const bo=+lsRaw('nnnbori.best')||0;if(bo)g.bori=bo;
+  const ka=+lsRaw('nnnkart.best')||0;if(ka)g.kart=Math.round(ka*10)/10;
+  const qz=lsRaw('nnnquiz.best');if(qz&&typeof qz==='object'){const v=Object.values(qz).map(Number).filter(x=>x>0);if(v.length)g.quiz=Math.max(...v)}
+  const en=lsRaw('nnneng.v1');if(en&&+en.xp)g.eng=+en.xp;
+  try{const me=lsRaw('cd-me'),b=lsRaw('cd-bests')||{};const mb=(me&&b[me])||Object.values(b).find(x=>x&&typeof x==='object'&&!('score' in x))||b;let st=0;Object.values(mb||{}).forEach(r=>{if(r&&+r.stars)st+=+r.stars});if(st)g.crash=st}catch(e){}
+  try{let pets=0,stars=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('mingnyu-forest-v1')){const S=lsRaw(k);if(S&&Array.isArray(S.pets))pets=Math.max(pets,S.pets.length);if(S&&+S.stars)stars=Math.max(stars,+S.stars)}}if(pets)g.forest=pets;if(stars)g.forestStar=stars}catch(e){}
+  return g}
+function syncGameStats(){if(!ME||ME.demo||isStaff(ME)||(typeof isGuest==='function'&&isGuest()))return;const d=readGameStats();const cur=Object.assign({},ME.gs||{});let ch=false;
+  for(const [k,v] of Object.entries(d)){const lower=k==='kart';if(cur[k]==null||(lower?v<cur[k]:v>cur[k])){cur[k]=v;ch=true}}
+  if(ch){ME.gs=cur;saveMe()}}
+const RK=[
+  ['gym','체육관',[['att','이달 출석왕','회'],['inv','이달 추천왕','명'],['sns','이달 홍보왕','회'],['lv','레벨','XP'],['skill','승급 레벨','']]],
+  ['fit','미니게임',[['bag','샌드백','점'],['rope','줄넘기','점'],['shadow','쉐도우','점']]],
+  ['arc','게임장',[['g_plays','많이 한 사람','판'],['g_quiz','퀴즈왕','점'],['g_kart','드리프트 카트','',1],['g_bori','보리보리쌀','연속'],['g_crash','크래시 드라이브','★'],['g_forest','밍뉴의숲 동물','마리'],['g_eng','잉글리시','XP']]]];
+const rkFmt=(k,v)=>k==='g_kart'?`${Math.floor(v/60)}:${(v%60).toFixed(1).padStart(4,'0')}`:Number(v).toLocaleString();
+async function renderRank(){try{syncGameStats()}catch(e){}
+  const flat=RK.flatMap(([,,L])=>L);if(!flat.some(x=>x[0]===rkMode))rkMode='att';
+  $('#rkTabs').innerHTML=RK.map(([g,gn,L])=>`<div class="rkgrp"><span class="rkg">${gn}</span><div class="rkchips">${L.map(([k,n])=>`<button class="chip ${k===rkMode?'on':''}" data-r="${k}">${n}</button>`).join('')}</div></div>`).join('');
   $$('#rkTabs [data-r]').forEach(b=>b.onclick=()=>{rkMode=b.dataset.r;renderRank()});
   $('#rkList').innerHTML='<div class="small">불러오는 중…</div>';
   const mon=TODAY().slice(0,7);
   const all=(await DB.all()).filter(m=>m&&m.id&&!isStaff(m));
-  const invMap=monthStats(all).inv;const val=m=>rkMode==='skill'?skillOf(m)*1e4+(m.attend||[]).length:rkMode==='sns'?((m.sns||{})[mon]||0):rkMode==='inv'?(invMap[m.id]||0):rkMode==='att'?m.attend.filter(d=>d.startsWith(mon)).length:rkMode==='lv'?(levelOf(m).lv*1e6+m.xp):(m.best[rkMode]||0);
-  const unit={inv:'명',att:'회',lv:'XP',bag:'점',rope:'점',shadow:'점',skill:'',sns:'회'}[rkMode];
-  const top=all.sort((a,b)=>val(b)-val(a)).slice(0,20);
-  if(!top.length){$('#rkList').innerHTML='<div class="small">아직 기록이 없어요. 첫 1등이 되어 보세요!</div>';return}
-  $('#rkList').innerHTML='';top.forEach((m,i)=>{const d=document.createElement('div');d.className='rk'+(m.id===ME.id?' me':'');d.innerHTML=`<span class="no num" style="color:${i<3?['#D49A00','#8A94A6','#B0693A'][i]:'var(--muted)'}">${i+1}</span><canvas width="80" height="80"></canvas><div class="grow">${esc(m.id===ME.id?ME.name:maskName(m.name))}<div class="small">Lv.${levelOf(m).lv} ${levelOf(m).title}${skillOf(m)>1?' · 승급 '+skillOf(m):''}</div></div><b class="num">${rkMode==='skill'?'레벨 '+skillOf(m):(rkMode==='lv'?m.xp:val(m)).toLocaleString()+unit}</b>`;$('#rkList').appendChild(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true,pad:3})});
+  const mode=flat.find(x=>x[0]===rkMode);const asc=!!mode[3];const unit=mode[2];
+  const invMap=monthStats(all).inv;const gs=m=>m.id===ME.id?(ME.gs||m.gs||{}):(m.gs||{});
+  const val=m=>{const k=rkMode;if(k.startsWith('g_')){if(k==='g_plays')return m.id===ME.id?(ME.arcN||m.arcN||0):(m.arcN||0);return gs(m)[k.slice(2)]||0}
+    return k==='skill'?skillOf(m)*1e4+(m.attend||[]).length:k==='sns'?((m.sns||{})[mon]||0):k==='inv'?(invMap[m.id]||0):k==='att'?m.attend.filter(d=>d.startsWith(mon)).length:k==='lv'?(levelOf(m).lv*1e6+m.xp):((m.best||{})[k]||0)};
+  const top=all.filter(m=>val(m)>0).sort((a,b)=>asc?val(a)-val(b):val(b)-val(a)).slice(0,20);
+  if(!top.length){$('#rkList').innerHTML=`<div class="small">아직 기록이 없어요. 첫 1등이 되어 보세요!${rkMode.startsWith('g_')?'<br>게임장에서 게임을 하고 나오면 내 최고 기록이 여기에 올라와요.':''}</div>`;return}
+  $('#rkList').innerHTML=rkMode.startsWith('g_')&&rkMode!=='g_plays'?'<div class="small" style="margin-bottom:6px">게임장에서 한 게임의 이 휴대폰 최고 기록이에요. '+(asc?'시간이 짧을수록 1등!':'')+'</div>':'';
+  top.forEach((m,i)=>{const d=document.createElement('div');d.className='rk'+(m.id===ME.id?' me':'');const v=val(m);d.innerHTML=`<span class="no num" style="color:${i<3?['#D49A00','#8A94A6','#B0693A'][i]:'var(--muted)'}">${i+1}</span><canvas width="80" height="80"></canvas><div class="grow">${esc(m.id===ME.id?ME.name:maskName(m.name))}<div class="small">Lv.${levelOf(m).lv} ${levelOf(m).title}${skillOf(m)>1?' · 승급 '+skillOf(m):''}</div></div><b class="num">${rkMode==='skill'?'레벨 '+skillOf(m):rkMode==='lv'?m.xp.toLocaleString()+unit:rkFmt(rkMode,v)+unit}</b>`;$('#rkList').appendChild(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true,pad:3})});
   if(!FB_ON())$('#rkList').insertAdjacentHTML('beforeend','<p class="small" style="margin:8px 0 0">지금은 이 기기에 저장된 회원만 보여요. 서버를 연결하면 체육관 전체 랭킹이 돼요.</p>');
 }
 
@@ -3547,6 +3569,7 @@ const FEAT=[
   {id:'s_sent',aud:'owner',q:'보낸 사람은 목록에서 자동 제외',d:'2026-10-20',e:'✉️',t:'보낼 안내 중복 방지',s:'문자·카톡으로 보낸 기록이 있으면 보낼 안내·한 번에 보내기에서 빠져요',go:'adm:today'},
   {id:'s_hr',aud:'owner',q:'날짜 누르면 수정 칸 하나만',d:'2026-10-21',e:'🕘',t:'코치 근태 수정 정리',s:'수정 칸이 겹치지 않고, 퇴근이 출근보다 빠르면 막아요',go:'adm:staff'},
   {id:'s_face',aud:'staff',q:'PIN·코드 대신 얼굴로',d:'2026-10-20',e:'🙂',t:'관장·코치 Face ID 로그인',s:'관장 메뉴·코치 로그인을 한 번 PIN(코드)으로 들어오면 다음부터 얼굴·지문으로 들어와요',go:null},
+  {id:'rankgame',q:'퀴즈왕·카트·보리보리쌀 등 순위',d:'2026-10-22',e:'🏆',t:'랭킹에 게임장 순위',s:'게임장에서 한 게임의 최고 기록으로 체육관 친구들과 순위를 겨뤄요',go:'rank',sel:'#nav [data-tab="rank"]',tab:'map'},
   {id:'quizeng',q:'퀴즈왕·잉글리시, 게임장에서',d:'2026-10-21',e:'🧠',t:'NNN 퀴즈왕 · NNN 잉글리시',s:'상식·넌센스 퀴즈 팀 대결과 듣고 따라 말하는 영어 레슨이 게임장에 생겼어요',go:'arcade',sel:null},
   {id:'arcade7',q:'아레나·카트·주사위 등, 첫 판 +10',d:'2026-10-21',e:'🎮',t:'게임장에 새 게임 7개',s:'아레나·드리프트 카트·욕심 주사위 등. 하루 첫 판은 +10 크레딧!',go:'arcade',sel:null},
   {id:'attalarm',q:'자녀 출석 때 학부모 폰이 울려요',d:'2026-10-20',e:'🔔',t:'출석 알림 (학부모님용)',s:'자녀가 출석하면 학부모님 휴대폰이 진동·소리로 알려요',go:'attal',sel:'[data-attme="full"]',tab:'more',who:'student'},
