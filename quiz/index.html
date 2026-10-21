@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 퀴즈왕</title>
+<meta name="theme-color" content="#FFF4D6">
+<link rel="icon" href="../shared/img/samsaek.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 한 손 세로 화면: 위=진행·점수, 가운데=큰 문제 카드, 아래=엄지로 누르는 보기 4개. 진행자 모드는 TV처럼 크게 */
+:root{
+  --paper:#FFF4D6; --card:#FFFDF7; --ink:#24363B; --mute:#6E7563; --line:rgba(36,54,59,.16);
+  --red:#E8453C; --blue:#2E6FD8; --green:#2E9A5A; --yellow:#FFD23F; --purple:#8E5BD8; --pink:#FF7AA8; --orange:#FF8A2F;
+  --f-display:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --f-body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
+  background-image:radial-gradient(rgba(36,54,59,.07) 1.5px,transparent 1.6px);background-size:18px 18px}
+input{-webkit-user-select:text;user-select:text}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+.wrap{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.top .grow{flex:1;min-width:0}
+.icon{width:44px;height:44px;border-radius:14px;border:2.5px solid var(--ink);background:#fff;font-size:18px;display:grid;place-items:center;flex:0 0 auto;text-decoration:none;color:var(--ink)}
+.card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 rgba(36,54,59,.25);padding:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:2.5px solid var(--ink);border-radius:18px;background:var(--orange);color:#fff;font-family:var(--f-display);font-size:21px;box-shadow:0 5px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.soft{background:#fff;color:var(--ink)}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* 홈 */
+.hero{display:flex;align-items:center;gap:12px;margin:2px 0 12px}
+.hero .crown{font-size:58px;line-height:1;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px) rotate(-6deg)}}
+.hero h1{font-size:40px;line-height:1}
+.hero p{margin:4px 0 0;color:var(--mute);font-size:14px;line-height:1.45}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;padding:4px;margin-bottom:12px}
+.modes button{border:0;border-radius:11px;background:transparent;padding:10px 4px;font-family:var(--f-display);font-size:17px}
+.modes button.on{background:var(--ink);color:#fff}
+.modes button small{display:block;font-family:var(--f-body);font-size:11.5px;opacity:.75}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat{position:relative;text-align:left;border:2.5px solid var(--ink);border-radius:20px;padding:14px 12px 12px;background:var(--c);color:#fff;box-shadow:0 5px 0 var(--ink);min-height:118px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.cat:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.cat .em{font-size:34px;line-height:1}
+.cat b{font-family:var(--f-display);font-weight:400;font-size:21px;margin-top:6px;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+.cat small{font-size:12.5px;opacity:.95;line-height:1.35}
+.cat .best{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.9);color:var(--ink);font-family:var(--f-display);font-size:12px;border-radius:999px;padding:2px 8px}
+.cat.wide{grid-column:1/-1;min-height:84px;flex-direction:row;align-items:center;gap:12px}
+.cat.wide b{margin:0}
+.teams{display:flex;gap:6px;align-items:center;margin-top:10px;font-family:var(--f-display);font-size:16px}
+.teams button{width:44px;height:40px;border-radius:12px;border:2.5px solid var(--ink);background:#fff;font-family:var(--f-display);font-size:18px}
+.teams button.on{background:var(--ink);color:#fff}
+
+/* 문제 화면 */
+.hud{display:flex;align-items:center;gap:8px}
+.prog{flex:1;height:14px;border-radius:7px;background:#fff;border:2.5px solid var(--ink);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
+.pts{font-family:var(--f-display);font-size:20px;min-width:66px;text-align:right}
+.combo{font-family:var(--f-display);font-size:14px;color:var(--orange);min-height:18px;text-align:right}
+.qcard{margin-top:12px;position:relative;text-align:center;padding:20px 16px 18px}
+.qtag{display:inline-block;font-family:var(--f-display);font-size:14px;color:#fff;background:var(--c,var(--ink));border-radius:999px;padding:3px 12px 2px;margin-bottom:10px}
+.qtext{font-family:var(--f-display);font-size:clamp(24px,6.6vw,32px);line-height:1.3;word-break:keep-all}
+.chosung{font-family:var(--f-display);font-size:clamp(56px,18vw,86px);letter-spacing:.08em;line-height:1.1;color:var(--ink);margin:6px 0}
+.hints{display:flex;flex-direction:column;gap:6px;margin-top:8px;min-height:20px}
+.hint{font-size:16px;background:#FFF1C9;border-radius:12px;padding:7px 10px;animation:pop .3s cubic-bezier(.2,1.6,.4,1)}
+.hint b{font-family:var(--f-display);font-weight:400}
+.hint.lock{background:#F1EEE6;color:var(--mute)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.timer{height:8px;border-radius:4px;background:#EDE6D3;overflow:hidden;margin-top:14px}
+.timer i{display:block;height:100%;width:100%;background:var(--orange);transform-origin:left}
+.ans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.ans button{min-height:clamp(64px,10vh,84px);border:2.5px solid var(--ink);border-radius:18px;background:#fff;font-family:var(--f-display);font-size:clamp(17px,4.8vw,22px);line-height:1.2;padding:8px;box-shadow:0 5px 0 var(--ink);word-break:keep-all;transition:transform .06s,box-shadow .06s}
+.ans button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.ans button.ok{background:var(--green);color:#fff}
+.ans button.no{background:var(--red);color:#fff}
+.ans button.dim{opacity:.45}
+.ans.lock button{pointer-events:none}
+.fb{position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-family:var(--f-display);font-size:22px;color:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:4px 16px 2px;white-space:nowrap;animation:pop .3s cubic-bezier(.2,1.6,.4,1)}
+.fb.ok{background:var(--green)}.fb.no{background:var(--red)}
+.note{margin-top:10px;font-size:15px;color:var(--mute);min-height:22px;text-align:center}
+.note b{color:var(--ink);font-family:var(--f-display);font-weight:400}
+
+/* 진행자 모드 */
+.host .qtext{font-size:clamp(28px,5.4vw,52px)}
+.host .chosung{font-size:clamp(70px,14vw,140px)}
+.host .ans button{font-size:clamp(20px,3.4vw,32px)}
+.score{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.score button{flex:1;min-width:110px;border:2.5px solid var(--ink);border-radius:16px;background:var(--c);color:#fff;font-family:var(--f-display);font-size:18px;padding:8px 6px;box-shadow:0 4px 0 var(--ink)}
+.score button b{display:block;font-weight:400;font-size:30px;line-height:1}
+.score button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.hostbar{display:flex;gap:8px;margin-top:12px}
+.hostbar .btn{min-height:52px;font-size:19px}
+
+/* 결과 */
+.res{text-align:center}
+.res .big{font-size:64px;line-height:1}
+.res h2{font-size:34px;margin:6px 0 2px}
+.res .sum{color:var(--mute);margin:0 0 12px}
+.stars{font-size:34px;letter-spacing:4px}
+.review{text-align:left;display:grid;gap:6px;margin:12px 0;max-height:34vh;overflow:auto}
+.review div{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px 10px;font-size:14px;line-height:1.4}
+.review div b{font-family:var(--f-display);font-weight:400;color:var(--green)}
+.review div.x{border-color:#F3B2AD}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<section id="home" class="wrap">
+  <div class="top"><a class="icon" id="back" href="../" aria-label="NNN 월드로">←</a><div class="grow"></div><button class="icon snd" aria-label="소리 켜고 끄기">🔊</button></div>
+  <div class="hero"><div class="crown">👑</div><div><h1>NNN 퀴즈왕</h1><p>상식부터 넌센스, 과자 초성까지!<br>빨리 맞힐수록 점수가 커요.</p></div></div>
+  <div class="modes" id="modes"><button data-m="solo">🙋 혼자 도전<small>10문제 · 타이머 · 콤보</small></button><button data-m="host">📺 다 같이<small>진행자가 TV·폰에 띄우고 팀 대결</small></button></div>
+  <div class="cats" id="cats"></div>
+  <div class="card" id="teamBox" hidden style="margin-top:12px"><b style="font-family:var(--f-display);font-weight:400">몇 팀이 할까요?</b><div class="teams" id="teams"><button data-t="2">2</button><button data-t="3">3</button><button data-t="4">4</button><span style="font-size:13px;color:var(--mute);font-family:var(--f-body)">· 정답을 외친 팀 버튼을 눌러 점수를 줘요</span></div></div>
+</section>
+
+<section id="play" class="wrap" hidden>
+  <div class="top"><button class="icon" id="quit" aria-label="그만하기">✕</button><div class="grow hud"><div class="prog"><i id="progBar"></i></div></div><div><div class="pts" id="pts">0</div><div class="combo" id="combo"></div></div><button class="icon snd" aria-label="소리 켜고 끄기">🔊</button></div>
+  <div class="card qcard" id="qcard">
+    <span class="qtag" id="qtag">상식</span>
+    <div id="qbody"></div>
+    <div class="timer" id="timerBox"><i id="timer"></i></div>
+  </div>
+  <div class="ans" id="ans"></div>
+  <div class="note" id="note"></div>
+  <div class="hostbar" id="hostbar" hidden><button class="btn soft" id="reveal">정답 보기</button><button class="btn" id="next">다음 문제 →</button></div>
+  <div class="score" id="score" hidden></div>
+</section>
+
+<section id="result" class="wrap" hidden>
+  <div class="card res" style="margin-top:auto;margin-bottom:auto">
+    <div class="big" id="resEmoji">🏆</div><h2 id="resTitle">퀴즈왕!</h2><div class="stars" id="resStars"></div><p class="sum" id="resSum"></p>
+    <div class="review" id="review"></div>
+    <div class="stack"><button class="btn" id="again">한 번 더</button><button class="btn soft" id="goHome">다른 퀴즈 고르기</button></div>
+  </div>
+</section>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const store={get(k,d){try{const v=localStorage.getItem('nnnquiz.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('nnnquiz.'+k,JSON.stringify(v))}catch(e){}}};
+if(window.top!==window)$('back').hidden=true;
+
+/* ================= 문제 =================
+   보기형: [문제, 정답, 오답1, 오답2, 오답3, (풀이)] */
+const GEN=[
+ ['우리나라의 수도는?','서울','부산','인천','대전'],
+ ['무지개는 보통 몇 가지 색으로 말할까요?','7가지','5가지','6가지','8가지'],
+ ['태양계에서 가장 큰 행성은?','목성','토성','지구','해왕성'],
+ ['한글을 만든 왕은?','세종대왕','태조','영조','정조'],
+ ['거미의 다리는 몇 개?','8개','6개','10개','4개','곤충은 6개, 거미는 8개예요'],
+ ['평년(윤년이 아닌 해)은 며칠?','365일','360일','366일','364일'],
+ ['세계에서 가장 넓은 바다는?','태평양','대서양','인도양','북극해'],
+ ['이순신 장군 하면 떠오르는 배는?','거북선','유람선','잠수함','돛단배'],
+ ['어른 사람의 뼈는 약 몇 개?','206개','106개','306개','156개'],
+ ['피카소는 무엇을 한 사람일까요?','화가','작곡가','과학자','소설가'],
+ ['세계에서 가장 높은 산은?','에베레스트산','백두산','킬리만자로산','후지산'],
+ ['우리나라의 나라꽃은?','무궁화','진달래','장미','개나리'],
+ ['올림픽 오륜기의 고리는 몇 개?','5개','4개','6개','7개'],
+ ['펭귄은 주로 어디에 살까요?','남반구(남극 쪽)','북극','사막','정글'],
+ ['빛의 삼원색이 아닌 것은?','노랑','빨강','초록','파랑'],
+ ['축구 한 팀이 경기장에 나오는 선수는?','11명','9명','10명','12명'],
+ ['프로 복싱 한 라운드는 몇 분?','3분','1분','2분','5분','라운드 사이엔 1분 쉬어요'],
+ ['오른손잡이 복서가 잽을 치는 손은?','앞손(왼손)','뒷손(오른손)','양손 동시에','발'],
+ ['5만 원짜리 지폐에 있는 인물은?','신사임당','세종대왕','이황','이이'],
+ ['1만 원짜리 지폐에 있는 인물은?','세종대왕','이순신','이황','신사임당'],
+ ['피를 온몸으로 보내는 기관은?','심장','간','폐','위'],
+ ['식물이 햇빛으로 양분을 만드는 것은?','광합성','호흡','증산','발아'],
+ ['세계에서 땅이 가장 넓은 나라는?','러시아','중국','미국','캐나다'],
+ ['개구리의 어릴 때 이름은?','올챙이','장구벌레','애벌레','번데기'],
+ ['독도는 어느 도에 속할까요?','경상북도','강원도','경상남도','전라남도'],
+ ['모나리자를 그린 사람은?','레오나르도 다빈치','미켈란젤로','고흐','피카소'],
+ ['물의 화학식은?','H₂O','CO₂','O₂','NaCl'],
+ ['지구가 태양을 한 바퀴 도는 데 걸리는 시간은?','약 1년','하루','한 달','10년'],
+ ['삼각형 세 각을 모두 더하면?','180°','90°','270°','360°'],
+ ['광복절은 언제일까요?','8월 15일','3월 1일','10월 9일','6월 6일'],
+ ['한글날은 언제일까요?','10월 9일','10월 3일','5월 5일','8월 15일'],
+ ['김치를 담글 때 가장 많이 쓰는 채소는?','배추','양배추','상추','시금치'],
+ ['흥부가 다리를 고쳐 준 새는?','제비','까치','참새','비둘기'],
+ ['기린의 목뼈는 몇 개일까요?','7개','3개','12개','20개','사람 목뼈와 개수가 같아요'],
+ ['사람이 가장 많이 사는 대륙은?','아시아','아프리카','유럽','남아메리카'],
+ ['처음으로 비행기를 만들어 하늘을 난 형제는?','라이트 형제','그림 형제','뤼미에르 형제','마리오 형제'],
+ ['태권도는 어느 나라에서 시작된 무술일까요?','대한민국','일본','중국','태국'],
+ ['무에타이는 어느 나라 무술일까요?','태국','베트남','필리핀','중국'],
+ ['축구 월드컵은 몇 년마다 열릴까요?','4년','2년','3년','5년'],
+ ['어린 왕자를 쓴 작가는?','생텍쥐페리','안데르센','톨스토이','셰익스피어'],
+ ['보통 피아노의 건반 수는?','88개','66개','76개','100개'],
+ ['고래는 어느 무리에 속할까요?','포유류','어류','파충류','양서류','새끼를 낳고 젖을 먹여요'],
+ ['박쥐는 어느 무리에 속할까요?','포유류','조류','곤충','파충류'],
+ ['물이 얼면 부피는 어떻게 될까요?','늘어난다','줄어든다','그대로다','사라진다'],
+ ['남한에서 가장 높은 산은?','한라산','지리산','설악산','북한산'],
+ ['지구 둘레를 도는 위성은?','달','태양','화성','금성'],
+ ['무지개가 생기는 까닭과 가장 관련 깊은 것은?','빛의 굴절','소리','바람','자석'],
+ ['육지에서 가장 빠른 동물은?','치타','사자','말','타조'],
+ ['우리나라 최초의 한글 소설로 알려진 작품은?','홍길동전','춘향전','심청전','구운몽'],
+ ['횡단보도에서 건너도 되는 신호등 색은?','초록','빨강','노랑','보라'],
+ ['탕정역은 몇 호선일까요?','1호선','2호선','4호선','9호선'],
+ ['1분은 몇 초?','60초','100초','30초','90초'],
+ ['숭례문의 다른 이름은?','남대문','동대문','서대문','광화문'],
+ ['가장 작은 소수(약수가 1과 자기 자신뿐인 수)는?','2','1','3','0'],
+ ['꿀벌이 꿀을 만드는 재료는?','꽃의 꿀','나뭇잎','흙','빗물']
+];
+const NON=[
+ ['세상에서 가장 뜨거운 과일은?','천도복숭아','수박','귤','사과','천도(1000도)!'],
+ ['왕이 넘어지면?','킹콩','왕방울','왕창','쾅'],
+ ['소가 웃는 소리는?','우하하','음매','하하','깔깔'],
+ ['세상에서 가장 쉬운 숫자는?','19만','1','0','100','십구만 = 쉽구만'],
+ ['자동차를 톡 치면?','카톡','차톡','빵빵','톡톡'],
+ ['세상에서 가장 가난한 왕은?','최저임금','거지왕','빈털터리왕','동전왕','최저 임금(王)'],
+ ['오리가 얼면?','언덕','얼음오리','꽁꽁','오리발','언 덕(duck)'],
+ ['바나나가 웃으면?','바나나킥','바나나우유','바나나껍질','몽키'],
+ ['아몬드가 죽으면?','다이아몬드','땅콩','호두','아몬드빵','다 이 아몬드'],
+ ['물고기의 반대말은?','불고기','산고기','새고기','돌고기'],
+ ['개가 사람을 가르치면?','개인지도','개교','개학','개그'],
+ ['세상에서 가장 빠른 닭은?','후다닥','치킨','꼬꼬닭','닭강정'],
+ ['세상에서 가장 큰 코는?','멕시코','코끼리','피노키오','들창코'],
+ ['딸기가 회사에서 잘리면?','딸기시럽','딸기잼','딸기우유','산딸기','시럽 = 실업'],
+ ['세상에서 가장 착한 사자는?','자원봉사자','사자왕','흰사자','아기사자'],
+ ['할아버지가 가장 좋아하는 돈은?','할머니','용돈','세뱃돈','동전'],
+ ['반성문을 영어로 하면?','글로벌','쏘리','다이어리','노트','글로 벌!'],
+ ['세상에서 가장 지루한 중학교는?','로딩중','여중','남중','공부중'],
+ ['별 중에서 가장 슬픈 별은?','이별','북극성','샛별','금성'],
+ ['세상에서 가장 빠른 새는?','눈 깜짝할 새','독수리','매','제비'],
+ ['가장 정직한 새는?','참새','앵무새','까치','거짓새'],
+ ['소금의 유통기한은?','천일','1년','영원','100일','천일염!'],
+ ['사과가 웃으면?','풋사과','꿀사과','사과잼','애플'],
+ ['세상에서 가장 추운 바다는?','썰렁해','북극해','남극해','동해'],
+ ['칼이 정색하면?','검정색','은색','빨간색','쇠색','검(칼)이 정색!'],
+ ['미소의 반대말은?','당기소','울음','찡그림','화남','미소 ↔ 당기소'],
+ ['왕이 궁에 들어가기 싫을 때 하는 말은?','궁시렁궁시렁','왕짜증','싫어요','몰라요'],
+ ['우유가 아프면?','앙팡','딸기우유','요구르트','치즈'],
+ ['하늘에서 떨어지는 개는?','번개','푸들','강아지','시바견'],
+ ['깨가 죽으면?','주근깨','참깨','들깨','깨소금'],
+ ['차가 놀라면?','카놀라유','빵빵','자동차','클랙슨'],
+ ['사람이 몸무게가 가장 많이 나갈 때는?','철들 때','밥 먹고 나서','아침','생일'],
+ ['세상에서 가장 비싼 새는?','백조','금새','공작새','비싼새','100조!'],
+ ['진짜 문제투성이인 것은?','시험지','숙제','책','일기'],
+ ['먹으면 먹을수록 늙는 것은?','나이','밥','물','약'],
+ ['다리가 넷인데 걷지 못하는 것은?','책상','강아지','고양이','거북이'],
+ ['눈이 있어도 보지 못하는 것은?','태풍','독수리','부엉이','사람'],
+ ['모든 사람을 일어서게 하는 숫자는?','다섯','일','셋','열','다 서!'],
+ ['가장 억울한 도형은?','원통','삼각형','사각형','별'],
+ ['왕이 헤어질 때 하는 인사는?','바이킹','안녕왕','굿바이','잘가요'],
+ ['개 중에서 가장 아름다운 개는?','무지개','푸들','진돗개','비숑'],
+ ['이상한 사람들이 가는 곳은?','치과','병원','학교','시장','이 상한 사람!'],
+ ['늘 가슴에 흑심을 품고 사는 것은?','연필','지우개','자','공책'],
+ ['머리를 감을수록 작아지는 것은?','비누','수건','빗','머리띠'],
+ ['노인들이 가장 좋아하는 폭포는?','나이아가라','빅토리아','이과수','천지연','나이야 가라~'],
+ ['원숭이를 불에 구우면?','구운몽','바비큐','몽키스패너','군고구마'],
+ ['세종대왕이 만든 우유는?','아야어여오요우유','바나나우유','딸기우유','초코우유']
+];
+/* 과자: [이름, 이모지 힌트, 설명 힌트] — 초성은 자동으로 만들어요 */
+const SNACK=[
+ ['새우깡','🦐','새우 맛 스낵 · "손이 가요 손이 가~"'],['꼬깔콘','🌽','고깔 모양 옥수수 스낵 · 손가락에 끼워 먹어요'],['포카칩','🥔','얇게 썬 감자칩'],
+ ['홈런볼','⚾','동그란 과자 안에 초코 크림'],['빼빼로','🥢','막대 과자에 초콜릿 · 11월 11일'],['초코파이','🥧','마시멜로가 든 초코 케이크 · 정(情)'],
+ ['오징어땅콩','🦑🥜','땅콩이 들어간 동그란 오징어 맛 과자'],['칸쵸','🐻','작은 쿠키 안에 초코 · 겉에 그림이 그려져 있어요'],['꼬북칩','🐢','여러 겹으로 바삭한 거북 등 모양 칩'],
+ ['허니버터칩','🍯','꿀과 버터 맛 감자칩 · 한때 품절 대란'],['맛동산','🥜','땅콩이 콕콕 묻은 달콤한 튀김 과자'],['고래밥','🐳','바다 동물 모양 작은 과자'],
+ ['양파링','🧅','양파 맛 동그란 링 과자'],['감자깡','🥔','감자로 만든 길쭉한 스낵'],['바나나킥','🍌','바나나 맛 옥수수 스낵'],
+ ['몽쉘','🍫','부드러운 케이크에 크림, 초콜릿 옷'],['에이스','☕','커피에 콕 찍어 먹는 바삭한 크래커'],['쿠크다스','🥮','얇은 겹겹 과자 사이에 크림'],
+ ['오예스','🍫','초코 케이크 · 반으로 가르면 크림'],['마이쮸','🍬','쫀득한 과일 맛 캔디'],['새콤달콤','🍓','이름처럼 새콤하고 달콤한 쫀득 캔디'],
+ ['왕꿈틀이','🐛','지렁이 모양 젤리'],['꿀꽈배기','🥨','꿀 바른 꽈배기 모양 스낵'],['죠리퐁','🥣','우유에 말아 먹는 작은 곡물 튀김'],
+ ['치토스','🧀','치즈 맛 옥수수 스낵'],['오감자','🥔','감자 맛 스낵 · 소스 찍어 먹는 맛도 있어요'],['스윙칩','〰️','물결 모양 감자칩'],
+ ['자갈치','🐙','문어 맛 스낵'],['꽃게랑','🦀','꽃게 모양 꽃게 맛 스낵'],['인디언밥','🌾','달콤한 가루가 묻은 곡물 스낵'],
+ ['사또밥','🍚','쌀로 만든 달콤한 동그란 과자'],['짱구','🌽','달콤한 옥수수 맛 스낵'],['뻥이요','🍘','뻥튀기처럼 바삭한 쌀 과자'],
+ ['오레오','🍪','검은 쿠키 사이 하얀 크림'],['칙촉','🍪','초코칩이 콕콕, 촉촉한 쿠키'],['다이제','🌾','통밀로 만든 비스킷'],
+ ['버터링','🧈','버터 향 가득한 쿠키'],['먹태깡','🐟','2023년 품절 대란! 먹태 맛 스낵'],['빈츠','🍫','얇은 비스킷에 초콜릿을 입힌 과자'],
+ ['포스틱','🥢','가늘고 긴 감자 스틱 스낵'],['프링글스','🥫','통에 차곡차곡 쌓인 감자칩'],['썬칩','☀️','통곡물로 만든 물결 칩'],
+ ['카스타드','🥚','부드러운 빵 안에 우유 크림'],['엄마손파이','✋','겹겹이 바삭한 파이'],['콘칩','🌽','바삭한 옥수수 칩']
+];
+const PROV=[
+ ['낮말은 새가 듣고 밤말은 ○가 듣는다','쥐','개','소','고양이'],
+ ['원숭이도 ○○에서 떨어진다','나무','산','지붕','하늘'],
+ ['소 잃고 ○○○ 고친다','외양간','대문','지붕','우물'],
+ ['세 살 버릇 ○○까지 간다','여든','스물','백','마흔'],
+ ['티끌 모아 ○○','태산','바다','부자','강물'],
+ ['백지장도 맞들면 ○○','낫다','무겁다','찢어진다','가볍다'],
+ ['고래 싸움에 ○○ 등 터진다','새우','멸치','상어','거북'],
+ ['하늘이 무너져도 솟아날 ○○이 있다','구멍','사다리','날개','문'],
+ ['등잔 밑이 ○○○','어둡다','밝다','뜨겁다','넓다'],
+ ['개구리 ○○○ 적 생각 못 한다','올챙이','알','어른','아기'],
+ ['우물 안 ○○○','개구리','물고기','거북이','두꺼비'],
+ ['꿩 대신 ○','닭','오리','비둘기','참새'],
+ ['금강산도 ○○○','식후경','구경꾼','산책길','풍경화'],
+ ['아니 땐 굴뚝에 ○○ 날까','연기','불','냄새','소리'],
+ ['사공이 많으면 배가 ○으로 간다','산','바다','강','집'],
+ ['결심이 사흘을 못 간다는 뜻은?','작심삼일','일석이조','대기만성','유비무환'],
+ ['돌 하나로 새 두 마리를 잡는다는 뜻은?','일석이조','작심삼일','동문서답','우왕좌왕'],
+ ['묻는 말에 엉뚱한 대답을 한다는 뜻은?','동문서답','작심삼일','금상첨화','십중팔구'],
+ ['좋은 일에 또 좋은 일이 더해진다는 뜻은?','금상첨화','설상가상','동문서답','대기만성'],
+ ['나쁜 일에 또 나쁜 일이 겹친다는 뜻은?','설상가상','금상첨화','일석이조','유비무환'],
+ ['미리 준비하면 걱정이 없다는 뜻은?','유비무환','작심삼일','설상가상','우왕좌왕'],
+ ['큰 그릇은 늦게 이루어진다는 뜻은?','대기만성','작심삼일','동문서답','금상첨화'],
+ ['열 가운데 여덟이나 아홉, 거의 다라는 뜻은?','십중팔구','구사일생','일석이조','유비무환'],
+ ['아홉 번 죽을 뻔하다 한 번 살아났다는 뜻은?','구사일생','십중팔구','대기만성','우왕좌왕'],
+ ['이리저리 왔다 갔다 갈피를 못 잡는다는 뜻은?','우왕좌왕','금상첨화','유비무환','구사일생'],
+ ['백 번 듣는 것보다 한 번 보는 것이 낫다는 말은?','백문이불여일견','일석이조','대기만성','유비무환']
+];
+const CAP=[
+ ['일본','도쿄','오사카','교토','삿포로'],['중국','베이징','상하이','홍콩','광저우'],['미국','워싱턴 D.C.','뉴욕','로스앤젤레스','시카고'],
+ ['영국','런던','맨체스터','리버풀','에든버러'],['프랑스','파리','마르세유','리옹','니스'],['독일','베를린','뮌헨','함부르크','프랑크푸르트'],
+ ['이탈리아','로마','밀라노','베네치아','나폴리'],['스페인','마드리드','바르셀로나','세비야','발렌시아'],['캐나다','오타와','토론토','밴쿠버','몬트리올'],
+ ['호주','캔버라','시드니','멜버른','브리즈번'],['러시아','모스크바','상트페테르부르크','블라디보스토크','노보시비르스크'],['태국','방콕','치앙마이','푸껫','파타야'],
+ ['베트남','하노이','호찌민','다낭','나트랑'],['필리핀','마닐라','세부','다바오','보라카이'],['인도','뉴델리','뭄바이','콜카타','벵갈루루'],
+ ['이집트','카이로','알렉산드리아','룩소르','기자'],['브라질','브라질리아','리우데자네이루','상파울루','살바도르'],['아르헨티나','부에노스아이레스','코르도바','멘도사','로사리오'],
+ ['멕시코','멕시코시티','칸쿤','과달라하라','몬테레이'],['튀르키예','앙카라','이스탄불','이즈미르','안탈리아'],['그리스','아테네','테살로니키','산토리니','크레타'],
+ ['네덜란드','암스테르담','로테르담','헤이그','위트레흐트'],['스위스','베른','취리히','제네바','바젤'],['몽골','울란바토르','에르데네트','다르항','초이발상'],
+ ['뉴질랜드','웰링턴','오클랜드','크라이스트처치','퀸스타운'],['케냐','나이로비','몸바사','키수무','나쿠루']
+];
+const CATS=[
+ {id:'gen',name:'상식 퀴즈',em:'🧠',c:'#2E6FD8',sub:'과학·역사·우리 동네까지'},
+ {id:'non',name:'넌센스',em:'🤪',c:'#FF7AA8',sub:'머리를 말랑말랑하게!'},
+ {id:'snack',name:'과자 이름',em:'🍪',c:'#FF8A2F',sub:'초성 보고 맞히기 · 힌트가 하나씩'},
+ {id:'prov',name:'속담·사자성어',em:'📜',c:'#2E9A5A',sub:'빈칸 채우기 · 뜻 보고 맞히기'},
+ {id:'cap',name:'나라와 수도',em:'🌏',c:'#8E5BD8',sub:'세계 여행 떠나요'},
+ {id:'mix',name:'섞어서 도전',em:'🔀',c:'#24363B',sub:'모든 퀴즈가 랜덤으로',wide:1}
+];
+
+/* 초성 만들기 */
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const chosung=s=>[...s].map(ch=>{const c=ch.charCodeAt(0)-0xAC00;return c>=0&&c<11172?CHO[Math.floor(c/588)]:ch}).join('');
+
+/* 문제 하나로 바꾸기 */
+function makeQ(cat){
+  if(cat==='gen'||cat==='non'||cat==='prov'){const src=cat==='gen'?GEN:cat==='non'?NON:PROV;const r=src[Math.floor(Math.random()*src.length)];
+    return{cat,text:r[0],answer:r[1],choices:shuffle(r.slice(1,5)),note:r[5]||'',key:cat+r[0]}}
+  if(cat==='cap'){const r=CAP[Math.floor(Math.random()*CAP.length)];return{cat,text:`${r[0]}의 수도는?`,answer:r[1],choices:shuffle(r.slice(1,5)),key:cat+r[0]}}
+  if(cat==='snack'){const r=SNACK[Math.floor(Math.random()*SNACK.length)],ch=chosung(r[0]);
+    // 헷갈리게: 첫 초성이 같은 과자를 먼저 오답으로
+    const others=shuffle(SNACK.filter(x=>x[0]!==r[0])).sort((a,b)=>(chosung(b[0])[0]===ch[0])-(chosung(a[0])[0]===ch[0]));
+    return{cat,chosung:ch,answer:r[0],choices:shuffle([r[0],...others.slice(0,3).map(x=>x[0])]),hints:[r[1],r[2]],key:cat+r[0]}}
+}
+function buildSet(cat,n){const out=[],seen=new Set();let guard=0;
+  while(out.length<n&&guard++<500){const c=cat==='mix'?['gen','non','snack','prov','cap'][Math.floor(Math.random()*5)]:cat;const q=makeQ(c);if(seen.has(q.key))continue;seen.add(q.key);out.push(q)}
+  return out}
+
+/* ================= 소리 ================= */
+let SOUND=store.get('sound',true),AC=null;
+function audio(){if(!SOUND)return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){AC=null}return AC}
+function tone(f,d,type='triangle',v=.15,w=0){const a=audio();if(!a)return;const t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02)}
+const sfx={ok:()=>{tone(784,.1);tone(1175,.16,'triangle',.15,.08)},no:()=>{tone(220,.25,'sawtooth',.1);tone(160,.3,'sawtooth',.08,.1)},tick:()=>tone(1000,.03,'square',.05),hint:()=>tone(660,.1,'sine',.12),
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'triangle',.16,i*.11)),team:()=>{tone(880,.08);tone(1320,.12,'triangle',.15,.07)}};
+function paintSnd(){document.querySelectorAll('.snd').forEach(b=>b.textContent=SOUND?'🔊':'🔇')}
+document.querySelectorAll('.snd').forEach(b=>b.onclick=()=>{SOUND=!SOUND;store.set('sound',SOUND);paintSnd();audio()});paintSnd();
+
+/* ================= 홈 ================= */
+let MODE=store.get('mode','solo'),TEAMS=store.get('teams',2);
+const TEAMC=['#2E6FD8','#E8453C','#2E9A5A','#FF8A2F'],TEAMN=['파랑 팀','빨강 팀','초록 팀','주황 팀'];
+function renderHome(){
+  $('modes').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('teamBox').hidden=MODE!=='host';
+  $('teams').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.t===TEAMS));
+  const best=store.get('best',{});
+  $('cats').innerHTML=CATS.map(c=>`<button class="cat${c.wide?' wide':''}" style="--c:${c.c}" data-c="${c.id}"><span class="em">${c.em}</span><span><b>${c.name}</b><br><small>${c.sub}</small></span>${best[c.id]&&MODE==='solo'?`<span class="best">최고 ${best[c.id]}</span>`:''}</button>`).join('')}
+$('modes').onclick=e=>{const b=e.target.closest('button');if(!b)return;MODE=b.dataset.m;store.set('mode',MODE);renderHome()};
+$('teams').onclick=e=>{const b=e.target.closest('button');if(!b)return;TEAMS=+b.dataset.t;store.set('teams',TEAMS);renderHome()};
+$('cats').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;audio();start(b.dataset.c)};
+function show(id){['home','play','result'].forEach(s=>$(s).hidden=s!==id);window.scrollTo(0,0)}
+
+/* ================= 게임 ================= */
+const N=10;
+const S={cat:'gen',qs:[],i:0,score:0,combo:0,best:0,right:0,log:[],t0:0,limit:15,raf:0,lock:false,hintAt:[],team:[]};
+function start(cat){S.cat=cat;S.qs=buildSet(cat,MODE==='host'?20:N);S.i=0;S.score=0;S.combo=0;S.best=0;S.right=0;S.log=[];S.team=Array(TEAMS).fill(0);
+  $('play').classList.toggle('host',MODE==='host');$('hostbar').hidden=MODE!=='host';$('score').hidden=MODE!=='host';$('pts').parentElement.hidden=MODE==='host';
+  show('play');renderTeams();ask()}
+const catOf=id=>CATS.find(c=>c.id===id);
+function ask(){
+  const q=S.qs[S.i];S.lock=false;S.hints=0;cancelAnimationFrame(S.raf);
+  const c=catOf(q.cat);$('qcard').style.setProperty('--c',c.c);$('qtag').textContent=`${c.em} ${c.name} · ${S.i+1}/${S.qs.length}`;
+  $('progBar').style.width=(S.i/S.qs.length*100)+'%';
+  if(q.cat==='snack'){$('qbody').innerHTML=`<div class="qtext" style="font-size:18px;color:var(--mute)">이 과자 이름은?</div><div class="chosung">${q.chosung}</div><div class="hints" id="hints"><div class="hint lock">💡 힌트 1 · 잠시 뒤 공개</div><div class="hint lock">💡 힌트 2 · 잠시 뒤 공개</div></div>`}
+  else $('qbody').innerHTML=`<div class="qtext">${esc(q.text)}</div>`;
+  $('ans').className='ans';$('ans').innerHTML=q.choices.map(t=>`<button data-v="${esc(t)}">${esc(t)}</button>`).join('');
+  $('note').innerHTML=MODE==='host'?'정답을 외친 팀 버튼을 눌러 점수를 주세요':'';$('qcard').querySelector('.fb')?.remove();
+  S.limit=MODE==='host'?(q.cat==='snack'?24:20):(q.cat==='snack'?20:15);S.t0=performance.now();S.lastTick=0;
+  $('timerBox').hidden=false;tick()}
+function tick(){const q=S.qs[S.i];const el=(performance.now()-S.t0)/1000,left=Math.max(0,1-el/S.limit);$('timer').style.transform=`scaleX(${left})`;$('timer').style.background=left<.3?'var(--red)':'var(--orange)';
+  if(q.cat==='snack'){const want=el>S.limit*.6?2:el>S.limit*.3?1:0;while(S.hints<want){const h=$('hints').children[S.hints];h.classList.remove('lock');h.innerHTML=S.hints===0?`💡 <b>${q.hints[0]}</b>`:`💡 ${esc(q.hints[1])}`;S.hints++;sfx.hint()}}
+  const sec=Math.ceil(S.limit-el);if(sec<=3&&sec>0&&sec!==S.lastTick){S.lastTick=sec;sfx.tick()}
+  if(S.lock)return;if(el>=S.limit){if(MODE==='host'){reveal();return}answer(null);return}S.raf=requestAnimationFrame(tick)}
+$('ans').onclick=e=>{const b=e.target.closest('button');if(!b||S.lock)return;if(MODE==='host'){reveal();return}answer(b.dataset.v,b)};
+function answer(v,btn){const q=S.qs[S.i];S.lock=true;cancelAnimationFrame(S.raf);$('ans').classList.add('lock');
+  const el=(performance.now()-S.t0)/1000,ok=v===q.answer;
+  [...$('ans').children].forEach(b=>{if(b.dataset.v===q.answer)b.classList.add('ok');else if(b===btn)b.classList.add('no');else b.classList.add('dim')});
+  let gain=0;
+  if(ok){S.combo++;S.best=Math.max(S.best,S.combo);S.right++;const speed=Math.max(0,1-el/S.limit);gain=Math.round(100+speed*100+(q.cat==='snack'?(2-S.hints)*50:0));gain=Math.round(gain*(1+Math.min(4,S.combo-1)*.25));S.score+=gain;sfx.ok()}
+  else{S.combo=0;sfx.no()}
+  const fb=document.createElement('div');fb.className='fb '+(ok?'ok':'no');fb.textContent=ok?(S.combo>=3?`🔥 ${S.combo}연속! +${gain}`:`정답! +${gain}`):(v==null?'시간 끝!':'땡!');$('qcard').appendChild(fb);
+  $('pts').textContent=S.score;$('combo').textContent=S.combo>=2?`🔥 ${S.combo} 콤보`:'';
+  $('note').innerHTML=(ok?'':`정답: <b>${esc(q.answer)}</b>`)+(q.note?` <span>· ${esc(q.note)}</span>`:'');
+  S.log.push({q,ok,v});
+  setTimeout(next,ok?1100:1900)}
+function next(){S.i++;if(S.i>=S.qs.length)finish();else ask()}
+/* 진행자 모드 */
+function reveal(){const q=S.qs[S.i];if(S.lock)return;S.lock=true;cancelAnimationFrame(S.raf);$('ans').classList.add('lock');
+  [...$('ans').children].forEach(b=>b.classList.add(b.dataset.v===q.answer?'ok':'dim'));
+  if(q.cat==='snack'){const h=$('hints');[...h.children].forEach((d,i)=>{d.classList.remove('lock');d.innerHTML=i===0?`💡 <b>${q.hints[0]}</b>`:`💡 ${esc(q.hints[1])}`})}
+  $('note').innerHTML=`정답: <b>${esc(q.answer)}</b>`+(q.note?` · ${esc(q.note)}`:'');sfx.ok()}
+$('reveal').onclick=reveal;
+$('next').onclick=()=>{if(!S.lock)reveal();next()};
+function renderTeams(){$('score').innerHTML=S.team.map((v,i)=>`<button style="--c:${TEAMC[i]}" data-t="${i}">${TEAMN[i]}<b>${v}</b></button>`).join('')}
+$('score').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;S.team[+b.dataset.t]++;sfx.team();renderTeams();if(!S.lock)reveal()};
+$('quit').onclick=()=>{cancelAnimationFrame(S.raf);if(MODE==='host'&&S.i>0){finish();return}show('home');renderHome()};
+function finish(){cancelAnimationFrame(S.raf);
+  if(MODE==='host'){const max=Math.max(...S.team),win=S.team.map((v,i)=>v===max?TEAMN[i]:null).filter(Boolean);
+    $('resEmoji').textContent='🏆';$('resTitle').textContent=max===0?'다음엔 꼭!':win.length>1?'무승부!':`${win[0]} 우승!`;$('resStars').textContent='';
+    $('resSum').textContent=S.team.map((v,i)=>`${TEAMN[i]} ${v}점`).join(' · ');$('review').innerHTML='';show('result');if(max>0){sfx.win();confetti()}return}
+  const best=store.get('best',{}),prev=best[S.cat]||0;if(S.score>prev){best[S.cat]=S.score;store.set('best',best)}
+  const st=S.right>=9?3:S.right>=6?2:S.right>=3?1:0;
+  $('resEmoji').textContent=st===3?'👑':st===2?'🎉':st===1?'🙂':'💪';$('resTitle').textContent=st===3?'퀴즈왕 등극!':st===2?'잘했어요!':st===1?'좋아요, 한 번 더!':'다시 도전!';
+  $('resStars').textContent='★'.repeat(st)+'☆'.repeat(3-st);
+  $('resSum').textContent=`${S.right}/${N} 정답 · ${S.score}점 · 최대 ${S.best}콤보`+(S.score>prev?' · 🆕 최고 기록!':'');
+  $('review').innerHTML=S.log.map(({q,ok,v})=>`<div class="${ok?'':'x'}">${ok?'⭕':'❌'} ${q.cat==='snack'?`과자 초성 <b style="color:var(--ink)">${q.chosung}</b>`:esc(q.text)} → <b>${esc(q.answer)}</b>${!ok&&v?` <span style="color:var(--mute)">(내 답: ${esc(v)})</span>`:''}</div>`).join('');
+  show('result');if(st>=2){sfx.win();confetti()}}
+function confetti(){const c=document.createElement('div');c.className='confetti';const cols=['#E8453C','#FFD23F','#2E9A5A','#2E6FD8','#FF7AA8'];
+  for(let i=0;i<60;i++){const d=document.createElement('i');d.style.left=Math.random()*100+'%';d.style.background=cols[i%5];d.style.animationDuration=(1.8+Math.random()*1.8)+'s';d.style.animationDelay=Math.random()*.6+'s';c.appendChild(d)}
+  document.body.appendChild(c);setTimeout(()=>c.remove(),4500)}
+$('again').onclick=()=>start(S.cat);
+$('goHome').onclick=()=>{show('home');renderHome()};
+renderHome();
+</script>
+</body>
+</html>
