@@ -70,7 +70,8 @@ body.touchui .where{top:calc(66px + env(safe-area-inset-top,0px));font-size:15px
 #tL{left:calc(14px + env(safe-area-inset-left,0px))}#tR{left:calc(106px + env(safe-area-inset-left,0px))}
 #tDrift{width:96px;height:92px;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));font-size:16px;background:rgba(255,90,60,.4)}
 #tBoost{width:80px;height:72px;right:calc(118px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px;background:rgba(54,197,255,.38)}
-#tBoost.ready{animation:rb .45s ease-in-out infinite;background:rgba(255,201,60,.7)}
+#tBoost.empty{opacity:.5}
+.instcue{position:absolute;left:50%;top:58%;transform:translateX(-50%);font-family:var(--f-display);font-size:30px;color:#8FE3FF;text-shadow:0 2px 0 rgba(0,0,0,.6);animation:rb .2s ease-in-out infinite;pointer-events:none}
 @keyframes rb{50%{transform:scale(1.08)}}
 #tBrake{width:58px;height:46px;right:calc(118px + env(safe-area-inset-right,0px));bottom:calc(112px + env(safe-area-inset-bottom,0px));font-size:12px;border-radius:14px}
 #tPause{width:40px;height:40px;right:calc(150px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));border-radius:12px;font-size:15px}
@@ -131,8 +132,9 @@ body.touchui .tip{display:none}
   <div class="pop" id="pop"></div>
   <div class="count" id="count"></div>
   <div class="warn" id="warn" hidden>⚠ 역주행!</div>
+  <div class="instcue" id="instCue" hidden>↑ 지금!</div>
   <div class="gauge"><div class="slots" id="slots"><i>🔥</i><i>🔥</i></div><div class="gbar"><div class="lbl"><span>부스터 게이지</span><span id="gpct">0%</span></div><div class="bar"><i id="gfill"></i></div></div><div class="spd" id="spd">0<small>km/h</small></div></div>
-  <div class="tip" id="tip">↑ 가속 · ← → 조향 · Shift 드리프트 · Ctrl 부스터 · 드리프트 끝나자마자 ↑ 다시 누르면 순간부스터 · Esc 일시정지</div>
+  <div class="tip" id="tip">↑ 가속 · ← → 조향 · Shift 드리프트 · Space 부스터 · 드리프트를 놓고 "↑ 지금!"이 뜨면 ↑ 다시 누르기 = 순간부스터 · Esc 일시정지</div>
 </div>
 
 <div class="rotate">📱↻ 폰을 가로로 돌리면 더 잘 보여요</div>
@@ -155,8 +157,8 @@ body.touchui .tip{display:none}
     <div class="colors" id="colors"></div>
     <div class="how">
       <div><b>드리프트</b> — 코너에서 방향키와 함께 <kbd>Shift</kbd>(폰: 드리프트 버튼)를 누르고 있으면 미끄러지며 돌아요. 미끄러질수록 게이지가 차요.</div>
-      <div><b>부스터</b> — 게이지가 꽉 차면 🔥 부스터 1개(최대 2개). <kbd>Ctrl</kbd>(폰: 부스터 버튼)로 써요.</div>
-      <div><b>순간부스터</b> — 드리프트를 놓자마자 <kbd>↑</kbd>를 다시 누르면(폰: 반짝이는 부스터 버튼) 짧게 빨라져요. 부스터 개수는 안 써요!</div>
+      <div><b>부스터</b> — 게이지가 꽉 차면 🔥 부스터 1개(최대 2개). <kbd>Space</kbd>(폰: 부스터 버튼)로 써요. 쓰는 중에 또 누르면 길게 이어져요.</div>
+      <div><b>순간부스터</b> — 크게 미끄러진 드리프트를 놓는 순간 <kbd>↑</kbd>를 다시 누르면 짧게 빨라져요("↑ 지금!"이 떠요). 폰은 드리프트를 잘 하면 저절로! 부스터 개수는 안 써요.</div>
       <div><b>폰</b> — 가속은 자동이에요. 왼쪽 ◀ ▶ 로 조향, 오른쪽에 드리프트·부스터.</div>
     </div>
     <button class="go" id="start">레이스 시작</button>
@@ -276,7 +278,7 @@ function makeKart(col,name,isPlayer){
     tag=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:true,transparent:true}));tag.scale.set(4,.9,1);tag.position.y=3;g.add(tag)}
   scene.add(g);
   return{g,body,wheels,flame,mBody,helmet,name,col,isPlayer,
-    pos:new THREE.Vector3(),h:0,vx:0,vz:0,speed:0,steer:0,drift:false,driftDir:0,driftT:0,gauge:0,boosters:0,boostT:0,boostPow:0,instWin:0,lastDriftEnd:-9,
+    pos:new THREE.Vector3(),h:0,vx:0,vz:0,speed:0,steer:0,drift:false,driftDir:0,driftT:0,gauge:0,boosters:0,boostT:0,instT:0,instWin:0,lastDriftEnd:-9,goodDrift:false,
     idx:0,lap:0,half:false,finished:false,finishT:0,lapStart:0,bestLap:null,place:1,ai:null,bumpT:0,wrongT:0,smokeT:0}}
 function paintKart(k,col){k.mBody.color.set(col);k.helmet.material.color.set(col);k.col=col}
 
@@ -288,8 +290,11 @@ function updSmoke(dt){for(let i=SMK.length-1;i>=0;i--){const s=SMK[i];s.t-=dt;s.
 /* ================= 레이스 ================= */
 const R={state:'menu',t:0,count:0,paused:false};
 const AIN=['다오렌','배찌킹','로두','마리오네','케피','에띠'].map((n,i)=>['번개','구름','토끼','호랑','펭귄','다람'][i]);
-const AIDIFF=[{max:44,corner:.82,mistake:.06},{max:49.5,corner:.9,mistake:.03},{max:54,corner:.97,mistake:.012}];
-const MAXS=50,BOOSTS=66;
+const AIDIFF=[{max:43,corner:.82,mistake:.06,inst:.25},{max:47.5,corner:.9,mistake:.03,inst:.6},{max:50,corner:.97,mistake:.012,inst:.9}]; // 봇 기본 속도는 나보다 빠르지 않아요 (L1 = 나와 같음)
+/* 속도 규칙 (카트라이더 방식)
+   기본 최고속도 50m/s(180km/h) · 부스터 66m/s(약 237km/h) 1.6초, 쓰는 중에 또 누르면 시간이 이어져요(최대 3.2초)
+   순간부스터 57m/s 0.6초: 좋은 드리프트(0.35초 이상, 충분히 미끄러짐)가 끝나는 순간에만 */
+const MAXS=50,BOOST_TOP=66,BOOST_T=1.6,BOOST_MAX_T=3.2,INST_TOP=57,INST_T=.6,INST_WIN=.35,GAUGE_RATE=.42;
 function setupRace(){
   K.forEach(k=>scene.remove(k.g));K.length=0;SMK.forEach(s=>scene.remove(s.m));SMK.length=0;
   K.push(makeKart(KCOL[OPT.color],'나',true));
@@ -298,7 +303,7 @@ function setupRace(){
   // 출발 그리드: 결승선 뒤 두 줄
   const order=[1,2,3,4,5,0];// 플레이어는 맨 뒤 줄에서 출발 (추월하는 재미)
   order.forEach((ki,slot)=>{const k=K[ki];const back=8+Math.floor(slot/2)*7,i=(N-Math.round(back/1.2))%N,side=slot%2?3.5:-3.5;
-    k.pos.set(P[i].x+NR[i].x*side,0,P[i].z+NR[i].z*side);k.h=Math.atan2(T[i].x,T[i].z);k.idx=i;k.lap=0;k.half=true;k.speed=0;k.vx=k.vz=0;k.gauge=0;k.boosters=0;k.boostT=0;k.finished=false;k.bestLap=null;k.drift=false;place(k)});
+    k.pos.set(P[i].x+NR[i].x*side,0,P[i].z+NR[i].z*side);k.h=Math.atan2(T[i].x,T[i].z);k.idx=i;k.lap=0;k.half=true;k.speed=0;k.vx=k.vz=0;k.gauge=0;k.boosters=0;k.boostT=0;k.instT=0;k.instWin=0;k.finished=false;k.bestLap=null;k.drift=false;place(k)});
   R.state='count';R.count=3.6;R.t=0;R.lastBeep=4;R.finishOrder=[];
   CAM.init=false;
 }
@@ -308,7 +313,7 @@ function place(k){k.g.position.copy(k.pos);k.g.rotation.y=k.h}
 const KEY={};let tL=false,tR=false,tDrift=false,tBrake=false;
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' ','shift','control'].includes(k))e.preventDefault();
   if(!KEY[k]&&(k==='arrowup'||k==='w'))instantTry(K[0]);
-  if(!KEY[k]&&(k==='control'||k==='z'||k==='x'))useBoost(K[0]);
+  if(!KEY[k]&&(k===' '||k==='z'||k==='x'))useBoost(K[0]);
   KEY[k]=true;if((k==='escape'||k==='p')&&R.state!=='menu')pauseRace()});
 addEventListener('keyup',e=>{KEY[e.key.toLowerCase()]=false});
 addEventListener('blur',()=>{for(const k in KEY)KEY[k]=false;if(R.state==='race'||R.state==='count')pauseRace()});
@@ -316,9 +321,13 @@ let touchReady=false;
 function setupTouch(){if(touchReady){$('touch').hidden=false;return}touchReady=true;$('touch').hidden=false;
   const hold=(id,on,off)=>{const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();audio();el.classList.add('on');on();try{el.setPointerCapture(e.pointerId)}catch(_){}});const up=()=>{el.classList.remove('on');off&&off()};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up)};
   hold('tL',()=>tL=true,()=>tL=false);hold('tR',()=>tR=true,()=>tR=false);hold('tDrift',()=>tDrift=true,()=>tDrift=false);hold('tBrake',()=>tBrake=true,()=>tBrake=false);
-  hold('tBoost',()=>{if(K[0].instWin>0)instantTry(K[0],true);else useBoost(K[0])});hold('tPause',pauseRace)}
-function instantTry(k,touch){if(!k||R.state!=='race'||k.finished)return;if(k.instWin>0&&!k.drift){k.instWin=0;k.boostT=Math.max(k.boostT,.55);k.boostPow=Math.max(k.boostPow,.55);SND.mini();pop('순간부스터!','#8FE3FF');return true}return false}
-function useBoost(k){if(!k||R.state!=='race'||k.finished)return;if(k.boosters<=0)return;k.boosters--;k.boostT=1.7;k.boostPow=1;if(k.isPlayer){SND.boost();pop('부스터!','#36C5FF');updGauge()}}
+  hold('tBoost',()=>useBoost(K[0]));hold('tPause',pauseRace)}
+// 순간부스터: 좋은 드리프트가 끝난 직후 짧은 시간 안에만. 부스터 개수는 안 써요
+function instantTry(k){if(!k||R.state!=='race'||k.finished)return false;if(k.instWin>0&&!k.drift){k.instWin=0;k.instT=INST_T;if(k.isPlayer){SND.mini();pop('순간부스터!','#8FE3FF');$('instCue').hidden=true}return true}return false}
+// 부스터: 모아 둔 🔥를 하나 써요. 쓰는 중에 또 쓰면 시간이 이어져요
+function useBoost(k){if(!k||R.state!=='race'||k.finished)return;
+  if(k.boosters<=0){if(k.isPlayer){tone(220,.12,'square',.08);pop('부스터가 없어요 · 드리프트로 모아요','#B8C2CC')}return}
+  k.boosters--;k.boostT=k.boostT>0?Math.min(BOOST_MAX_T,k.boostT+BOOST_T):BOOST_T;if(k.isPlayer){SND.boost();pop(k.boostT>BOOST_T?'부스터 연결!':'부스터!','#36C5FF');updGauge()}}
 function pop(t,c){const el=$('pop');el.textContent=t;el.style.color=c||'#fff';el.classList.remove('on');void el.offsetWidth;el.classList.add('on')}
 
 /* ---------- 카트 물리 (드리프트 = 차 방향과 미끄러지는 방향의 차이) ---------- */
@@ -327,18 +336,21 @@ function drive(k,inp,dt){
   let vs=Math.hypot(k.vx,k.vz);
   const vAng=vs>.5?Math.atan2(k.vx,k.vz):k.h;const slip=wrapA(k.h-vAng);
   // 드리프트 시작/끝
-  if(inp.drift&&inp.steer!==0&&vs>16&&!k.drift){k.drift=true;k.driftDir=Math.sign(inp.steer);k.driftT=0;k.h+=k.driftDir*-.12}
-  if(k.drift&&(!inp.drift||vs<9)){k.drift=false;k.instWin=.42;if(k.isPlayer&&Math.abs(slip)>.15)$('tBoost').classList.add('ready')}
-  if(k.instWin>0){k.instWin-=dt;if(k.instWin<=0&&k.isPlayer)$('tBoost').classList.remove('ready')}
+  if(inp.drift&&inp.steer!==0&&vs>16&&!k.drift){k.drift=true;k.driftDir=Math.sign(inp.steer);k.driftT=0;k.goodDrift=false;k.instWin=0;if(k.isPlayer)$('instCue').hidden=true;k.h+=k.driftDir*-.12}
+  if(k.drift){k.driftT+=dt;if(Math.abs(slip)>.2)k.goodDrift=true}
+  if(k.drift&&(!inp.drift||vs<9)){k.drift=false;
+    if(k.goodDrift&&k.driftT>=.35&&vs>=9){if(k.isPlayer&&TOUCH){k.instWin=1;instantTry(k)}// 폰: 좋은 드리프트면 순간부스터가 저절로
+      else{k.instWin=INST_WIN;if(k.isPlayer)$('instCue').hidden=false}}}
+  if(k.instWin>0){k.instWin-=dt;if(k.instWin<=0&&k.isPlayer)$('instCue').hidden=true}
   // 조향
   const sf=clamp(vs/14,0,1)*(1-clamp((vs-40)/80,0,.35));
-  let turn;if(k.drift){k.driftT+=dt;const s=k.driftDir*(1+(inp.steer===k.driftDir?.55:inp.steer===-k.driftDir?-.6:0));turn=s*2.15}
+  let turn;if(k.drift){const s=k.driftDir*(1+(inp.steer===k.driftDir?.55:inp.steer===-k.driftDir?-.6:0));turn=s*2.15}
   else turn=inp.steer*1.75*sf;
   k.h-=turn*dt*(k.drift?1:1);
   // 가속
-  const boostOn=k.boostT>0;let max=(k.maxS||MAXS)*(inp.brake?.0:1);if(boostOn)max=Math.max(max,BOOSTS*(.82+.18*k.boostPow));
+  const boostOn=k.boostT>0||k.instT>0;let max=(k.maxS||MAXS)*(inp.brake?.0:1);if(k.boostT>0)max=Math.max(max,BOOST_TOP);else if(k.instT>0)max=Math.max(max,INST_TOP);
   if(R.state==='count')max=0;else if(k.finished)max=28;
-  const acc=boostOn?40:inp.gas?(vs<25?24:13):0;
+  const acc=k.boostT>0?45:k.instT>0?38:inp.gas?(vs<25?24:13):0;
   if(inp.brake)vs-=32*dt;else if(vs<max)vs=Math.min(max,vs+acc*dt);else vs-=(vs-max)*1.2*dt;
   if(!inp.gas&&!boostOn)vs-=7*dt;
   if(k.drift)vs-=Math.abs(slip)*9*dt;
@@ -346,9 +358,9 @@ function drive(k,inp,dt){
   // 접지력: 드리프트 중에는 미끄러짐
   const grip=k.drift?1.25:7.5;const nAng=vAng+wrapA(k.h-vAng)*Math.min(1,grip*dt);
   k.vx=Math.sin(nAng)*vs;k.vz=Math.cos(nAng)*vs;
-  if(boostOn)k.boostT-=dt;
+  if(k.boostT>0)k.boostT=Math.max(0,k.boostT-dt);if(k.instT>0)k.instT=Math.max(0,k.instT-dt);
   // 게이지: 속도 × 미끄러진 각도
-  if(k.drift&&R.state==='race'){const gain=dt*(vs/MAXS)*clamp(Math.abs(slip)/.45,.25,1.25)*.36;k.gauge+=gain;if(k.gauge>=1){if(k.boosters<2){k.boosters++;k.gauge=0;if(k.isPlayer){SND.gain();pop('부스터 +1','#FFC93C')}}else k.gauge=1}}
+  if(k.drift&&R.state==='race'){const gain=dt*(Math.min(vs,MAXS)/MAXS)*clamp(Math.abs(slip)/.45,.25,1.25)*GAUGE_RATE;k.gauge+=gain;if(k.gauge>=1){if(k.boosters<2){k.boosters++;k.gauge=0;if(k.isPlayer){SND.gain();pop('부스터 +1','#FFC93C')}}else k.gauge=1}}
   k.pos.x+=k.vx*dt;k.pos.z+=k.vz*dt;k.speed=vs;
   return slip;
 }
@@ -389,7 +401,7 @@ function aiInput(k,dt){
   const steer=clamp(-err*2.4,-1,1);
   const drift=bend>.55&&vs>30&&Math.abs(err)>.08&&Math.random()>D.mistake;
   ai.boostT-=dt;if(k.boosters>0&&ai.boostT<=0&&bend<.25){useBoost(k);ai.boostT=rand(2.5,6)}
-  if(k.instWin>0&&Math.random()<.35*(OPT.diff+1)*dt*10){instantTry(k)}
+  if(k.instWin>0&&!k.aiInstDone){k.aiInstDone=true;if(Math.random()<D.inst)setTimeout(()=>instantTry(k),80+Math.random()*150)}if(k.instWin<=0)k.aiInstDone=false;
   return{steer:Math.abs(steer)<.05?0:steer,gas:true,brake:false,drift}
 }
 
@@ -397,13 +409,13 @@ function aiInput(k,dt){
 const CAM={pos:new THREE.Vector3(),look:new THREE.Vector3(),h:0,shake:0,init:false};
 function updCam(k,dt){
   const h=k.drift?CAM.h+wrapA(k.h+k.driftDir*.0-CAM.h)*Math.min(1,dt*3.2):CAM.h+wrapA(k.h-CAM.h)*Math.min(1,dt*6);CAM.h=h;
-  const dist=7.2+(k.boostT>0?1.2:0),hgt=3.1;
+  CAM.d=(CAM.d||7.2)+((7.2+(k.boostT>0?1.3:k.instT>0?.6:0))-(CAM.d||7.2))*Math.min(1,dt*4);const dist=CAM.d,hgt=3.1;
   const tp=new THREE.Vector3(k.pos.x-Math.sin(h)*dist,hgt,k.pos.z-Math.cos(h)*dist);
   if(!CAM.init){CAM.pos.copy(tp);CAM.h=k.h;CAM.init=true}CAM.pos.lerp(tp,Math.min(1,dt*9));
   CAM.shake=Math.max(0,CAM.shake-dt);
   camera.position.copy(CAM.pos);if(CAM.shake)camera.position.add(new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).multiplyScalar(CAM.shake*.6));
   camera.lookAt(k.pos.x+Math.sin(h)*5,1.2,k.pos.z+Math.cos(h)*5);
-  const fov=70+clamp((k.speed-30)/36,0,1)*10+(k.boostT>0?7:0);camera.fov+=(fov-camera.fov)*Math.min(1,dt*5);camera.updateProjectionMatrix();
+  const fov=70+clamp((k.speed-30)/36,0,1)*10+(k.boostT>0?8:k.instT>0?4:0);camera.fov+=(fov-camera.fov)*Math.min(1,dt*5);camera.updateProjectionMatrix();
 }
 
 /* ---------- 미니맵 ---------- */
@@ -424,7 +436,7 @@ function drawMini(){mini.clearRect(0,0,260,260);mini.globalAlpha=.92;mini.drawIm
 
 /* ---------- HUD ---------- */
 const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(2)};
-function updGauge(){const k=K[0];$('gfill').style.width=(k.gauge*100)+'%';$('gpct').textContent=Math.floor(k.gauge*100)+'%';$('slots').querySelectorAll('i').forEach((el,i)=>el.classList.toggle('on',i<k.boosters))}
+function updGauge(){const k=K[0];if(TOUCH){const b=$('tBoost');b.innerHTML=`부스터<br><b style="font-size:20px">${k.boosters}</b>`;b.classList.toggle('empty',k.boosters<=0)}$('gfill').style.width=(k.gauge*100)+'%';$('gpct').textContent=Math.floor(k.gauge*100)+'%';$('slots').querySelectorAll('i').forEach((el,i)=>el.classList.toggle('on',i<k.boosters))}
 let hudT=0;
 let whereT=0,whereName='';
 const PICON={apt:'🏢',school:'🏫',station:'🚉',gym:'🥊',park:'🌳',home:'🏠',road:'🛣️'};
@@ -458,12 +470,12 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.04,(now-last)/
     // 모양: 차체 기울기·바퀴·불꽃·연기
     place(k);k.body.rotation.z=clamp(-slip*.25,-.12,.12)*(k.drift?1:.4);k.body.rotation.x=k.boostT>0?-.04:0;
     k.wheels[0].rotation.y=k.wheels[1].rotation.y=-inp.steer*.35;k.wheels.forEach(w=>w.children[0].rotation.x+=k.speed*dt/.42);
-    k.flame.visible=k.boostT>0;if(k.flame.visible)k.flame.scale.setScalar(rand(.8,1.2)*(k.boostPow>.9?1:.7));
+    k.flame.visible=k.boostT>0||k.instT>0;if(k.flame.visible)k.flame.scale.setScalar(rand(.8,1.2)*(k.boostT>0?1.05:.6));
     k.smokeT-=dt;if(k.drift&&k.smokeT<=0&&k.speed>10){k.smokeT=.045;const bx=-Math.sin(k.h)*1.1,bz=-Math.cos(k.h)*1.1,rx=Math.cos(k.h),rz=-Math.sin(k.h);smoke(k.pos.x+bx+rx,k.pos.z+bz+rz,k.gauge>.85?0x9fe6ff:0xf0f0f0,.7);smoke(k.pos.x+bx-rx,k.pos.z+bz-rz,k.gauge>.85?0x9fe6ff:0xf0f0f0,.7)}
   }
   collide();updSmoke(dt);TOWN.update(dt,camera);
   const pk=K[0];updCam(pk,dt);
-  $('lines').classList.toggle('on',pk.boostT>0||pk.speed>58);
+  $('lines').classList.toggle('on',pk.boostT>0||pk.instT>0||pk.speed>56);
   engineSet(pk.speed,pk.drift,true);
   if(R.state!=='menu')updHUD(dt);
   if(R.state==='after'){R.afterT-=dt;if(R.afterT<=0||K.every(k=>k.finished))showResult()}
