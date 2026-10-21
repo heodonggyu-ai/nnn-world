@@ -64,18 +64,30 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 .join .btn{flex:none}
 .sec{font-family:var(--f-display);font-size:22px;margin:26px 4px 12px;display:flex;align-items:center;gap:8px}
 .sec span{font-size:14px;color:var(--mute)}
-.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:16px}
-.game{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;overflow:hidden;box-shadow:0 5px 0 rgba(36,54,59,.28);display:flex;flex-direction:column}
-.cover{aspect-ratio:16/10;position:relative;overflow:hidden;border-bottom:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.chips{display:flex;gap:6px;overflow-x:auto;margin:0 -4px 12px;padding:2px 4px 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;height:38px;padding:0 13px;border-radius:999px;border:2.5px solid var(--ink);background:#fff;font-family:var(--f-display);font-size:15px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.chips button.on{background:var(--ink);color:#fff}
+/* 게임이 많아져서 작은 타일로: 폰 2칸, 넓은 화면 3~4칸. 타일 전체를 누르면 바로 시작 */
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.game{position:relative;background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;box-shadow:0 4px 0 rgba(36,54,59,.28);display:flex;flex-direction:column;text-decoration:none;color:var(--ink);transition:transform .08s,box-shadow .08s}
+.game:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(36,54,59,.28)}
+.game.feat{grid-column:1/-1;flex-direction:row}
+.game.feat .cover{width:46%;flex:none;aspect-ratio:auto;border-bottom:0;border-right:2.5px solid var(--ink)}
+.game.feat .body p{-webkit-line-clamp:3}
+.cover{aspect-ratio:4/3;position:relative;overflow:hidden;border-bottom:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.newb{position:absolute;top:7px;right:7px;background:#E2557A;color:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 7px;font-family:var(--f-display);font-size:11.5px}
+.play{align-self:flex-start;margin-top:2px;background:var(--berry);color:#fff;border-radius:999px;padding:3px 11px 2px;font-family:var(--f-display);font-size:14px}
 .cover img{width:100%;height:100%;object-fit:cover}
-.cover .art{font-family:var(--f-display);color:#fff;font-size:40px;text-align:center;line-height:1.05;text-shadow:0 3px 0 rgba(0,0,0,.25);padding:0 16px}
-.cover .badge{position:absolute;top:10px;left:10px;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:4px 10px;font-family:var(--f-display);font-size:13px;color:var(--ink)}
-.game .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
-.game h3{font-size:24px}
-.game p{margin:0;font-size:15px;line-height:1.5;color:var(--mute);flex:1}
-.game p.gnote{flex:none;font-size:13px;color:var(--leaf-deep);background:#F1FAF3;border-radius:12px;padding:8px 10px}
-.tags{display:flex;gap:6px;flex-wrap:wrap}
-.tags i{font-style:normal;font-size:12px;background:#EAF6FB;border-radius:999px;padding:3px 9px;color:var(--ink)}
+.cover .art{font-family:var(--f-display);color:#fff;font-size:26px;text-align:center;line-height:1.05;text-shadow:0 3px 0 rgba(0,0,0,.25);padding:0 16px}
+.cover .badge{position:absolute;top:7px;left:7px;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:1px 8px;font-family:var(--f-display);font-size:11.5px;color:var(--ink)}
+.game .body{padding:9px 10px 10px;display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.game h3{font-size:17px;line-height:1.2}
+.game p{margin:0;font-size:12.5px;line-height:1.4;color:var(--mute);flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.game p.gnote{flex:none;font-size:12px;color:var(--leaf-deep);background:#F1FAF3;border-radius:10px;padding:6px 8px;-webkit-line-clamp:3}
+.tags{display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden}
+.tags i{font-style:normal;font-size:11px;background:#EAF6FB;border-radius:999px;padding:2px 7px;color:var(--ink);white-space:nowrap}
+@media (min-width:640px){.game h3{font-size:19px}.game p{font-size:13.5px}}
 .combo{background:repeating-linear-gradient(-45deg,#E2504A 0 22px,#D2433E 22px 44px)}
 .crash{background:repeating-linear-gradient(90deg,#4F7FC1 0 26px,#456FAD 26px 52px)}
 .bomb{background:radial-gradient(circle at 50% 50%,#FF9A52 0 30%,#FF7A2F 31% 60%,#E8453C 61%)}
@@ -131,6 +143,7 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
     <div class="hi"><p class="sub">반가워요</p><h2 id="hiName">친구</h2></div>
     <div class="msg" id="msg2" role="status"></div>
     <div class="sec">게임 고르기 <span id="gameCount"></span></div>
+    <div class="chips" id="chips"></div>
     <div class="games" id="games"></div>
     <footer>NNN 월드 · 아빠가 만든 게임들이 모이는 곳<br>게임은 계속 늘어나요</footer>
   </section>
@@ -144,16 +157,16 @@ footer{margin-top:28px;font-size:13px;color:var(--mute);text-align:center;line-h
 <script>
 const $=s=>document.querySelector(s);
 const GAMES=[
-  {id:'forest',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 탕정역부터 한들물빛도시, 설화·연화, 세교까지 실제 지도처럼 넓은 동네를 돌고, 학교와 집, 엔엔엔복싱에도 들어가요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','학교 탐험','엄마 미션','핼러윈 이벤트'],note:'캐릭터 꾸미기 상점과 친구 초대코드는 밍뉴의숲 안에 있어요. 위쪽 노란 동전을 누르면 상점, 아래 <b>친구</b> 버튼을 누르면 초대코드!'},
-  {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',img:'shared/img/combo-cover.jpg',art:'NNN<br>콤보 러시',cls:'combo',tags:['복싱','랭킹']},
-  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',img:'shared/img/crash-cover.jpg',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']},
-  {id:'bomb',name:'폭탄 돌리기',desc:'폰 하나를 옆사람에게 넘기며 해요. 폭탄을 받으면 암산 문제를 맞히고 빨리 넘기기! 터질 때 들고 있으면 탈락.',href:'bomb/',img:'shared/img/bomb-cover.jpg',art:'💣<br>폭탄 돌리기',cls:'bomb',tags:['여럿이 한 폰','암산','파티']},
-  {id:'dice',name:'욕심 주사위',desc:'한 번 더 굴릴까, 멈출까? 숫자가 쌓이지만 1이 나오면 꽝! 폰을 돌려가며 하고, 혼자면 관장봇이랑 대결해요.',href:'dice/',img:'shared/img/dice-cover.jpg',art:'🎲<br>욕심 주사위',cls:'dice',tags:['주사위','눈치싸움','혼자도 OK']},
-  {id:'bori',name:'보리보리쌀',desc:'폰이 술래 손! 쌀그릇에 손가락을 올리고 "쌀!"에만 쏙 빼요. 가짜 말에 속지 마세요.',href:'bori/',img:'shared/img/bori-cover.jpg',art:'🌾<br>보리보리쌀',cls:'bori',tags:['반응속도','여럿이 한 폰','전래놀이']},
-  {id:'fps',name:'NNN 아레나',desc:'한들물빛공원에서 붙는 팀 대결 FPS! 돌격소총·샷건·저격총에 권총·복싱 글러브·수류탄까지. 슬라이딩으로 피하고 5라운드 먼저 이기면 우승.',href:'fps/',img:'shared/img/fps-cover.jpg',tags:['FPS','1대1·2대2','3D']},
-  {id:'kart',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로 3바퀴 스피드전! 드리프트로 게이지를 채워 부스터를 모으고, 순간부스터로 역전해요.',href:'kart/',img:'shared/img/kart-cover.jpg',tags:['레이싱','드리프트','3D']},
-  {id:'quiz',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성·속담·나라와 수도! 혼자 도전하거나, TV에 띄우고 팀끼리 대결해요.',href:'quiz/',img:'shared/img/quiz-cover.jpg',tags:['퀴즈','넌센스','다 같이']},
-  {id:'english',name:'NNN 잉글리시',desc:'10단원 영어 여행! 단어·표현·문법을 레슨으로 익히고, 듣고 따라 말하며 공부해요.',href:'english/',img:'shared/img/english-cover.jpg',tags:['영어','듣기·말하기','매일 학습']}
+  {id:'forest',grp:'online',name:'밍뉴의숲',desc:'한들물빛도시에 숨은 동물 친구들을 찾아 데려와 키워요. 탕정역부터 한들물빛도시, 설화·연화, 세교까지 실제 지도처럼 넓은 동네를 돌고, 학교와 집, 엔엔엔복싱에도 들어가요.',href:'forest/',img:'shared/img/forest-cover.jpg',tags:['친구와 같이','동물 키우기','학교 탐험','엄마 미션','핼러윈 이벤트'],note:'캐릭터 꾸미기 상점과 친구 초대코드는 밍뉴의숲 안에 있어요. 위쪽 노란 동전을 누르면 상점, 아래 <b>친구</b> 버튼을 누르면 초대코드!'},
+  {id:'combo',grp:'action',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',img:'shared/img/combo-cover.jpg',art:'NNN<br>콤보 러시',cls:'combo',tags:['복싱','랭킹']},
+  {id:'crash',grp:'action',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:'crash/',img:'shared/img/crash-cover.jpg',art:'꽝!<br>크래시 드라이브',cls:'crash',tags:['자동차','3D','미션']},
+  {id:'bomb',grp:'party',name:'폭탄 돌리기',desc:'폰 하나를 옆사람에게 넘기며 해요. 폭탄을 받으면 암산 문제를 맞히고 빨리 넘기기! 터질 때 들고 있으면 탈락.',href:'bomb/',img:'shared/img/bomb-cover.jpg',art:'💣<br>폭탄 돌리기',cls:'bomb',tags:['여럿이 한 폰','암산','파티']},
+  {id:'dice',grp:'party',name:'욕심 주사위',desc:'한 번 더 굴릴까, 멈출까? 숫자가 쌓이지만 1이 나오면 꽝! 폰을 돌려가며 하고, 혼자면 관장봇이랑 대결해요.',href:'dice/',img:'shared/img/dice-cover.jpg',art:'🎲<br>욕심 주사위',cls:'dice',tags:['주사위','눈치싸움','혼자도 OK']},
+  {id:'bori',grp:'party',name:'보리보리쌀',desc:'폰이 술래 손! 쌀그릇에 손가락을 올리고 "쌀!"에만 쏙 빼요. 가짜 말에 속지 마세요.',href:'bori/',img:'shared/img/bori-cover.jpg',art:'🌾<br>보리보리쌀',cls:'bori',tags:['반응속도','여럿이 한 폰','전래놀이']},
+  {id:'fps',isNew:1,grp:'action online',name:'NNN 아레나',desc:'한들물빛공원에서 붙는 팀 대결 FPS! 돌격소총·샷건·저격총에 권총·복싱 글러브·수류탄까지. 슬라이딩으로 피하고 5라운드 먼저 이기면 우승.',href:'fps/',img:'shared/img/fps-cover.jpg',tags:['FPS','1대1·2대2','3D']},
+  {id:'kart',isNew:1,grp:'action',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로 3바퀴 스피드전! 드리프트로 게이지를 채워 부스터를 모으고, 순간부스터로 역전해요.',href:'kart/',img:'shared/img/kart-cover.jpg',tags:['레이싱','드리프트','3D']},
+  {id:'quiz',isNew:1,grp:'party study',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성·속담·나라와 수도! 혼자 도전하거나, TV에 띄우고 팀끼리 대결해요.',href:'quiz/',img:'shared/img/quiz-cover.jpg',tags:['퀴즈','넌센스','다 같이']},
+  {id:'english',isNew:1,grp:'study',name:'NNN 잉글리시',desc:'10단원 영어 여행! 단어·표현·문법을 레슨으로 익히고, 듣고 따라 말하며 공부해요.',href:'english/',img:'shared/img/english-cover.jpg',tags:['영어','듣기·말하기','매일 학습']}
 ];
 let mode='new',ME=null,AV=null,TRY=null,TAB='base',SEL=null;
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
@@ -163,13 +176,18 @@ $('#form').onsubmit=async e=>{e.preventDefault();const nick=$('#nick').value.tri
   try{const s=mode==='new'?await World.signup(nick,pin):await World.login(nick,pin);$('#msg').textContent='';showHome(s);toast(mode==='new'?`${s.nick}, NNN 월드에 온 걸 환영해요!`:`${s.nick}, 다시 왔구나!`)}
   catch(err){$('#msg').textContent=(err&&err.msg)||'잠시 후 다시 해 주세요.'}
   finally{$('#go').disabled=false}};
+const GRPS=[['all','전체'],['action','🏎️ 3D·액션'],['party','🎉 여럿이 한 폰'],['study','📚 공부·퀴즈'],['online','👥 친구랑 온라인']];
+let GRP=(()=>{try{return localStorage.getItem('nnnw_grp')||'all'}catch(e){return 'all'}})();
 function renderGames(){
   $('#gameCount').textContent=`${GAMES.filter(g=>!g.soon).length}개`;
-  $('#games').innerHTML=GAMES.map(g=>`<article class="game${g.soon?' soon':''}">
-    <div class="cover ${g.cls||''}">${g.img?`<img src="${g.img}" alt="${g.name} 게임 화면">`:`<div class="art">${g.art}</div>`}${g.soon?'<span class="badge">곧 들어와요</span>':g.id==='forest'?'<span class="badge">친구와 같이</span>':''}</div>
-    <div class="body"><h3>${g.name}</h3><p>${g.desc}</p>${g.note?`<p class="gnote">${g.note}</p>`:''}<div class="tags">${g.tags.map(t=>`<i>${t}</i>`).join('')}</div>
-    ${g.soon?'<button class="btn soft" disabled>준비 중</button>':`<a class="btn" href="${g.href}">플레이</a>`}</div></article>`).join('');
+  $('#chips').innerHTML=GRPS.map(([k,n])=>`<button data-g="${k}" class="${k===GRP?'on':''}">${n}</button>`).join('');
+  const list=GAMES.filter(g=>GRP==='all'||(g.grp||'').split(' ').includes(GRP));
+  $('#games').innerHTML=list.map(g=>{const feat=g.id==='forest'&&GRP==='all';const tag=g.soon?'div':'a';
+    return `<${tag} class="game${g.soon?' soon':''}${feat?' feat':''}"${g.soon?'':` href="${g.href}"`}>
+    <div class="cover ${g.cls||''}">${g.img?`<img src="${g.img}" alt="${g.name} 게임 화면" loading="lazy">`:`<div class="art">${g.art}</div>`}${g.soon?'<span class="badge">곧 들어와요</span>':g.id==='forest'?'<span class="badge">친구와 같이</span>':''}${g.isNew?'<span class="newb">NEW</span>':''}</div>
+    <div class="body"><h3>${g.name}</h3><p>${g.desc}</p>${feat&&g.note?`<p class="gnote">${g.note}</p>`:''}<div class="tags">${g.tags.slice(0,2).map(t=>`<i>${t}</i>`).join('')}</div>${g.soon?'':'<span class="play">▶ 플레이</span>'}</div></${tag}>`}).join('');
 }
+document.addEventListener('click',e=>{const b=e.target.closest('#chips [data-g]');if(!b)return;GRP=b.dataset.g;try{localStorage.setItem('nnnw_grp',GRP)}catch(_){}renderGames()});
 const IS_ADMIN=()=>{const s=World.session();return s&&s.key===World.ADMIN_KEY};
 const clone=o=>JSON.parse(JSON.stringify(o||{}));
 function fixAv(av){av=Object.assign({base:'cat',fur:'cream',pat:'none',eye:'black',acc:{}},clone(av));av.acc=av.acc||{};if(IS_ADMIN())av.base='mingnyu';else if(av.base==='mingnyu')av.base='cat';return av}
