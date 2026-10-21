@@ -130,6 +130,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .ndot{position:relative}.ndot::after{content:'NEW';position:absolute;top:-8px;right:-6px;background:var(--red);color:#fff;font:700 9.5px/1 system-ui;padding:3px 5px;border-radius:8px;letter-spacing:.03em;z-index:3;pointer-events:none}
 .tabtip{display:flex;gap:10px;align-items:flex-start;background:#FFF7DD;border:2px solid #F0C64A;border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:13.5px;line-height:1.45}.tabtip b{display:block;font-size:14.5px}.tabtip button{margin-left:auto;border:0;background:none;font-size:18px;line-height:1;padding:2px 4px;color:#7a6420}
 
+.imp-pill{display:inline-block;font-size:11px;border-radius:8px;padding:2px 6px;background:#E3ECFA;color:#2E5AAC;margin-left:4px;white-space:nowrap}.imp-pill.create{background:#E6F4EC;color:#1E6B45}.imp-pill.fail{background:#FDE2E3;color:#8A1F24}
 .memc{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .memc.soon{border-color:var(--gold)}.memc.expired{border-color:var(--red)}.memc.none{border-style:dashed;border-color:var(--line)}
 .mtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -1155,7 +1156,7 @@ async function fbInit(){
     fuid=u.uid;fdb=firebase.database();return true}catch(e){console.warn(e);FB_ERR=(e&&(e.code||e.message))||'unknown';return false}}
 const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
-const PRIV=['legacy','lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
+const PRIV=['impBatch','impAct','importedAt','legacy','lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
 function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(m.mem){if(!Array.isArray(m.mem.days))m.mem.days=m.mem.days?Object.values(m.mem.days):[];if(m.mem.holds&&!Array.isArray(m.mem.holds))m.mem.holds=Object.values(m.mem.holds)}if(m.memHist&&!Array.isArray(m.memHist))m.memHist=Object.values(m.memHist);if(m.unpaid&&!Array.isArray(m.unpaid))m.unpaid=Object.values(m.unpaid);if(m.sentLog&&!Array.isArray(m.sentLog))m.sentLog=Object.values(m.sentLog);if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=m.attend||[];m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
 const isLocal=id=>!FB_ON()||id==='0000';
@@ -2760,14 +2761,38 @@ function impBuild(rows,hi,map,opt,all){const T=TODAY();const by={};const byName=
     out.push({key,recs,last,m,act})}
   return{list:out.sort((a,b)=>a.last.name.localeCompare(b.last.name,'ko')),bad}}
 const IMP_ACT={update:['기존 회원에 넣기','#1E6B45'],create:['새 회원 만들기','#2E5AAC'],'skip-same':['건너뜀 · 이미 같거나 더 긴 기간','#888'],'skip-exp':['건너뜀 · 이미 끝난 회원','#888'],'skip-nomem':['건너뜀 · 앱에 없는 회원','#888'],'skip-nophone':['건너뜀 · 연락처 없음','#B07A08']};
+
+
+async function impUndo(batch){const snap=await hget('backups/import-'+batch);if(!snap||snap.kind!=='import'){toast('이 가져오기의 되돌리기 정보를 찾지 못했어요. 백업·복구에서 \'가져오기 직전 보관본\'으로 복구할 수 있어요',5000);return false}
+  if(snap.undone){toast('이미 되돌린 가져오기예요');return false}
+  let nd=0,nr=0,np=0;
+  for(const id of (snap.created||[])){try{if(FB_ON()){await gref('members/'+id).set(null);await gref('private/'+id).set(null);try{await gref('mpin/'+id).set(null)}catch(e){}try{await gref('roster/'+id).set(null)}catch(e){}}else{delete local.members[id];persist()}await hset('memos/'+id,null);nd++}catch(e){console.error(e)}}
+  for(const [id,pv] of Object.entries(snap.prev||{})){try{if(FB_ON()){if(pv.pub)await gref('members/'+id).set(clean(pv.pub));await gref('private/'+id).set(pv.prv?clean(pv.prv):null)}else{local.members[id]=joinM(pv.pub,pv.prv);persist()}
+      const mm=await hget('memos/'+id);if(mm)for(const [k,v] of Object.entries(mm)){if(v&&String(v.text||'').startsWith('[가져옴]'))await hset(`memos/${id}/${k}`,null)}nr++}catch(e){console.error(e)}}
+  for(const pid of (snap.pays||[])){try{if(FB_ON())await gref('pays/'+pid).set(null);else{delete local.pays[pid];persist()}np++}catch(e){}}
+  snap.undone=new Date().toISOString();await hset('backups/import-'+batch,snap);
+  toast(`되돌렸어요 · 새로 만든 회원 ${nd}명 삭제 · 기존 회원 ${nr}명 원래대로 · 결제 기록 ${np}건 삭제`,5500);return true}
+function impUndoAsk(batch,n,after){sheet(`<h2>이 가져오기 되돌리기</h2><p style="margin:0">가져오기로 <b>새로 만든 회원은 지우고</b>, 기존 회원의 등록 기간은 <b>가져오기 전으로</b> 돌리고, 같이 들어간 <b>결제 기록도 지워요</b>.</p><p class="small" style="margin:0">가져온 뒤에 그 회원에게 생긴 출석·결제도 함께 사라질 수 있어요. 가져오기 직전 전체 백업은 따로 남아 있어요.</p>
+  <div class="field"><label for="iuOk">확인을 위해 <b>되돌리기</b>라고 적어 주세요</label><input id="iuOk" placeholder="되돌리기"></div><button class="btn red" id="iuGo">되돌리기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+  el.querySelector('#iuGo').onclick=async()=>{if(el.querySelector('#iuOk').value.trim()!=='되돌리기'){toast("'되돌리기'라고 적어 주세요");return}const b=el.querySelector('#iuGo');b.disabled=true;b.textContent='되돌리는 중…';await impUndo(batch);close();admFilter='all';try{renderAdmRows();renderADash();renderBackups()}catch(e){}after&&after()}})}
+function impResult(res,o){const ok=res.filter(r=>r.act!=='fail');
+  sheet(`<h2>가져오기 완료</h2><div class="memsum"><b>${ok.length}명 가져왔어요</b><div class="small">기존 회원에 넣음 ${ok.filter(r=>r.act==='update').length} · 새로 만듦 ${o.made} · 결제 기록 ${o.pays}건${o.fail?` · <b style="color:var(--red)">실패 ${o.fail}명</b>`:''}</div></div>
+    <div style="max-height:52vh;overflow:auto">${res.map(r=>`<div class="hrrow"><div class="grow" style="min-width:0"><b>${esc(r.name)}</b> <span class="small num">${esc(r.id||'')}</span><div class="small num">${r.mem?esc(r.mem.item||'')+(r.mem.end?' · ~'+md(r.mem.end):''):''}</div></div><span class="imp-pill ${r.act}">${r.act==='create'?'새로 만듦':r.act==='update'?'기간 넣음':'실패'}</span>${r.id?`<button class="btn sm ghost" data-rd="${esc(r.id)}">상세</button>`:''}</div>`).join('')}</div>
+    <p class="small" style="margin:0">회원 탭 목록도 지금 <b>방금 가져온 회원</b>만 보이게 걸러 뒀어요. '전체'를 누르면 다시 다 보여요.</p>
+    <button class="btn red" data-close>확인</button><button class="btn ghost" id="irUndo">잘못 들어갔어요 · 이번 가져오기 되돌리기</button>`,(el,close)=>{el.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{close();admDetail(b.dataset.rd)});el.querySelector('#irUndo').onclick=()=>{close();impUndoAsk(o.batch,ok.length)}})}
+const impB=m=>m.impBatch||(m.mem&&m.mem.imported?'0'+(m.mem.setAt||''):'');const impA=m=>m.impAct||(m.importedAt?'create':'update');const impAt=m=>m.importedAt||(m.mem&&m.mem.imported&&m.mem.setAt)||'';
+function impBatches(all){const g={};all.forEach(m=>{const k=impB(m);if(!k)return;const b=g[k]=g[k]||{id:k,at:impAt(m),n:0,c:0,t:k[0]==='0'?(m.mem.setAt||''):''};b.n++;if(impA(m)==='create')b.c++});return Object.values(g).sort((a,b)=>(b.at+b.id).localeCompare(a.at+a.id))}
 function openImport(){let rows=null,hi=0,map={},data=null;const opt={create:true,expired:false,overwrite:false,pays:true};
   sheet(`<h2>다른 프로그램에서 가져오기</h2>
     <p class="small" style="margin:0">원알엠 같은 회원관리 프로그램의 <b>회원 목록</b>을 엑셀로 내려받아 올리거나, 목록 화면을 드래그해서 <b>복사 → 아래 칸에 붙여넣기</b> 하세요. 연락처로 앱 회원과 자동으로 짝지어 등록 기간·결제 정보를 넣어요.</p>
     <div class="row" style="gap:8px"><label class="btn ghost sm grow" style="text-align:center" for="impFile">엑셀·CSV 파일 고르기</label><input id="impFile" type="file" accept=".xlsx,.xls,.csv,.txt" hidden></div>
     <textarea id="impPaste" rows="4" style="min-height:96px;width:100%;box-sizing:border-box" placeholder="여기에 붙여넣기 (표를 복사해서 길게 눌러 붙여넣기)"></textarea>
-    <div id="impMap"></div><div id="impPrev"></div>
+    <div id="impHist"></div><div id="impMap"></div><div id="impPrev"></div>
     <button class="btn red" id="impGo" disabled>가져오기</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     const $e=q=>el.querySelector(q);
+    Promise.all([DB.all(),hget('backups')]).then(([all,bks])=>{const B=impBatches(all.filter(m=>!m.demo));Object.entries(bks||{}).filter(([k,v])=>k.startsWith('import-')&&v&&!v.undone&&!B.some(b=>b.id===v.batch)).forEach(([k,v])=>B.push({id:v.batch,at:String(v.at).slice(0,10),n:Object.keys(v.prev||{}).length+(v.created||[]).length,c:(v.created||[]).length}));if(!B.length)return;const canU=id=>{const v=(bks||{})['import-'+id];return v&&!v.undone};$e('#impHist').innerHTML=`<div class="memsum" style="display:flex;flex-direction:column;gap:4px"><b>지난 가져오기</b>${B.slice(0,5).map(b=>`<div class="row" style="align-items:center;gap:8px"><span class="grow small num">${esc(b.at?md(b.at):'')} · ${b.n}명${b.c?` (새로 만듦 ${b.c})`:''}</span><button class="btn sm ghost" data-ib="${b.id}">회원 보기</button>${canU(b.id)?`<button class="btn sm ghost" style="color:var(--red)" data-iu="${b.id}">되돌리기</button>`:''}</div>`).join('')}</div>`;
+      el.querySelectorAll('[data-iu]').forEach(x=>x.onclick=()=>{close();impUndoAsk(x.dataset.iu)});
+      el.querySelectorAll('[data-ib]').forEach(x=>x.onclick=()=>{close();admFilter='imp:'+x.dataset.ib;setATab('mem');renderAdmRows()})});
     const setRows=r=>{rows=r.filter(x=>x.some(c=>String(c||'').trim()));if(!rows.length){toast('읽을 내용이 없어요');return}hi=impHeader(rows);map=impGuess(rows[hi]);drawMap();preview()};
     $e('#impFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{if(/\.(xlsx|xls)$/i.test(f.name)){const X=await loadXLSX();const wb=X.read(await f.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];setRows(X.utils.sheet_to_json(ws,{header:1,raw:true,defval:''}))}else setRows(impRows(await f.text()))}catch(err){toast(String(err.message||err),4000)}};
     $e('#impPaste').oninput=()=>{const t=$e('#impPaste').value;if(t.trim().split('\n').length>=2)setRows(impRows(t))};
@@ -2776,31 +2801,44 @@ function openImport(){let rows=null,hi=0,map={},data=null;const opt={create:true
         <label class="check" style="margin:0"><input type="checkbox" data-o="create" ${opt.create?'checked':''}><span>앱에 아직 없는 회원은 새로 만들기 <span class="small">(회원번호 자동, 비밀번호=휴대폰 뒤 4자리)</span></span></label>
         <label class="check" style="margin:0"><input type="checkbox" data-o="pays" ${opt.pays?'checked':''}><span>결제 금액·결제일이 있으면 매출 기록에도 넣기</span></label>
         <label class="check" style="margin:0"><input type="checkbox" data-o="expired" ${opt.expired?'checked':''}><span>이미 기간이 끝난 회원도 가져오기</span></label>
-        <label class="check" style="margin:0"><input type="checkbox" data-o="overwrite" ${opt.overwrite?'checked':''}><span>앱에 이미 같거나 더 긴 기간이 있어도 덮어쓰기</span></label></div>`;
+        <label class="check" style="margin:0"><input type="checkbox" data-o="overwrite" ${opt.overwrite?'checked':''}><span>앱에 이미 같거나 더 긴 기간이 있어도 덮어쓰기</span></label>
+        <div class="small" style="color:#1E6B45">🛡 가져오기 직전에 전체 데이터를 서버에 자동 백업해요. 잘못 들어가면 '지난 가져오기 → 되돌리기'로 이번 가져오기만 취소할 수 있어요.</div>
+        <label class="check" style="margin:0"><input type="checkbox" id="impDl"><span>백업 파일도 이 기기에 받아 두기</span></label></div>`;
       el.querySelectorAll('[data-mk]').forEach(s=>{s.value=map[s.dataset.mk]!=null?String(map[s.dataset.mk]):'';s.onchange=()=>{if(s.value==='')delete map[s.dataset.mk];else map[s.dataset.mk]=+s.value;preview()}});
       el.querySelectorAll('[data-o]').forEach(c=>c.onchange=()=>{opt[c.dataset.o]=c.checked;preview()})}
     async function preview(){const all=(await DB.all()).filter(m=>!m.demo);data=impBuild(rows,hi,map,opt,all);const L=data.list;const n=k=>L.filter(x=>x.act===k).length;const go=n('update')+n('create');
       $e('#impPrev').innerHTML=`<div class="memsum"><b>${L.length}명 읽음</b><div class="small">기존 회원에 넣기 <b>${n('update')}</b> · 새로 만들기 <b>${n('create')}</b> · 건너뜀 <b>${L.length-go}</b>${data.bad.length?` · 읽지 못한 줄 ${data.bad.length}`:''}</div></div>
-        <div style="max-height:46vh;overflow:auto;display:flex;flex-direction:column">${L.map(x=>{const a=IMP_ACT[x.act];const r=x.last;return `<div class="hrrow" style="align-items:flex-start"><div class="grow" style="min-width:0"><b>${esc(r.name)}</b> <span class="small num">${r.ph?esc(normPhone(r.ph)):'번호 없음'}${x.m?' → '+esc(x.m.id):''}</span><div class="small num">${esc(r.item||'')}${r.start||r.end?' · '+(r.start?md(r.start):'?')+' ~ '+(r.end?md(r.end):'?'):''}${r.amount?' · '+r.amount.toLocaleString()+'원':''}${x.recs.length>1?` · 기록 ${x.recs.length}건`:''}</div></div><span class="small" style="color:${a[1]};white-space:nowrap">${a[0]}</span></div>`}).join('')}
+        <div style="max-height:52vh;overflow:auto;display:flex;flex-direction:column">${L.map(x=>{const a=IMP_ACT[x.act];const r=x.last;const go=x.act==='update'||x.act==='create';const cm=x.m&&x.m.mem;
+          const per=m=>m?`${esc(m.item||planLabel(m)||'')}${m.start||m.end?' '+(m.start?md(m.start):'?')+'~'+(m.end?md(m.end):'?'):''}`:'없음';
+          const pays=opt.pays?x.recs.filter(q=>q.amount):[];
+          return `<div style="padding:8px 0;border-bottom:1px solid var(--mat);${go?'':'opacity:.6'}"><div class="row" style="align-items:center;gap:6px"><b class="grow" style="min-width:0">${esc(r.name)} <span class="small num">${r.ph?esc(normPhone(r.ph)):'번호 없음'}</span></b><span class="small" style="color:${a[1]};white-space:nowrap;font-weight:700">${a[0]}</span></div>
+            ${go?`<div class="small num" style="line-height:1.55">${x.act==='update'?`앱 회원 <b>${esc(x.m.id)}</b> · 지금 등록: ${per(cm)}<br>→ <b>바뀜: ${per({item:r.item,start:r.start,end:r.end})}</b>`:`<b>새 회원번호</b> 자동 · 비밀번호 ${esc(r.ph.slice(-4))}<br>→ <b>등록: ${per({item:r.item,start:r.start,end:r.end})}</b>`}${x.recs.length>1?`<br>이전 기간 ${x.recs.length-1}건 → 등록 이력`:''}${pays.length?`<br>+ 결제 기록 ${pays.length}건: ${pays.map(q=>`${q.amount.toLocaleString()}원 ${esc(payName(q.method)||'')} ${q.paid?md(q.paid):''}`).join(', ')}`:''}${r.memo?`<br>+ 메모: ${esc(r.memo.slice(0,40))}`:''}</div>`:`<div class="small num">${esc(r.item||'')} ${r.end?'~'+md(r.end):''}</div>`}</div>`}).join('')}
         ${data.bad.slice(0,5).map(b=>`<div class="small" style="color:#B07A08">${b.row}번째 줄 ${esc(b.name)}: ${b.why}</div>`).join('')}</div>`;
       $e('#impGo').disabled=!go;$e('#impGo').textContent=go?`${go}명 가져오기`:'가져올 회원이 없어요'}
     $e('#impGo').onclick=async()=>{const b=$e('#impGo');if(!data)return;const todo=data.list.filter(x=>x.act==='update'||x.act==='create');if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=`정말 ${todo.length}명을 가져올까요? 한 번 더 눌러 주세요`;return}
-      b.disabled=true;let done=0,made=0,pays=0,fail=0;
+      b.disabled=true;let done=0,made=0,pays=0,fail=0;const batch=Date.now().toString(36);const res=[];
+      b.textContent='가져오기 전 전체 백업 중…';
+      try{const pre=await bkCollect(false);if(!(await hset('backups/before-import-'+batch,pre)))throw new Error('backup')}catch(e){toast('백업을 만들지 못해서 가져오기를 멈췄어요. 인터넷·보안 규칙을 확인해 주세요',5000);b.disabled=false;b.dataset.sure='';b.textContent='다시 시도';return}
+      if($e('#impDl')&&$e('#impDl').checked){try{const f=await bkCollect(false);download(`NNN_WORLD_가져오기전_백업_${TODAY().replace(/-/g,'')}.json`,JSON.stringify(f),'application/json')}catch(e){}}
+      const snap={kind:'import',at:new Date().toISOString(),batch,prev:{},created:[],pays:[],names:{}};
+      for(const x of todo)if(x.act==='update'&&x.m){const cur=await DB.get(x.m.id)||x.m;const sp=splitM(cur);snap.prev[cur.id]={pub:sp.pub,prv:sp.prv}}
+      await hset('backups/import-'+batch,snap);
       let ex={};if(opt.pays){try{(await DB.pays()).forEach(p=>{if(p&&p.impKey)ex[p.impKey]=1})}catch(e){}}
       for(const x of todo){try{let m=x.m;
           if(x.act==='create'){const id=await DB.newId();const r0=x.last;m=blankMember({name:r0.name,phone:normPhone(r0.ph),birth:r0.birth,gender:r0.gender,char:'boxer'},id);m.approvedAt=TODAY();m.joined=TODAY();m.legacy=true;m.importedAt=TODAY();
-            if(FB_ON()){try{await gref('mpin/'+id).set(r0.ph.slice(-4))}catch(e){}try{await gref('roster/'+id).set({name:r0.name})}catch(e){}}made++}
+            if(FB_ON()){try{await gref('mpin/'+id).set(r0.ph.slice(-4))}catch(e){}try{await gref('roster/'+id).set({name:r0.name})}catch(e){}}made++;snap.created.push(id);snap.names[id]=r0.name}
           else m=await DB.get(m.id)||m;
           const toMem=r=>{const p=parsePlan(r.item);const mo=p.months||(r.start&&r.end?Math.max(1,Math.round(dDiff(r.end,r.start)/30)):0);return clean({item:r.item||planLabel({months:mo}),months:mo,start:r.start||'',end:r.end||'',weekly:p.weekly||0,days:[],pt:p.pt?{total:p.pt,left:r.ptLeft!=null?Math.min(r.ptLeft,p.pt):p.pt}:null,paidAt:r.paid||'',setAt:TODAY(),imported:true})};
           const last=x.last;const hist=(m.memHist||[]).slice(-9);if(m.mem&&(m.mem.end||m.mem.pt))hist.push(m.mem);
           x.recs.slice(0,-1).forEach(r=>{if(r.end&&!hist.some(h=>h.end===r.end))hist.push(toMem(r))});
-          m.mem=toMem(last);m.memHist=hist.slice(-10);if(m.legacy==null)m.legacy=true;
+          m.mem=toMem(last);m.memHist=hist.slice(-10);if(m.legacy==null)m.legacy=true;m.impBatch=batch;m.impAct=x.act;m.importedAt=TODAY();
           if(x.act==='create'){await DB.save(m)}await DB.savePriv(m);
           if(last.memo)try{await memoAdd(m.id,'[가져옴] '+last.memo,'mem')}catch(e){}
           if(opt.pays)for(const r of x.recs){if(!r.amount)continue;const ik=['imp',r.ph||r.name,r.paid||r.start,r.amount].join(':');if(ex[ik])continue;ex[ik]=1;
-            await DB.addPay(clean({id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),mid:m.id,name:m.name,item:r.item||planLabel(toMem(r)),amount:r.amount,method:r.method||'etc',status:'done',source:'import',impKey:ik,saleDate:r.paid||r.start||TODAY(),at:new Date().toISOString(),doneAt:new Date().toISOString(),months:toMem(r).months,weekly:toMem(r).weekly,pt:toMem(r).pt?toMem(r).pt.total:0,kind:'new'}));pays++}
-          done++;b.textContent=`가져오는 중… ${done}/${todo.length}`}catch(e){console.error(e);fail++}}
-      toast(`${done}명 가져왔어요 (새 회원 ${made}명 · 결제 기록 ${pays}건)${fail?` · 실패 ${fail}명`:''}`,5000);close();try{renderAdmRows();renderADash()}catch(e){}};
+            const pid='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);snap.pays.push(pid);await DB.addPay(clean({id:pid,mid:m.id,name:m.name,item:r.item||planLabel(toMem(r)),amount:r.amount,method:r.method||'etc',status:'done',source:'import',impKey:ik,saleDate:r.paid||r.start||TODAY(),at:new Date().toISOString(),doneAt:new Date().toISOString(),months:toMem(r).months,weekly:toMem(r).weekly,pt:toMem(r).pt?toMem(r).pt.total:0,kind:'new'}));pays++}
+          done++;res.push({id:m.id,name:m.name,act:x.act,mem:m.mem});b.textContent=`가져오는 중… ${done}/${todo.length}`}catch(e){console.error(e);fail++;res.push({name:x.last.name,act:'fail'})}}
+      snap.done=new Date().toISOString();await hset('backups/import-'+batch,snap);
+      close();admFilter='imp:'+batch;try{renderAdmRows();renderADash()}catch(e){}impResult(res,{made,pays,fail,batch})};
   })}
 $('#impBtn').onclick=openImport;
 
@@ -3292,13 +3330,14 @@ const bkCount=b=>({mem:Object.keys(b.members||{}).length,reg:Object.values(b.pri
 async function autoSnapshot(){if(!FB_ON()||!IS_ADMIN)return;const key=TODAY();
   try{const ex=(await gref('backups/'+key+'/at').get()).val();if(ex)return;const b=await bkCollect(false);if(!Object.keys(b.members).length)return;await gref('backups/'+key).set(clean(b));
     const ks=Object.keys((await gref('backups').get()).val()||{}).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();for(const k of ks.slice(0,Math.max(0,ks.length-BK_KEEP))){try{await gref('backups/'+k).set(null)}catch(e){}}
-    const br=Object.keys((await gref('backups').get()).val()||{}).filter(k=>k.startsWith('before-restore-')).sort();for(const k of br.slice(0,Math.max(0,br.length-5))){try{await gref('backups/'+k).set(null)}catch(e){}}}catch(e){}}
+    const br=Object.keys((await gref('backups').get()).val()||{}).filter(k=>k.startsWith('before-restore-')).sort();for(const k of br.slice(0,Math.max(0,br.length-5))){try{await gref('backups/'+k).set(null)}catch(e){}}
+    const bi=Object.keys((await gref('backups').get()).val()||{}).filter(k=>k.startsWith('before-import-')).sort();for(const k of bi.slice(0,Math.max(0,bi.length-5))){try{await gref('backups/'+k).set(null)}catch(e){}}}catch(e){}}
 async function renderBackups(){const box=$('#bkList');if(!box)return;let lf='';try{lf=localStorage.getItem('nnn_bkfile')||''}catch(e){}
   $('#bkLast').innerHTML=lf?`마지막 백업 파일: <b>${md(lf.slice(0,10))}</b> (${dDiff(TODAY(),lf.slice(0,10))}일 전)`:'<span style="color:var(--red)">아직 백업 파일을 받은 적이 없어요.</span>';
   if(!FB_ON()){box.innerHTML='<div class="small">서버에 연결되면 자동 백업 목록이 보여요.</div>';return}
   let o={};try{const ks=(await gref('backups').get()).val()||{};o=ks}catch(e){box.innerHTML='<div class="small" style="color:var(--red)">자동 백업을 읽지 못했어요. 보안 규칙을 최신으로 붙여 넣었는지 확인해 주세요.</div>';return}
-  const ks=Object.keys(o).sort().reverse();
-  box.innerHTML=ks.length?ks.slice(0,10).map(k=>{const c=bkCount(o[k]);return`<div class="payrow"><div class="grow"><b>${/^\d{4}/.test(k)?md(k)+' ('+DAYN[new Date(k+'T00:00:00').getDay()]+')':'복구 직전 보관본'}</b><div class="small num">${new Date(o[k].at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} · 회원 ${c.mem}명 · 등록 ${c.reg}건 · 결제 ${c.pay}건</div></div><button class="btn sm ghost" data-bkr="${esc(k)}">이날로 복구</button></div>`}).join('')+(ks.length>10?`<div class="small">그 이전 ${ks.length-10}개도 보관 중이에요.</div>`:''):'<div class="small">아직 자동 백업이 없어요. 오늘 안에 만들어져요.</div>';
+  Object.keys(o).forEach(k=>{if(k.startsWith('import-'))delete o[k]});const ks=Object.keys(o).sort().reverse();
+  box.innerHTML=ks.length?ks.slice(0,10).map(k=>{const c=bkCount(o[k]);return`<div class="payrow"><div class="grow"><b>${/^\d{4}/.test(k)?md(k)+' ('+DAYN[new Date(k+'T00:00:00').getDay()]+')':k.startsWith('before-import-')?'가져오기 직전 보관본':'복구 직전 보관본'}</b><div class="small num">${new Date(o[k].at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} · 회원 ${c.mem}명 · 등록 ${c.reg}건 · 결제 ${c.pay}건</div></div><button class="btn sm ghost" data-bkr="${esc(k)}">이날로 복구</button></div>`}).join('')+(ks.length>10?`<div class="small">그 이전 ${ks.length-10}개도 보관 중이에요.</div>`:''):'<div class="small">아직 자동 백업이 없어요. 오늘 안에 만들어져요.</div>';
   box.querySelectorAll('[data-bkr]').forEach(b=>b.onclick=()=>openRestore(o[b.dataset.bkr],b.dataset.bkr))}
 $('#bkDown').onclick=async()=>{const faces=$('#bkFaces').checked;toast('백업을 모으는 중…');const b=await bkCollect(faces);const c=bkCount(b);
   const n=new Date();download(`NNN_WORLD_백업_${TODAY().replace(/-/g,'')}_${pad2(n.getHours())}${pad2(n.getMinutes())}${faces?'_사진포함':''}.json`,JSON.stringify(b),'application/json');
@@ -3950,7 +3989,7 @@ async function renderAdmRows(){
     return false};
   renderAdmFilter(all);const list=all.filter(m=>admPass(m)&&srch(m));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${impB(m)?`<span class="imp-pill ${impA(m)}">${impA(m)==='create'?'가져옴·새로':'가져옴'} ${esc(impAt(m)?md(impAt(m)):'')}</span>`:''}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
   {const io=window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){io.unobserve(en.target);faceInto(en.target,en.target.dataset.mf)}}),{rootMargin:'200px'}):null;
     $$('#admRows [data-mf]').forEach(el=>{const m=list.find(x=>x.id===el.dataset.mf);if(!m||!m.hasFace)return;if(io)io.observe(el);else faceInto(el,el.dataset.mf)})}
   $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]')||e.target.closest('.mface img'))return;admDetail(r.dataset.d)});
@@ -5058,10 +5097,11 @@ function renderAdmFilter(all){
   pb.querySelectorAll('[data-pf]').forEach(el=>{const m=pl.find(x=>x.id===el.dataset.pf);if(m&&m.hasFace)faceInto(el,m.id)});
   pb.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>admDetail(b.dataset.pd));
   pb.querySelectorAll('[data-pa]').forEach(b=>b.onclick=async()=>{const m=pl.find(x=>x.id===b.dataset.pa);if(!m)return;b.disabled=true;b.textContent='승인 중';await approveMember(m)});
-  $('#admFilt').innerHTML=[['pending','승인 대기',pend],['all','전체',g.all],['valid','유효',valid],['soon','만료 임박',g.soon],['expired','만료',g.expired],['none','미등록',g.none]].map(([k,n,c])=>`<button class="chip ${admFilter===k?'on':''}" data-f="${k}">${n} ${c}</button>`).join('');
+  const IB=impBatches(all);const lastB=IB[0];const nImp=all.filter(m=>impB(m)).length;
+  $('#admFilt').innerHTML=[['pending','승인 대기',pend],['all','전체',g.all],['valid','유효',valid],['soon','만료 임박',g.soon],['expired','만료',g.expired],['none','미등록',g.none],...(nImp?[['imp','가져온 회원',nImp]]:[]),...(lastB&&admFilter.startsWith('imp:')&&admFilter!=='imp:'+lastB.id?[[admFilter,'선택한 가져오기',all.filter(m=>'imp:'+impB(m)===admFilter).length]]:[]),...(lastB?[['imp:'+lastB.id,'방금(마지막) 가져온',lastB.n]]:[])].map(([k,n,c])=>`<button class="chip ${admFilter===k?'on':''}" data-f="${k}">${n} ${c}</button>`).join('');
   $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=b.dataset.f;renderAdmRows()});
 }
-function admPass(m){if(admFilter==='all')return true;if(admFilter==='pending')return!m.approvedAt;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
+function admPass(m){if(admFilter==='all')return true;if(admFilter==='imp')return !!impB(m);if(admFilter.startsWith('imp:'))return 'imp:'+impB(m)===admFilter;if(admFilter==='pending')return!m.approvedAt;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
 
 /* ================= 주N회 요일 고정 ================= */
 const WEEKLY_RULE=n=>`주${n}회권은 등록할 때 정한 요일에만 출석할 수 있어요. 못 온 날을 다른 요일로 옮겨 출석할 수 없어요. (관장님이 승인한 보강만 예외)`;
