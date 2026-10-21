@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1B2230">
 <link rel="icon" href="../shared/img/samsaek.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&family=Gothic+A1:wght@600;800&display=swap">
 <style>
 /* 화면 가득 3D 아레나. 위=점수판, 가운데=조준점, 아래 왼쪽=이동 조이스틱, 아래 오른쪽=발사·점프 등 엄지 버튼. 메뉴는 3D 위에 뜨는 카드 */
 :root{
@@ -33,6 +33,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .score .mid b{font-weight:400;color:var(--fg);font-size:15px}
 .pips{display:flex;gap:3px;margin-top:2px}.pips i{width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.18)}
 .pips i.on.b{background:var(--blue)}.pips i.on.r{background:var(--red)}
+.place{position:absolute;top:calc(56px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:rgba(255,255,255,.9);color:#1B2230;border-radius:999px;padding:3px 12px 2px;font-family:"Jua","Black Han Sans",sans-serif;font-size:14px;white-space:nowrap}
 .feed{position:absolute;top:calc(60px + env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:4px;align-items:flex-end}
 .feed div{background:var(--glass);border-radius:8px;padding:3px 9px;font-size:13px;font-weight:800;animation:fin .2s}
 @keyframes fin{from{opacity:0;transform:translateX(10px)}}
@@ -143,6 +144,7 @@ body.touchui .tip{display:none}
 
 <div class="hud" id="hud" hidden>
   <div class="score"><div class="t b" id="sB">0</div><div class="mid"><b id="rnd">라운드 1</b><span id="first">5승 먼저</span></div><div class="t r" id="sR">0</div></div>
+  <div class="place" id="place">📍 탕정 한들물빛공원</div>
   <div class="feed" id="feed"></div>
   <div class="hurt" id="hurt"></div>
   <div class="scope" id="scope"></div>
@@ -274,7 +276,8 @@ vmScene.add(new THREE.HemisphereLight(0xffffff,0x707a90,1.0));const vsun=new THR
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();vmCam.aspect=w/h;vmCam.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
-function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;if(rep)t.repeat.set(rep[0],rep[1]);t.anisotropy=4;return t}
+const FONT_REDRAW=[];if(document.fonts)Promise.all(['48px Jua','48px "Black Han Sans"'].map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>FONT_REDRAW.forEach(f=>{try{f()}catch(e){}}));
+function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);FONT_REDRAW.push(()=>{const g=c.getContext('2d');g.clearRect(0,0,w,h);draw(g,w,h);t.needsUpdate=true});t.wrapS=t.wrapT=THREE.RepeatWrapping;if(rep)t.repeat.set(rep[0],rep[1]);t.anisotropy=4;return t}
 /* 경기장: 밍뉴의숲 한들물빛공원 (지도 41~50, 35~44칸). 1칸 = 7m, 공원 한가운데가 원점 */
 const PS=7,TOWN=Town3D.build(THREE,scene,{S:PS,origin:[46,40],skip:[42,36,49,43],px:20,aptH:38});
 const AW=28,AD=28;
@@ -408,7 +411,7 @@ function startRound(){
   const sp={0:[[-5,-25],[5,-25]],1:[[5,25],[-5,25]]};const used={0:0,1:0};
   for(const e of ENT){const s=sp[e.team][used[e.team]++%2];e.pos.set(s[0],0,s[1]);e.vel.set(0,0,0);e.yaw=e.team===0?Math.PI:0;e.pitch=0;e.hp=100;e.alive=true;e.cur=0;e.cd=0;e.reloadT=0;e.nade=1;e.slideT=0;e.crouch=0;
     e.loadout.forEach(k=>{if(WEAP[k].mag)e.ammo[k]=WEAP[k].mag});if(e.model){e.model.g.visible=true;e.model.drawTag(100)}e.ai.target=null;e.ai.react=0}
-  G.state='pre';G.timer=2.6;$('deadTxt').hidden=true;showBanner(`라운드 ${G.round}`,`파랑 ${G.score[0]} : ${G.score[1]} 빨강`);SND.round();updScore();updWeaponHUD();updHP();
+  G.state='pre';G.timer=2.6;$('deadTxt').hidden=true;showBanner(`라운드 ${G.round}`,`📍 한들물빛공원 · 파랑 ${G.score[0]} : ${G.score[1]} 빨강`);SND.round();updScore();updWeaponHUD();updHP();
 }
 function showBanner(a,b){const el=$('banner');el.innerHTML=`<b>${a}</b>${b?`<span>${b}</span>`:''}`;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');el.hidden=false}
 function updScore(){$('sB').textContent=G.score[0];$('sR').textContent=G.score[1];$('rnd').textContent='라운드 '+G.round;
@@ -647,9 +650,9 @@ function spectate(dt){G.specT+=dt;const mate=ENT.find(e=>e.team===0&&e.alive&&!e
 let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(G.state==='menu'){camera.position.set(Math.sin(now/9000)*58,30,Math.cos(now/9000)*58);camera.lookAt(0,0,0);renderer.clear();renderer.render(scene,camera);return}
+  if(G.state==='menu'){TOWN.update(dt,camera);const a=now/14000;camera.position.set(Math.sin(a)*120,62,Math.cos(a)*120);camera.lookAt(0,6,0);renderer.clear();renderer.render(scene,camera);return}
   if(G.paused){renderer.clear();renderer.render(scene,camera);return}
-  updFX(dt);updNades(dt);
+  updFX(dt);updNades(dt);TOWN.update(dt,camera);
   if(G.state==='pre'){G.timer-=dt;if(G.timer<=0){G.state='fight';$('banner').hidden=true}}
   else if(G.state==='end'){G.timer-=dt;if(G.timer<=0){if(G.matchOver)endMatch();else{G.round++;startRound()}}}
   // 무기 쿨타임·재장전

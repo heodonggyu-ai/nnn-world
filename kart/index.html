@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#14202E">
 <link rel="icon" href="../shared/img/samsaek.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&family=Gothic+A1:wght@600;800&display=swap">
 <style>
 /* 화면 가득 3D 트랙. 위 왼쪽=순위·바퀴, 위 오른쪽=미니맵, 아래 가운데=부스터 게이지, 아래 양쪽=엄지 버튼 */
 :root{
@@ -32,7 +32,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .lap{font-family:var(--f-display);font-size:20px;line-height:1.1}
 .lap small{display:block;font-family:var(--f-body);font-weight:800;font-size:11px;color:var(--muted)}
 .time{font-family:ui-monospace,Menlo,monospace;font-weight:700;font-size:15px;margin-top:3px}
-#mini{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));width:130px;height:130px;background:var(--glass);border-radius:14px}
+#mini{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));width:150px;height:150px;border:2px solid rgba(255,255,255,.6);background:var(--glass);border-radius:14px}
 .gauge{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;background:var(--glass);border-radius:14px;padding:8px 12px}
 .slots{display:flex;gap:6px}
 .slots i{width:34px;height:34px;border-radius:9px;border:2px solid rgba(255,255,255,.25);display:grid;place-items:center;font-style:normal;font-size:18px;filter:grayscale(1);opacity:.35}
@@ -53,6 +53,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .speedlines{position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 50% 55%,rgba(255,255,255,.18) 0 1deg,transparent 1deg 7deg);-webkit-mask:radial-gradient(circle at 50% 55%,transparent 30%,#000 75%);mask:radial-gradient(circle at 50% 55%,transparent 30%,#000 75%);opacity:0;transition:opacity .2s}
 .speedlines.on{opacity:1}
 .tip{position:absolute;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:12px;color:var(--muted);background:var(--glass);padding:4px 10px;border-radius:8px;white-space:nowrap}
+.where{position:absolute;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:rgba(255,255,255,.92);color:#14202E;border-radius:999px;padding:6px 16px 5px;font-family:"Jua","Black Han Sans",sans-serif;font-size:clamp(16px,2.6vw,22px);white-space:nowrap;box-shadow:0 3px 0 rgba(0,0,0,.25);opacity:0;transition:opacity .3s}
+.where.on{opacity:1}.where.pop{animation:wpop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes wpop{from{transform:translateX(-50%) scale(.6)}}
+body.touchui .where{top:calc(66px + env(safe-area-inset-top,0px));font-size:15px;padding:4px 12px 3px}
 .board{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:calc(84px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:800}
 .board div{background:var(--glass);border-radius:6px;padding:2px 8px;display:flex;gap:6px;min-width:110px}
 .board div.me{background:rgba(255,201,60,.35)}
@@ -123,6 +127,7 @@ body.touchui .tip{display:none}
   <div class="tl"><div class="pos" id="pos">1<small>/6</small></div><div class="box"><div class="lap" id="lap">1 / 3<small>바퀴</small></div><div class="time" id="time">0:00.00</div></div></div>
   <div class="board" id="board"></div>
   <canvas id="mini" width="260" height="260"></canvas>
+  <div class="where" id="where"></div>
   <div class="pop" id="pop"></div>
   <div class="count" id="count"></div>
   <div class="warn" id="warn" hidden>⚠ 역주행!</div>
@@ -202,15 +207,16 @@ const scene=new THREE.Scene();scene.background=new THREE.Color(0x8fd0f5);scene.f
 const camera=new THREE.PerspectiveCamera(70,1,.3,1800);
 scene.add(new THREE.HemisphereLight(0xffffff,0x5a7a4a,.56));const sun=new THREE.DirectionalLight(0xfff4e0,.55);sun.position.set(-80,140,60);scene.add(sun);
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
-function ctex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;if(rep)t.repeat.set(rep[0],rep[1]);t.anisotropy=renderer.capabilities.getMaxAnisotropy?Math.min(8,renderer.capabilities.getMaxAnisotropy()):4;return t}
+const FONT_REDRAW=[];if(document.fonts)Promise.all(['48px Jua','48px "Black Han Sans"'].map(f=>document.fonts.load(f).catch(()=>{}))).then(()=>FONT_REDRAW.forEach(f=>{try{f()}catch(e){}}));
+function ctex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);FONT_REDRAW.push(()=>{const g=c.getContext('2d');g.clearRect(0,0,w,h);draw(g,w,h);t.needsUpdate=true});t.wrapS=t.wrapT=THREE.RepeatWrapping;if(rep)t.repeat.set(rep[0],rep[1]);t.anisotropy=renderer.capabilities.getMaxAnisotropy?Math.min(8,renderer.capabilities.getMaxAnisotropy()):4;return t}
 
 /* ---------- 트랙: 밍뉴의숲 한들물빛도시 실제 도로 (지도 1칸 = 9m) ---------- */
-const TS=9,TOWN=Town3D.build(THREE,scene,{S:TS,origin:[64,48],px:20,aptH:40});
+const SIGNTEX=[];const TS=9,TOWN=Town3D.build(THREE,scene,{S:TS,origin:[64,48],px:20,aptH:40});
 // 지도 좌표(칸)로 적은 도로 중앙선. 꺾이는 곳은 앞뒤로 점을 넣어 둥글게
 function fillet(pts,r){const out=[];for(let i=0;i<pts.length;i++){const p=pts[i];if(!p.c){out.push(p);continue}const a=pts[(i-1+pts.length)%pts.length],b=pts[(i+1)%pts.length];
   const u=[a[0]-p[0],a[1]-p[1]],v=[b[0]-p[0],b[1]-p[1]],lu=Math.hypot(...u),lv=Math.hypot(...v);out.push([p[0]+u[0]/lu*r,p[1]+u[1]/lu*r]);out.push([p[0]+(u[0]/lu+v[0]/lv)*r*.29,p[1]+(u[1]/lu+v[1]/lv)*r*.29]);out.push([p[0]+v[0]/lv*r,p[1]+v[1]/lv*r])}return out}
 const C=(x,y)=>Object.assign([x,y],{c:1});
-const ROUTE=fillet([[47,17],C(53,17),C(53,32),C(103,32),C(103,42.4),[92,47],[67,57],C(38,68.6),C(38,17)],2.6);
+const ROUTE=fillet([[47,17],C(38,17),C(38,68.6),[67,57],[92,47],C(103,42.4),C(103,32),C(53,32),C(53,17)],2.6); // 탕정역 앞 출발 → 한들물빛초 옆길 → 21번 국도 → 설화중 앞 → 한들물빛중 앞 → 결승
 const CP=ROUTE.map(([x,y])=>{const w=TOWN.W(x,y);return[w.x,w.z]});
 const curve=new THREE.CatmullRomCurve3(CP.map(p=>new THREE.Vector3(p[0],0,p[1])),true,'centripetal');
 const TLEN=curve.getLength(),N=Math.round(TLEN/1.2);
@@ -234,6 +240,15 @@ const fmat=new THREE.MeshLambertMaterial({map:fenceTex,side:THREE.DoubleSide});w
   const banTex=ctex(512,96,(g,w,h)=>{g.fillStyle='#111';g.fillRect(0,0,w,h);g.fillStyle='#FFC93C';g.font='bold 56px "Black Han Sans",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('한들물빛 그랑프리',w/2,h/2+3)});
   const top=new THREE.Mesh(new THREE.BoxGeometry(WALL*2+4,2.6,1),[pm,pm,pm,pm,new THREE.MeshBasicMaterial({map:banTex}),new THREE.MeshBasicMaterial({map:banTex})]);top.position.y=9;arch.add(L,Rr,top);arch.position.copy(P[0]);arch.rotation.y=Math.atan2(T[0].x,T[0].z);scene.add(arch)}
 for(let i=0;i<18;i++){const a=i/18*Math.PI*2,h=60+Math.random()*80;const m=new THREE.Mesh(new THREE.ConeGeometry(110+Math.random()*60,h,5),new THREE.MeshLambertMaterial({color:new THREE.Color().setHSL(.36,.25,.38+Math.random()*.12)}));m.position.set(Math.cos(a)*1050,h/2-5,Math.sin(a)*800);scene.add(m)}
+// 초록 도로 표지판: 다음에 나올 동네 이름
+{const near=(tx,ty)=>{const w=TOWN.W(tx,ty);let bi=0,bd=1e9;P.forEach((p,i)=>{const d=(p.x-w.x)**2+(p.z-w.z)**2;if(d<bd){bd=d;bi=i}});return bi};
+ const SIGNS=[[43,17,'🚉 탕정역','한들물빛공원 · 한들물빛초 방면'],[38,27,'한들물빛초 · 예미지','하늘채 · 21번 국도 방면'],[47,65.3,'21번 국도','🥊 엔엔엔복싱 · 한들물빛 상가'],[80,51.8,'신라아파트 · 이순신고','세교 · 천안아산역 방면'],[103,39,'설화중 · 연화마을','설화고 · 연화초 방면'],[78,32,'시티프라디움 · 휴먼시아','한들물빛중 · 3단지 방면'],[53,26,'🏁 결승선','🚉 탕정역 · 3단지']];
+ const pm=new THREE.MeshLambertMaterial({color:0x8D98A3});
+ SIGNS.forEach(([tx,ty,a,b])=>{const i=near(tx,ty),p=P[i],t=T[i],n=NR[i];const g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=Math.atan2(-t.x,-t.z);scene.add(g);
+   const span=(WALL+1.4)*2;[-1,1].forEach(k=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.5,8.4,.5),pm);m.position.set(k*span/2,4.2,0);g.add(m)});const beam=new THREE.Mesh(new THREE.BoxGeometry(span,.4,.4),pm);beam.position.set(0,7.6,0);g.add(beam);
+   const tex=ctex(1024,256,(c,w,h)=>{c.fillStyle='#0E7A4B';c.fillRect(0,0,w,h);c.strokeStyle='#fff';c.lineWidth=10;c.strokeRect(12,12,w-24,h-24);c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
+     const fit=(t,y,fs)=>{c.font=`${fs}px "Jua","Black Han Sans",sans-serif`;const tw=c.measureText(t).width;if(tw>w-80)c.font=`${fs*(w-80)/tw}px "Jua","Black Han Sans",sans-serif`;c.fillText(t,w/2,y)};fit('↑ '+a,h*.4,96);fit(b,h*.76,60)});
+   const panel=new THREE.Mesh(new THREE.PlaneGeometry(14,3.5),new THREE.MeshBasicMaterial({map:tex}));panel.position.set(0,9.6,.22);g.add(panel);const back=new THREE.Mesh(new THREE.BoxGeometry(14.2,3.7,.3),new THREE.MeshLambertMaterial({color:0x5d6670}));back.position.set(0,9.6,0);g.add(back)})}
 // 코너 안내 화살표 표지판 (급커브 앞)
 {const arrTex=ctex(128,64,(g,w,h)=>{g.fillStyle='#FFC93C';g.fillRect(0,0,w,h);g.fillStyle='#111';for(let i=0;i<3;i++){g.beginPath();g.moveTo(20+i*36,8);g.lineTo(44+i*36,32);g.lineTo(20+i*36,56);g.lineTo(32+i*36,56);g.lineTo(56+i*36,32);g.lineTo(32+i*36,8);g.fill()}});
   for(let i=0;i<N;i+=4){const a=T[i],b=T[(i+25)%N];const turn=wrapA(Math.atan2(b.x,b.z)-Math.atan2(a.x,a.z));if(Math.abs(turn)>.7){const side=turn>0?-1:1;// 바깥쪽에 세움
@@ -394,9 +409,16 @@ function updCam(k,dt){
 /* ---------- 미니맵 ---------- */
 const mini=$('mini').getContext('2d');let MB=null;
 {let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;P.forEach(p=>{x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z)});const s=220/Math.max(x1-x0,z1-z0);MB={x0,z0,s,ox:(260-(x1-x0)*s)/2,oz:(260-(z1-z0)*s)/2}}
-const mm=(x,z)=>[260-(MB.ox+(x-MB.x0)*MB.s),MB.oz+(z-MB.z0)*MB.s];
-function drawMini(){mini.clearRect(0,0,260,260);mini.lineJoin='round';mini.lineCap='round';
-  mini.beginPath();P.forEach((p,i)=>{const [x,y]=mm(p.x,p.z);i?mini.lineTo(x,y):mini.moveTo(x,y)});mini.closePath();mini.strokeStyle='rgba(255,255,255,.85)';mini.lineWidth=12;mini.stroke();mini.strokeStyle='#4a4f58';mini.lineWidth=8;mini.stroke();
+const mm=(x,z)=>[MB.ox+(x-MB.x0)*MB.s,MB.oz+(z-MB.z0)*MB.s];
+// 미니맵 배경: 밍뉴의숲 지도 그대로 (도로·아파트·학교·역)
+const MINIBG=document.createElement('canvas');MINIBG.width=MINIBG.height=260;
+{const g=MINIBG.getContext('2d'),Y=TOWN.types,cs=MB.s*TS;g.fillStyle='#6FAE55';g.fillRect(0,0,260,260);
+ const col={[Y.RD]:'#8C9298',[Y.SW]:'#CFC8BA',[Y.BL]:'#FFFFFF',[Y.HE]:'#4E8F4A',[Y.WA]:'#5FB2DA',[Y.SA]:'#D9C38F',[Y.FD]:'#D2B07E',[Y.PZ]:'#E3D5B5',[Y.PG]:'#E9A86C',[Y.TR]:'#4F9446'};
+ for(let ty=0;ty<TOWN.MH;ty++)for(let tx=0;tx<TOWN.MW;tx++){const w=TOWN.W(tx,ty),[x,y]=mm(w.x,w.z);if(x<-cs||y<-cs||x>260||y>260)continue;const c=col[TOWN.tileAt(tx,ty)];if(c){g.fillStyle=c;g.fillRect(x,y,cs+.6,cs+.6)}}
+ g.textAlign='center';g.textBaseline='middle';
+ TOWN.places.forEach(pl=>{const ic={station:'🚉',gym:'🥊',park:'🌳',school:'🏫'}[pl.kind];if(!ic)return;const [x,y]=mm(pl.cx,pl.cz);if(x<8||y<8||x>252||y>252)return;g.font='20px sans-serif';g.fillText(ic,x,y)})}
+function drawMini(){mini.clearRect(0,0,260,260);mini.globalAlpha=.92;mini.drawImage(MINIBG,0,0);mini.globalAlpha=1;mini.lineJoin='round';mini.lineCap='round';
+  mini.beginPath();P.forEach((p,i)=>{const [x,y]=mm(p.x,p.z);i?mini.lineTo(x,y):mini.moveTo(x,y)});mini.closePath();mini.strokeStyle='rgba(255,255,255,.95)';mini.lineWidth=8;mini.stroke();mini.strokeStyle='#FFC93C';mini.lineWidth=4;mini.stroke();
   {const [x,y]=mm(P[0].x,P[0].z);mini.fillStyle='#fff';mini.fillRect(x-5,y-5,10,10)}
   K.slice().reverse().forEach(k=>{const [x,y]=mm(k.pos.x,k.pos.z);mini.beginPath();mini.arc(x,y,k.isPlayer?8:6,0,7);mini.fillStyle=k.col;mini.fill();mini.lineWidth=k.isPlayer?3:2;mini.strokeStyle=k.isPlayer?'#fff':'#111';mini.stroke()})}
 
@@ -404,7 +426,13 @@ function drawMini(){mini.clearRect(0,0,260,260);mini.lineJoin='round';mini.lineC
 const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(2)};
 function updGauge(){const k=K[0];$('gfill').style.width=(k.gauge*100)+'%';$('gpct').textContent=Math.floor(k.gauge*100)+'%';$('slots').querySelectorAll('i').forEach((el,i)=>el.classList.toggle('on',i<k.boosters))}
 let hudT=0;
-function updHUD(dt){hudT-=dt;const k=K[0];updGauge();$('spd').innerHTML=Math.round(k.speed*3.6)+'<small>km/h</small>';
+let whereT=0,whereName='';
+const PICON={apt:'🏢',school:'🏫',station:'🚉',gym:'🥊',park:'🌳',home:'🏠',road:'🛣️'};
+function updWhere(dt){whereT-=dt;if(whereT>0)return;whereT=.25;const k=K[0];let best=null,bd=55;
+  TOWN.places.forEach(pl=>{const dx=Math.max(pl.wx0-k.pos.x,0,k.pos.x-pl.wx1),dz=Math.max(pl.wz0-k.pos.z,0,k.pos.z-pl.wz1),d=Math.hypot(dx,dz)+(pl.kind==='road'?20:0);if(d<bd){bd=d;best=pl}});
+  const nm=best?best.name:'';if(nm===whereName)return;whereName=nm;const el=$('where');if(!nm){el.classList.remove('on');return}
+  el.textContent='📍 '+nm+(bd>4?' 옆':'');el.classList.add('on');el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
+function updHUD(dt){hudT-=dt;updWhere(dt);const k=K[0];updGauge();$('spd').innerHTML=Math.round(k.speed*3.6)+'<small>km/h</small>';
   if(hudT>0)return;hudT=.1;
   const order=K.slice().sort((a,b)=>progress(b)-progress(a));order.forEach((x,i)=>x.place=i+1);
   $('pos').innerHTML=k.place+'<small>/'+K.length+'</small>';$('pos').className='pos'+(k.place===1?' p1':'');
@@ -415,10 +443,10 @@ function updHUD(dt){hudT-=dt;const k=K[0];updGauge();$('spd').innerHTML=Math.rou
 /* ================= 반복 ================= */
 let last=performance.now(),menuA=0;
 function loop(now){requestAnimationFrame(loop);const dt=Math.min(.04,(now-last)/1000);last=now;
-  if(R.state==='menu'){menuA+=dt*.05;camera.position.set(Math.cos(menuA)*380-60,190,Math.sin(menuA)*300+20);camera.lookAt(-60,0,20);renderer.render(scene,camera);return}
+  if(R.state==='menu'){menuA+=dt;TOWN.update(dt,camera);const i=Math.floor(menuA*14)%N,j=(i+90)%N,p=P[i];const tp=new THREE.Vector3(p.x-NR[i].x*40,62,p.z-NR[i].z*40);if(!CAM.menu){camera.position.copy(tp);CAM.menu=true}camera.position.lerp(tp,Math.min(1,dt*1.5));CAM.mlook=(CAM.mlook||new THREE.Vector3(P[j].x,0,P[j].z)).lerp(new THREE.Vector3(P[j].x,4,P[j].z),Math.min(1,dt*1.5));camera.lookAt(CAM.mlook);renderer.render(scene,camera);return}
   if(R.paused){renderer.render(scene,camera);return}
   if(R.state==='count'){R.count-=dt;const c=Math.ceil(R.count-.6);if(c!==R.lastBeep&&c>=1&&c<=3){R.lastBeep=c;SND.beep();$('count').textContent=c;$('count').className='count'}
-    if(R.count<=.6&&R.lastBeep!==0){R.lastBeep=0;SND.go();$('count').textContent='GO!';$('count').className='count cgo';R.state='race';R.t=0;K.forEach(k=>k.lapStart=0)}}
+    if(R.count<=.6&&R.lastBeep!==0){R.lastBeep=0;SND.go();setTimeout(()=>pop('📍 탕정역 앞 출발!','#FFC93C'),700);$('count').textContent='GO!';$('count').className='count cgo';R.state='race';R.t=0;K.forEach(k=>k.lapStart=0)}}
   else if(R.state==='race'||R.state==='after'){R.t+=dt;if(R.count>-1){R.count-=dt;if(R.count<=-.6)$('count').textContent=''}}
   for(const k of K){
     let inp;
@@ -433,7 +461,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.04,(now-last)/
     k.flame.visible=k.boostT>0;if(k.flame.visible)k.flame.scale.setScalar(rand(.8,1.2)*(k.boostPow>.9?1:.7));
     k.smokeT-=dt;if(k.drift&&k.smokeT<=0&&k.speed>10){k.smokeT=.045;const bx=-Math.sin(k.h)*1.1,bz=-Math.cos(k.h)*1.1,rx=Math.cos(k.h),rz=-Math.sin(k.h);smoke(k.pos.x+bx+rx,k.pos.z+bz+rz,k.gauge>.85?0x9fe6ff:0xf0f0f0,.7);smoke(k.pos.x+bx-rx,k.pos.z+bz-rz,k.gauge>.85?0x9fe6ff:0xf0f0f0,.7)}
   }
-  collide();updSmoke(dt);
+  collide();updSmoke(dt);TOWN.update(dt,camera);
   const pk=K[0];updCam(pk,dt);
   $('lines').classList.toggle('on',pk.boostT>0||pk.speed>58);
   engineSet(pk.speed,pk.drift,true);
