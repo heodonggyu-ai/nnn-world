@@ -2743,7 +2743,7 @@ function impPeriod(v){const s=String(v||'');const ds=[...s.matchAll(/(\d{2,4}\s*
 function impMethod(v){const s=String(v||'');if(/아산/.test(s))return 'asan';if(/온누리|상품권/.test(s))return 'onnuri';if(/이체|계좌|무통장|송금/.test(s))return 'bank';if(/현금/.test(s))return 'cash';if(/카드|card/i.test(s))return 'card';return s?'etc':''}
 function impRows(text){const L=String(text).replace(/\r/g,'').split('\n').filter(l=>l.trim());const sep=L.some(l=>l.includes('\t'))?'\t':',';
   return L.map(l=>{if(sep===','){const out=[];let cur='',q=false;for(const ch of l){if(ch==='"'){q=!q;continue}if(ch===','&&!q){out.push(cur);cur='';continue}cur+=ch}out.push(cur);return out.map(x=>x.trim())}return l.split('\t').map(x=>x.trim())})}
-function impHeader(rows){for(let i=0;i<Math.min(rows.length,15);i++){const r=rows[i].map(x=>String(x||''));if(r.some(c=>IMP_F[0][2].test(c.replace(/\s/g,'')))&&r.some(c=>/(연락처|휴대폰|핸드폰|전화|기간|종료|상품|이용권)/.test(c)))return i}return 0}
+function impHeader(rows){for(let i=0;i<Math.min(rows.length,15);i++){const r=rows[i].map(x=>String(x||''));if(r.some(c=>IMP_F.find(f=>f[0]==='name')[2].test(c.replace(/\s/g,'')))&&r.some(c=>/(연락처|휴대폰|핸드폰|전화|기간|종료|상품|이용권)/.test(c)))return i}return 0}
 function impGuess(head){const map={};head.forEach((h,i)=>{const t=String(h||'').replace(/\s+/g,' ').trim();for(const [k,,re] of IMP_F){if(map[k]==null&&re.test(t.replace(/\s/g,''))&&!(k==='pt'&&/(상품|이용권)/.test(t))){map[k]=i;break}}});return map}
 function impBuild(rows,hi,map,opt,all){const T=TODAY();const by={};const byName={};all.forEach(m=>{const d=String(m.phone||'').replace(/\D/g,'');if(d.length>=8)by[d.slice(-8)]=m;const n=String(m.name||'').replace(/\s/g,'');(byName[n]=byName[n]||[]).push(m)});
   const g=(r,k)=>map[k]!=null?r[map[k]]:'';const groups={};const bad=[];
