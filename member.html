@@ -113,7 +113,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .stat span{font-size:11px;color:var(--muted);text-align:center}
 .stat.warn b{color:#B07A08}.stat.bad b{color:var(--red)}.stat.mute b{color:var(--muted)}
 .mstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px}.mstrip-b{background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;color:var(--ink);cursor:pointer}.mstrip-b b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.1}.mstrip-b span{font-size:11.5px;color:#666}.mstrip-b.soon{border-color:var(--gold)}.mstrip-b.expired,.mstrip-b.warn{border-color:var(--red)}.mstrip-b.warn b,.mstrip-b.expired b{color:var(--red)}.mstrip-b.ok{border-color:#2E9E62}.mstrip-b.ok b{color:#1E6B45}.mstrip-b.none{border-style:dashed}
-.mlist{display:grid!important;grid-template-columns:1fr 1fr}.mlist>.quick,.mlist>#kakaoBtn2,.mlist>#logoutBtn{grid-column:1/-1}.mlist>.btn.ghost.sm{font-size:13px;padding:10px 4px}
+.mqlist{display:grid!important;grid-template-columns:1fr 1fr}.mqlist>.quick,.mqlist>#kakaoBtn2,.mqlist>#logoutBtn{grid-column:1/-1}.mqlist>.btn.ghost.sm{font-size:13px;padding:10px 4px}
 /* 도움말 · 새 기능 안내 */
 .flash{animation:flash 1.5s ease}@keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(255,213,74,0)}25%,75%{box-shadow:0 0 0 6px rgba(255,213,74,.9)}}
 .helpbtn{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);background:#fff;font:700 17px/1 system-ui;color:var(--ink);position:relative;cursor:pointer}
@@ -443,6 +443,15 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .mrow .ms{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
 .mrow .mb{display:flex;gap:6px;flex:0 0 auto}
 .mrow.pend{background:#FFF6EE}
+.mrow .mchev{display:none;font-size:22px;color:#B0B4BE;line-height:1;padding:0 2px}
+#admRows[data-lay="c"] .mrow{padding:6px 4px;gap:10px}
+#admRows[data-lay="c"] .mrow .mface{width:40px;height:40px;border-radius:9px}
+#admRows[data-lay="c"] .mrow .mn{flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
+#admRows[data-lay="c"] .mrow .mn>*{flex:0 0 auto}
+#admRows[data-lay="c"] .mrow .ms{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;margin-top:1px}
+#admRows[data-lay="c"] .mrow .ms .pill{padding:1px 7px;font-size:11.5px}
+#admRows[data-lay="c"] .mrow .mdet{display:none}
+#admRows[data-lay="c"] .mrow .mchev{display:block}
 .atcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .atcal .wd{font-size:11px;text-align:center;color:var(--muted)}
 .atcal button{border:1px solid var(--line);background:#fff;border-radius:8px;min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;font:inherit;color:var(--ink)}
@@ -750,7 +759,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     </div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"><div class="label">친구 초대</div><div id="inviteBox" style="display:flex;flex-direction:column;gap:10px"></div></div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"><div class="label">NNN 복싱 소식</div><div data-sns></div></div>
-    <div class="card mlist" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+    <div class="card mqlist" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
       <div class="quick"><button id="mTT"><b>수업 시간표</b><span>요일별 수업</span></button><button id="mPay"><b>결제</b><span>회원권 · PT</span></button></div>
       <a class="btn gold sm" id="kakaoBtn2" style="text-align:center;text-decoration:none" target="_blank" rel="noopener">카카오톡 채널 추가</a>
       <button class="btn ghost sm" id="termsBtn">이용약관 보기</button>
@@ -938,7 +947,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div class="stats" id="admStats"></div>
     <div class="chips" id="admFilt"></div>
     <div class="field"><input id="admSearch" placeholder="이름·번호·전화·메모 검색 (예: 9996, 아산페이)"></div>
-    <div class="mlist" id="admRows"></div>
+    <div class="mlist" id="admRows" data-lay="c"></div>
   </div>
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:4px">
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
@@ -4221,7 +4230,7 @@ async function renderAdmRows(){
     return false};
   renderAdmFilter(all);try{renderImpLast(all)}catch(e){}try{dupBackfill(all)}catch(e){}const list=all.filter(m=>admPass(m)&&srch(m));
   $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${impB(m)?`<span class="imp-pill ${impA(m)}">${impA(m)==='create'?'가져옴·새로':'가져옴'} ${esc(impAt(m)?md(impAt(m)):'')}</span>`:''}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost" data-dd="${esc(m.id)}">상세</button></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${impB(m)?`<span class="imp-pill ${impA(m)}">${impA(m)==='create'?'가져옴·새로':'가져옴'} ${esc(impAt(m)?md(impAt(m)):'')}</span>`:''}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost mdet" data-dd="${esc(m.id)}">상세</button><span class="mchev" aria-hidden="true">›</span></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
   {const io=window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){io.unobserve(en.target);faceInto(en.target,en.target.dataset.mf)}}),{rootMargin:'200px'}):null;
     $$('#admRows [data-mf]').forEach(el=>{const m=list.find(x=>x.id===el.dataset.mf);if(!m||!m.hasFace)return;if(io)io.observe(el);else faceInto(el,el.dataset.mf)})}
   $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]')||e.target.closest('.mface img'))return;admDetail(r.dataset.d)});
