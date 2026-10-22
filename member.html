@@ -1197,7 +1197,11 @@ const CHARS={
   panda:{name:'판다',body:'#2A2F3A'},penguin:{name:'펭귄',body:'#2A2F3A'},bear:{name:'곰',body:'#9B6B43'},
   trex:{name:'티라노',body:'#5BB25A'},trice:{name:'트리케라',body:'#E39B4B'},robot:{name:'로봇 복서',body:'#AEB8C6'},
   pumpkin:{name:'호박 유령',body:'#2A2234'},skull:{name:'해골 복서',body:'#3A3F4A'},witch:{name:'마녀냥',body:'#2B2B33'},
-  dragon:{name:'드래곤',body:'#D9443A'}
+  dragon:{name:'드래곤',body:'#D9443A'},
+  frog:{name:'개굴 복서',body:'#7CC75A'},squirrel:{name:'다람 복서',body:'#C9844A'},rabbit:{name:'깡총 토끼',body:'#F4F1EC'},
+  girl:{name:'복싱 걸',body:'#F5CDA5'},hamster:{name:'볼빵 햄찌',body:'#F0C27B'},duck:{name:'꽥꽥 오리',body:'#FFD84A'},
+  shiba:{name:'시바 복서',body:'#E2A15A'},grandpa:{name:'할아버지 관장',body:'#F2C9A0'},fox:{name:'여우 복서',body:'#E8833A'},
+  tiger:{name:'아기 호랑이',body:'#F29B38'},axolotl:{name:'우파루파',body:'#F7B5C8'},unicorn:{name:'유니콘',body:'#F7F3FF'}
 };
 const ITEMS=[
   {id:'c_boxer',slot:'char',ch:'boxer',price:0,r:'n'},{id:'c_cat',slot:'char',ch:'cat',price:0,r:'n'},{id:'c_dog',slot:'char',ch:'dog',price:0,r:'n'},
@@ -1205,6 +1209,10 @@ const ITEMS=[
   {id:'c_pumpkin',slot:'char',ch:'pumpkin',price:800,r:'e',ev:'hw'},{id:'c_skull',slot:'char',ch:'skull',price:800,r:'e',ev:'hw'},{id:'c_witch',slot:'char',ch:'witch',price:1000,r:'e',ev:'hw'},
   {id:'c_trex',slot:'char',ch:'trex',price:1200,r:'e'},{id:'c_trice',slot:'char',ch:'trice',price:1200,r:'e'},{id:'c_robot',slot:'char',ch:'robot',price:1500,r:'e'},
   {id:'c_dragon',slot:'char',ch:'dragon',price:2500,r:'l'},
+  {id:'c_frog',slot:'char',ch:'frog',price:0,r:'n'},{id:'c_squirrel',slot:'char',ch:'squirrel',price:0,r:'n'},{id:'c_girl',slot:'char',ch:'girl',price:0,r:'n'},{id:'c_rabbit',slot:'char',ch:'rabbit',price:0,r:'n'},
+  {id:'c_hamster',slot:'char',ch:'hamster',price:300,r:'r'},{id:'c_duck',slot:'char',ch:'duck',price:300,r:'r'},{id:'c_shiba',slot:'char',ch:'shiba',price:400,r:'r'},{id:'c_grandpa',slot:'char',ch:'grandpa',price:500,r:'r'},
+  {id:'c_fox',slot:'char',ch:'fox',price:700,r:'e'},{id:'c_tiger',slot:'char',ch:'tiger',price:1000,r:'e'},{id:'c_axolotl',slot:'char',ch:'axolotl',price:1000,r:'e'},
+  {id:'c_unicorn',slot:'char',ch:'unicorn',price:2000,r:'l'},
 
   {id:'g_red',slot:'glove',name:'기본 레드 글러브',col:['#D9343A','#fff'],price:0,r:'n'},
   {id:'g_blue',slot:'glove',name:'블루 글러브',col:['#2F6FD6','#fff'],price:120,r:'n'},
@@ -1214,6 +1222,18 @@ const ITEMS=[
   {id:'g_pumpkin',slot:'glove',name:'호박 글러브',col:['#F08A24','#2B2234'],price:500,r:'r',ev:'hw'},
   {id:'g_gold',slot:'glove',name:'골드 글러브',col:['#E9B92F','#7A5200'],price:600,r:'r'},
   {id:'g_fire',slot:'glove',name:'불꽃 글러브',col:['#FF5A1F','#FFD23F'],price:1200,r:'e',fx:'fire'},
+  {id:'g_mint',slot:'glove',name:'민트 글러브',col:['#5ED1B4','#1D2433'],price:150,r:'n'},
+  {id:'g_lace',slot:'glove',name:'네이비 레이스업',col:['#1F3A6B','#FFFFFF'],price:250,r:'n',pat:'lace'},
+  {id:'g_dot',slot:'glove',name:'땡땡이 글러브',col:['#F07AA8','#FFFFFF'],price:250,r:'n',pat:'dot'},
+  {id:'g_heart',slot:'glove',name:'하트 글러브',col:['#FFFFFF','#E8435A'],price:450,r:'r',pat:'heart'},
+  {id:'g_bolt',slot:'glove',name:'번개 글러브',col:['#23262E','#FFD23F'],price:500,r:'r',pat:'bolt'},
+  {id:'g_camo',slot:'glove',name:'카모 글러브',col:['#7A8A55','#3E4A2A'],price:500,r:'r',pat:'camo'},
+  {id:'g_paw',slot:'glove',name:'냥발 글러브',col:['#FFE1EA','#F28AA0'],price:500,r:'r',pat:'paw'},
+  {id:'g_melon',slot:'glove',name:'수박 글러브',col:['#3FAE4A','#E8435A'],price:600,r:'r',pat:'melon'},
+  {id:'g_korea',slot:'glove',name:'태극 글러브',col:['#C8102E','#0047A0'],price:900,r:'e',pat:'split'},
+  {id:'g_galaxy',slot:'glove',name:'갤럭시 글러브',col:['#2A1B5C','#B79BFF'],price:1500,r:'e',pat:'galaxy'},
+  {id:'g_ice',slot:'glove',name:'얼음 글러브',col:['#9EE3FF','#FFFFFF'],price:1500,r:'e',fx:'ice'},
+  {id:'g_champlace',slot:'glove',name:'챔피언 레이스업',col:['#7A0E1F','#E9B92F'],price:2800,r:'l',pat:'lace',fx:'star'},
   {id:'g_winning',slot:'glove',name:'위닝 글러브',col:['#B3122B','#F2D27A'],price:3000,r:'l',fx:'star'},
 
   {id:'h_red',slot:'head',name:'헤드기어 레드',col:['#D9343A','#fff'],price:150,r:'n'},
@@ -1222,6 +1242,15 @@ const ITEMS=[
   {id:'h_witch',slot:'head',name:'마녀 모자',col:['#5B2C83','#F08A24'],price:400,r:'r',ev:'hw',hat:1},
   {id:'h_owan',slot:'head',name:'오운완 헤드밴드',col:['#2F2F2F','#E9A91F'],price:-1,r:'e',note:'한 달에 오운완 인증 12일 달성 보상'},
   {id:'h_gold',slot:'head',name:'골드 헤드기어',col:['#E9B92F','#7A5200'],price:700,r:'e'},
+  {id:'h_white',slot:'head',name:'헤드기어 화이트',col:['#F4F4F2','#2E5AAC'],price:150,r:'n'},
+  {id:'h_band',slot:'head',name:'땀 헤드밴드',col:['#D9343A','#FFFFFF'],price:100,r:'n',hg:'band'},
+  {id:'h_ribbon',slot:'head',name:'리본 머리띠',col:['#F07AA8','#FFE3EC'],price:200,r:'n',hg:'ribbon'},
+  {id:'h_bandana',slot:'head',name:'반다나',col:['#1D2433','#FFFFFF'],price:250,r:'r',hg:'bandana'},
+  {id:'h_beanie',slot:'head',name:'니트 비니',col:['#2E5AAC','#FFD23F'],price:300,r:'r',hg:'beanie'},
+  {id:'h_twotone',slot:'head',name:'볼 보호 헤드기어',col:['#2F6FD6','#FFFFFF'],price:350,r:'r',hg:'cheek'},
+  {id:'h_face',slot:'head',name:'페이스가드 헤드기어',col:['#23262E','#9AA3B2'],price:500,r:'r',hg:'face'},
+  {id:'h_cat',slot:'head',name:'냥이 귀 헤드기어',col:['#FFFFFF','#F6B7C3'],price:700,r:'e',hg:'ears'},
+  {id:'h_crown',slot:'head',name:'챔피언 왕관',col:['#E9B92F','#D9343A'],price:2500,r:'l',hg:'crown',fx:'star'},
   {id:'h_winning',slot:'head',name:'위닝 헤드기어',col:['#B3122B','#F2D27A'],price:3000,r:'l',fx:'star'},
 
   {id:'s_basic',slot:'shoes',name:'기본 운동화',col:['#EDEFF3','#8A94A6'],price:0,r:'n'},
@@ -1235,6 +1264,9 @@ const ITEMS=[
   {id:'t_red',slot:'trunks',name:'레드 트렁크',col:['#D9343A','#fff'],price:100,r:'n'},
   {id:'t_blue',slot:'trunks',name:'블루 트렁크',col:['#2F6FD6','#fff'],price:100,r:'n'},
   {id:'t_pumpkin',slot:'trunks',name:'호박 트렁크',col:['#F08A24','#2B2234'],price:300,r:'r',ev:'hw'},
+  {id:'t_star',slot:'trunks',name:'별무늬 트렁크',col:['#2E5AAC','#FFFFFF'],price:350,r:'r',pat:'stars'},
+  {id:'t_tiger',slot:'trunks',name:'호피 트렁크',col:['#F29B38','#2B2320'],price:500,r:'r',pat:'tiger'},
+  {id:'t_korea',slot:'trunks',name:'태극 트렁크',col:['#FFFFFF','#C8102E'],price:700,r:'e',pat:'split'},
   {id:'t_champ',slot:'trunks',name:'NNN 챔피언 트렁크',col:['#1D2433','#E9A91F'],price:900,r:'e'},
 
   {id:'g_buddy',slot:'glove',name:'버디 글러브',col:['#2B9B66','#F2D27A'],price:-1,r:'e',note:'친구 1명이 등록하면 받는 한정 글러브'},
@@ -1336,6 +1368,14 @@ function drawBehind(c,ch,t){
   if(ch==='cat'||ch==='witch'){c.strokeStyle=ch==='cat'?'#E9DFCF':'#2B2B33';c.lineWidth=2.4;c.lineCap='round';c.beginPath();c.moveTo(6,-11);c.quadraticCurveTo(15,-12+Math.sin(t*4)*3,12,-22);c.stroke()}
   if(ch==='dragon'){c.fillStyle='#7B3BB5';[-1,1].forEach(s=>{c.beginPath();c.moveTo(s*5,-19);c.lineTo(s*16,-28+Math.sin(t*5)*2);c.lineTo(s*14,-16);c.lineTo(s*10,-18);c.closePath();c.fill()})}
   if(ch==='trice'){c.beginPath();c.arc(0,-31,13,Math.PI*1.05,Math.PI*1.95);c.lineTo(0,-31);c.fillStyle='#C9763A';c.fill()}
+  const sw=Math.sin(t*3)*.12;
+  if(ch==='squirrel'){c.save();c.translate(7,-10);c.rotate(sw);ell(c,4,-9,6,11,'#B06E36',.35);ell(c,4.6,-9,3,8,'#D9A06A',.35);c.restore()}
+  if(ch==='fox'){c.save();c.translate(6,-11);c.rotate(sw);ell(c,7,0,9,3.8,'#E8833A',-.35);ell(c,13.5,-2.4,3,2.6,'#FFF6EA',-.35);c.restore()}
+  if(ch==='tiger'){c.save();c.translate(6,-11);c.rotate(sw);c.strokeStyle='#F29B38';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(10,2,12,-8);c.stroke();c.strokeStyle='#2B2320';c.lineWidth=3.2;c.lineCap='butt';[[6,1.4],[10.6,-2.6]].forEach(([x,y])=>{c.beginPath();c.moveTo(x-.6,y);c.lineTo(x+.6,y);c.stroke()});c.restore()}
+  if(ch==='shiba'){c.strokeStyle='#E2A15A';c.lineWidth=3;c.lineCap='round';c.beginPath();c.arc(9,-15,3.6,Math.PI*.6,Math.PI*2.1);c.stroke()}
+  if(ch==='rabbit'){circ(c,7,-9,2.6,'#FFFFFF')}
+  if(ch==='girl'){c.save();c.translate(8,-33);c.rotate(sw*1.5);ell(c,3,4,3.2,6.6,'#5A3324',.5);c.restore();circ(c,8.4,-33.4,1.5,'#F07AA8')}
+  if(ch==='unicorn'){c.save();c.translate(6,-11);c.rotate(sw);['#FF8FB8','#B79BFF','#7CC8FF'].forEach((col,i)=>{c.strokeStyle=col;c.lineWidth=2;c.lineCap='round';c.beginPath();c.moveTo(0,i*1.4);c.quadraticCurveTo(9,i*1.4,11,6+i*1.6);c.stroke()});c.restore()}
 }
 function drawHead(c,ch,t){
   const H=-29;
@@ -1372,6 +1412,49 @@ function drawHead(c,ch,t){
     case 'witch':
       tri(c,[-9,H-4],[-7,H-14],[-2,H-8],'#2B2B33');tri(c,[9,H-4],[7,H-14],[2,H-8],'#2B2B33');circ(c,0,H,10,'#2B2B33');
       ell(c,-3.6,H,2,2.4,'#F7D33C');ell(c,3.6,H,2,2.4,'#F7D33C');ell(c,-3.6,H,.7,2,'#1D2433');ell(c,3.6,H,.7,2,'#1D2433');circ(c,0,H+3,1,'#F28AA0');break;
+    case 'frog':
+      circ(c,-5.6,H-6.5,4.2,'#7CC75A');circ(c,5.6,H-6.5,4.2,'#7CC75A');ell(c,0,H+1,11,8.6,'#7CC75A');
+      circ(c,-5.6,H-7,2.8,'#fff');circ(c,5.6,H-7,2.8,'#fff');circ(c,-5.3,H-6.8,1.5,'#1D2433');circ(c,5.9,H-6.8,1.5,'#1D2433');circ(c,-4.8,H-7.4,.5,'#fff');circ(c,6.4,H-7.4,.5,'#fff');
+      c.strokeStyle='#2E6B2A';c.lineWidth=1;c.beginPath();c.arc(0,H+1,5,.2*Math.PI,.8*Math.PI);c.stroke();blush(c);break;
+    case 'squirrel':
+      tri(c,[-8,H-5],[-6.5,H-14],[-3,H-8],'#C9844A');tri(c,[8,H-5],[6.5,H-14],[3,H-8],'#C9844A');tri(c,[-6.8,H-12],[-6.2,H-16],[-5.2,H-12.5],'#8A5A2E');tri(c,[6.8,H-12],[6.2,H-16],[5.2,H-12.5],'#8A5A2E');
+      circ(c,0,H,10,'#C9844A');ell(c,-4.6,H+3.2,3.6,2.8,'#F3D3AE');ell(c,4.6,H+3.2,3.6,2.8,'#F3D3AE');ell(c,0,H+2.6,2.6,2.2,'#F3D3AE');eyes(c);circ(c,0,H+1.6,1.2,'#5A3418');c.fillStyle='#fff';c.fillRect(-1,H+3.6,2,1.8);c.strokeStyle='#5A3418';c.lineWidth=.4;c.strokeRect(-1,H+3.6,2,1.8);break;
+    case 'rabbit':
+      ell(c,-4,H-14,2.7,7.5,'#F4F1EC',-.12);ell(c,4,H-14,2.7,7.5,'#F4F1EC',.12);ell(c,-4,H-14,1.3,5.5,'#F6B7C3',-.12);ell(c,4,H-14,1.3,5.5,'#F6B7C3',.12);
+      circ(c,0,H,10,'#F4F1EC');eyes(c);blush(c);circ(c,0,H+2,1.1,'#F28AA0');c.strokeStyle='#C9BFB2';c.lineWidth=.6;c.beginPath();c.moveTo(0,H+3);c.lineTo(0,H+4.4);c.stroke();break;
+    case 'girl':
+      circ(c,0,H,10,'#F5CDA5');c.fillStyle='#5A3324';c.beginPath();c.arc(0,H-1,10.6,Math.PI*1.02,Math.PI*1.98);c.quadraticCurveTo(4,H-6,-1,H-8);c.quadraticCurveTo(-6,H-5,-10.4,H-2);c.fill();
+      c.fillStyle='#F07AA8';rr(c,-10.6,H-6,21.2,2.4,1.2);c.fill();eyes(c);blush(c);c.strokeStyle='#C2665E';c.lineWidth=.8;c.beginPath();c.arc(0,H+3,2,.15*Math.PI,.85*Math.PI);c.stroke();break;
+    case 'hamster':
+      circ(c,-7.5,H-7.5,3,'#E0A95E');circ(c,7.5,H-7.5,3,'#E0A95E');circ(c,-7.5,H-7.5,1.6,'#F6B7C3');circ(c,7.5,H-7.5,1.6,'#F6B7C3');
+      ell(c,0,H,11,10,'#F0C27B');ell(c,-5.5,H+3.6,4.4,3.6,'#FFF6E8');ell(c,5.5,H+3.6,4.4,3.6,'#FFF6E8');ell(c,0,H+2.5,3,2.4,'#FFF6E8');eyes(c,'#1D2433',H-1);circ(c,0,H+1.5,.9,'#F28AA0');blush(c);break;
+    case 'duck':
+      circ(c,0,H,10,'#FFD84A');c.strokeStyle='#E8B520';c.lineWidth=1.4;c.beginPath();c.moveTo(-1,H-9.5);c.quadraticCurveTo(0,H-14,2.5,H-12);c.moveTo(1,H-9.5);c.quadraticCurveTo(3,H-13,5,H-11);c.stroke();
+      eyes(c);ell(c,0,H+3,5.2,2.4,'#F5913A');c.strokeStyle='#C96812';c.lineWidth=.5;c.beginPath();c.moveTo(-4.5,H+3);c.lineTo(4.5,H+3);c.stroke();blush(c);break;
+    case 'shiba':
+      tri(c,[-9,H-4],[-7.5,H-14],[-2.5,H-8],'#E2A15A');tri(c,[9,H-4],[7.5,H-14],[2.5,H-8],'#E2A15A');tri(c,[-7.6,H-6],[-6.8,H-11.5],[-4,H-8],'#FFF4E4');tri(c,[7.6,H-6],[6.8,H-11.5],[4,H-8],'#FFF4E4');
+      circ(c,0,H,10,'#E2A15A');ell(c,-4.8,H+3.4,4.4,3.4,'#FFF4E4');ell(c,4.8,H+3.4,4.4,3.4,'#FFF4E4');ell(c,0,H+4.4,3.6,3,'#FFF4E4');circ(c,-3.4,H-4.6,1,'#FFF4E4');circ(c,3.4,H-4.6,1,'#FFF4E4');
+      eyes(c);circ(c,0,H+2.4,1.5,'#1D2433');blush(c);break;
+    case 'grandpa':
+      circ(c,0,H,10,'#F2C9A0');ell(c,-8.6,H-1,3,4.6,'#F1F1EF');ell(c,8.6,H-1,3,4.6,'#F1F1EF');ell(c,0,H-9,5,1.6,'#F1F1EF');
+      c.strokeStyle='#3A3F4A';c.lineWidth=.8;circ(c,-3.6,H-1,2.6,'rgba(255,255,255,.35)');circ(c,3.6,H-1,2.6,'rgba(255,255,255,.35)');c.beginPath();c.arc(-3.6,H-1,2.6,0,Math.PI*2);c.moveTo(6.2,H-1);c.arc(3.6,H-1,2.6,0,Math.PI*2);c.moveTo(-1,H-1);c.lineTo(1,H-1);c.stroke();
+      circ(c,-3.6,H-1,1,'#1D2433');circ(c,3.6,H-1,1,'#1D2433');ell(c,-2.6,H+3.2,3,1.6,'#F1F1EF',.25);ell(c,2.6,H+3.2,3,1.6,'#F1F1EF',-.25);ell(c,0,H+1.6,1.6,1.3,'#E3A98A');blush(c);break;
+    case 'fox':
+      tri(c,[-9.5,H-3],[-8,H-15],[-2.5,H-8],'#E8833A');tri(c,[9.5,H-3],[8,H-15],[2.5,H-8],'#E8833A');tri(c,[-8.2,H-5.6],[-7.6,H-12.4],[-4.2,H-8],'#2B2320');tri(c,[8.2,H-5.6],[7.6,H-12.4],[4.2,H-8],'#2B2320');
+      circ(c,0,H,10,'#E8833A');c.beginPath();c.moveTo(-10,H+1);c.quadraticCurveTo(-4,H+1,0,H+8.5);c.quadraticCurveTo(4,H+1,10,H+1);c.quadraticCurveTo(6,H+9,0,H+10);c.quadraticCurveTo(-6,H+9,-10,H+1);c.fillStyle='#FFF6EA';c.fill();
+      eyes(c);circ(c,0,H+3.6,1.4,'#1D2433');blush(c);break;
+    case 'tiger':
+      circ(c,-7.6,H-7.6,3.4,'#F29B38');circ(c,7.6,H-7.6,3.4,'#F29B38');circ(c,-7.6,H-7.6,1.7,'#2B2320');circ(c,7.6,H-7.6,1.7,'#2B2320');
+      circ(c,0,H,10,'#F29B38');ell(c,0,H+4,6.4,4,'#FFF6EA');c.fillStyle='#2B2320';[[-1.6,H-9.8,3.2,3.4],[-5.4,H-8.4,2,2.6],[3.4,H-8.4,2,2.6]].forEach(([x,y,w,h])=>{c.fillRect(x,y,w,h)});
+      [-1,1].forEach(s=>{c.fillRect(s>0?7:-9.4,H-1,2.4,1.1);c.fillRect(s>0?7.4:-9.8,H+1.6,2.4,1.1)});eyes(c);circ(c,0,H+2.4,1.4,'#E8435A');blush(c);break;
+    case 'axolotl':
+      [-1,1].forEach(s=>{for(let i=0;i<3;i++){c.strokeStyle='#E8578A';c.lineWidth=1.8;c.lineCap='round';c.beginPath();c.moveTo(s*8,H-4+i*3);c.lineTo(s*(13+Math.sin(t*4+i)*.6),H-8+i*3.6);c.stroke()}});
+      ell(c,0,H,11,9,'#F7B5C8');circ(c,-4.4,H-.5,1.3,'#1D2433');circ(c,4.4,H-.5,1.3,'#1D2433');c.strokeStyle='#C2577C';c.lineWidth=.8;c.beginPath();c.arc(0,H+1.6,3,.15*Math.PI,.85*Math.PI);c.stroke();blush(c);break;
+    case 'unicorn':
+      tri(c,[-8.5,H-4],[-7,H-12.5],[-3,H-8],'#F7F3FF');tri(c,[8.5,H-4],[7,H-12.5],[3,H-8],'#F7F3FF');
+      ['#FF8FB8','#B79BFF','#7CC8FF'].forEach((col,i)=>{c.strokeStyle=col;c.lineWidth=2.4;c.lineCap='round';c.beginPath();c.moveTo(-2+i*2,H-9);c.quadraticCurveTo(-9+i*1.5,H-6,-10+i,H+2);c.stroke()});
+      circ(c,0,H,9.6,'#F7F3FF');tri(c,[-2,H-9],[2,H-9],[0,H-20],'#F4C542');c.strokeStyle='#D9A520';c.lineWidth=.6;c.beginPath();c.moveTo(-1.2,H-12);c.lineTo(1,H-13);c.moveTo(-.8,H-15);c.lineTo(.8,H-16);c.stroke();
+      eyes(c,'#3B2A5A');blush(c);circ(c,0,H+3,.8,'#F28AA0');break;
     case 'dragon':
       tri(c,[-6,H-6],[-3,H-7],[-8,H-16],'#FFF0C9');tri(c,[6,H-6],[3,H-7],[8,H-16],'#FFF0C9');circ(c,0,H,10,'#D9443A');ell(c,0,H+4,6,3.6,'#F59B7E');circ(c,-1.8,H+3,.8,'#7A1E18');circ(c,1.8,H+3,.8,'#7A1E18');eyes(c);break;
   }
@@ -1379,8 +1462,16 @@ function drawHead(c,ch,t){
 function drawHeadgear(c,it,t){
   const H=-29,[a,b]=it.col;
   if(it.hat){tri(c,[-12,H-6],[12,H-6],[3,H-26],a);ell(c,0,H-6,14,3.2,a);c.fillStyle=b;c.fillRect(-7,H-9.5,14,2.6);return}
+  const hg=it.hg;
+  if(hg==='band'){c.fillStyle=a;rr(c,-10.8,H-6.4,21.6,3.4,1.6);c.fill();c.fillStyle=b;c.fillRect(-10.8,H-5.2,21.6,.8);c.fillStyle=a;c.save();c.translate(10,H-5);c.rotate(.5+Math.sin(t*5)*.15);rr(c,0,-1,6,2,1);c.fill();c.rotate(.5);rr(c,0,-1,5,2,1);c.fill();c.restore();return}
+  if(hg==='ribbon'){c.lineWidth=2;c.strokeStyle=a;c.beginPath();c.arc(0,H,10.4,Math.PI*1.1,Math.PI*1.9);c.stroke();const bx=5.5,by=H-10;tri(c,[bx,by],[bx-5,by-3.4],[bx-4.4,by+3],a);tri(c,[bx,by],[bx+5,by-3.4],[bx+4.4,by+3],a);circ(c,bx,by,1.6,b);return}
+  if(hg==='beanie'){c.fillStyle=a;c.beginPath();c.arc(0,H-1,11,Math.PI,0);c.closePath();c.fill();c.fillStyle=b;rr(c,-11.6,H-3.2,23.2,3.6,1.6);c.fill();c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=.6;for(let i=-3;i<=3;i++){c.beginPath();c.moveTo(i*2.8,H-3.2);c.lineTo(i*2.2,H-10);c.stroke()}circ(c,0,H-12.4,2.8,b);return}
+  if(hg==='bandana'){c.fillStyle=a;c.beginPath();c.arc(0,H-1,10.8,Math.PI,0);c.lineTo(10.8,H-3);c.lineTo(-10.8,H-3);c.closePath();c.fill();c.fillStyle=b;[[-5,H-7],[0,H-9],[5,H-7],[-2.5,H-5],[2.5,H-5]].forEach(([x,y])=>circ(c,x,y,.8,b));c.fillStyle=a;tri(c,[9.6,H-4],[15,H-1+Math.sin(t*5)],[12,H-6],a);tri(c,[9.6,H-4],[14,H-6.5],[13,H-3],a);return}
+  if(hg==='crown'){c.fillStyle=a;c.beginPath();c.moveTo(-8,H-8);c.lineTo(-8,H-15);c.lineTo(-4,H-11);c.lineTo(0,H-17);c.lineTo(4,H-11);c.lineTo(8,H-15);c.lineTo(8,H-8);c.closePath();c.fill();c.strokeStyle='#A87A0E';c.lineWidth=.7;c.stroke();circ(c,0,H-10.6,1.5,b);circ(c,-5,H-9.8,1,'#2E5AAC');circ(c,5,H-9.8,1,'#2E5AAC');circ(c,0,H-17.4,1,'#FFF6C8');return}
+  if(hg==='ears'){tri(c,[-10,H-6],[-8.5,H-17],[-3,H-11],a);tri(c,[10,H-6],[8.5,H-17],[3,H-11],a);tri(c,[-8.6,H-8],[-8,H-14],[-4.6,H-10.6],b);tri(c,[8.6,H-8],[8,H-14],[4.6,H-10.6],b)}
   c.lineWidth=4.2;c.strokeStyle=a;c.beginPath();c.arc(0,H,11,Math.PI*1.08,Math.PI*1.92);c.stroke();
-  c.fillStyle=a;rr(c,-13,H-4,5,10,2.5);c.fill();rr(c,8,H-4,5,10,2.5);c.fill();
+  c.fillStyle=a;if(hg==='cheek'){rr(c,-14,H-5,6.4,14,3);c.fill();rr(c,7.6,H-5,6.4,14,3);c.fill();c.fillStyle=b;rr(c,-13,H+3,4.4,2,1);c.fill();rr(c,8.6,H+3,4.4,2,1);c.fill()}else{rr(c,-13,H-4,5,10,2.5);c.fill();rr(c,8,H-4,5,10,2.5);c.fill()}
+  if(hg==='face'){c.strokeStyle=b;c.lineWidth=1.5;c.beginPath();c.moveTo(-9,H+2);c.quadraticCurveTo(0,H+10,9,H+2);c.stroke();c.lineWidth=1;c.beginPath();c.moveTo(0,H+6);c.lineTo(0,H+9.6);c.stroke()}
   c.lineWidth=1.2;c.strokeStyle=b;c.beginPath();c.arc(0,H,11,Math.PI*1.2,Math.PI*1.8);c.stroke();
   rr(c,-3,H-14.5,6,4,2);c.fillStyle=a;c.fill();
   if(it.id==='h_winning'){circ(c,0,H-12.6,1.4,b)}
@@ -1388,7 +1479,21 @@ function drawHeadgear(c,it,t){
 function drawGlove(c,x,y,r,it,t){
   const [a,b]=it.col;
   if(it.fx==='fire'){c.globalAlpha=.55;for(let i=0;i<3;i++){const ang=t*8+i*2.1;circ(c,x+Math.cos(ang)*2,y-r-1-Math.abs(Math.sin(ang))*3,r*.55,i%2?'#FFD23F':'#FF7A1F')}c.globalAlpha=1}
-  circ(c,x,y,r,a);ell(c,x-r*.3,y-r*.35,r*.35,r*.22,'rgba(255,255,255,.45)');c.fillStyle=b;rr(c,x-r*.8,y+r*.55,r*1.6,r*.6,1.5);c.fill();
+  if(it.fx==='ice'){c.globalAlpha=.35+.25*Math.sin(t*4);circ(c,x,y,r*1.35,'#CFF3FF');c.globalAlpha=1}
+  circ(c,x,y,r,a);
+  if(it.pat){c.save();c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.clip();const p=it.pat,u=r/4.4;
+    if(p==='dot'){[[-1.6,-1.4],[1.4,-.6],[-.4,1.2],[2,1.8],[-2.4,1.6]].forEach(([dx,dy])=>circ(c,x+dx*u,y+dy*u,.65*u,b))}
+    if(p==='lace'){c.strokeStyle=b;c.lineWidth=.55*u;c.beginPath();for(let i=0;i<4;i++){const yy=y-2.6*u+i*1.5*u;c.moveTo(x-1.1*u,yy);c.lineTo(x+1.1*u,yy+1*u);c.moveTo(x+1.1*u,yy);c.lineTo(x-1.1*u,yy+1*u)}c.stroke()}
+    if(p==='heart'){c.fillStyle=b;c.beginPath();const hx=x,hy=y-.4*u,k=1.5*u;c.moveTo(hx,hy+1.6*k);c.bezierCurveTo(hx-2.2*k,hy+.2*k,hx-1.2*k,hy-1.6*k,hx,hy-.5*k);c.bezierCurveTo(hx+1.2*k,hy-1.6*k,hx+2.2*k,hy+.2*k,hx,hy+1.6*k);c.fill()}
+    if(p==='bolt'){c.fillStyle=b;c.beginPath();c.moveTo(x+.6*u,y-3.6*u);c.lineTo(x-1.8*u,y+.4*u);c.lineTo(x-.1*u,y+.4*u);c.lineTo(x-.8*u,y+3.6*u);c.lineTo(x+1.9*u,y-.8*u);c.lineTo(x+.2*u,y-.8*u);c.closePath();c.fill()}
+    if(p==='camo'){[[-1.8,-1.6,1.6,1.1,b],[1.6,-.4,1.4,1,'#A7B47A'],[-.6,1.8,1.8,1,b],[2.2,2.2,1,.8,'#2C3520'],[-2.6,.6,1,.8,'#2C3520']].forEach(([dx,dy,rx,ry,col])=>ell(c,x+dx*u,y+dy*u,rx*u,ry*u,col,.5))}
+    if(p==='paw'){ell(c,x,y+.6*u,1.6*u,1.3*u,b);[[-1.6,-1.2],[0,-1.9],[1.6,-1.2]].forEach(([dx,dy])=>circ(c,x+dx*u,y+dy*u,.65*u,b))}
+    if(p==='melon'){circ(c,x,y+.3*u,r*.78,b);c.fillStyle='#1D2433';[[-1,0],[1,.6],[0,1.8],[1.6,-.6],[-1.8,1.2]].forEach(([dx,dy])=>ell(c,x+dx*u,y+dy*u,.28*u,.45*u,'#1D2433'));c.strokeStyle='#2C7A34';c.lineWidth=.5*u;[-2,0,2].forEach(dx=>{c.beginPath();c.moveTo(x+dx*u,y-4*u);c.lineTo(x+dx*u*1.1,y-2.6*u);c.stroke()})}
+    if(p==='split'){c.fillStyle=b;c.beginPath();c.moveTo(x-r,y);c.bezierCurveTo(x-r*.4,y+r*.5,x+r*.4,y-r*.5,x+r,y);c.lineTo(x+r,y+r);c.lineTo(x-r,y+r);c.closePath();c.fill()}
+    if(p==='galaxy'){ell(c,x+.8*u,y-.6*u,2.6*u,1.6*u,'rgba(183,155,255,.55)',.6);ell(c,x-1.2*u,y+1.4*u,2*u,1.1*u,'rgba(255,143,184,.45)',-.4);[[-1.8,-1.8],[1.8,1.6],[.4,-.2],[-.8,2.6],[2.4,-1.4]].forEach(([dx,dy],i)=>{c.globalAlpha=.6+.4*Math.sin(t*5+i);circ(c,x+dx*u,y+dy*u,.35*u,'#FFFFFF');c.globalAlpha=1})}
+    c.restore()}
+  ell(c,x-r*.3,y-r*.35,r*.35,r*.22,'rgba(255,255,255,.45)');c.fillStyle=b;rr(c,x-r*.8,y+r*.55,r*1.6,r*.6,1.5);c.fill();
+  if(it.pat==='lace'){c.fillStyle=a;rr(c,x-r*.8,y+r*.55,r*1.6,r*.6,1.5);c.fill();c.fillStyle=b;c.fillRect(x-r*.8,y+r*.75,r*1.6,r*.18)}
 }
 function drawChar(c,x,y,s,eq,o={}){
   const t=o.t||0,pose=o.pose||'idle';
@@ -1402,7 +1507,7 @@ function drawChar(c,x,y,s,eq,o={}){
   if(pose==='duck')dy=6;if(pose==='back')dx=-5;if(o.jump)dy=-o.jump;
   c.translate(dx,dy);
   // 다리·신발
-  const legC=ch==='boxer'?'#F5CDA5':C.body;
+  const legC=ch==='boxer'||ch==='girl'?'#F5CDA5':ch==='grandpa'?'#F2C9A0':C.body;
   c.fillStyle=legC;c.fillRect(-5,-8,3.4,6);c.fillRect(1.6,-8,3.4,6);
   if(sh.high){c.fillStyle=sh.col[0];rr(c,-6.2,-6,5,5,1.5);c.fill();rr(c,1.2,-6,5,5,1.5);c.fill()}
   ell(c,-4,-1,4.2,2.4,sh.col[0]);ell(c,4,-1,4.2,2.4,sh.col[0]);c.fillStyle=sh.col[1];c.fillRect(-8,-.4,8,1.2);c.fillRect(0,-.4,8,1.2);
@@ -1415,7 +1520,18 @@ function drawChar(c,x,y,s,eq,o={}){
   if(ch==='skull'){c.strokeStyle='#F1EFE8';c.lineWidth=.9;for(let i=0;i<3;i++){c.beginPath();c.moveTo(-4,-18+i*2.4);c.lineTo(4,-18+i*2.4);c.stroke()}}
   if(ch==='pumpkin'){tri(c,[-7,-9],[7,-9],[0,-4],C.body)}
   if(ch==='boxer'){c.fillStyle='#23262E';rr(c,-7,-21,14,8,4);c.fill();if(!o.flip){c.fillStyle='#fff';c.font='bold 4px sans-serif';c.textAlign='center';c.fillText('NNN',0,-15.5)}}
-  c.fillStyle=tr.col[0];rr(c,-7.2,-12,14.4,6,[0,0,3,3]);c.fill();c.fillStyle=tr.col[1];c.fillRect(-7.2,-12,14.4,1.4);
+  if(ch==='girl'){c.fillStyle='#F07AA8';rr(c,-7,-21,14,7,4);c.fill();if(!o.flip){c.fillStyle='#fff';c.font='bold 3.6px sans-serif';c.textAlign='center';c.fillText('NNN',0,-16.2)}}
+  if(ch==='grandpa'){c.fillStyle='#8A94A6';rr(c,-7,-21,14,10,4);c.fill();c.fillStyle='#5D6880';c.fillRect(-4.5,-21,1.4,10);c.fillRect(3.1,-21,1.4,10);if(!o.flip){c.fillStyle='#fff';c.font='bold 3.2px sans-serif';c.textAlign='center';c.fillText('COACH',0,-15.2)}}
+  if(ch==='frog'||ch==='duck'||ch==='hamster'||ch==='axolotl'){ell(c,0,-14,4.6,5.2,ch==='frog'?'#CDEB9F':ch==='duck'?'#FFF0A8':ch==='axolotl'?'#FFD9E4':'#FFF6E8')}
+  if(ch==='tiger'){c.fillStyle='#2B2320';[-19,-16.5].forEach(y=>{c.fillRect(-7,y,2.6,1.2);c.fillRect(4.4,y,2.6,1.2)})}
+  if(ch==='fox'||ch==='shiba'||ch==='squirrel'){ell(c,0,-14,4.2,5,ch==='squirrel'?'#F3D3AE':'#FFF6EA')}
+  c.fillStyle=tr.col[0];rr(c,-7.2,-12,14.4,6,[0,0,3,3]);c.fill();
+  if(tr.pat){c.save();rr(c,-7.2,-12,14.4,6,[0,0,3,3]);c.clip();const b=tr.col[1];
+    if(tr.pat==='stars'){[[-4.5,-8.5],[0,-7.2],[4.5,-8.8]].forEach(([x,y])=>star(c,x,y,1.4,b))}
+    if(tr.pat==='split'){c.fillStyle=b;c.fillRect(0,-12,7.2,6)}
+    if(tr.pat==='tiger'){c.fillStyle=b;[-5,-1,3].forEach(x=>{c.beginPath();c.moveTo(x,-12);c.lineTo(x+1.6,-12);c.lineTo(x+.6,-7.5);c.closePath();c.fill()})}
+    c.restore()}
+  c.fillStyle=tr.col[1];c.fillRect(-7.2,-12,14.4,1.4);
   if(bt){c.fillStyle=bt.col[0];rr(c,-8,-13.5,16,4,1.5);c.fill();circ(c,0,-11.5,2.6,bt.col[0]);circ(c,0,-11.5,1.4,bt.col[1])}
   // 머리
   c.save();if(pose==='duck')c.translate(0,1);drawHead(c,ch,t);if(hd)drawHeadgear(c,hd,t);
@@ -1512,7 +1628,7 @@ let starterPick='boxer';
 function buildJoin(){
   $('#termsText').textContent=local.meta.terms+'\n\n[이용수칙]\n'+rulesTxt();
   const g=$('#starter');g.innerHTML='';
-  ['boxer','cat','dog'].forEach(ch=>{const b=document.createElement('button');b.type='button';b.className='item'+(ch===starterPick?' eq':'');b.innerHTML=`<canvas width="180" height="198"></canvas><span class="nm">${CHARS[ch].name}</span>`;g.appendChild(b);
+  ['boxer','girl','cat','dog','frog','squirrel'].forEach(ch=>{const b=document.createElement('button');b.type='button';b.className='item'+(ch===starterPick?' eq':'');b.innerHTML=`<canvas width="180" height="198"></canvas><span class="nm">${CHARS[ch].name}</span>`;g.appendChild(b);
     avatarTo(b.querySelector('canvas'),{char:ch,glove:'g_red',shoes:'s_basic',trunks:'t_black'},{h:44});
     b.onclick=()=>{starterPick=ch;buildJoin()}});
 }
@@ -3574,6 +3690,7 @@ const FEAT=[
   {id:'s_sent',aud:'owner',q:'보낸 사람은 목록에서 자동 제외',d:'2026-10-20',e:'✉️',t:'보낼 안내 중복 방지',s:'문자·카톡으로 보낸 기록이 있으면 보낼 안내·한 번에 보내기에서 빠져요',go:'adm:today'},
   {id:'s_hr',aud:'owner',q:'날짜 누르면 수정 칸 하나만',d:'2026-10-21',e:'🕘',t:'코치 근태 수정 정리',s:'수정 칸이 겹치지 않고, 퇴근이 출근보다 빠르면 막아요',go:'adm:staff'},
   {id:'s_face',aud:'staff',q:'PIN·코드 대신 얼굴로',d:'2026-10-20',e:'🙂',t:'관장·코치 Face ID 로그인',s:'관장 메뉴·코치 로그인을 한 번 PIN(코드)으로 들어오면 다음부터 얼굴·지문으로 들어와요',go:null},
+  {id:'newchars',q:'개구리·다람쥐 등 12종, 글러브·헤드기어 새 디자인',d:'2026-10-22',e:'🐸',t:'새 캐릭터와 장비',s:'개구리·다람쥐·토끼·복싱 걸은 무료! 햄찌·시바·여우·아기 호랑이·우파루파·유니콘, 냥발·수박·갤럭시 글러브, 왕관·비니 등',go:'shop',sel:'#nav [data-tab="shop"]',tab:'map'},
   {id:'rankgame',q:'퀴즈왕·카트·보리보리쌀 등 순위',d:'2026-10-22',e:'🏆',t:'랭킹에 게임장 순위',s:'게임장에서 한 게임의 최고 기록으로 체육관 친구들과 순위를 겨뤄요',go:'rank',sel:'#nav [data-tab="rank"]',tab:'map'},
   {id:'quizeng',q:'퀴즈왕·잉글리시, 게임장에서',d:'2026-10-21',e:'🧠',t:'NNN 퀴즈왕 · NNN 잉글리시',s:'상식·넌센스 퀴즈 팀 대결과 듣고 따라 말하는 영어 레슨이 게임장에 생겼어요',go:'arcade',sel:null},
   {id:'arcade7',q:'아레나·카트·주사위 등, 첫 판 +10',d:'2026-10-21',e:'🎮',t:'게임장에 새 게임 7개',s:'아레나·드리프트 카트·욕심 주사위 등. 하루 첫 판은 +10 크레딧!',go:'arcade',sel:null},
