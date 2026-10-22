@@ -607,7 +607,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div class="field"><label for="jNote">부상·건강 참고사항 <span class="small">(코치만 확인)</span></label><textarea id="jNote" rows="2" placeholder="예: 오른쪽 어깨 수술 이력"></textarea></div>
     <div class="field"><span>본인 얼굴 사진 <b style="color:var(--red)">(필수)</b></span>
       <div class="row" style="align-items:center"><div id="faceBox" style="width:84px;height:84px;border-radius:10px;background:var(--mat);border:2px dashed var(--line);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;color:var(--muted);font-size:12px">사진 없음</div>
-      <div class="grow" style="display:flex;flex-direction:column;gap:6px"><label class="btn sm red" for="jFace" style="text-align:center">셀카 찍기</label><input id="jFace" type="file" accept="image/*" capture="user" hidden>
+      <div class="grow" style="display:flex;flex-direction:column;gap:6px"><div class="row" style="gap:6px"><label class="btn sm red grow" for="jFace" style="text-align:center">📷 셀카 찍기</label><label class="btn sm ghost grow" for="jFaceG" style="text-align:center">🖼 사진첩에서</label></div><input id="jFace" type="file" accept="image/*" capture="user" hidden><input id="jFaceG" type="file" accept="image/*" hidden>
       <span class="small">관장님이 회원 얼굴을 기억하기 위한 용도예요. 관장님만 볼 수 있고 다른 회원이나 외부에는 공개되지 않아요.</span></div></div></div>
     <div class="field"><span>내 첫 캐릭터</span>
       <div class="grid" id="starter"></div></div>
@@ -1686,7 +1686,7 @@ $('#joinForm').onsubmit=async e=>{
     const m=blankMember({name,phone,birth:$('#jBirth').value,gender:$('#jGender').value,goal:$$('#jGoal .chip.on').map(c=>c.textContent),exp:$('#jExp').value,path:$('#jPath').value,note:$('#jNote').value.trim(),mkt:$('#ag3').checked,char:starterPick},id);
     const rf=($('#jRef').value||'').trim();if(stu){m.student=true;m.gPhone=gPhone;m.gName=$('#jGRel').value}
     if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
-    m.hasFace=true;await DB.save(m);await DB.savePriv(m);try{await dupSave(m)}catch(e){}if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}}if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref');const pv=JSON.parse(localStorage.getItem('nnn_joined')||'[]');pv.push({id,name,phone:phone.replace(/\D/g,''),at:Date.now()});localStorage.setItem('nnn_joined',JSON.stringify(pv.slice(-10)))}catch(e){}lsSet(LS_SESSION,id);
+    m.hasFace=true;await DB.save(m);await DB.savePriv(m);try{await dupSave(m)}catch(e){}if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}}if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';try{jdClear()}catch(e){}ME=m;try{localStorage.removeItem('nnn_ref');const pv=JSON.parse(localStorage.getItem('nnn_joined')||'[]');pv.push({id,name,phone:phone.replace(/\D/g,''),at:Date.now()});localStorage.setItem('nnn_joined',JSON.stringify(pv.slice(-10)))}catch(e){}lsSet(LS_SESSION,id);
     showDone();
   }catch(err){console.error(err);joinErr('가입을 마무리하지 못했어요. 다시 한 번 눌러 주세요. 계속 안 되면 이 화면을 캡처해서 데스크에 보여 주세요<br><span style="font-size:12px">('+esc(String(err&&err.message||err).slice(0,120))+')</span>');
     if(jid&&FB_ON()){try{await gref('diag/'+jid+'/'+Date.now().toString(36)).set(clean({at:Date.now(),reason:'가입 오류',err:String(err&&err.message||err).slice(0,300),ua:navigator.userAgent.slice(0,200)}))}catch(e){}}
@@ -4242,7 +4242,7 @@ $('#admSearch').oninput=renderAdmRows;
 async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad();
   sheet(`<div class="row" style="align-items:center"><div id="admFace" style="width:84px;height:84px;border-radius:10px;background:var(--mat);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:var(--muted)">${m.hasFace?'불러오는 중':'사진 없음'}</div><div class="grow"><h2>${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>${m.approvedAt?`<span class="pill">승인 ${esc(md(m.approvedAt))}</span>`:'<span class="pill fire">승인 대기</span>'}</div></div>
     ${m.approvedAt?'':'<button class="btn red" id="admApprove">가입 승인하고 약관·이용수칙 보내기</button>'}
-    <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden></div>
+    <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><label class="btn ghost sm" for="admFaceG" style="text-align:center">사진첩</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden><input id="admFaceG" type="file" accept="image/*" hidden></div>
     <div class="qrow"><div class="grow">연락처 <a class="num" href="tel:${esc((m.phone||'').replace(/[^0-9]/g,''))}" style="font-weight:600">${esc(m.phone||'-')}</a></div>${m.phone?`<a class="btn sm ghost" href="tel:${esc(m.phone.replace(/[^0-9]/g,''))}">전화</a><a class="btn sm ghost" href="sms:${esc(m.phone.replace(/[^0-9]/g,''))}">문자</a>`:''}</div>
     <div class="qrow"><div class="grow small">가입일 ${esc(m.joined||'-')} · 크레딧 <span class="num">${m.credits}</span> · 출석 <span class="num">${m.attend.length}</span>회<br>생년월일 ${esc(m.birth||'-')} · ${esc(m.gender||'-')}<br>목적 ${esc(m.goal.join(', ')||'-')} · 경력 ${esc(m.exp)}<br>유입 ${esc(m.path||'-')} · 마케팅 수신 ${m.agreeMkt?'동의':'미동의'}<br>참고사항 ${esc(m.note||'-')}</div></div>
     <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
@@ -4268,6 +4268,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     {const pb=el.querySelector('#admPt');if(pb)pb.onclick=async()=>{m.mem.pt.left--;await DB.savePriv(m);toast(`PT 차감 · 남은 ${m.mem.pt.left}회`);close();renderAdmRows()}}
     if(m.hasFace)FDB.get(m.id).then(src=>{const b=el.querySelector('#admFace');if(b)b.innerHTML=src?`<img src="${src}" alt="${esc(m.name)} 얼굴" style="width:100%;height:100%;object-fit:cover">`:'사진 없음'});
     {const a=el.querySelector('#admApprove');if(a)a.onclick=()=>{close();approveMember(m)}}
+    el.querySelector('#admFaceG').onchange=e=>el.querySelector('#admFaceIn').onchange(e);
     el.querySelector('#admFaceIn').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const d=await faceFromFile(f);if(await FDB.save(m.id,d)){m.hasFace=true;await DB.savePriv(m);el.querySelector('#admFace').innerHTML=`<img src="${d}" alt="" style="width:100%;height:100%;object-fit:cover">`;toast('얼굴 사진을 등록했어요')}else toast('저장하지 못했어요')}catch(err){toast('사진을 열지 못했어요')}};
     {const h=el.querySelector('#admHold');if(h)h.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
     el.querySelector('#admSend').onclick=()=>{close();openSendPicker(m)};
@@ -5771,7 +5772,25 @@ async function deleteMember(m){
   else{delete local.members[m.id];persist()}
   toast(m.name+' 님 정보를 삭제했어요');return true}
 
-$('#jFace').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{JOIN_FACE=await faceFromFile(f);$('#faceBox').innerHTML=`<img src="${JOIN_FACE}" alt="내 얼굴 사진" style="width:100%;height:100%;object-fit:cover">`;$('#faceBox').style.borderStyle='solid'}catch(err){toast('사진을 열지 못했어요')}};
+const JD_KEY='nnn_jdraft';
+function jFacePaint(){if(!JOIN_FACE)return;$('#faceBox').innerHTML=`<img src="${JOIN_FACE}" alt="내 얼굴 사진" style="width:100%;height:100%;object-fit:cover">`;$('#faceBox').style.borderStyle='solid'}
+function jdSave(){try{if($('#v-join').hidden)return;const f=$('#v-join form')||$('#v-join');const d={at:Date.now(),v:{},c:{},goal:[],face:JOIN_FACE||'',star:starterPick};
+  f.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{if(el.type==='file')return;if(el.type==='checkbox')d.c[el.id]=el.checked;else d.v[el.id]=el.value});
+  $$('#jGoal .chip.on').forEach(c=>d.goal.push(c.textContent));
+  let js=JSON.stringify(d);try{localStorage.setItem(JD_KEY,js)}catch(e){d.face='';try{localStorage.setItem(JD_KEY,JSON.stringify(d))}catch(e2){}}}catch(e){}}
+function jdClear(){try{localStorage.removeItem(JD_KEY)}catch(e){}}
+function jdLoad(){try{const d=JSON.parse(localStorage.getItem(JD_KEY)||'null');if(!d||Date.now()-d.at>6*3600e3)return null;return d}catch(e){return null}}
+function jdRestore(d){if(!d)return false;try{if(d.star&&CHARS[d.star])starterPick=d.star;buildJoin();
+  ['jBY','jBM'].forEach(k=>{if(d.v[k]!=null){$('#'+k).value=d.v[k];$('#'+k).dispatchEvent(new Event('change'))}});
+  Object.keys(d.v).forEach(k=>{if(k==='jBY'||k==='jBM')return;const el=document.getElementById(k);if(el&&el.closest('#v-join')){el.value=d.v[k];if(k==='jBD')el.dispatchEvent(new Event('change'))}});
+  Object.keys(d.c).forEach(k=>{const el=document.getElementById(k);if(el&&el.closest('#v-join'))el.checked=d.c[k]});syncGuard();
+  $$('#jGoal .chip').forEach(c=>c.classList.toggle('on',(d.goal||[]).includes(c.textContent)));
+  if(d.face){JOIN_FACE=d.face;jFacePaint()}return true}catch(e){return false}}
+{const jv=$('#v-join');['input','change','click'].forEach(ev=>jv.addEventListener(ev,()=>setTimeout(jdSave,0)));
+  jv.querySelector('[data-back]').addEventListener('click',()=>setTimeout(jdClear,50));
+  jv.querySelectorAll('label[for="jFace"],label[for="jFaceG"]').forEach(l=>l.addEventListener('click',jdSave,true))}
+const jFaceOn=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;$('#faceBox').textContent='불러오는 중…';try{JOIN_FACE=await faceFromFile(f);jFacePaint();jdSave();try{$('#joinMsg').hidden=true}catch(x){}}catch(err){$('#faceBox').textContent='사진 없음';toast('사진을 열지 못했어요. 사진첩에서 다른 사진을 골라 주세요',3500)}e.target.value=''};
+$('#jFace').onchange=jFaceOn;$('#jFaceG').onchange=jFaceOn;
 $('#rulesLink').onclick=e=>{e.preventDefault();openRules()};
 /* ================= 자동 문자 (발송함 → 구글 앱스 스크립트 → 솔라피) ================= */
 const lmsBytes=t=>[...String(t)].reduce((n,ch)=>n+(ch.charCodeAt(0)>127?2:1),0);
@@ -5821,10 +5840,11 @@ async function testAutoSms(){
 }
 
 /* ================= 나중에 셀카 등록 ================= */
-function faceCardHTML(){return`<div class="memc" style="border-color:var(--red)"><div class="row"><div class="grow"><div class="label">본인 확인 사진</div><b style="font-family:var(--display);font-weight:400;font-size:20px">셀카를 등록해 주세요</b><div class="small">관장님이 얼굴을 기억하기 위한 용도예요. 관장님만 볼 수 있어요.</div></div><label class="btn red sm" for="lateFace">셀카 찍기</label></div><input id="lateFace" type="file" accept="image/*" capture="user" hidden></div>`}
+function faceCardHTML(){return`<div class="memc" style="border-color:var(--red)"><div class="row"><div class="grow"><div class="label">본인 확인 사진</div><b style="font-family:var(--display);font-weight:400;font-size:20px">셀카를 등록해 주세요</b><div class="small">관장님이 얼굴을 기억하기 위한 용도예요. 관장님만 볼 수 있어요.</div></div><div style="display:flex;flex-direction:column;gap:6px"><label class="btn red sm" for="lateFace">셀카 찍기</label><label class="btn ghost sm" for="lateFaceG">사진첩에서</label></div></div><input id="lateFace" type="file" accept="image/*" capture="user" hidden><input id="lateFaceG" type="file" accept="image/*" hidden></div>`}
 function renderFaceCard(){
-  $$('[data-face]').forEach(el=>{el.innerHTML=ME&&!ME.hasFace&&!ME.demo&&!(MLAY!=='old'&&el.closest('#t-map'))?faceCardHTML():'';const inp=el.querySelector('#lateFace');if(inp)inp.onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
-    try{const data=await faceFromFile(f);if(!(await FDB.save(ME.id,data))){toast('저장하지 못했어요. 다시 해 주세요');return}ME.hasFace=true;await DB.savePriv(ME);toast('셀카를 등록했어요. 고마워요!');renderFaceCard()}catch(err){toast('사진을 열지 못했어요')}}});
+  $$('[data-face]').forEach(el=>{el.innerHTML=ME&&!ME.hasFace&&!ME.demo&&!(MLAY!=='old'&&el.closest('#t-map'))?faceCardHTML():'';const onF=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+    try{const data=await faceFromFile(f);if(!(await FDB.save(ME.id,data))){toast('저장하지 못했어요. 다시 해 주세요');return}ME.hasFace=true;await DB.savePriv(ME);toast('셀카를 등록했어요. 고마워요!');renderFaceCard()}catch(err){toast('사진을 열지 못했어요')}};
+    el.querySelectorAll('#lateFace,#lateFaceG').forEach(i=>i.onchange=onF)});
 }
 
 $('#tplBtn').onclick=openTplEditor;
@@ -5837,6 +5857,7 @@ $('#logQ').oninput=()=>renderSendLog();
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
   if(new URLSearchParams(location.search).get('guest')&&!sid){try{history.replaceState(null,'',location.pathname)}catch(e){}openGuest();return}
+  {const jd=jdLoad();if(jd&&!sid&&!userMoved()){jdRestore(jd);show('v-join');jdRestore(jd);setTimeout(()=>{const fb=$('#faceBox');toast(JOIN_FACE?'쓰던 가입서를 이어서 불러왔어요':'쓰던 가입서를 불러왔어요. 사진이 안 들어갔으면 「사진첩에서」로 골라 주세요',5000);if(!JOIN_FACE&&fb)fb.scrollIntoView({block:'center'})},400);return}}
   if(new URLSearchParams(location.search).get('join')){try{history.replaceState(null,'',location.pathname+(getRef()?'?ref='+getRef():''))}catch(e){}buildJoin();show('v-join');return}
   {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
