@@ -614,6 +614,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <label class="check"><input type="checkbox" class="ag" id="ag3"><span>[선택] 카카오톡·문자로 공지·이벤트 받기</span></label>
     </div>
     <p class="small" style="margin:0">입장 비밀번호는 연락처 뒤 4자리예요.</p>
+    <div id="joinMsg" hidden style="background:#FDE2E3;color:#8A1F24;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.45"></div>
     <button class="btn red" type="submit" id="joinBtn">가입하고 회원번호 받기</button>
   </form>
 </section>
@@ -1527,30 +1528,34 @@ $('#jStu').onchange=syncGuard;$('#jBirth').addEventListener('change',()=>{if(age
 $('#jGoal').onclick=e=>{if(e.target.classList.contains('chip'))e.target.classList.toggle('on')};
 $('#agAll').onchange=e=>$$('.ag').forEach(a=>a.checked=e.target.checked);
 $('#goJoin').onclick=()=>{buildJoin();show('v-join')};
+function joinErr(msg,el){const b=$('#joinMsg');b.hidden=false;b.innerHTML='⚠ '+msg;toast(msg.replace(/<[^>]+>/g,''),3500);if(el){try{el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1600);if(el.focus)el.focus({preventScroll:true})}catch(e){}}}
 $('#joinForm').onsubmit=async e=>{
-  e.preventDefault();
+  e.preventDefault();$('#joinMsg').hidden=true;
   const name=$('#jName').value.trim(),phone=normPhone($('#jPhone').value);
-  if(!name){toast('이름을 적어 주세요');$('#jName').focus();return}
-  if(phone.replace(/\D/g,'').length<10){toast('연락처를 정확히 적어 주세요');$('#jPhone').focus();return}
+  if(!name){joinErr('이름을 적어 주세요',$('#jName'));return}
+  if(phone.replace(/\D/g,'').length<10){joinErr('연락처(휴대폰 번호)를 정확히 적어 주세요',$('#jPhone'));return}
   const stu=$('#jStu').checked||ageOf($('#jBirth').value)<19,gPhone=normPhone($('#jGPhone').value);
-  if(stu&&gPhone.replace(/\D/g,'').length<10){$('#jStu').checked=true;syncGuard();toast('학생은 보호자 연락처를 꼭 적어 주세요');$('#jGPhone').focus();return}
-  if(!JOIN_FACE){toast('본인 얼굴 사진을 찍어 주세요');$('#faceBox').scrollIntoView({block:'center'});return}
-  if(!$('#ag1').checked||!$('#ag2').checked||!$('#ag4').checked||!$('#ag5').checked){toast('필수 항목에 모두 동의해 주세요');return}
+  if(stu&&gPhone.replace(/\D/g,'').length<10){$('#jStu').checked=true;syncGuard();joinErr('학생(만 19세 미만)은 <b>보호자 연락처</b>를 꼭 적어 주세요',$('#jGPhone'));return}
+  if(!JOIN_FACE){joinErr('<b>본인 얼굴 사진</b>을 찍어 주세요 (위 사진 칸의 버튼)',$('#faceBox'));return}
+  {const miss=['ag1','ag2','ag4','ag5'].filter(k=>!$('#'+k).checked);if(miss.length){joinErr('<b>[필수] 동의</b> 항목에 체크해 주세요 ('+miss.length+'개 남음). 맨 위 \'전체 동의\'를 누르면 한 번에 돼요',$('#'+miss[0]).closest('label')||$('#'+miss[0]));return}}
   {const prev=(()=>{try{return JSON.parse(localStorage.getItem('nnn_joined')||'[]')}catch(e){return[]}})();const same=prev.find(p=>p.name===name&&p.phone===phone.replace(/\D/g,''));
     if(same&&!window._joinDupOk){sheet(`<h2>이미 가입했어요</h2><p style="margin:0">${esc(name)}님은 이 폰에서 <b class="num">회원번호 ${esc(same.id)}</b>로 가입했어요. 다시 가입하면 회원번호가 두 개가 돼요.</p><button class="btn red" id="jdLogin">회원번호 ${esc(same.id)}로 로그인</button><button class="btn ghost" data-close>닫기</button><p class="small" style="margin:0">번호를 잃어버렸거나 다시 가입해야 하면 카운터에 말씀해 주세요.</p>`,(el,close)=>{el.querySelector('#jdLogin').onclick=()=>{close();show('v-login');try{$('#lId').value=same.id}catch(e){}}});return}}
   $('#joinBtn').disabled=true;
-  if(!(await fbWait())){$('#joinBtn').disabled=false;return}
-  try{
-    if(!FB_ON()){const all=await DB.all();if(all.some(m=>(m.phone||'').replace(/\D/g,'')===phone.replace(/\D/g,''))){toast('이미 가입된 연락처예요. 데스크에 문의해 주세요',3200);return}}
+  $('#joinBtn').textContent='가입하는 중…';
+  if(!(await fbWait())){$('#joinBtn').disabled=false;$('#joinBtn').textContent='가입하고 회원번호 받기';joinErr('서버에 연결하지 못했어요. 와이파이·데이터를 확인하고 다시 눌러 주세요. 카카오톡 안에서 열었다면 오른쪽 위 ⋮ → <b>다른 브라우저로 열기</b>를 해 보세요');return}
+  let jid=null;try{
+    if(!FB_ON()){const all=await DB.all();if(all.some(m=>(m.phone||'').replace(/\D/g,'')===phone.replace(/\D/g,''))){joinErr('이미 가입된 연락처예요. 데스크에 문의해 주세요');return}}
     const last4=phone.replace(/\D/g,'').slice(-4);let id=null;
     for(let i=0;i<4&&!id;i++){const cand=await DB.newId();if(await DB.claim(cand,last4))id=cand}
-    if(!id||!(await DB.loginMember(id,last4))){toast('가입 중 문제가 생겼어요. 인터넷 연결을 확인하고 다시 눌러 주세요',3500);return}
+    if(!id||!(await DB.loginMember(id,last4))){joinErr('회원번호를 받는 중 문제가 생겼어요. 인터넷 연결을 확인하고 다시 눌러 주세요');return}jid=id;
     const m=blankMember({name,phone,birth:$('#jBirth').value,gender:$('#jGender').value,goal:$$('#jGoal .chip.on').map(c=>c.textContent),exp:$('#jExp').value,path:$('#jPath').value,note:$('#jNote').value.trim(),mkt:$('#ag3').checked,char:starterPick},id);
     const rf=($('#jRef').value||'').trim();if(stu){m.student=true;m.gPhone=gPhone;m.gName=$('#jGRel').value}
     if(rf&&rf!==id&&(await DB.get(rf))){m.ref=rf;m.credits+=REF_BONUS_JOIN;m.earned+=REF_BONUS_JOIN}
     m.hasFace=true;await DB.save(m);await DB.savePriv(m);if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}}if(!(await FDB.save(id,JOIN_FACE)))m.hasFace=false;JOIN_FACE='';ME=m;try{localStorage.removeItem('nnn_ref');const pv=JSON.parse(localStorage.getItem('nnn_joined')||'[]');pv.push({id,name,phone:phone.replace(/\D/g,''),at:Date.now()});localStorage.setItem('nnn_joined',JSON.stringify(pv.slice(-10)))}catch(e){}lsSet(LS_SESSION,id);
     showDone();
-  }finally{$('#joinBtn').disabled=false}
+  }catch(err){console.error(err);joinErr('가입을 마무리하지 못했어요. 다시 한 번 눌러 주세요. 계속 안 되면 이 화면을 캡처해서 데스크에 보여 주세요<br><span style="font-size:12px">('+esc(String(err&&err.message||err).slice(0,120))+')</span>');
+    if(jid&&FB_ON()){try{await gref('diag/'+jid+'/'+Date.now().toString(36)).set(clean({at:Date.now(),reason:'가입 오류',err:String(err&&err.message||err).slice(0,300),ua:navigator.userAgent.slice(0,200)}))}catch(e){}}
+  }finally{$('#joinBtn').disabled=false;$('#joinBtn').textContent='가입하고 회원번호 받기'}
 };
 function kakaoLink(a,missing){const k=(local.meta.kakao||'').trim().replace(/\/+$/,'');if(k){a.href=/\/friend$/.test(k)?k:k+'/friend';a.hidden=false;if(missing)missing.hidden=true}else{a.removeAttribute('href');a.hidden=true;if(missing)missing.hidden=false}}
 function showDone(){
