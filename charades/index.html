@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>몸으로 말해요</title>
+<meta name="theme-color" content="#FFF1E6">
+<link rel="icon" href="../shared/img/samsaek.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 몸으로 말해요: 출제자가 폰의 제시어를 몸짓으로 설명하고, 팀이 맞혀요. 말·소리·입모양 금지! */
+:root{
+  --paper:#FFF1E6; --card:#FFFDF9; --ink:#2B2540; --mute:#6F6880; --line:rgba(43,37,64,.16);
+  --main:#FF7A59; --ok:#2FB36B; --pass:#9AA0B4; --sun:#FFD23F;
+  --t0:#E8453C; --t1:#2E6FE0; --t2:#E8A20F; --t3:#2FB36B;
+  --f-display:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --f-body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overscroll-behavior:none}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-x:hidden;
+  background-image:radial-gradient(rgba(43,37,64,.06) 1.5px,transparent 1.6px);background-size:18px 18px}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--main);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+.wrap{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+.card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 rgba(43,37,64,.22);padding:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:58px;border:2.5px solid var(--ink);border-radius:18px;
+  background:var(--main);color:#fff;font-family:var(--f-display);font-size:22px;box-shadow:0 5px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.soft{background:#fff;color:var(--ink)}
+.btn:disabled{opacity:.45}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.top .grow{flex:1;min-width:0}
+.icon{width:44px;height:44px;border-radius:14px;border:2.5px solid var(--ink);background:#fff;font-size:18px;display:grid;place-items:center;flex:0 0 auto;text-decoration:none;color:var(--ink)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.label{font-family:var(--f-display);font-size:16px;color:var(--mute);margin:0 0 8px}
+.logo{text-align:center;margin:4px 0 14px}
+.logo .big{font-size:52px;line-height:1}
+.logo h1{font-size:40px;line-height:1.05;margin-top:6px}
+.logo h1 b{font-weight:400;color:var(--main)}
+.logo p{margin:8px 0 0;color:var(--mute);font-size:15px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2.5px solid var(--ink);background:#fff;border-radius:999px;padding:8px 12px;font-family:var(--f-display);font-size:16px;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--ink);color:#fff}
+.chip small{font-family:var(--f-body);font-size:12px;opacity:.75}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;border:2.5px solid var(--ink);background:#fff;border-radius:14px;padding:9px 4px;font-family:var(--f-display);font-size:17px}
+.seg button.on{background:var(--ink);color:#fff}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.teams input{width:100%;min-width:0;border:2.5px solid var(--ink);border-radius:14px;padding:10px 12px;font-family:var(--f-display);font-size:18px;background:#fff;color:var(--ink)}
+.rules{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px;line-height:1.4}
+.rules li{display:flex;gap:8px;align-items:flex-start}
+.rules li span{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--f-display);font-size:14px;display:grid;place-items:center}
+.note{font-size:13px;color:var(--mute);line-height:1.45;margin:0}
+
+/* 차례 안내 */
+.turn{text-align:center}
+.turn .who{font-family:var(--f-display);font-size:44px;line-height:1.1;margin:8px 0}
+.turn .tip{font-size:16px;line-height:1.5;color:var(--mute)}
+.phone{font-size:64px;margin:6px 0}
+.count{position:fixed;inset:0;display:grid;place-items:center;background:rgba(255,241,230,.96);font-family:var(--f-display);font-size:150px;color:var(--main);z-index:20}
+
+/* 게임 */
+.bar{height:16px;border:2.5px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);transition:width .25s linear}
+.bar i.hurry{background:var(--t0)}
+.status{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:18px}
+.status .tm{margin-left:auto;font-size:28px}
+.wordbox{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px 0;min-height:42vh}
+.tag{font-family:var(--f-display);font-size:16px;padding:4px 12px;border-radius:999px;border:2px solid var(--ink);background:#fff}
+.word{font-family:var(--f-display);line-height:1.15;margin-top:14px;word-break:keep-all;color:var(--ink)}
+.word span{display:inline-block;animation:pop .3s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.hint{margin-top:12px;color:var(--mute);font-size:15px}
+.acts{display:grid;grid-template-columns:1fr 1.6fr;gap:10px}
+.acts .btn{min-height:84px;font-size:26px}
+.btn.ok{background:var(--ok)}
+.btn.pass{background:var(--pass)}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:15;opacity:0}
+.flash.go{animation:fl .45s ease}
+@keyframes fl{0%{opacity:.55}100%{opacity:0}}
+.score{font-family:var(--f-display);font-size:22px}
+
+/* 결과 */
+.res-list{display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow:auto}
+.res-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:#fff;border:2px solid var(--line);font-size:16px}
+.res-row b{font-family:var(--f-display);font-weight:400;font-size:18px}
+.res-row .ic{margin-left:auto;font-size:18px}
+.board{display:flex;flex-direction:column;gap:8px}
+.brow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:2.5px solid var(--ink);background:#fff;font-family:var(--f-display);font-size:20px}
+.brow .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink)}
+.brow .pt{margin-left:auto;font-size:26px}
+.brow.win{background:var(--sun)}
+.crown{text-align:center;font-size:64px;margin:4px 0}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;z-index:30;font-size:15px;pointer-events:none}
+</style>
+</head>
+<body>
+<!-- 시작·설정 -->
+<div class="wrap" id="sSetup">
+  <div class="top"><a class="icon" id="back" href="../" aria-label="NNN 월드로">←</a><div class="grow"></div><button class="icon snd" aria-label="소리 켜고 끄기">🔊</button></div>
+  <div class="logo"><div class="big">🙆‍♀️🤸</div><h1>몸으로 <b>말해요</b></h1><p>말은 금지! 몸짓으로만 설명하고<br>우리 팀이 맞혀요</p></div>
+  <div class="stack">
+    <div class="card">
+      <p class="label">주제 고르기 <span style="font-size:13px">(여러 개 골라도 돼요)</span></p>
+      <div class="chips" id="topics"></div>
+    </div>
+    <div class="card stack">
+      <div><p class="label">팀 수</p><div class="seg" id="teamN"></div></div>
+      <div class="teams" id="teamNames"></div>
+      <div><p class="label">한 차례 시간</p><div class="seg" id="secs"></div></div>
+      <div><p class="label">몇 바퀴 돌까요?</p><div class="seg" id="rounds"></div></div>
+      <div><p class="label">한 차례 패스</p><div class="seg" id="passes"></div></div>
+    </div>
+    <div class="card">
+      <p class="label">이렇게 해요</p>
+      <ul class="rules">
+        <li><span>1</span><div>출제자가 폰을 들고 화면을 <b>혼자</b> 봐요.</div></li>
+        <li><span>2</span><div>제시어를 <b>몸짓으로만</b> 설명해요. 말·소리·입모양·글씨 쓰기는 반칙!</div></li>
+        <li><span>3</span><div>팀이 맞히면 <b>맞혔어요</b>, 너무 어려우면 <b>패스</b>.</div></li>
+        <li><span>4</span><div>시간이 끝나면 다음 팀 차례. 많이 맞힌 팀이 우승!</div></li>
+      </ul>
+    </div>
+    <button class="btn" id="start">시작하기</button>
+    <p class="note" style="text-align:center">게임 중에는 화면이 꺼지지 않게 해 둘게요.</p>
+  </div>
+</div>
+
+<!-- 차례 안내 -->
+<div class="wrap" id="sTurn" hidden>
+  <div class="top"><div class="grow status" id="turnStatus"></div><button class="icon snd" aria-label="소리 켜고 끄기">🔊</button><button class="icon" id="quit1" aria-label="그만하기">✕</button></div>
+  <div class="card turn stack">
+    <div class="phone">📱</div>
+    <div class="who" id="turnWho"></div>
+    <div class="tip">출제자 한 명이 폰을 들고<br>화면이 친구들에게 보이지 않게 해요.</div>
+    <div class="board" id="miniBoard"></div>
+  </div>
+  <div style="flex:1"></div>
+  <button class="btn" id="go" style="margin-top:14px">준비됐어요! 시작</button>
+</div>
+
+<!-- 게임 -->
+<div class="wrap" id="sPlay" hidden>
+  <div class="status"><span id="pTeam"></span><span class="score" id="pScore">0</span><span class="tm num" id="pTime">60</span></div>
+  <div class="bar" style="margin:8px 0"><i id="pBar" style="width:100%"></i></div>
+  <div class="wordbox" id="wordbox">
+    <span class="tag" id="pTag">동물</span>
+    <div class="word" id="pWord"></div>
+    <div class="hint" id="pHint">말하지 말고 몸으로만!</div>
+  </div>
+  <div class="acts"><button class="btn pass" id="bPass">패스</button><button class="btn ok" id="bOk">맞혔어요 ✓</button></div>
+  <p class="note" id="passLeft" style="text-align:center;margin-top:8px"></p>
+</div>
+
+<!-- 차례 결과 -->
+<div class="wrap" id="sResult" hidden>
+  <div class="top"><div class="grow status" id="resTitle"></div><button class="icon" id="quit2" aria-label="그만하기">✕</button></div>
+  <div class="card stack">
+    <div style="text-align:center"><div class="score" id="resScore" style="font-size:44px"></div><div class="note" id="resSub"></div></div>
+    <div class="res-list" id="resList"></div>
+  </div>
+  <div style="flex:1"></div>
+  <button class="btn" id="next" style="margin-top:14px">다음 차례</button>
+</div>
+
+<!-- 최종 -->
+<div class="wrap" id="sEnd" hidden>
+  <div class="top"><a class="icon" href="../" aria-label="NNN 월드로">←</a><div class="grow"></div></div>
+  <div class="crown">🏆</div>
+  <h2 style="text-align:center;font-size:34px" id="endTitle"></h2>
+  <div class="card" style="margin-top:14px"><div class="board" id="endBoard"></div></div>
+  <div class="stack" style="margin-top:14px"><button class="btn" id="again">한 판 더!</button><button class="btn soft" id="toSetup">주제·팀 바꾸기</button></div>
+</div>
+
+<div class="flash" id="flash"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem('nnncharade.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('nnncharade.'+k,JSON.stringify(v))}catch(e){}}};
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+
+/* ================= 제시어 ================= */
+const TOPICS=[
+ {id:'sport',name:'스포츠',e:'⚽',w:'축구 야구 농구 배구 탁구 테니스 배드민턴 골프 수영 다이빙 복싱 태권도 유도 씨름 레슬링 펜싱 양궁 사격 역도 체조 리듬체조 스키 스노보드 스케이트 피겨스케이팅 컬링 볼링 당구 줄넘기 마라톤 높이뛰기 멀리뛰기 허들 서핑 카누 자전거 클라이밍 스케이트보드 요가 줄다리기 피구 아이스하키 럭비 승마 낚시 등산 핸드볼 봅슬레이 투포환'},
+ {id:'animal',name:'동물',e:'🐒',w:'고양이 강아지 토끼 사자 호랑이 코끼리 기린 원숭이 고릴라 펭귄 캥거루 코알라 판다 곰 여우 늑대 뱀 악어 거북이 개구리 오리 닭 병아리 독수리 부엉이 앵무새 공작 타조 홍학 돌고래 상어 고래 문어 꽃게 해파리 나비 꿀벌 모기 개미 거미 달팽이 다람쥐 햄스터 고슴도치 하마 코뿔소 낙타 말 소 돼지 양 박쥐 나무늘보 미어캣 물개 지렁이'},
+ {id:'proverb',name:'속담',e:'📜',w:['원숭이도 나무에서 떨어진다','고래 싸움에 새우 등 터진다','소 잃고 외양간 고친다','누워서 떡 먹기','하늘의 별 따기','그림의 떡','낫 놓고 기역 자도 모른다','등잔 밑이 어둡다','발 없는 말이 천 리 간다','백지장도 맞들면 낫다','세 살 버릇 여든까지 간다','우물 안 개구리','개구리 올챙이 적 생각 못 한다','바늘 도둑이 소도둑 된다','가는 말이 고와야 오는 말이 곱다','낮말은 새가 듣고 밤말은 쥐가 듣는다','호랑이도 제 말 하면 온다','꿩 먹고 알 먹고','티끌 모아 태산','금강산도 식후경','돌다리도 두들겨 보고 건너라','사공이 많으면 배가 산으로 간다','빈 수레가 요란하다','콩 심은 데 콩 나고 팥 심은 데 팥 난다','아니 땐 굴뚝에 연기 날까','지렁이도 밟으면 꿈틀한다','뛰는 놈 위에 나는 놈 있다','수박 겉 핥기','우물에서 숭늉 찾는다','열 번 찍어 안 넘어가는 나무 없다','서당 개 삼 년이면 풍월을 읊는다','공든 탑이 무너지랴','도토리 키 재기','쥐구멍에도 볕 들 날 있다','하룻강아지 범 무서운 줄 모른다','식은 죽 먹기','마른하늘에 날벼락','닭 쫓던 개 지붕 쳐다본다','울며 겨자 먹기','엎질러진 물']},
+ {id:'job',name:'직업',e:'👩‍🚒',w:'의사 간호사 소방관 경찰관 선생님 요리사 미용사 가수 배우 개그맨 댄서 화가 사진작가 기자 아나운서 버스기사 비행기조종사 승무원 우주비행사 과학자 프로그래머 농부 어부 택배기사 마술사 피아니스트 지휘자 축구선수 복싱관장 심판 치과의사 수의사 제빵사 바리스타 목수 건축가 군인 유튜버 탐정 계산원 발레리나 해녀'},
+ {id:'food',name:'음식',e:'🍜',w:'라면 김밥 떡볶이 치킨 피자 햄버거 짜장면 짬뽕 삼겹살 냉면 비빔밥 김치찌개 붕어빵 호떡 아이스크림 솜사탕 팝콘 수박 바나나 귤 옥수수 감자튀김 핫도그 스파게티 초밥 탕후루 마라탕 계란후라이 컵라면 팥빙수 생일케이크 도넛 츄러스 떡국 송편 김치 콜라 우유 군고구마 꽈배기'},
+ {id:'act',name:'생활 동작',e:'🪥',w:['양치하기','세수하기','머리 감기','화장하기','면도하기','빨래 널기','설거지','청소기 돌리기','다림질','전화 받기','셀카 찍기','자전거 타기','운전하기','우산 쓰기','김장하기','엘리베이터 타기','지각해서 뛰기','모기 잡기','재채기','하품','코 골며 자기','바나나 껍질 밟고 넘어지기','무거운 짐 들기','노래방에서 노래하기','롤러코스터 타기','번지점프','뜨거운 국물 먹기','매운 음식 먹기','레몬 먹기','눈싸움','썰매 타기','택시 잡기','시험 공부하다 졸기','강아지 산책','풍선 불기','피아노 치기','기타 치기','눈사람 만들기','줄넘기 걸리기','계단 오르기']},
+ {id:'boxing',name:'복싱·체육관',e:'🥊',w:['잽','원투','훅','어퍼컷','더킹','위빙','백스텝','가드 올리기','줄넘기 2단 뛰기','샌드백 치기','미트 잡기','쉐도우 복싱','스파링','다운당하기','심판 카운트 세기','승리 세리머니','붕대 감기','글러브 끼기','마우스피스 끼기','체중계 올라가기','플랭크','버피','스쿼트','팔굽혀펴기','윗몸일으키기','런지','물 마시고 쉬기','땀 닦기','타임벨 울림','관장님 잔소리','챔피언 벨트 들기','링 로프 넘어가기','코너에서 쉬기','손목 테이핑']},
+ {id:'thing',name:'사물',e:'📺',w:'냉장고 세탁기 선풍기 에어컨 텔레비전 리모컨 휴대폰 컴퓨터 우산 가위 망치 시계 안경 의자 침대 거울 칫솔 드라이기 카메라 피아노 기타 드럼 바이올린 자동차 비행기 기차 배 헬리콥터 로켓 신호등 엘리베이터 회전목마 시소 미끄럼틀 그네 풍선 연 팽이 눈사람 자판기'}];
+TOPICS.forEach(t=>{if(typeof t.w==='string')t.w=t.w.split(' ')});
+
+/* ================= 설정 ================= */
+const TCOL=['var(--t0)','var(--t1)','var(--t2)','var(--t3)'];
+const DEFN=['빨강팀','파랑팀','노랑팀','초록팀'];
+const CFG=Object.assign({topics:['sport','animal','boxing'],teams:2,names:DEFN.slice(),secs:60,rounds:2,passes:2},store.get('cfg',{}));
+CFG.topics=CFG.topics.filter(id=>TOPICS.some(t=>t.id===id));if(!CFG.topics.length)CFG.topics=['animal'];
+function seg(el,opts,key,cb){el.innerHTML=opts.map(([v,l])=>`<button data-v="${v}" class="${String(CFG[key])===String(v)?'on':''}">${l}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{CFG[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;store.set('cfg',CFG);seg(el,opts,key,cb);cb&&cb();sfx('tap')})}
+function drawSetup(){
+  $('#topics').innerHTML=[...TOPICS.map(t=>`<button class="chip ${CFG.topics.includes(t.id)?'on':''}" data-t="${t.id}">${t.e} ${t.name} <small>${t.w.length}</small></button>`),`<button class="chip" data-t="all">🎲 전부</button>`].join('');
+  $$('#topics [data-t]').forEach(b=>b.onclick=()=>{const id=b.dataset.t;if(id==='all')CFG.topics=TOPICS.map(t=>t.id);else if(CFG.topics.includes(id)){if(CFG.topics.length>1)CFG.topics=CFG.topics.filter(x=>x!==id);else toast('주제는 하나 이상 골라 주세요')}else CFG.topics.push(id);store.set('cfg',CFG);drawSetup();sfx('tap')});
+  seg($('#teamN'),[[1,'혼자'],[2,'2팀'],[3,'3팀'],[4,'4팀']],'teams',drawNames);
+  seg($('#secs'),[[45,'45초'],[60,'60초'],[90,'90초'],[120,'2분']],'secs');
+  seg($('#rounds'),[[1,'1바퀴'],[2,'2바퀴'],[3,'3바퀴']],'rounds');
+  seg($('#passes'),[[0,'없음'],[2,'2번'],[3,'3번'],[99,'무제한']],'passes');
+  drawNames()}
+function drawNames(){const n=CFG.teams;$('#teamNames').innerHTML=n<2?'':Array.from({length:n},(_,i)=>`<input data-i="${i}" maxlength="8" value="${(CFG.names[i]||DEFN[i]).replace(/"/g,'')}" style="border-color:${TCOL[i]}" aria-label="${i+1}번 팀 이름">`).join('');
+  $$('#teamNames input').forEach(inp=>inp.oninput=()=>{CFG.names[+inp.dataset.i]=inp.value.trim()||DEFN[+inp.dataset.i];store.set('cfg',CFG)})}
+
+/* ================= 소리 ================= */
+let AC=null,SND=store.get('sound',true);
+function ac(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state!=='running')AC.resume();return AC}catch(e){return null}}
+function tone(f,d,type='sine',v=.25,at=0){if(!SND)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(a.destination);const t=a.currentTime+at;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.start(t);o.stop(t+d+.05)}
+function sfx(k){if(k==='tap')tone(660,.08,'triangle',.12);if(k==='ok'){tone(880,.12,'sine',.3);tone(1320,.18,'sine',.25,.09)}if(k==='pass')tone(220,.18,'sawtooth',.12);if(k==='tick')tone(1000,.05,'square',.1);if(k==='go')tone(988,.3,'triangle',.3);if(k==='cnt')tone(660,.12,'triangle',.25);
+  if(k==='end'){tone(392,.25,'sawtooth',.2);tone(311,.35,'sawtooth',.2,.22);tone(247,.6,'sawtooth',.22,.5)}if(k==='win'){[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.28,i*.13))}}
+function vib(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+function syncSnd(){$$('.snd').forEach(b=>b.textContent=SND?'🔊':'🔇')}
+$$('.snd').forEach(b=>b.onclick=()=>{SND=!SND;store.set('sound',SND);syncSnd();sfx('tap')});syncSnd();
+
+/* ================= 화면 켜짐 유지 ================= */
+let WL=null;async function wake(on){try{if(on&&'wakeLock' in navigator&&!WL){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>WL=null)}if(!on&&WL){await WL.release();WL=null}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&G&&G.playing)wake(true)});
+
+/* ================= 진행 ================= */
+let G=null;
+function show(id){['sSetup','sTurn','sPlay','sResult','sEnd'].forEach(s=>$('#'+s).hidden=s!==id);window.scrollTo(0,0)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function newGame(){const pool=shuffle(CFG.topics.flatMap(id=>{const t=TOPICS.find(x=>x.id===id);return t.w.map(w=>({w,t:t.name,e:t.e}))}));
+  const n=CFG.teams;G={pool,pi:0,teams:Array.from({length:n},(_,i)=>({name:n<2?'나':(CFG.names[i]||DEFN[i]),score:0,col:TCOL[i]})),turn:0,total:n*CFG.rounds,playing:false};turnScreen()}
+function nextWord(){if(G.pi>=G.pool.length){G.pool=shuffle(G.pool);G.pi=0}return G.pool[G.pi++]}
+function curTeam(){return G.teams[G.turn%G.teams.length]}
+function boardHTML(win){const mx=Math.max(...G.teams.map(t=>t.score));return G.teams.map(t=>`<div class="brow ${win&&t.score===mx&&G.teams.length>1?'win':''}"><span class="dot" style="background:${t.col}"></span>${esc(t.name)}<span class="pt">${t.score}</span></div>`).join('')}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function turnScreen(){const t=curTeam();const round=Math.floor(G.turn/G.teams.length)+1;
+  $('#turnStatus').textContent=`${round} / ${CFG.rounds}바퀴`;$('#turnWho').innerHTML=G.teams.length<2?'혼자 연습!':`<span style="color:${t.col}">${esc(t.name)}</span> 차례!`;
+  $('#miniBoard').innerHTML=G.teams.length>1?boardHTML(false):'';show('sTurn')}
+$('#go').onclick=()=>{ac();countdown(()=>startTurn())};
+function countdown(done){const d=document.createElement('div');d.className='count';document.body.appendChild(d);let n=3;const step=()=>{if(n===0){d.remove();sfx('go');done();return}d.textContent=n;sfx('cnt');vib(30);n--;setTimeout(step,750)};step()}
+function startTurn(){const t=curTeam();G.cur={score:0,log:[],passLeft:CFG.passes,left:CFG.secs,word:null};G.playing=true;wake(true);
+  $('#pTeam').innerHTML=`<span style="color:${t.col}">${esc(t.name)}</span>`;$('#pScore').textContent='0점';show('sPlay');showWord();tick();G.timer=setInterval(tick,1000)}
+function showWord(){const w=nextWord();G.cur.word=w;$('#pTag').textContent=`${w.e} ${w.t}`;const len=w.w.length;const fs=len<=4?'clamp(64px,19vw,104px)':len<=8?'clamp(46px,13vw,76px)':len<=14?'clamp(32px,9vw,52px)':'clamp(26px,7.4vw,40px)';
+  $('#pWord').style.fontSize=fs;$('#pWord').innerHTML=`<span>${esc(w.w)}</span>`;
+  const pl=G.cur.passLeft;$('#bPass').disabled=pl<=0;$('#passLeft').textContent=CFG.passes>=99?'패스 무제한':pl>0?`남은 패스 ${pl}번`:'패스를 다 썼어요'}
+function tick(){const c=G.cur;$('#pTime').textContent=c.left;$('#pBar').style.width=(c.left/CFG.secs*100)+'%';$('#pBar').classList.toggle('hurry',c.left<=10);
+  if(c.left<=5&&c.left>0){sfx('tick');vib(20)}if(c.left<=0){endTurn();return}c.left--}
+function flash(col){const f=$('#flash');f.style.background=col;f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+$('#bOk').onclick=()=>{if(!G||!G.playing)return;G.cur.score++;G.cur.log.push({w:G.cur.word.w,ok:true});$('#pScore').textContent=G.cur.score+'점';sfx('ok');vib(40);flash('#2FB36B');showWord()};
+$('#bPass').onclick=()=>{if(!G||!G.playing||G.cur.passLeft<=0)return;if(CFG.passes<99)G.cur.passLeft--;G.cur.log.push({w:G.cur.word.w,ok:false});sfx('pass');flash('#9AA0B4');showWord()};
+function endTurn(){clearInterval(G.timer);G.playing=false;wake(false);sfx('end');vib([200,80,200]);
+  if(G.cur.word)G.cur.log.push({w:G.cur.word.w,ok:null});const t=curTeam();t.score+=G.cur.score;
+  $('#resTitle').innerHTML=`<span style="color:${t.col}">${esc(t.name)}</span>`;$('#resScore').textContent=`${G.cur.score}개 맞혔어요!`;
+  $('#resSub').textContent=G.cur.score>=8?'몸짓 천재!':G.cur.score>=5?'잘했어요!':G.cur.score>=1?'좋아요, 다음엔 더!':'아깝다! 다음 차례에 만회해요';
+  $('#resList').innerHTML=G.cur.log.map(x=>`<div class="res-row"><b>${esc(x.w)}</b><span class="ic">${x.ok===true?'✅':x.ok===false?'⏭️':'⏰'}</span></div>`).join('')||'<div class="note">아무 제시어도 안 나왔어요</div>';
+  G.turn++;$('#next').textContent=G.turn>=G.total?'최종 결과 보기 🏆':'다음 차례';show('sResult')}
+$('#next').onclick=()=>{if(G.turn>=G.total)finish();else turnScreen()};
+function finish(){const mx=Math.max(...G.teams.map(t=>t.score));const win=G.teams.filter(t=>t.score===mx);
+  $('#endTitle').textContent=G.teams.length<2?`${mx}개 맞혔어요!`:win.length>1?'공동 우승!':`${win[0].name} 우승!`;$('#endBoard').innerHTML=boardHTML(true);
+  const plays=store.get('plays',0)+1;store.set('plays',plays);const best=store.get('best',0);if(G.teams.length<2&&mx>best)store.set('best',mx);
+  sfx('win');vib([80,60,80,60,160]);show('sEnd')}
+$('#again').onclick=()=>newGame();$('#toSetup').onclick=()=>{drawSetup();show('sSetup')};
+function quit(){if(G){clearInterval(G.timer);G.playing=false}wake(false);drawSetup();show('sSetup')}
+$('#quit1').onclick=quit;$('#quit2').onclick=()=>{if(confirmQuit())quit()};
+let qT=0;function confirmQuit(){if(Date.now()-qT<2500)return true;qT=Date.now();toast('한 번 더 누르면 그만해요');return false}
+$('#start').onclick=()=>{ac();sfx('tap');newGame()};
+drawSetup();
+</script>
+</body>
+</html>

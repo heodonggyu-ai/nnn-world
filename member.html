@@ -2277,7 +2277,8 @@ const ARCADE=[
   {id:'fps',name:'NNN 아레나',desc:'한들물빛공원 팀 대결 FPS! 5라운드 먼저 이기면 우승.',href:GHUB+'fps/',img:GHUB+'shared/img/fps-cover.jpg',col:'#1B2230',art:'NNN<br>아레나',tags:['FPS','3D']},
   {id:'kart',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로를 달리는 드리프트 스피드전!',href:GHUB+'kart/',img:GHUB+'shared/img/kart-cover.jpg',col:'#1F6FB0',art:'드리프트<br>카트',tags:['레이싱','3D']},
   {id:'quiz',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성 퀴즈! 팀 대결도 돼요.',href:GHUB+'quiz/',img:GHUB+'shared/img/quiz-cover.jpg',col:'#FF8A2F',art:'퀴즈왕',tags:['퀴즈','넌센스']},
-  {id:'english',name:'NNN 잉글리시',desc:'단어·표현·문법을 레슨으로! 듣고 따라 말하는 영어 공부.',href:GHUB+'english/',img:GHUB+'shared/img/english-cover.jpg',col:'#36B37E',art:'잉글리시',tags:['영어','공부']}];
+  {id:'english',name:'NNN 잉글리시',desc:'단어·표현·문법을 레슨으로! 듣고 따라 말하는 영어 공부.',href:GHUB+'english/',img:GHUB+'shared/img/english-cover.jpg',col:'#36B37E',art:'잉글리시',tags:['영어','공부']},
+  {id:'charades',name:'몸으로 말해요',desc:'말은 금지! 몸짓으로만 설명하고 팀이 맞혀요. 스포츠·동물·속담·복싱 등 주제 선택.',href:GHUB+'charades/',img:GHUB+'shared/img/charades-cover.jpg',col:'#FF7A59',art:'🙆<br>몸으로 말해요',tags:['여럿이 한 폰','팀 대결']}];
 function openArcade(){sheet(`<h2>게임장</h2><p class="small" style="margin:0">관장님이 직접 만든 게임들이에요. 하루 처음 한 판은 <b>+10 크레딧</b>!</p>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">${ARCADE.map(g=>`<button class="qrow" data-ag="${g.id}" style="border:0;text-align:left;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#fff;gap:0">
     <div style="aspect-ratio:4/3;background:${g.col};${g.img?`background-image:url('${g.img}');background-size:cover;background-position:center;`:''}display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:15px;line-height:1.1;text-align:center;padding:8px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${g.img?'':(g.art||'')}</div>
@@ -3690,6 +3691,7 @@ const FEAT=[
   {id:'s_sent',aud:'owner',q:'보낸 사람은 목록에서 자동 제외',d:'2026-10-20',e:'✉️',t:'보낼 안내 중복 방지',s:'문자·카톡으로 보낸 기록이 있으면 보낼 안내·한 번에 보내기에서 빠져요',go:'adm:today'},
   {id:'s_hr',aud:'owner',q:'날짜 누르면 수정 칸 하나만',d:'2026-10-21',e:'🕘',t:'코치 근태 수정 정리',s:'수정 칸이 겹치지 않고, 퇴근이 출근보다 빠르면 막아요',go:'adm:staff'},
   {id:'s_face',aud:'staff',q:'PIN·코드 대신 얼굴로',d:'2026-10-20',e:'🙂',t:'관장·코치 Face ID 로그인',s:'관장 메뉴·코치 로그인을 한 번 PIN(코드)으로 들어오면 다음부터 얼굴·지문으로 들어와요',go:null},
+  {id:'charades',q:'스포츠·동물·속담·복싱 주제, 팀 대결',d:'2026-10-22',e:'🙆',t:'게임장에 몸으로 말해요',s:'폰에 뜬 제시어를 몸짓으로만 설명하고 팀이 맞혀요. 주제를 골라 2~4팀 대결!',go:'arcade',sel:null},
   {id:'newchars',q:'개구리·다람쥐 등 12종, 글러브·헤드기어 새 디자인',d:'2026-10-22',e:'🐸',t:'새 캐릭터와 장비',s:'개구리·다람쥐·토끼·복싱 걸은 무료! 햄찌·시바·여우·아기 호랑이·우파루파·유니콘, 냥발·수박·갤럭시 글러브, 왕관·비니 등',go:'shop',sel:'#nav [data-tab="shop"]',tab:'map'},
   {id:'rankgame',q:'퀴즈왕·카트·보리보리쌀 등 순위',d:'2026-10-22',e:'🏆',t:'랭킹에 게임장 순위',s:'게임장에서 한 게임의 최고 기록으로 체육관 친구들과 순위를 겨뤄요',go:'rank',sel:'#nav [data-tab="rank"]',tab:'map'},
   {id:'quizeng',q:'퀴즈왕·잉글리시, 게임장에서',d:'2026-10-21',e:'🧠',t:'NNN 퀴즈왕 · NNN 잉글리시',s:'상식·넌센스 퀴즈 팀 대결과 듣고 따라 말하는 영어 레슨이 게임장에 생겼어요',go:'arcade',sel:null},
