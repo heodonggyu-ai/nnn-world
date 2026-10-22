@@ -1,426 +1,434 @@
 {
- "rules": {
-  "pins": {
-   "$k": {
-    ".read": false,
-    ".write": "auth != null && !data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/) && $k.length >= 2 && $k.length <= 8"
-   }
-  },
-  "devices": {
-   "$k": {
-    "$uid": {
-     ".read": false,
-     ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('pins').child($k).val()"
-    }
-   }
-  },
-  "profiles": {
-   ".read": "auth != null",
-   "$k": {
-    ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
-    ".validate": "newData.hasChildren(['nick'])",
-    "nick": {
-     ".validate": "newData.isString() && newData.val().length <= 8"
-    },
-    "credits": {
-     ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999"
-    },
-    "av": {
-     "base": {
-      ".validate": "newData.isString() && (newData.val() !== 'mingnyu' || $k === '밍뉴')"
-     }
-    }
-   }
-  },
-  "saves": {
-   "$k": {
-    ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
-    "$game": {
-     ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
-     "data": {
-      ".validate": "newData.isString() && newData.val().length < 200000"
-     }
-    }
-   }
-  },
-  "meta": {
-   ".read": "auth != null",
-   ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()"
-  },
-  "requests": {
-   ".read": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()",
-   "$k": {
-    ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
-    ".write": "auth != null && (root.child('devices').child($k).child(auth.uid).exists() || root.child('devices').child('밍뉴').child(auth.uid).exists())"
-   }
-  },
-  "rooms": {
-   "$code": {
-    ".read": "auth != null",
-    "host": {
-     ".write": "auth != null && !data.exists() && root.child('devices').child('밍뉴').child(auth.uid).exists()"
-    },
-    "game": {
-     ".write": "auth != null && !data.exists() && newData.isString()"
-    },
-    "created": {
-     ".write": "auth != null && !data.exists()"
-    },
-    "allowed": {
-     "$k": {
-      ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()"
-     }
-    },
-    "players": {
-     "$k": {
-      ".write": "auth != null && (root.child('devices').child('밍뉴').child(auth.uid).exists() || (root.child('devices').child($k).child(auth.uid).exists() && (!newData.exists() || root.child('rooms').child($code).child('allowed').child($k).exists() || root.child('rooms').child($code).child('host').val() === $k)))",
-      "n": {
-       ".validate": "newData.isString() && newData.val().length <= 8"
-      }
-     }
-    }
-   }
-  },
-  "gym": {
-   "adminPin": {
-    ".read": false,
-    ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists()) && newData.isString() && newData.val().matches(/^[0-9]{4}$/)"
-   },
-   "admins": {
-    "$uid": {
-     ".read": "auth != null && auth.uid === $uid",
-     ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('gym/adminPin').val()"
-    }
-   },
-   "meta": {
-    ".read": "auth != null",
-    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
-   },
-   "nextId": {
-    ".read": "auth != null",
-    ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() > 1000) || newData.val() === data.val() + 1)"
-   },
-   "mpin": {
-    "$id": {
-     ".read": false,
-     ".write": "auth != null && ((!data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/)) || root.child('gym/admins').child(auth.uid).exists())"
-    }
-   },
-   "mdev": {
-    "$id": {
-     "$uid": {
-      ".read": "auth != null && auth.uid === $uid",
-      ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('gym/mpin').child($id).val()"
-     }
-    }
-   },
-   "members": {
-    ".read": "auth != null",
-    "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
-    }
-   },
-   "private": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$id": {
-     ".read": "auth != null && (root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
-    }
-   },
-   "pays": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$pid": {
-     ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists())"
-    }
-   },
-   "shots": {
-    ".read": "auth != null",
-    ".indexOn": [
-     "at"
-    ],
-    "$sid": {
-     ".write": "auth != null && ((!data.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists()) || (data.exists() && !newData.exists() && (root.child('gym/mdev').child(data.child('mid').val()).child(auth.uid).exists() || root.child('gym/admins').child(auth.uid).exists())))",
-     ".validate": "newData.hasChildren(['mid','at','thumb']) && newData.child('thumb').isString() && newData.child('thumb').val().length < 80000"
-    }
-   },
-   "shotimg": {
-    ".read": "auth != null",
-    "$sid": {
-     ".write": "auth != null && ((!data.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists()) || (data.exists() && !newData.exists() && (root.child('gym/mdev').child(data.child('mid').val()).child(auth.uid).exists() || root.child('gym/admins').child(auth.uid).exists())))",
-     ".validate": "newData.hasChildren(['mid','img']) && newData.child('img').isString() && newData.child('img').val().length < 300000"
-    }
-   },
-   "likes": {
-    ".read": "auth != null",
-    "$sid": {
-     "$uid": {
-      ".write": "auth != null && auth.uid === $uid && (!newData.exists() || newData.val() === true)"
-     }
-    }
-   },
-   "faces": {
-    ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').isString() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-    "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
-     ".validate": "newData.isString() && newData.val().length < 80000"
-    }
-   },
-   "outbox": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    ".indexOn": [
-     "status"
-    ],
-    "$jid": {
-     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
-    }
-   },
-   "sender": {
-    ".read": "auth != null"
-   },
-   "coachcodes": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$code": {
-     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     ".validate": "!newData.exists() || ($code.matches(/^[0-9]{6}$/) && newData.child('name').isString())"
-    }
-   },
-   "coaches": {
-    "$uid": {
-     ".read": "auth != null && auth.uid === $uid",
-     ".write": "auth != null && auth.uid === $uid && (!newData.exists() || (newData.child('code').isString() && root.child('gym/coachcodes').child(newData.child('code').val()).exists()))"
-    }
-   },
-   "roster": {
-    ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').isString() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-    "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
-     ".validate": "!newData.exists() || newData.child('name').isString()"
-    }
-   },
-   "live": {
-    ".read": "auth != null",
-    "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-     ".validate": "!newData.exists() || (newData.child('at').isNumber() && newData.child('nick').isString())"
-    }
-   },
-   "backups": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
-   },
-   "staff": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$code": {
-     ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
-     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
-    }
-   },
-   "hr": {
-    "att": {
-     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     "$code": {
-      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
-      "$date": {
-       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && newData.exists() && (!data.exists() || !data.child('out').exists())))"
-      }
-     }
-    },
-    "leave": {
-     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     "$code": {
-      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
-      "$id": {
-       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
-      }
-     }
-    },
-    "fix": {
-     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     "$code": {
-      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
-      "$id": {
-       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
-      }
-     }
-    }
-   },
-   "trials": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$id": {
-     ".write": "auth != null && ((!data.exists() && newData.child('name').isString() && newData.child('phone').isString() && newData.child('status').val() === 'new') || root.child('gym/admins').child(auth.uid).exists())"
-    }
-   },
-   "staffchat": {
-    ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-    "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('uid').val() === auth.uid))))",
-     ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 1000 && newData.child('at').isNumber() && newData.child('name').isString())"
-    }
-   },
-   "staffnotice": {
-    ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-    "$id": {
-     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     ".validate": "!newData.exists() || (newData.child('title').isString() && newData.child('at').isNumber())"
-    }
-   },
-   "memos": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
-   },
-   "lockers": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
-   },
-   "families": {
-    ".read": "auth != null",
-    "$fid": {
-     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     "cheer": {
-      "$from": {
-       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/mdev').child($from).child(auth.uid).exists() && root.child('gym/families').child($fid).child('m').child($from).exists()))",
-       ".validate": "!newData.exists() || (newData.child('to').isString() && newData.child('emo').isString() && newData.child('emo').val().length <= 30)"
-      }
-     }
-    }
-   },
-   "wchat": {
-    ".read": "auth != null",
-    "$k": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.child('id').isString() && (root.child('gym/mdev').child(newData.child('id').val()).child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && newData.child('id').val() === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val())) && root.child('gym/meta/chatOff').val() !== true && !root.child('gym/meta/chatMute').child(newData.child('id').val()).exists()))",
-     ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 80 && newData.child('at').isNumber())"
-    }
-   },
-   "wrep": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$k": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists()))"
-    }
-   },
-   "online": {
-    ".read": "auth != null",
-    "$id": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val()))"
-    }
-   },
-   "spar": {
-    ".read": "auth != null",
-    "$pid": {
-     ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-     "post": {
-      ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (newData.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && (!data.exists() || data.child('by').val() === newData.child('by').val())))"
-     },
-     "req": {
-      "$m": {
-       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())"
-      }
-     },
-     "match": {
-      ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/spar').child($pid).child('post/by').exists() && root.child('gym/mdev').child(root.child('gym/spar').child($pid).child('post/by').val()).child(auth.uid).exists()))"
-     },
-     "staff": {
-      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
-     },
-     "cfb": {
-      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
-     },
-     "fb": {
-      "$m": {
-       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())"
-      }
-     },
-     "video": {
-      "$m": {
-       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())",
-       ".validate": "!newData.exists() || newData.child('url').val().beginsWith('https://')"
-      }
-     },
-     "talk": {
+  "rules": {
+    "pins": {
       "$k": {
-       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (!data.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && (newData.child('by').val() === root.child('gym/spar').child($pid).child('post/by').val() || newData.child('by').val() === root.child('gym/spar').child($pid).child('post/to/id').val())))",
-       ".validate": "!newData.exists() || (newData.child('date').isString() && newData.child('time').isString())"
+        ".read": false,
+        ".write": "auth != null && !data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/) && $k.length >= 2 && $k.length <= 8"
       }
-     },
-     "ok": {
-      "$m": {
-       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ($m === root.child('gym/spar').child($pid).child('post/by').val() || $m === root.child('gym/spar').child($pid).child('post/to/id').val())))",
-       ".validate": "!newData.exists() || newData.isString()"
+    },
+    "devices": {
+      "$k": {
+        "$uid": {
+          ".read": false,
+          ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('pins').child($k).val()"
+        }
       }
-     }
-    }
-   },
-   "voice": {
-    "pub": {
-     ".read": "auth != null",
-     "$id": {
-      ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (!data.exists() && newData.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && !newData.child('reply').exists() && !newData.child('hide').exists()) || (data.exists() && !newData.exists() && root.child('gym/mdev').child(data.child('by').val()).child(auth.uid).exists()))",
-      ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('at').isNumber())",
+    },
+    "profiles": {
+      ".read": "auth != null",
+      "$k": {
+        ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['nick'])",
+        "nick": {
+          ".validate": "newData.isString() && newData.val().length <= 8"
+        },
+        "credits": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999999"
+        },
+        "av": {
+          "base": {
+            ".validate": "newData.isString() && (newData.val() !== 'mingnyu' || $k === '밍뉴')"
+          }
+        }
+      }
+    },
+    "saves": {
+      "$k": {
+        ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+        "$game": {
+          ".write": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+          "data": {
+            ".validate": "newData.isString() && newData.val().length < 200000"
+          }
+        }
+      }
+    },
+    "meta": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()"
+    },
+    "requests": {
+      ".read": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()",
+      "$k": {
+        ".read": "auth != null && root.child('devices').child($k).child(auth.uid).exists()",
+        ".write": "auth != null && (root.child('devices').child($k).child(auth.uid).exists() || root.child('devices').child('밍뉴').child(auth.uid).exists())"
+      }
+    },
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        "host": {
+          ".write": "auth != null && !data.exists() && root.child('devices').child('밍뉴').child(auth.uid).exists()"
+        },
+        "game": {
+          ".write": "auth != null && !data.exists() && newData.isString()"
+        },
+        "created": {
+          ".write": "auth != null && !data.exists()"
+        },
+        "allowed": {
+          "$k": {
+            ".write": "auth != null && root.child('devices').child('밍뉴').child(auth.uid).exists()"
+          }
+        },
+        "players": {
+          "$k": {
+            ".write": "auth != null && (root.child('devices').child('밍뉴').child(auth.uid).exists() || (root.child('devices').child($k).child(auth.uid).exists() && (!newData.exists() || root.child('rooms').child($code).child('allowed').child($k).exists() || root.child('rooms').child($code).child('host').val() === $k)))",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            }
+          }
+        }
+      }
+    },
+    "gym": {
+      "adminPin": {
+        ".read": false,
+        ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists()) && newData.isString() && newData.val().matches(/^[0-9]{4}$/)"
+      },
+      "admins": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('gym/adminPin').val()"
+        }
+      },
+      "meta": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+      },
+      "nextId": {
+        ".read": "auth != null",
+        ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() > 1000) || newData.val() === data.val() + 1)"
+      },
+      "mpin": {
+        "$id": {
+          ".read": false,
+          ".write": "auth != null && ((!data.exists() && newData.isString() && newData.val().matches(/^[0-9]{4}$/)) || root.child('gym/admins').child(auth.uid).exists())"
+        }
+      },
+      "mdev": {
+        "$id": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && newData.child('pin').val() === root.child('gym/mpin').child($id).val()"
+          }
+        }
+      },
+      "members": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
+        }
+      },
+      "private": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$id": {
+          ".read": "auth != null && (root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
+        }
+      },
+      "pays": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$pid": {
+          ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists())"
+        }
+      },
+      "shots": {
+        ".read": "auth != null",
+        ".indexOn": [
+          "at"
+        ],
+        "$sid": {
+          ".write": "auth != null && ((!data.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists()) || (data.exists() && !newData.exists() && (root.child('gym/mdev').child(data.child('mid').val()).child(auth.uid).exists() || root.child('gym/admins').child(auth.uid).exists())))",
+          ".validate": "newData.hasChildren(['mid','at','thumb']) && newData.child('thumb').isString() && newData.child('thumb').val().length < 80000"
+        }
+      },
+      "shotimg": {
+        ".read": "auth != null",
+        "$sid": {
+          ".write": "auth != null && ((!data.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists()) || (data.exists() && !newData.exists() && (root.child('gym/mdev').child(data.child('mid').val()).child(auth.uid).exists() || root.child('gym/admins').child(auth.uid).exists())))",
+          ".validate": "newData.hasChildren(['mid','img']) && newData.child('img').isString() && newData.child('img').val().length < 300000"
+        }
+      },
       "likes": {
-       "$m": {
-        ".write": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
-        ".validate": "!newData.exists() || newData.val() === true"
-       }
+        ".read": "auth != null",
+        "$sid": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && (!newData.exists() || newData.val() === true)"
+          }
+        }
+      },
+      "faces": {
+        ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').isString() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
+          ".validate": "newData.isString() && newData.val().length < 80000"
+        }
+      },
+      "outbox": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        ".indexOn": [
+          "status"
+        ],
+        "$jid": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+        }
+      },
+      "sender": {
+        ".read": "auth != null"
+      },
+      "coachcodes": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$code": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          ".validate": "!newData.exists() || ($code.matches(/^[0-9]{6}$/) && newData.child('name').isString())"
+        }
+      },
+      "coaches": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && (!newData.exists() || (newData.child('code').isString() && root.child('gym/coachcodes').child(newData.child('code').val()).exists()))"
+        }
+      },
+      "roster": {
+        ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').isString() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
+          ".validate": "!newData.exists() || newData.child('name').isString()"
+        }
+      },
+      "live": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() != null && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+          ".validate": "!newData.exists() || (newData.child('at').isNumber() && newData.child('nick').isString())"
+        }
+      },
+      "backups": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+      },
+      "staff": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$code": {
+          ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+        }
+      },
+      "hr": {
+        "att": {
+          ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          "$code": {
+            ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+            "$date": {
+              ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && newData.exists() && (!data.exists() || !data.child('out').exists())))"
+            }
+          }
+        },
+        "leave": {
+          ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          "$code": {
+            ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+            "$id": {
+              ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
+            }
+          }
+        },
+        "fix": {
+          ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          "$code": {
+            ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+            "$id": {
+              ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
+            }
+          }
+        }
+      },
+      "trials": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && newData.child('name').isString() && newData.child('phone').isString() && newData.child('status').val() === 'new') || root.child('gym/admins').child(auth.uid).exists())"
+        }
+      },
+      "staffchat": {
+        ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('uid').val() === auth.uid))))",
+          ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 1000 && newData.child('at').isNumber() && newData.child('name').isString())"
+        }
+      },
+      "staffnotice": {
+        ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+        "$id": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          ".validate": "!newData.exists() || (newData.child('title').isString() && newData.child('at').isNumber())"
+        }
+      },
+      "memos": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+      },
+      "lockers": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+      },
+      "families": {
+        ".read": "auth != null",
+        "$fid": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          "cheer": {
+            "$from": {
+              ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/mdev').child($from).child(auth.uid).exists() && root.child('gym/families').child($fid).child('m').child($from).exists()))",
+              ".validate": "!newData.exists() || (newData.child('to').isString() && newData.child('emo').isString() && newData.child('emo').val().length <= 30)"
+            }
+          }
+        }
+      },
+      "wchat": {
+        ".read": "auth != null",
+        "$k": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.child('id').isString() && (root.child('gym/mdev').child(newData.child('id').val()).child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && newData.child('id').val() === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val())) && root.child('gym/meta/chatOff').val() !== true && !root.child('gym/meta/chatMute').child(newData.child('id').val()).exists()))",
+          ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 80 && newData.child('at').isNumber())"
+        }
+      },
+      "wrep": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$k": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists()))"
+        }
+      },
+      "online": {
+        ".read": "auth != null",
+        "$id": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val()))"
+        }
+      },
+      "spar": {
+        ".read": "auth != null",
+        "$pid": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          "post": {
+            ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (newData.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && (!data.exists() || data.child('by').val() === newData.child('by').val())))"
+          },
+          "req": {
+            "$m": {
+              ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())"
+            }
+          },
+          "match": {
+            ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/spar').child($pid).child('post/by').exists() && root.child('gym/mdev').child(root.child('gym/spar').child($pid).child('post/by').val()).child(auth.uid).exists()))"
+          },
+          "staff": {
+            ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
+          },
+          "cfb": {
+            ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))"
+          },
+          "fb": {
+            "$m": {
+              ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())"
+            }
+          },
+          "video": {
+            "$m": {
+              ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || root.child('gym/mdev').child($m).child(auth.uid).exists())",
+              ".validate": "!newData.exists() || newData.child('url').val().beginsWith('https://')"
+            }
+          },
+          "talk": {
+            "$k": {
+              ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (!data.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && (newData.child('by').val() === root.child('gym/spar').child($pid).child('post/by').val() || newData.child('by').val() === root.child('gym/spar').child($pid).child('post/to/id').val())))",
+              ".validate": "!newData.exists() || (newData.child('date').isString() && newData.child('time').isString())"
+            }
+          },
+          "ok": {
+            "$m": {
+              ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ($m === root.child('gym/spar').child($pid).child('post/by').val() || $m === root.child('gym/spar').child($pid).child('post/to/id').val())))",
+              ".validate": "!newData.exists() || newData.isString()"
+            }
+          }
+        }
+      },
+      "voice": {
+        "pub": {
+          ".read": "auth != null",
+          "$id": {
+            ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (!data.exists() && newData.exists() && newData.child('by').isString() && root.child('gym/mdev').child(newData.child('by').val()).child(auth.uid).exists() && !newData.child('reply').exists() && !newData.child('hide').exists()) || (data.exists() && !newData.exists() && root.child('gym/mdev').child(data.child('by').val()).child(auth.uid).exists()))",
+            ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('at').isNumber())",
+            "likes": {
+              "$m": {
+                ".write": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
+                ".validate": "!newData.exists() || newData.val() === true"
+              }
+            }
+          }
+        },
+        "prv": {
+          ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
+          "$m": {
+            ".read": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
+            "$id": {
+              ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ((!data.exists() && newData.exists() && newData.child('by').val() === $m && !newData.child('reply').exists()) || (data.exists() && !newData.exists()))))",
+              ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('at').isNumber())"
+            }
+          }
+        }
+      },
+      "diag": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$id": {
+          "$k": {
+            ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && root.child('gym/mdev').child($id).child(auth.uid).exists()) || (!data.exists() && newData.exists() && (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val()))"
+          }
+        }
+      },
+      "hourly": {
+        ".read": "auth != null",
+        "$d": {
+          "$h": {
+            ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
+            ".validate": "newData.isNumber()"
+          }
+        }
+      },
+      "spprof": {
+        ".read": "auth != null",
+        "$m": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($m).child(auth.uid).exists())",
+          ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
+        }
+      },
+      "phoneidx": {
+        ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+        "$k": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.exists()) || root.child('gym/admins').child(auth.uid).exists())",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length < 12)"
+        }
       }
-     }
     },
-    "prv": {
-     ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()))",
-     "$m": {
-      ".read": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
-      "$id": {
-       ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ((!data.exists() && newData.exists() && newData.child('by').val() === $m && !newData.child('reply').exists()) || (data.exists() && !newData.exists()))))",
-       ".validate": "!newData.exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('at').isNumber())"
+    "arena": {
+      "$code": {
+        ".read": "auth != null",
+        ".validate": "$code.matches(/^[0-9]{6}$/)",
+        "info": {
+          ".write": "auth != null && (!data.exists() || root.child('arena').child($code).child('p').child(auth.uid).exists())"
+        },
+        "p": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "!newData.exists() || (newData.child('n').isString() && newData.child('n').val().length <= 8)"
+          }
+        },
+        "bots": {
+          ".write": "auth != null && root.child('arena').child($code).child('p').child(auth.uid).exists()"
+        },
+        "ev": {
+          "$e": {
+            ".write": "auth != null && root.child('arena').child($code).child('p').child(auth.uid).exists()"
+          }
+        }
       }
-     }
     }
-   },
-   "diag": {
-    ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
-    "$id": {
-     "$k": {
-      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && root.child('gym/mdev').child($id).child(auth.uid).exists()) || (!data.exists() && newData.exists() && (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists()) && $id === 'c' + root.child('gym/coaches').child(auth.uid).child('code').val()))"
-     }
-    }
-   },
-   "hourly": {
-    ".read": "auth != null",
-    "$d": {
-     "$h": {
-      ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
-      ".validate": "newData.isNumber()"
-     }
-    }
-   },
-   "spprof": {
-    ".read": "auth != null",
-    "$m": {
-     ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($m).child(auth.uid).exists())",
-     ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
-    }
-   }
-  },
-  "arena": {
-   "$code": {
-    ".read": "auth != null",
-    ".validate": "$code.matches(/^[0-9]{6}$/)",
-    "info": {
-     ".write": "auth != null && (!data.exists() || root.child('arena').child($code).child('p').child(auth.uid).exists())"
-    },
-    "p": {
-     "$uid": {
-      ".write": "auth != null && auth.uid === $uid",
-      ".validate": "!newData.exists() || (newData.child('n').isString() && newData.child('n').val().length <= 8)"
-     }
-    },
-    "bots": {
-     ".write": "auth != null && root.child('arena').child($code).child('p').child(auth.uid).exists()"
-    },
-    "ev": {
-     "$e": {
-      ".write": "auth != null && root.child('arena').child($code).child('p').child(auth.uid).exists()"
-     }
-    }
-   }
   }
- }
 }
