@@ -226,6 +226,12 @@ body.tvmode .app{max-width:none;padding:0}
 .bkbar{height:8px;background:var(--mat);border-radius:4px;margin:4px 0 2px;overflow:hidden}.bkbar i{display:block;height:100%;background:var(--ink);border-radius:0 4px 4px 0}
 #svRange input{border:2px solid var(--line);border-radius:12px;padding:8px}
 .payrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--mat)}
+.rfban{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:linear-gradient(120deg,#FFF3C4,#FFE0E2);border:2px solid var(--red);border-radius:14px;padding:10px 12px;color:var(--ink);cursor:pointer;font:inherit}
+.rfban .rfi{font-size:30px;line-height:1}.rfban b{display:block;font-family:var(--display);font-weight:400;font-size:18px}.rfban span{font-size:13px}.rfban span b{display:inline;font-family:inherit;font-size:inherit;font-weight:800}
+.rfban .rftag{flex:0 0 auto;background:var(--red);color:#fff;border-radius:999px;padding:3px 9px;font-weight:700;font-size:12.5px}
+.rfban.pulse{animation:rfp 1.6s ease-in-out infinite}@keyframes rfp{0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,0)}50%{box-shadow:0 0 0 5px rgba(230,57,70,.25)}}
+.rfhead{display:flex;gap:12px;align-items:center}.rfp{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;background:var(--mat);margin-bottom:4px}.rfp.me{background:#FFE0E2;outline:2px solid var(--red)}
+.rfstage{min-height:84px;display:grid;place-items:center;text-align:center;background:#2F2F2F;color:#FFD54A;border-radius:14px;font-family:var(--display);font-size:28px;padding:10px;line-height:1.2}
 .ev{display:flex;gap:10px;align-items:center;background:#2A1B33;color:#FFD9A8;border-radius:14px;padding:10px 14px;font-size:14px}
 .ev b{font-family:var(--display);font-weight:400;color:#FF9A3C}
 
@@ -567,6 +573,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <canvas id="parade" width="720" height="240"></canvas>
   </div>
   <div id="homeLive" hidden></div>
+  <button class="rfban" data-raffle hidden></button>
   <div class="bring" data-bring hidden></div>
   <div class="ev" id="hwBanner" hidden><b>할로윈 이벤트</b><span>11월 7일까지 한정 캐릭터 · 맵에서 사탕 줍기</span></div>
   <div class="refban" id="refBanner" hidden><canvas width="96" height="96"></canvas><div class="grow"><b id="refWho"></b><div class="small">지금 가입하면 초대 선물 100 크레딧을 더 받아요</div></div></div>
@@ -689,6 +696,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 
   <div class="tab" id="t-map">
     <div data-face style="margin-bottom:10px"></div>
+    <button class="rfban" data-raffle hidden style="margin-bottom:10px"></button>
     <div data-mem style="margin-bottom:10px"></div>
     <div data-attme style="margin-bottom:10px"></div>
     <div data-fam style="margin-bottom:10px"></div>
@@ -797,6 +805,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="pill" style="background:var(--gold);color:#2F2F2F">게스트</span></div>
   <div class="ghero"><div class="lg" id="gLogo"></div><div><div class="label">탕정 엔엔엔복싱</div><h1>NNN WORLD<br><span>둘러보기</span></h1><p>가입 없이 체육관을 구경하고, 게임도 해 보세요!</p></div></div>
   <div class="glive" id="gLive"></div>
+  <button class="rfban" data-raffle hidden></button>
   <div id="guestLive" hidden></div>
   <div class="grid2"><button class="gbig red" id="gTrial"><b>1일 무료 체험 신청</b><span>전화번호만 남기면 연락드려요</span></button><button class="gbig" id="gPlay"><b>게임 체험하기</b><span>체육관 맵 · 샌드백 · 줄넘기</span></button></div>
   <div class="card"><h3 style="font-size:20px">프로그램</h3><div id="gProg"></div></div>
@@ -953,6 +962,10 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
+  </div>
+  <div class="card" data-atab="ops" id="rfAdm" style="display:flex;flex-direction:column;gap:8px;border:2px solid var(--red)">
+    <h3 style="font-size:20px">🎁 응모 이벤트</h3>
+    <div id="rfAdmBox" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
   <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:8px">
     <h3 style="font-size:20px">실시간 출석 인원 표시</h3>
@@ -1864,7 +1877,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600)}
+async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -2089,7 +2102,7 @@ function openAnimal(a){
       W.animals=W.animals.filter(x=>x!==a);saveMe();refreshTop();close()}});
 }
 $('#rcRun').onclick=async()=>{if(!FB_ON()){toast('서버에 연결된 상태에서만 점검할 수 있어요');return}const box=$('#rcBox');box.innerHTML='<div class="small">점검 중…</div>';
-  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups'],['중복 가입 막기','phoneidx']];
+  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups'],['중복 가입 막기','phoneidx'],['응모 이벤트','raffle']];
   const out=[];for(const [n,p] of T){let ok=false;try{await Promise.race([gref(p).limitToFirst?gref(p).limitToFirst(1).get():gref(p).get(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),8000))]);ok=true}catch(e){ok=false}out.push([n,ok])}
   let wok=false;try{await gref('hourly/_check/0').set(null);wok=true}catch(e){}
   const bad=out.filter(x=>!x[1]).length;
@@ -3500,7 +3513,7 @@ const ytId=u=>{const m=String(u).match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-
 const DEFAULT_PROG='기초 복싱 | 스텝·잽·원투부터 차근차근. 처음 오셔도 1주면 미트를 쳐요\n다이어트 복싱 | 줄넘기·샌드백·서킷으로 1시간 땀 빼는 수업\n실전 · 스파링 | 레벨에 맞춘 매스 스파링과 카운터 훈련\n1:1 PT | 목표에 맞춘 개인 레슨';
 const isGuest=()=>ME&&ME.id==='0000';
 async function openGuest(){show('v-guest');$('#gLogo').innerHTML=logoSVG('#2F2F2F',true,'#4A4A4A');try{await DB.meta()}catch(e){}renderGuest();startLive();setTimeout(renderGuest,1500)}
-function renderGuest(){const M=local.meta,G2=M.guest||{};setTimeout(renderLiveCards,300);
+function renderGuest(){const M=local.meta,G2=M.guest||{};try{renderRaffle()}catch(e){}setTimeout(renderLiveCards,300);
   const pres=livePresent().filter(([id])=>id!=='0000');$('#gLive').innerHTML=pres.length?`<b>지금 체육관에 ${pres.length}명이 운동 중!</b><span style="margin-left:auto;font-size:13px">맵에서 보기 ›</span>`:'<b>NNN WORLD에서 회원들이 캐릭터로 운동해요</b><span style="margin-left:auto;font-size:13px">구경하기 ›</span>';$('#gLive').onclick=guestPlay;$('#gLive').style.cursor='pointer';
   $('#gProg').innerHTML=parseLines(G2.prog||DEFAULT_PROG).map(p=>`<div class="gprog"><b>${esc(p.t)}</b>${p.v?`<div class="small">${esc(p.v)}</div>`:''}</div>`).join('');
   try{$('#gTTnow').textContent=ttStatus().line}catch(e){$('#gTTnow').textContent='시간표를 눌러 확인하세요'}
@@ -3702,6 +3715,7 @@ function popItems(m){
 /* ================= 새 기능 소식 · 도움말 =================
    새 기능을 만들면 FEAT 맨 위에 한 줄 추가하면 회원들에게 자동으로 안내돼요(가입일 이후 기능만). */
 const FEAT=[
+  {id:'s_raffle',aud:'owner',q:'운영 탭 맨 위 · 상품·기간 정하고 추첨까지',d:'2026-10-23',e:'🎁',t:'응모 이벤트 만들기',s:'상품·기간을 정하면 회원 앱과 처음 화면에 배너가 떠요. 출석·친구 초대 보너스 응모권, 추첨 화면, 당첨자 발표·지급 체크까지',go:'adm:ops'},
   {id:'s_import',aud:'owner',q:'엑셀로 회원·기간·결제·락커 한 번에',d:'2026-10-22',e:'📥',t:'다른 프로그램에서 가져오기',s:'원알엠 등 엑셀·복사 붙여넣기로 회원·기간·결제를 옮겨요(락커는 락커 칸에서 따로). 미리보기·자동 백업·바뀐 내용 요약, 회원 탭에서 바로 되돌리기',go:'adm:mem'},
   {id:'s_notice',aud:'owner',q:'공지·자동 알림에 쓰면 맵 공지판에도',d:'2026-10-21',e:'📢',t:'맵의 공지판 = 관장님 공지',s:'공지·자동 알림에 올린 공지가 체육관 맵 공지판에도 그대로 떠요',go:'adm:ops'},
   {id:'s_onb',aud:'owner',q:'회원 화면 ? 버튼',d:'2026-10-21',e:'❓',t:'회원에게 새 기능 안내·도움말',s:'회원이 로그인하면 새 기능을 짧게 알려 주고, 처음 온 회원에겐 탭마다 한 줄 도움말이 떠요',go:null},
@@ -3742,7 +3756,7 @@ function onbNew(){if(!ME||(ME.demo&&!isStaff(ME))||(typeof isGuest==='function'&
   return FEAT.filter(f=>!onbSeen()[f.id]&&featOk(f))}
 function onbDot(){const d=$('#helpDot');if(d)d.hidden=!onbNew().length}
 function onbGo(go){const T=t=>{setTab(t);window.scrollTo(0,0)};const scrollTo=(sel,fn)=>setTimeout(()=>{const e=$(sel);if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.classList.add('flash');setTimeout(()=>e.classList.remove('flash'),1600)}fn&&fn(e)},250);
-  switch(go){case 'arcade':T('map');openArcade();break;
+  switch(go){case 'arcade':T('map');openArcade();break;case 'raffle':T('map');rfSheet();break;
     case 'attal':T('more');scrollTo('[data-attme="full"]',()=>{if(!attAlarmOn(ME.id))attAlarmToggle()});break;
     case 'bio':T('more');scrollTo('#bioBtn',e=>{if(e&&!e.hidden)e.click()});break;
     case 'spar':T('map');openSparBoard();break;
@@ -4197,7 +4211,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
 
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -5849,9 +5863,140 @@ function renderFaceCard(){
 
 $('#tplBtn').onclick=openTplEditor;
 $('#logQ').oninput=()=>renderSendLog();
+/* ================= 응모 이벤트 ================= */
+const RF=()=>{const r=local.meta&&local.meta.raffle;return r&&r.id&&!r.hidden?r:null};
+const rfArr=x=>Array.isArray(x)?x.filter(Boolean):Object.values(x||{}).filter(Boolean);
+const rfPrizes=r=>rfArr(r.prizes).filter(p=>p&&p.name);
+const rfWinners=r=>rfArr(r.winners);
+function rfPhase(r){if(!r)return'none';if(r.drawnAt)return'drawn';const t=TODAY();if(r.start&&t<r.start)return'soon';if(r.end&&t>r.end)return'closed';return'open'}
+function rfDtxt(r){const n=dDiff(r.end,TODAY());return n>0?'D-'+n:n===0?'오늘 마감':'마감'}
+function rfTixOf(m,r,all){const o={base:1,att:0,ref:0,total:1};if(!m)return o;const a=rfArr(m.attend).filter(d=>typeof d==='string'&&d>=(r.start||'')&&d<=(r.end||'9999'));
+  if(r.attOn)o.att=Math.min(a.length,+r.attMax||30);
+  if(r.refOn&&all)o.ref=(+r.refN||3)*all.filter(x=>x&&x.ref===m.id&&!x.demo&&(x.joined||'')>=(r.start||'')&&(x.joined||'')<=(r.end||'9999')).length;
+  o.total=o.base+o.att+o.ref;return o}
+async function rfEntries(r){const v=await hget('raffle/'+r.id);return v&&typeof v==='object'?v:{}}
+async function rfSaveMeta(r){local.meta.raffle=r||null;if(FB_ON()){try{await gref('meta/raffle').set(r?clean(r):null);return true}catch(e){toast('저장하지 못했어요. 보안 규칙을 확인해 주세요',3500);return false}}persist();return true}
+const rfPrizeTxt=r=>rfPrizes(r).map(p=>p.name+(+p.n>1?' ×'+p.n:'')).join(' · ');
+const RF_MEDAL=['🥇','🥈','🥉','🎁','🎁','🎁','🎁','🎁'];
+function rfHowTxt(r){const L=['앱에서 <b>응모하기</b>만 누르면 응모권 1장'];if(r.attOn)L.push(`기간 중 <b>출석 1번마다 +1장</b> (최대 ${+r.attMax||30}장)`);if(r.refOn)L.push(`내 초대 링크로 <b>친구가 가입하면 1명당 +${+r.refN||3}장</b>`);L.push('응모권이 많을수록 당첨 확률이 올라가요 · 한 사람은 상품 하나만');return L.map(x=>'· '+x).join('<br>')}
+/* 회원·처음 화면 배너 */
+async function renderRaffle(){const r=RF();const ph=rfPhase(r);
+  const late=r&&r.drawnAt&&dDiff(TODAY(),dstr(new Date(r.drawnAt)))>14;
+  for(const el of $$('[data-raffle]')){const inMap=!!el.closest('#t-map');
+    const show=r&&!late&&ph!=='none'&&(inMap?(ME&&!ME.demo):(r.showHome!==false));
+    el.hidden=!show;if(!show){el.innerHTML='';continue}
+    let sub='',tag='';
+    if(ph==='soon'){sub=`${md(r.start)}부터 응모 · 상품 ${rfPrizeTxt(r)}`;tag='곧 시작'}
+    else if(ph==='open'){sub=`상품 ${rfPrizeTxt(r)} · ${md(r.end)}까지`;tag=rfDtxt(r)}
+    else if(ph==='closed'){sub=`응모 마감 · ${r.draw?md(r.draw)+' 추첨':'곧 추첨'}`;tag='마감'}
+    else{sub='당첨자 발표! 눌러서 확인하세요';tag='발표'}
+    if(inMap&&ME&&ph==='open'&&!isStaff(ME)){const mine=await hget('raffle/'+r.id+'/'+ME.id);if(mine){const t=rfTixOf(ME,r,null);sub=`응모 완료 · 내 응모권 <b>${t.total}장</b>${r.attOn?' · 출석하면 +1장':''}`}else{sub='아직 응모 안 했어요 · 눌러서 응모하기';el.classList.add('pulse')}}
+    if(inMap&&ME&&ph==='drawn'&&rfWinners(r).some(w=>w.id===ME.id)){sub='🎉 축하해요! 당첨됐어요 · 눌러서 확인';tag='당첨'}
+    el.className='rfban'+(el.classList.contains('pulse')&&ph==='open'?' pulse':'');
+    el.innerHTML=`<div class="rfi">🎁</div><div class="grow"><b>${esc(r.title||'응모 이벤트')}</b><span>${sub.includes('<b>')?sub:esc(sub)}</span></div><span class="rftag">${esc(tag)}</span>`;
+    el.onclick=()=>rfSheet()}}
+async function rfSheet(){const r=RF();if(!r){toast('진행 중인 이벤트가 없어요');return}const ph=rfPhase(r);
+  const ent=await rfEntries(r);const cnt=Object.keys(ent).length;
+  const member=ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());
+  let mine=member?ent[ME.id]:null;let tix=null;if(member){let all=null;if(r.refOn){try{all=await DB.all()}catch(e){}}tix=rfTixOf(ME,r,all)}
+  const W=rfWinners(r);const iWon=member&&W.find(w=>w.id===ME.id);
+  const prizes=rfPrizes(r).map((p,i)=>`<div class="rfp"><span>${RF_MEDAL[i]||'🎁'}</span><b class="grow">${esc(p.name)}</b><span class="small num">${+p.n||1}명</span></div>`).join('');
+  const dates=`<div class="small">응모 기간 <b>${r.start?md(r.start):'지금'} ~ ${md(r.end)}</b>${r.draw?` · 추첨·발표 <b>${md(r.draw)}</b>`:''} · 지금까지 <b class="num">${cnt}명</b> 응모</div>`;
+  let act='';
+  if(ph==='drawn'){act=`<div class="label" style="margin-top:4px">당첨자</div><div class="rfwl">${W.map(w=>`<div class="rfp${member&&w.id===ME.id?' me':''}"><span>🎉</span><b class="grow">${esc(w.nm||'')} <span class="small num">(${esc(String(w.id).slice(-2).padStart(String(w.id).length,'*'))})</span></b><span class="small">${esc(w.prize)}</span></div>`).join('')||'<div class="small">당첨자가 없어요</div>'}</div>
+    ${iWon?`<div class="memsum" style="border-color:var(--red)"><b style="color:var(--red)">🎉 ${esc(ME.name)}님 당첨! (${esc(iWon.prize)})</b><div class="small">데스크에서 관장님께 이 화면을 보여 주세요.</div></div>`:member&&mine?'<div class="small">아쉽게도 이번엔 당첨되지 않았어요. 다음 이벤트도 응모해 주세요!</div>':''}`}
+  else if(!ME||(typeof isGuest==='function'&&isGuest())){act=`<button class="btn red" id="rfJoin">가입하고 응모하기</button><button class="btn ghost" id="rfLogin">이미 회원이에요 · 회원번호로 입장</button><div class="small">NNN WORLD 앱에 가입한 회원만 응모할 수 있어요. 가입은 1분이면 끝나요.</div>`}
+  else if(!member){act=`<div class="small">관장·코치 계정은 응모하지 않아요. 회원 화면에서 이렇게 보여요.</div>`}
+  else if(ph==='soon'){act=`<button class="btn" disabled>${md(r.start)}부터 응모할 수 있어요</button>`}
+  else if(ph==='closed'){act=mine?`<div class="memsum"><b>응모 완료 · 응모권 ${tix.total}장</b><div class="small">추첨을 기다려 주세요!</div></div>`:'<div class="small">응모가 마감됐어요.</div>'}
+  else{act=mine?`<div class="memsum"><b>✅ 응모 완료 · 내 응모권 <span class="num">${tix.total}</span>장</b><div class="small">기본 1${tix.att?` + 출석 ${tix.att}`:''}${tix.ref?` + 친구 초대 ${tix.ref}`:''}</div></div>${r.refOn?'<button class="btn gold" id="rfInv">친구 초대하고 응모권 더 받기</button>':''}`:`<button class="btn red" id="rfGo">🎁 응모하기</button>`}
+  sheet(`<div class="rfhead"><div style="font-size:40px;line-height:1">🎁</div><div class="grow"><div class="label">응모 이벤트 ${ph==='open'?'· '+rfDtxt(r):''}</div><h2 style="margin:0">${esc(r.title||'응모 이벤트')}</h2></div></div>
+    ${r.desc?`<p style="margin:0;white-space:pre-line">${esc(r.desc)}</p>`:''}
+    <div class="label">상품</div><div>${prizes}</div>${dates}
+    ${ph!=='drawn'?`<div class="memsum"><b>응모권 받는 방법</b><div class="small" style="line-height:1.6">${rfHowTxt(r)}</div></div>`:''}
+    ${act}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const g=el.querySelector('#rfGo');if(g)g.onclick=async()=>{g.disabled=true;g.textContent='응모하는 중…';const ok=await hset('raffle/'+r.id+'/'+ME.id,{at:Date.now()});if(ok){try{navigator.vibrate&&navigator.vibrate([30,40,30])}catch(e){}toast('응모 완료! 행운을 빌어요 🍀',3000);close();renderRaffle();setTimeout(rfSheet,250)}else{g.disabled=false;g.textContent='🎁 응모하기'}};
+    const j=el.querySelector('#rfJoin');if(j)j.onclick=()=>{close();try{localStorage.setItem('nnn_rafgo',r.id)}catch(e){}if(typeof isGuest==='function'&&isGuest()){ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}}buildJoin();show('v-join')};
+    const l=el.querySelector('#rfLogin');if(l)l.onclick=()=>{close();try{localStorage.setItem('nnn_rafgo',r.id)}catch(e){}if(typeof isGuest==='function'&&isGuest()){ME=null;try{localStorage.removeItem(LS_SESSION)}catch(e){}}show('v-login')};
+    const v=el.querySelector('#rfInv');if(v)v.onclick=()=>{close();shareLink(`${ME.name}이(가) 다니는 탕정 엔엔엔복싱! 지금 앱 가입하면 「${r.title||'응모 이벤트'}」 응모할 수 있어요 (${rfPrizeTxt(r)}) 🥊`,inviteLink(ME.id))}})}
+let RF_AUTO=0;
+async function rfAuto(){const r=RF();if(!r||!ME||ME.demo||isStaff(ME)||(typeof isGuest==='function'&&isGuest()))return;const ph=rfPhase(r);
+  if($('#sheetRoot').innerHTML){if(RF_AUTO++<6)setTimeout(rfAuto,4000);return}
+  let go='';try{go=localStorage.getItem('nnn_rafgo')||''}catch(e){}
+  if(go===r.id){try{localStorage.removeItem('nnn_rafgo')}catch(e){}rfSheet();return}
+  const k='nnn_rfseen_'+r.id;let seen='';try{seen=localStorage.getItem(k)||''}catch(e){}
+  if(ph==='drawn'){if(seen!=='drawn'&&rfWinners(r).some(w=>w.id===ME.id)){try{localStorage.setItem(k,'drawn')}catch(e){}rfSheet()}return}
+  if(ph==='open'&&seen!==TODAY()){const mine=await hget('raffle/'+r.id+'/'+ME.id);try{localStorage.setItem(k,TODAY())}catch(e){}if(!mine)rfSheet()}}
+/* 관장 */
+async function renderRfAdm(){const box=$('#rfAdmBox');if(!box)return;const r0=local.meta.raffle;const r=r0&&r0.id?r0:null;
+  if(!r||r.hidden){box.innerHTML=`<p class="small" style="margin:0">상품을 걸고 기간을 정하면, 회원은 앱에서 <b>응모하기</b>를 눌러 응모해요. 처음 화면에도 배너가 떠서 <b>앱 가입을 끌어와요</b>. 출석·친구 초대로 응모권을 더 받게 할 수 있어요.</p><button class="btn red" id="rfNew">새 응모 이벤트 만들기</button>${r&&r.hidden?'<button class="btn ghost sm" id="rfPrev">지난 이벤트 결과 보기</button>':''}`;
+    box.querySelector('#rfNew').onclick=()=>rfEdit(null);const pv=box.querySelector('#rfPrev');if(pv)pv.onclick=()=>rfAdmResult(r);return}
+  const ph=rfPhase(r);const ent=await rfEntries(r);const ids=Object.keys(ent);
+  const PH={soon:'시작 전',open:'응모 중',closed:'마감 · 추첨 대기',drawn:'발표 완료'};
+  box.innerHTML=`<div class="memsum"><div class="row" style="align-items:center"><b class="grow">${esc(r.title)}</b><span class="pill">${PH[ph]}</span></div>
+    <div class="small">${r.start?md(r.start):''} ~ ${md(r.end)}${r.draw?' · 추첨 '+md(r.draw):''}</div><div class="small">상품: ${esc(rfPrizeTxt(r))}</div>
+    <div class="small">응모 <b class="num">${ids.length}명</b>${r.attOn?' · 출석 보너스':''}${r.refOn?' · 초대 보너스':''}${r.showHome!==false?' · 처음 화면 배너':''}</div></div>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm ghost grow" id="rfEd">수정</button><button class="btn sm ghost grow" id="rfList">응모자 ${ids.length}명</button><button class="btn sm ghost grow" id="rfSee">회원 화면 보기</button></div>
+    ${ph==='drawn'?`<button class="btn red" id="rfRes">당첨자 · 지급 체크</button><button class="btn ghost sm" id="rfEnd">이벤트 끝내기 (배너 내리기)</button>`:`<button class="btn red" id="rfDraw">🎲 추첨하기${ph==='open'||ph==='soon'?' (마감 전)':''}</button>`}`;
+  box.querySelector('#rfEd').onclick=()=>rfEdit(r);box.querySelector('#rfSee').onclick=()=>rfSheet();
+  box.querySelector('#rfList').onclick=()=>rfAdmList(r);
+  const d=box.querySelector('#rfDraw');if(d)d.onclick=()=>rfAdmDraw(r);
+  const rs=box.querySelector('#rfRes');if(rs)rs.onclick=()=>rfAdmResult(r);
+  const en=box.querySelector('#rfEnd');if(en)en.onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 끝내요 (결과는 남아요)';return}r.hidden=true;await rfSaveMeta(r);renderRfAdm();renderRaffle()}}
+async function rfPool(r){const ent=await rfEntries(r);const all=await DB.all();const by={};all.forEach(m=>by[m.id]=m);const pool=[],out=[];
+  for(const id of Object.keys(ent)){const m=by[id];if(!m||m.demo||isStaff(m)){out.push({id,why:'없는 회원'});continue}if(r.onlyOk!==false&&!m.approvedAt){out.push({id,nm:m.name,why:'가입 승인 전'});continue}const t=rfTixOf(m,r,all);pool.push({id,name:m.name,w:t.total,t,at:ent[id].at})}
+  pool.sort((a,b)=>b.w-a.w||a.at-b.at);return{pool,out}}
+async function rfAdmList(r){const {pool,out}=await rfPool(r);const tot=pool.reduce((s,x)=>s+x.w,0);
+  sheet(`<h2>응모자 ${pool.length}명</h2><div class="small">응모권 총 <b class="num">${tot}</b>장 · 많은 순</div>
+    <div style="display:flex;flex-direction:column;gap:4px;max-height:52vh;overflow:auto">${pool.map(p=>`<div class="rfp"><b class="grow">${esc(p.name)} <span class="small num">${esc(p.id)}</span></b><span class="small num">${p.w}장 · ${tot?Math.round(p.w/tot*1000)/10:0}%</span></div>`).join('')||'<div class="small">아직 응모한 회원이 없어요</div>'}</div>
+    ${out.length?`<div class="small">추첨 제외 ${out.length}명: ${out.map(o=>esc((o.nm||o.id)+' ('+o.why+')')).join(', ')}</div>`:''}<button class="btn ghost" data-close>닫기</button>`)}
+function rfPick(pool,prizes){const P=pool.map(x=>Object.assign({},x)),win=[];const rnd=()=>{try{const u=new Uint32Array(1);crypto.getRandomValues(u);return u[0]/4294967296}catch(e){return Math.random()}};
+  for(const p of prizes){for(let k=0;k<(+p.n||1);k++){if(!P.length)break;const tot=P.reduce((s,x)=>s+x.w,0);let t=rnd()*tot,i=0;for(;i<P.length-1;i++){t-=P[i].w;if(t<0)break}const w=P.splice(i,1)[0];win.push({id:w.id,nm:maskName(w.name),name:w.name,prize:p.name})}}return win}
+async function rfAdmDraw(r){const {pool,out}=await rfPool(r);const prizes=rfPrizes(r);if(!pool.length){toast('추첨할 응모자가 없어요');return}
+  const need=prizes.reduce((s,p)=>s+(+p.n||1),0);
+  sheet(`<h2>🎲 추첨하기</h2><div class="small">응모자 <b>${pool.length}명</b> · 상품 <b>${need}개</b>${out.length?` · 제외 ${out.length}명(승인 전 등)`:''}. 응모권 수만큼 확률이 올라가요. TV나 휴대폰 화면을 회원들에게 보여 주면서 눌러도 좋아요.</div>
+    <div id="rfStage" class="rfstage">준비됐어요</div><div id="rfOut" style="display:flex;flex-direction:column;gap:4px"></div>
+    <button class="btn red" id="rfStart">추첨 시작</button><button class="btn" id="rfPub" hidden>이 결과로 발표하기</button><button class="btn ghost sm" id="rfAgain" hidden>다시 추첨</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    let res=null;const st=el.querySelector('#rfStage'),o=el.querySelector('#rfOut'),sb=el.querySelector('#rfStart'),pb=el.querySelector('#rfPub'),ag=el.querySelector('#rfAgain');
+    const run=async()=>{sb.hidden=true;pb.hidden=true;ag.hidden=true;o.innerHTML='';res=rfPick(pool,prizes);
+      for(const w of res){await new Promise(done=>{let n=0;const iv=setInterval(()=>{st.textContent=pool[Math.floor(Math.random()*pool.length)].name;if(++n>22){clearInterval(iv);done()}},70)});
+        st.innerHTML=`<span class="small">${esc(w.prize)}</span><br>🎉 ${esc(w.name)}`;try{sfx&&sfx('win')}catch(e){}
+        o.insertAdjacentHTML('beforeend',`<div class="rfp"><span>🎉</span><b class="grow">${esc(w.name)} <span class="small num">${esc(w.id)}</span></b><span class="small">${esc(w.prize)}</span></div>`);await new Promise(x=>setTimeout(x,700))}
+      pb.hidden=false;ag.hidden=false};
+    sb.onclick=run;ag.onclick=run;
+    pb.onclick=async()=>{r.winners=res.map(w=>({id:w.id,nm:w.nm,prize:w.prize}));r.drawnAt=Date.now();if(!r.draw)r.draw=TODAY();if(await rfSaveMeta(r)){toast('당첨자를 발표했어요. 회원 앱에 바로 떠요',3500);close();renderRfAdm();renderRaffle();rfAdmResult(r)}}})}
+async function rfAdmResult(r){const all=await DB.all();const by={};all.forEach(m=>by[m.id]=m);const W=rfWinners(r);
+  const txt=`[${r.title}] 당첨자 발표 🎉\n`+W.map(w=>`${w.prize} - ${w.nm} (${String(w.id).slice(-2).padStart(String(w.id).length,'*')})`).join('\n')+`\n\n당첨되신 분은 데스크에서 앱 화면을 보여 주세요. 응모해 주신 모든 회원님 고맙습니다!`;
+  sheet(`<h2>당첨자 · 지급 체크</h2><div style="display:flex;flex-direction:column;gap:4px">${W.map((w,i)=>{const m=by[w.id];return`<label class="rfp"><input type="checkbox" data-gv="${i}" ${w.given?'checked':''}><b class="grow">${esc(m?m.name:w.nm)} <span class="small num">${esc(w.id)}</span><br><span class="small">${esc(w.prize)}${m&&m.phone?' · '+esc(m.phone):''}</span></b>${m&&m.phone?`<a class="btn sm ghost" href="${smsHref(m,`${m.name}님, ${r.title} 「${w.prize}」 당첨을 축하드려요! 체육관 데스크에서 받아 가세요. - 탕정 엔엔엔복싱`)}">문자</a>`:''}</label>`}).join('')}</div>
+    <div class="field"><label>공지·단톡방에 붙여 넣을 발표 문구</label><textarea id="rfTxt" rows="6">${esc(txt)}</textarea></div>
+    <button class="btn red" id="rfCopy">발표 문구 복사</button><button class="btn ghost" data-close>닫기</button>`,(el)=>{
+    el.querySelectorAll('[data-gv]').forEach(c=>c.onchange=async()=>{const w=rfWinners(r);w[+c.dataset.gv].given=c.checked;r.winners=w;await rfSaveMeta(r);toast(c.checked?'지급 완료로 표시했어요':'지급 표시를 지웠어요')});
+    el.querySelector('#rfCopy').onclick=()=>copyText(el.querySelector('#rfTxt').value,'발표 문구를')})}
+function rfEdit(r){const isNew=!r;const T=TODAY();const R=r?Object.assign({},r):{id:'r'+Date.now().toString(36),title:'NNN WORLD 앱 가입 응모 이벤트',desc:'NNN WORLD 앱에 가입하고 응모하기만 누르면 끝! 출석할수록 당첨 확률이 올라가요.',prizes:[{name:'복싱 글러브',n:1},{name:'핸드랩',n:3},{name:'음료 쿠폰',n:5}],start:T,end:dAdd(T,13),draw:dAdd(T,14),attOn:true,attMax:20,refOn:true,refN:3,onlyOk:true,showHome:true};
+  const started=r&&rfPhase(r)!=='soon';
+  sheet(`<h2>${isNew?'새 응모 이벤트':'응모 이벤트 수정'}</h2>
+    <div class="field"><label for="rfT">이벤트 이름</label><input id="rfT" maxlength="40" value="${esc(R.title||'')}"></div>
+    <div class="field"><label for="rfD">설명 <span class="small">(선택)</span></label><textarea id="rfD" rows="2" maxlength="300">${esc(R.desc||'')}</textarea></div>
+    <div class="field"><label for="rfP">상품 · 한 줄에 하나 <span class="small">(상품 | 인원) 위에 적은 것부터 먼저 추첨</span></label><textarea id="rfP" rows="4" placeholder="복싱 글러브 | 1&#10;핸드랩 | 3">${esc(rfPrizes(R).map(p=>p.name+' | '+(+p.n||1)).join('\n'))}</textarea></div>
+    <div class="row"><div class="field grow"><label for="rfS">응모 시작</label><input type="date" id="rfS" value="${esc(R.start||T)}"></div><div class="field grow"><label for="rfE">응모 마감</label><input type="date" id="rfE" value="${esc(R.end||'')}"></div></div>
+    <div class="field"><label for="rfDr">추첨·발표일 <span class="small">(회원에게 보여 주는 날짜)</span></label><input type="date" id="rfDr" value="${esc(R.draw||'')}"></div>
+    <label class="check" style="margin:0"><input type="checkbox" id="rfAtt" ${R.attOn?'checked':''}><span><b>출석 1번마다 응모권 +1장</b> · 최대 <input id="rfAttMax" type="number" min="1" max="99" value="${+R.attMax||20}" style="width:56px;display:inline-block;padding:2px 6px">장</span></label>
+    <label class="check" style="margin:0"><input type="checkbox" id="rfRef" ${R.refOn?'checked':''}><span><b>친구 초대로 가입하면 1명당 +<input id="rfRefN" type="number" min="1" max="20" value="${+R.refN||3}" style="width:48px;display:inline-block;padding:2px 6px">장</b> <span class="small">(기간 안에 가입한 친구만)</span></span></label>
+    <label class="check" style="margin:0"><input type="checkbox" id="rfOk" ${R.onlyOk!==false?'checked':''}><span>가입 승인된 회원만 추첨 <span class="small">(중복·장난 가입 막기)</span></span></label>
+    <label class="check" style="margin:0"><input type="checkbox" id="rfHome" ${R.showHome!==false?'checked':''}><span><b>처음 화면·게스트 화면에도 배너</b> <span class="small">(아직 가입 안 한 사람에게 '가입하고 응모하기')</span></span></label>
+    <div id="rfErr" class="small" style="color:var(--red)"></div>
+    <button class="btn red" id="rfSv">${isNew?'이벤트 시작하기':'저장'}</button>${!isNew?'<button class="btn ghost sm" id="rfDel">이벤트 삭제</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    el.querySelector('#rfSv').onclick=async()=>{const v=id=>el.querySelector(id).value.trim();const er=el.querySelector('#rfErr');
+      const prizes=v('#rfP').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.split(/\s*[|｜]\s*/);let n=parseInt(m[1],10);if(!(n>0)){const mm=l.match(/^(.*?)\s*[x×]\s*(\d+)\s*$/i);if(mm)return{name:mm[1].trim(),n:+mm[2]};n=1}return{name:m[0].slice(0,40),n:Math.min(n,50)}});
+      if(!v('#rfT')){er.textContent='이벤트 이름을 적어 주세요';return}if(!prizes.length){er.textContent='상품을 하나 이상 적어 주세요';return}
+      if(!v('#rfE')){er.textContent='응모 마감일을 골라 주세요';return}if(v('#rfS')&&v('#rfE')<v('#rfS')){er.textContent='마감일이 시작일보다 빨라요';return}
+      Object.assign(R,{title:v('#rfT'),desc:v('#rfD'),prizes,start:v('#rfS'),end:v('#rfE'),draw:v('#rfDr'),attOn:el.querySelector('#rfAtt').checked,attMax:+v('#rfAttMax')||20,refOn:el.querySelector('#rfRef').checked,refN:+v('#rfRefN')||3,onlyOk:el.querySelector('#rfOk').checked,showHome:el.querySelector('#rfHome').checked,hidden:false});
+      if(isNew){R.made=Date.now();delete R.winners;delete R.drawnAt}
+      if(await rfSaveMeta(R)){toast(isNew?'응모 이벤트를 시작했어요! 회원 앱에 바로 떠요':'저장했어요',3500);close();renderRfAdm();renderRaffle()}};
+    const dl=el.querySelector('#rfDel');if(dl)dl.onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (응모 기록도 지워요)';return}try{await hset('raffle/'+R.id,null)}catch(x){}await rfSaveMeta(null);toast('이벤트를 삭제했어요');close();renderRfAdm();renderRaffle()}})}
 /* ================= 시작 ================= */
 (async()=>{
-  show('v-home');syncInstUI();setTimeout(renderHomeQR,300);renderSNS();FB_READY=fbInit();const fbok=await FB_READY;if(fbok)await DB.meta();renderSNS();try{if(!LIVE.off)startLive();setTimeout(renderLiveCards,800)}catch(e){}renderBring();showInviteBanner();
+  show('v-home');syncInstUI();setTimeout(renderHomeQR,300);renderSNS();FB_READY=fbInit();const fbok=await FB_READY;if(fbok)await DB.meta();renderSNS();try{renderRaffle()}catch(e){}try{if(!LIVE.off)startLive();setTimeout(renderLiveCards,800)}catch(e){}renderBring();showInviteBanner();
   const userMoved=()=>!!ME||$('#v-home').hidden;
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}

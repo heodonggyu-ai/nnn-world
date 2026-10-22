@@ -398,6 +398,16 @@
           ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
         }
       },
+      "raffle": {
+        ".read": "auth != null",
+        "$rid": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+          "$id": {
+            ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || root.child('gym/mdev').child($id).child(auth.uid).exists())",
+            ".validate": "!newData.exists() || (newData.hasChildren(['at']) && newData.child('at').isNumber())"
+          }
+        }
+      },
       "phoneidx": {
         ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
         "$k": {
