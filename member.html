@@ -1201,7 +1201,11 @@ const DB={
   async addPay(x){if(!FB_ON()){local.pays[x.id]=x;persist();return}try{await gref('pays/'+x.id).set(clean(x))}catch(e){toast('결제 알림 저장 실패')}},
   async pays(){if(!FB_ON())return Object.values(local.pays);try{const o=(await gref('pays').get()).val()||{};local.pays=o;return Object.values(o)}catch(e){return[]}},
   async newId(){if(!FB_ON()){const id=local.meta.nextId++;persist();return String(id)}
-    const r=await gref('nextId').transaction(v=>(v||1000)+1);return String(r.snapshot.val())},
+    // 처음 여는 폰은 서버 번호를 모른 채 (null→1001)로 요청해서 규칙(현재+1만 허용)에 막힘 → 먼저 서버 값을 읽어 두고 요청
+    const ref=gref('nextId');let base=null;try{base=(await ref.get()).val()}catch(e){}
+    for(let i=0;i<3;i++){try{const r=await ref.transaction(v=>{const cur=Number(v!=null?v:base)||1000;return cur+1});if(r.committed)return String(r.snapshot.val())}catch(e){if(i===2)throw e}
+      try{base=(await ref.get()).val()}catch(e){}}
+    throw new Error('회원번호 발급 실패')},
   async claim(id,pin){if(!FB_ON())return true;try{await gref('mpin/'+id).set(pin);return true}catch(e){return false}},
   async loginMember(id,pin){if(isLocal(id)){const m=local.members[id];return !!m&&m.phone.replace(/\D/g,'').slice(-4)===pin}
     try{await gref('mdev/'+id+'/'+fuid).set({pin,at:Date.now()});return true}catch(e){return false}},
