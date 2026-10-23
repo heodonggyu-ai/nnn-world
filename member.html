@@ -378,6 +378,24 @@ body.tvmode .app{max-width:none;padding:0}
 .kres{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
 .kres canvas{width:150px;height:170px}
 .wheel{font-family:var(--display);font-size:40px;color:var(--gold);min-height:52px}
+/* 출석패드 · 흰색 테마 */
+body:has(#v-pad:not([hidden])){background:#fff}
+.kiosk{background:#fff;color:var(--ink);border:1px solid #E4E6EB;border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(20,26,39,.08)}
+.kiosk h2{color:var(--ink)}
+#padNext{color:#7A808C!important}
+#padCount{background:#FDECEC!important;color:var(--red)!important;font-weight:700}
+.kiosk .padhint{color:#7A808C!important}
+.kdisp{background:#F5F6F8;border:2px solid #E4E6EB;color:var(--ink)}
+.keys button{background:#fff;color:var(--ink);border:1.5px solid #E1E4EA;box-shadow:0 3px 0 #D7DBE2}
+.keys button:active{box-shadow:0 1px 0 #D7DBE2;background:#F3F4F6}
+.keys button[data-k="지움"]{background:#F3F4F6;color:#5B616E}
+.keys .ok{background:var(--red);color:#fff;border-color:var(--red);box-shadow:0 3px 0 #8f1c20}
+.padqr{background:#F7F8FA;border:1px solid #E4E6EB}
+.kres #padMsg{color:var(--ink)}
+.kres #padSub{color:#6B717D!important}
+.kiosk .wheel{color:#E0A100}
+.kiosk #padBonus{color:#B07A00!important}
+.kiosk #padForceBtn{color:var(--ink)!important;border-color:#C9CDD5!important;background:#fff}
 
 .toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;z-index:90;font-size:14px;max-width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .toast{pointer-events:none}html{scroll-padding-bottom:96px;scroll-padding-top:60px}
@@ -784,7 +802,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="kiosk">
     <div class="row" style="justify-content:space-between"><div class="row"><span id="padLogo" style="width:44px;display:block"></span><div><h2 style="font-size:24px">출석패드</h2><div class="small" id="padNext" style="color:#C8C8CC"></div></div></div><span class="pill num" id="padCount" style="background:#2C3549;color:#fff"></span></div>
     <div id="padInput" class="padgrid">
-      <div><div class="small" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요<br><span style="font-size:12px">코치는 코치 코드 6자리 → 출근 · 퇴근</span></div>
+      <div><div class="small padhint" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요<br><span style="font-size:12px">코치는 코치 코드 6자리 → 출근 · 퇴근</span></div>
       <div class="kdisp num" id="kdisp"></div>
       <div class="keys" style="margin-top:12px" id="keys"></div></div>
       <div class="padqr"><b>휴대폰으로 QR 출석</b><div id="padQR"></div><span>카메라로 찍으면 바로 출석돼요<br>QR은 30초마다 바뀌어요</span><div id="padFeed"></div></div>
@@ -3397,7 +3415,7 @@ function pinSheet(title,ok){
 }
 $('#goPad').onclick=()=>pinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>pinSheet('출석패드 종료',()=>show('v-home'));
-async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#fff',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
+async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
 async function updPadCount(){const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
@@ -3433,25 +3451,25 @@ async function doAttend(){
   if(m.last===TODAY()){avatarTo(cv,m.equip,{h:46,pose:'guard'});$('#padMsg').textContent=m.name+' 님, 오늘은 이미 출석!';$('#padSub').textContent='좋은 운동 되세요';padTimer=setTimeout(resetPad,3000);return}
   {const dow=new Date().getDay(),ms=memStatus(m);
   if(!padForce&&ms.state==='hold'){avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='정지(연기) 기간이에요';$('#padSub').textContent=`${m.name} 님 정지 ${md(m.mem.hold.start)} ~ ${md(m.mem.hold.end)}`;
-    const pm=$('#padMem');pm.innerHTML=`정지 기간에는 출석할 수 없어요. 정지는 1회만 가능해요.<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 출석</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
+    const pm=$('#padMem');pm.innerHTML=`정지 기간에는 출석할 수 없어요. 정지는 1회만 가능해요.<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};padTimer=setTimeout(resetPad,9000);return}
   if(!padForce&&ms.state==='expired'){
     avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='등록 기간이 끝났어요';$('#padSub').textContent=`${m.name} 님 등록 종료일 ${md(m.mem.end)}`;
     m.unpaid=Array.isArray(m.unpaid)?m.unpaid:[];if(!m.unpaid.some(u=>u.d===TODAY())){m.unpaid.push({d:TODAY(),ok:false});m.unpaid=m.unpaid.slice(-20);DB.savePriv(m)}
     const n=m.unpaid.filter(u=>u.ok).length;
-    const pm=$('#padMem');pm.innerHTML=`<b style="color:#fff;font-size:18px">재등록 후 출석할 수 있어요</b><br>카운터에서 관장님께 말씀해 주세요.${m.gPhone?'<br>보호자님께 안내 문자가 갑니다.':''}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 · 오늘만 출석${n?` (이전 승인 ${n}회)`:''}</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
+    const pm=$('#padMem');pm.innerHTML=`<b style="font-size:18px">재등록 후 출석할 수 있어요</b><br>카운터에서 관장님께 말씀해 주세요.${m.gPhone?'<br>보호자님께 안내 문자가 갑니다.':''}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 · 오늘만 출석${n?` (이전 승인 ${n}회)`:''}</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('만료 회원 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     sfx('bad');padTimer=setTimeout(resetPad,12000);return}
   if(!padForce&&m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='expired'&&ms.state!=='none'){
     avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='오늘은 수강 요일이 아니에요';$('#padSub').textContent=`${m.name} 님 등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)`;
-    const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#5A1E22';pm.style.color='#FFD9D9';
+    const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     padTimer=setTimeout(resetPad,9000);return}}
   const makeup=padForce;padForce=false;
   const {base,bonus,item,txt,bs}=await applyAttend(m,makeup,'pad');
   $('#padMsg').textContent=m.name+' 님 출석 완료!';
   $('#padSub').textContent=`+${base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`;
-  {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#5A1E22':'#26303F';el.style.color=pm.warn?'#FFD9D9':'#C8D6EA'}
+  {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#FDE2E3':'#F1F4F8';el.style.color=pm.warn?'#8A1F24':'#3E4654'}
   let t0=performance.now();const vals=['+10','+20','+50','+100','장비?'];
   const spin=now=>{const t=(now-t0)/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);drawChar(c,150,330,6.6,m.equip,{t,pose:Math.floor(t*4)%2?'jab':'cross'});
     if(t<1.6){$('#wheel').textContent=vals[Math.floor(t*14)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<5)requestAnimationFrame(spin)}};
