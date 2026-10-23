@@ -380,6 +380,38 @@ body.tvmode .app{max-width:none;padding:0}
 .wheel{font-family:var(--display);font-size:40px;color:var(--gold);min-height:52px}
 /* 출석패드 · 흰색 테마 */
 body:has(#v-pad:not([hidden])){background:#fff}
+/* 태블릿 가로 (갤럭시탭 A7 등) : 화면 꽉 차게 */
+@media (min-width:900px) and (orientation:landscape){
+  body:has(#v-pad:not([hidden])) .app{max-width:none;padding:14px 22px 10px}
+  #v-pad{min-height:calc(100vh - 24px);gap:6px}
+  #v-pad .kiosk{flex:1;display:flex;flex-direction:column;gap:14px;padding:20px 28px;border-radius:26px}
+  #v-pad .kiosk>.row:first-child h2{font-size:32px!important}
+  #v-pad #padLogo{width:58px!important}
+  #v-pad #padNext{font-size:16px}
+  #v-pad #padCount{font-size:20px;padding:6px 16px}
+  #v-pad .padgrid{flex:1;display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:stretch}
+  #v-pad .padgrid[hidden]{display:none}
+  #v-pad .padgrid>div:first-child{display:flex;flex-direction:column}
+  #v-pad .padhint{font-size:17px!important;margin-bottom:10px!important}.padhint span{font-size:14px!important}
+  #v-pad .kdisp{font-size:64px;min-height:100px;padding:10px;line-height:80px}
+  #v-pad .keys{flex:1;grid-auto-rows:1fr;gap:12px;margin-top:14px!important}
+  #v-pad .keys button{font-size:40px;padding:0;min-height:76px}
+  #v-pad .keys button[data-k="지움"],#v-pad .keys .ok{font-size:28px!important}
+  #v-pad .padqr{justify-content:center;gap:14px;padding:22px;border-radius:20px}
+  #v-pad .padqr b{font-size:30px}
+  #v-pad .padqr span{font-size:16px}
+  #v-pad #padQR{min-height:260px}
+  #v-pad #padFeed .pfeed b{font-size:18px}
+  #v-pad .kres{flex:1;display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:48px;row-gap:6px;align-content:center;justify-items:start;text-align:left;padding:0 30px}
+  #v-pad .kres[hidden]{display:none}
+  #v-pad .kres canvas{grid-row:1 / span 6;width:260px;height:295px;align-self:center}
+  #v-pad #padMsg{font-size:46px!important;line-height:1.2}
+  #v-pad #padSub{font-size:18px}
+  #v-pad .wheel{font-size:64px;min-height:72px}
+  #v-pad #padBonus{font-size:17px}
+  #v-pad #padMem{font-size:20px!important;padding:10px 16px!important}
+  #v-pad #padExit{font-size:13px}
+}
 .kiosk{background:#fff;color:var(--ink);border:1px solid #E4E6EB;border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(20,26,39,.08)}
 .kiosk h2{color:var(--ink)}
 #padNext{color:#7A808C!important}
@@ -4177,7 +4209,7 @@ let padTokTimer=0,padPoll=0,padSeen=null;
 const newTok=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
 async function rotatePadTok(){const cur=newTok();const old=(local.meta.padtok&&local.meta.padtok.t||[])[0];const pt={t:old?[cur,old]:[cur],at:Date.now()};local.meta.padtok=pt;
   if(FB_ON()){try{await gref('meta/padtok').set(pt)}catch(e){}}else persist();
-  const box=$('#padQR');if(box){box.innerHTML='';try{new QRCode(box,{text:appBase()+'?att='+cur,width:168,height:168,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){box.textContent='QR 오류'}}}
+  const box=$('#padQR');if(box){box.innerHTML='';try{const qs=(innerWidth>=900&&innerWidth>innerHeight)?260:168;new QRCode(box,{text:appBase()+'?att='+cur,width:qs,height:qs,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){box.textContent='QR 오류'}}}
 async function pollPad(){if($('#v-pad').hidden){stopPadQR();return}const all=await DB.all();const today=all.filter(m=>m.last===TODAY());
   if(padSeen){const fresh=today.filter(m=>!padSeen.has(m.id)&&(m.qrAtt||[]).includes(TODAY()));fresh.forEach(m=>{const f=$('#padFeed');const d=document.createElement('div');d.className='pfeed';d.innerHTML=`<canvas width="64" height="64"></canvas><b>${esc(maskName(m.name))}</b><span>QR 출석 완료!</span>`;f.prepend(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true});sfx('coin');while(f.children.length>4)f.lastChild.remove()})}
   padSeen=new Set(today.map(m=>m.id));$('#padCount').textContent='오늘 출석 '+today.length+'명'}
