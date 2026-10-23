@@ -784,7 +784,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="kiosk">
     <div class="row" style="justify-content:space-between"><div class="row"><span id="padLogo" style="width:44px;display:block"></span><div><h2 style="font-size:24px">출석패드</h2><div class="small" id="padNext" style="color:#C8C8CC"></div></div></div><span class="pill num" id="padCount" style="background:#2C3549;color:#fff"></span></div>
     <div id="padInput" class="padgrid">
-      <div><div class="small" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요</div>
+      <div><div class="small" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요<br><span style="font-size:12px">코치는 코치 코드 6자리 → 출근 · 퇴근</span></div>
       <div class="kdisp num" id="kdisp"></div>
       <div class="keys" style="margin-top:12px" id="keys"></div></div>
       <div class="padqr"><b>휴대폰으로 QR 출석</b><div id="padQR"></div><span>카메라로 찍으면 바로 출석돼요<br>QR은 30초마다 바뀌어요</span><div id="padFeed"></div></div>
@@ -3404,8 +3404,26 @@ function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9',
 function updPad(){$('#kdisp').textContent=padBuf||' '}
 document.addEventListener('keydown',e=>{if($('#v-pad').hidden||$('#sheetRoot').innerHTML)return;if(/^\d$/.test(e.key)&&padBuf.length<6){padBuf+=e.key;updPad()}if(e.key==='Backspace'){padBuf=padBuf.slice(0,-1);updPad()}if(e.key==='Enter')doAttend()});
 let padForce=false;
+/* 코치 출퇴근: 출석패드에 코치 코드 6자리 → 출근, 다시 찍으면 퇴근 (회원번호는 4자리라 겹치지 않음) */
+async function coachPad(code){
+  $('#padInput').hidden=true;$('#padRes').hidden=false;$('#wheel').textContent='';$('#padBonus').textContent='';$('#padMem').textContent='';$('#padMem').style.background='transparent';
+  const cv=$('#padAv');const c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);clearTimeout(padTimer);
+  const cc=await hget('coachcodes/'+code);
+  if(!cc||!cc.name){$('#padMsg').textContent='없는 코치 코드예요';$('#padSub').textContent='코드 6자리를 다시 확인해 주세요.';padTimer=setTimeout(resetPad,2500);return}
+  const T=TODAY(),now=Date.now(),rec=Object.assign({},(await hget(`hr/att/${code}/${T}`))||{});
+  if(rec.in&&rec.out){$('#padMsg').textContent=cc.name+' 코치님, 오늘은 퇴근까지 기록됐어요';$('#padSub').textContent=`출근 ${hm(rec.in)} · 퇴근 ${hm(rec.out)}`;padTimer=setTimeout(resetPad,3500);return}
+  if(rec.in&&now-rec.in<10*60*1000){$('#padMsg').textContent=cc.name+' 코치님, 이미 출근했어요';$('#padSub').textContent=`출근 ${hm(rec.in)} · 퇴근은 10분 뒤부터 찍을 수 있어요`;padTimer=setTimeout(resetPad,3500);return}
+  const isIn=!rec.in;
+  if(isIn)Object.assign(rec,{in:now,flag:'',note:'출석패드',via:'pad'});else Object.assign(rec,{out:now,outVia:'pad'});
+  if(await hset(`hr/att/${code}/${T}`,rec)){sfx('win');
+    $('#padMsg').textContent=isIn?`${cc.name} 코치님, 출근!`:`${cc.name} 코치님, 퇴근!`;
+    $('#padSub').textContent=isIn?`출근 ${hm(now)} · 오늘도 화이팅!`:`출근 ${hm(rec.in)} · 퇴근 ${hm(now)} · 수고하셨어요!`;
+    $('#padMem').style.background=isIn?'#1565C0':'#37474F';$('#padMem').innerHTML=`<b style="color:#fff;font-size:18px">${isIn?'출근 기록 완료':'퇴근 기록 완료'}</b>`}
+  else{$('#padMsg').textContent='기록하지 못했어요';$('#padSub').textContent='관장님께 알려 주세요.'}
+  padTimer=setTimeout(resetPad,3500)}
 async function doAttend(){
   if(!padBuf)return;const id=padBuf;padBuf='';updPad();
+  if(id.length===6){coachPad(id);return}
   const m=await DB.get(id);
   $('#padInput').hidden=true;$('#padRes').hidden=false;$('#wheel').textContent='';$('#padBonus').textContent='';$('#padMem').textContent='';$('#padMem').style.background='transparent';
   const cv=$('#padAv');const c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);
