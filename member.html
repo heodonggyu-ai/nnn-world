@@ -390,7 +390,7 @@ body.tvmode .app{max-width:none;padding:0}
 .padwifi .wt{display:flex;flex-direction:column;gap:1px;min-width:0}.padwifi .wt small{color:#5B6B85;font-size:12px}.padwifi .wt b{font-size:17px;word-break:break-all}.padwifi .wt .pw{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.03em}
 .padwifi.wlock{justify-content:center;text-align:center}
 .padwifi.res{max-width:440px;margin-top:4px}
-body:has(#v-pad:not([hidden])){background:#fff}
+body.padmode{background:#fff}
 /* 출석패드 층별 배경 (2층·5층) */
 .floortag{border:0;border-radius:10px;padding:2px 14px;font-family:var(--display);font-size:20px;font-weight:700;vertical-align:middle;margin-left:6px;background:#EEF0F3;color:#5B616E;cursor:pointer}
 #v-pad[data-floor="2"] .floortag{background:var(--red);color:#fff}
@@ -402,8 +402,8 @@ body:has(#v-pad:not([hidden])){background:#fff}
 @keyframes padgo5{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(31,78,156,.35)}50%{transform:scale(1.015);box-shadow:0 0 0 8px rgba(31,78,156,0)}}
 #v-pad[data-floor="5"] .keys .ok{background:#1F4E9C;border-color:#1F4E9C;box-shadow:0 3px 0 #12305f}
 #v-pad[data-floor="5"] .kdisp{border-color:#C9D8F2}
-body[data-padfloor="2"]:has(#v-pad:not([hidden])){background:#FFF3F3 repeating-linear-gradient(135deg,rgba(230,57,70,.05) 0 2px,transparent 2px 22px)}
-body[data-padfloor="5"]:has(#v-pad:not([hidden])){background:#F1F5FD repeating-linear-gradient(135deg,rgba(31,78,156,.06) 0 2px,transparent 2px 22px)}
+body.padmode[data-padfloor="2"]{background:#FFF3F3 repeating-linear-gradient(135deg,rgba(230,57,70,.05) 0 2px,transparent 2px 22px)}
+body.padmode[data-padfloor="5"]{background:#F1F5FD repeating-linear-gradient(135deg,rgba(31,78,156,.06) 0 2px,transparent 2px 22px)}
 #v-pad[data-floor="2"]::after,#v-pad[data-floor="5"]::after{position:fixed;right:-1vw;bottom:-9vh;font-family:var(--display);font-size:62vh;line-height:1;z-index:-1;pointer-events:none;letter-spacing:-.04em}
 #v-pad[data-floor="2"]::after{content:"2F";color:rgba(230,57,70,.10)}
 #v-pad[data-floor="5"]::after{content:"5F";color:rgba(31,78,156,.10)}
@@ -412,7 +412,7 @@ body[data-padfloor="5"]:has(#v-pad:not([hidden])){background:#F1F5FD repeating-l
 #v-pad[data-floor="5"]::before{content:"NNN BOXING · 5F";color:rgba(31,78,156,.13)}
 /* 태블릿 가로 (갤럭시탭 A7 등) : 화면 꽉 차게 */
 @media (min-width:700px) and (orientation:landscape){
-  body:has(#v-pad:not([hidden])) .app{max-width:none;padding:14px 22px 10px}
+  body.padmode .app{max-width:none;padding:14px 22px 10px}
   #v-pad{min-height:calc(100vh - 24px);gap:6px}
   #v-pad .kiosk{flex:1;display:flex;flex-direction:column;gap:14px;padding:20px 28px;border-radius:26px}
   #v-pad .kiosk>.row:first-child h2{font-size:32px!important}
@@ -457,7 +457,7 @@ body[data-padfloor="5"]:has(#v-pad:not([hidden])){background:#F1F5FD repeating-l
   #v-pad .kres canvas{width:clamp(150px,32vh,260px);height:auto;aspect-ratio:300/340}
   #v-pad #padMsg{font-size:clamp(28px,5.6vh,46px)!important}
   #v-pad .wheel{font-size:clamp(36px,8vh,64px);min-height:clamp(40px,9vh,72px)}
-  body:has(#v-pad:not([hidden])) .app{padding:clamp(6px,1.6vh,14px) 22px 4px;height:100vh;box-sizing:border-box;display:flex;flex-direction:column}
+  body.padmode .app{padding:clamp(6px,1.6vh,14px) 22px 4px;height:100vh;box-sizing:border-box;display:flex;flex-direction:column}
   #v-pad{min-height:0!important;flex:1}
 }
 .kiosk{background:#fff;color:var(--ink);border:1px solid #E4E6EB;border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(20,26,39,.08)}
@@ -1745,7 +1745,7 @@ function sfx(type){if(!SND)return;try{if(!getAC())return;const o=AC.createOscill
 
 /* ================= 화면 전환 ================= */
 let ME=null;
-function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'||id==='v-login'){try{bioRender()}catch(e){}}if(id==='v-world'){try{bioSyncBtn()}catch(e){}}if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
+function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);document.body.classList.toggle('padmode',id==='v-pad');$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'||id==='v-login'){try{bioRender()}catch(e){}}if(id==='v-world'){try{bioSyncBtn()}catch(e){}}if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
 $$('[data-back]').forEach(b=>b.onclick=()=>show('v-home'));
 $('#hwBanner').hidden=!HW;
 
