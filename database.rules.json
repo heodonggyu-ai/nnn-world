@@ -398,6 +398,12 @@
           ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
         }
       },
+      "nimg": {
+        ".read": "auth != null",
+        "$nid": {
+          ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()"
+        }
+      },
       "compwant": {
         ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
         "$id": {

@@ -233,6 +233,11 @@ body.tvmode .app{max-width:none;padding:0}
 .pinrow{display:flex;gap:8px}.pinb{flex:1 1 0;min-width:0;display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;text-align:left;background:#fff;border:1.5px solid #D6E4FA;border-radius:12px;padding:8px 10px;font:inherit;color:var(--ink);cursor:pointer}
 .pinb span{grid-row:1/3;font-size:22px}.pinb b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pinb i{font-style:normal;font-size:12px;color:#5B6B85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pinb.comp{border-color:#F3B9BD;background:#FFF6F6}
+.nmed{display:flex;flex-direction:column;gap:6px}.nimgs{display:grid;gap:4px;border-radius:12px;overflow:hidden}.nimgs.n1{grid-template-columns:1fr}.nimgs.n2,.nimgs.n4{grid-template-columns:1fr 1fr}.nimgs.n3{grid-template-columns:1fr 1fr 1fr}
+.nimg{background:var(--mat);aspect-ratio:4/3;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}.nimgs.n1 .nimg{aspect-ratio:auto;max-height:60vh}.nimg img{width:100%;height:100%;object-fit:cover;display:block}.nimgs.n1 .nimg img{object-fit:contain;max-height:60vh;background:#000}
+.nview{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}.nview img{max-width:100%;max-height:82vh;object-fit:contain}
+.nvbar{display:flex;gap:10px;align-items:center;color:#fff}.nvbar button{background:#fff;color:var(--ink);border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:16px}
+.neimgs{display:flex;gap:6px;flex-wrap:wrap}.neimgs button{position:relative;width:72px;height:72px;border:0;padding:0;border-radius:10px;overflow:hidden;background:var(--mat)}.neimgs img{width:100%;height:100%;object-fit:cover}.neimgs i{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:20px;height:20px;font-style:normal;font-size:12px;line-height:20px}
 .rfhead{display:flex;gap:12px;align-items:center}.rfp{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;background:var(--mat);margin-bottom:4px}.rfp.me{background:#FFE0E2;outline:2px solid var(--red)}
 .rfstage{min-height:84px;display:grid;place-items:center;text-align:center;background:#2F2F2F;color:#FFD54A;border-radius:14px;font-family:var(--display);font-size:28px;padding:10px;line-height:1.2}
 .ev{display:flex;gap:10px;align-items:center;background:#2A1B33;color:#FFD9A8;border-radius:14px;padding:10px 14px;font-size:14px}
@@ -2176,9 +2181,21 @@ function interact(tg){
 }
 
 /* --- 시트들 --- */
-function noticeCardHTML(n){const w=nWindow(n);return `<div class="popn ${n.kind==='normal'?'':n.kind}" style="background:#fff;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div><span class="ntag ${n.kind==='normal'?'':n.kind}">${NKIND[n.kind]||'공지'}</span>${n.kind==='closed'?` <span class="small">${esc(closedRange(n))}</span>`:''}</div><b style="font-size:17px">${esc(n.title||'')}</b>${nBody(n)?`<div style="white-space:pre-wrap;line-height:1.5">${esc(nBody(n))}</div>`:''}${n.kind!=='closed'&&w.to&&w.to!=='9999'?`<div class="small">${md(w.to)}까지</div>`:''}</div>`}
+/* 공지 사진·영상 */
+const NIMG={};
+function nMediaHTML(n){return (+n.imgN>0||n.vid)?`<div class="nmed" data-nmid="${esc(n.id)}" data-ni="${+n.imgN||0}" data-nv="${esc(n.vid||'')}"></div>`:''}
+async function nImgs(id){if(NIMG[id])return NIMG[id];const v=await hget('nimg/'+id);const a=v&&v.imgs?(Array.isArray(v.imgs)?v.imgs:Object.values(v.imgs)).filter(Boolean):[];NIMG[id]=a;return a}
+function nVidHTML(u){const id=ytId(u);if(id)return `<div class="gvid"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="공지 영상" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  if(/^https?:\/\//i.test(u))return `<a class="btn ghost sm" style="text-decoration:none;text-align:center" href="${esc(u)}" target="_blank" rel="noopener">▶ ${esc(linkTitle(u))}</a>`;return ''}
+function nMediaFill(root){(root||document).querySelectorAll('.nmed:not([data-done])').forEach(async el=>{el.dataset.done=1;const id=el.dataset.nmid,n=+el.dataset.ni,v=el.dataset.nv;
+  let h='';if(n>0)h+=`<div class="nimgs n${Math.min(n,4)}">${Array.from({length:n},(_,i)=>`<div class="nimg" data-ix="${i}"><span class="small">사진 불러오는 중…</span></div>`).join('')}</div>`;if(v)h+=nVidHTML(v);el.innerHTML=h;
+  if(n>0){const imgs=await nImgs(id);el.querySelectorAll('.nimg').forEach((b,i)=>{if(!imgs[i]){b.remove();return}b.innerHTML=`<img src="${imgs[i]}" alt="공지 사진 ${i+1}">`;b.onclick=e=>{e.stopPropagation();nImgView(imgs,i)}})}})}
+function nImgView(imgs,i){const r=document.createElement('div');r.className='nview';const draw=()=>{r.innerHTML=`<img src="${imgs[i]}" alt=""><div class="nvbar">${imgs.length>1?`<button data-d="-1">‹</button><span>${i+1} / ${imgs.length}</span><button data-d="1">›</button>`:''}<button data-x>닫기 ✕</button></div>`;
+  r.querySelectorAll('[data-d]').forEach(b=>b.onclick=e=>{e.stopPropagation();i=(i+ +b.dataset.d+imgs.length)%imgs.length;draw()});r.querySelector('[data-x]').onclick=()=>r.remove()};draw();r.onclick=e=>{if(e.target===r)r.remove()};document.body.appendChild(r)}
+async function nImgFile(f){const im=await loadImg(f);const M=1280,k=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);let q=.8,d=cv.toDataURL('image/jpeg',q);while(d.length>420000&&q>.4){q-=.1;d=cv.toDataURL('image/jpeg',q)}return d}
+function noticeCardHTML(n){const w=nWindow(n);return `<div class="popn ${n.kind==='normal'?'':n.kind}" style="background:#fff;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div><span class="ntag ${n.kind==='normal'?'':n.kind}">${NKIND[n.kind]||'공지'}</span>${n.kind==='closed'?` <span class="small">${esc(closedRange(n))}</span>`:''}</div><b style="font-size:17px">${esc(n.title||'')}</b>${nBody(n)?`<div style="white-space:pre-wrap;line-height:1.5">${esc(nBody(n))}</div>`:''}${nMediaHTML(n)}${n.kind!=='closed'&&w.to&&w.to!=='9999'?`<div class="small">${md(w.to)}까지</div>`:''}</div>`}
 function openNotice(){const all=noticesAll().slice().sort((x,y)=>(y.at||0)-(x.at||0)||String(y.from||y.cFrom||'').localeCompare(String(x.from||x.cFrom||'')));const act=all.filter(n=>nActive(n));const past=all.filter(n=>!nActive(n)&&nWindow(n).to<TODAY()).slice(0,5);
-  sheet(`<h2>체육관 공지</h2>${pinsHTML()?`<div class="pinrow" style="flex-direction:column">${pinsHTML()}</div>`:''}${act.length?act.map(noticeCardHTML).join(''):'<div class="small">지금 게시 중인 공지가 없어요.</div>'}${past.length?`<details><summary class="small" style="cursor:pointer;padding:6px 0">지난 공지 ${past.length}개</summary><div style="display:flex;flex-direction:column;gap:8px;opacity:.75">${past.map(noticeCardHTML).join('')}</div></details>`:''}${(local.meta.notice||'').trim()?`<div class="label" style="margin-top:4px">체육관 안내</div><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>`:''}${snsHTML()}<button class="btn ghost" id="ntVoice">관장님께 의견 남기기 · 건의함</button><button class="btn" data-close>닫기</button>`,(el,close)=>{el.querySelector('#ntVoice').onclick=()=>{close();openVoice()};el.querySelectorAll('[data-pin]').forEach(b=>b.onclick=()=>{close();setTimeout(()=>b.dataset.pin==='wifi'?openWifi():openComp(),200)})})}
+  sheet(`<h2>체육관 공지</h2>${pinsHTML()?`<div class="pinrow" style="flex-direction:column">${pinsHTML()}</div>`:''}${act.length?act.map(noticeCardHTML).join(''):'<div class="small">지금 게시 중인 공지가 없어요.</div>'}${past.length?`<details><summary class="small" style="cursor:pointer;padding:6px 0">지난 공지 ${past.length}개</summary><div style="display:flex;flex-direction:column;gap:8px;opacity:.75">${past.map(noticeCardHTML).join('')}</div></details>`:''}${(local.meta.notice||'').trim()?`<div class="label" style="margin-top:4px">체육관 안내</div><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>`:''}${snsHTML()}<button class="btn ghost" id="ntVoice">관장님께 의견 남기기 · 건의함</button><button class="btn" data-close>닫기</button>`,(el,close)=>{nMediaFill(el);el.querySelector('#ntVoice').onclick=()=>{close();openVoice()};el.querySelectorAll('[data-pin]').forEach(b=>b.onclick=()=>{close();setTimeout(()=>b.dataset.pin==='wifi'?openWifi():openComp(),200)})})}
 function openPadInfo(){sheet(`<h2>출석패드</h2><p style="margin:0">체육관 입구 출석패드에 회원번호 <b class="num">${esc(ME.id)}</b>를 입력하면 출석 완료!</p>
   <div class="qrow"><div class="grow">기본 출석</div><b class="num">+50</b></div><div class="qrow"><div class="grow">연속 출석 보너스 (하루마다)</div><b class="num">+10 · 최대 +50</b></div><div class="qrow"><div class="grow">출석 룰렛</div><b>최대 +100 · 깜짝 장비</b></div>
   <p class="small" style="margin:0">오늘 출석: ${ME.last===TODAY()?'완료':'아직'}</p><button class="btn" data-close>확인</button>`)}
@@ -2215,7 +2232,7 @@ function openAnimal(a){
       W.animals=W.animals.filter(x=>x!==a);saveMe();refreshTop();close()}});
 }
 $('#rcRun').onclick=async()=>{if(!FB_ON()){toast('서버에 연결된 상태에서만 점검할 수 있어요');return}const box=$('#rcBox');box.innerHTML='<div class="small">점검 중…</div>';
-  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups'],['중복 가입 막기','phoneidx'],['응모 이벤트','raffle'],['대회 출전 희망','compwant']];
+  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups'],['중복 가입 막기','phoneidx'],['응모 이벤트','raffle'],['대회 출전 희망','compwant'],['공지 사진','nimg']];
   const out=[];for(const [n,p] of T){let ok=false;try{await Promise.race([gref(p).limitToFirst?gref(p).limitToFirst(1).get():gref(p).get(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),8000))]);ok=true}catch(e){ok=false}out.push([n,ok])}
   let wok=false;try{await gref('hourly/_check/0').set(null);wok=true}catch(e){}
   const bad=out.filter(x=>!x[1]).length;
@@ -3837,7 +3854,7 @@ function nBody(n){return n.kind==='closed'?`${closedRange(n)} 휴무입니다.${
 /* 회원 팝업 */
 function popItems(m){
   const A=autoCfg(),ack=m.ack||{},T=TODAY(),out=[];const daily=k=>ack[k]!==T,once=k=>!ack[k];
-  noticesAll().filter(n=>nActive(n)).forEach(n=>{const k='n:'+n.id;if(n.kind==='normal'?once(k):daily(k))out.push({k,cls:n.kind==='normal'?'':n.kind,tag:NKIND[n.kind],title:n.kind==='closed'?(n.title||'체육관 휴무 안내'):n.title,body:nBody(n)})});
+  noticesAll().filter(n=>nActive(n)).forEach(n=>{const k='n:'+n.id;if(n.kind==='normal'?once(k):daily(k))out.push({k,cls:n.kind==='normal'?'':n.kind,tag:NKIND[n.kind],title:n.kind==='closed'?(n.title||'체육관 휴무 안내'):n.title,body:nBody(n),med:nMediaHTML(n)})});
   const mem=m.mem,st=memStatus(m);
   if(mem&&mem.end&&A.exp&&st.state==='soon'&&st.left<=+A.expDays&&daily('exp:'+mem.end))out.push({k:'exp:'+mem.end,cls:'auto',tag:st.left?'D-'+st.left:'오늘 종료',title:'회원권이 곧 끝나요',body:`${md(mem.end)}에 등록 기간이 끝나요. 종료일이 지나면 재등록 전까지 출석이 되지 않아요.\n미리 재등록하면 남은 기간 다음 날부터 이어져요.`,pay:'미리 재등록하기'});
   if(mem&&mem.end&&A.expired&&st.state==='expired'&&daily('expd:'+mem.end))out.push({k:'expd:'+mem.end,cls:'imp',tag:'만료',title:'등록 기간이 끝났어요',body:`${md(mem.end)}에 등록 기간이 끝났어요.\n재등록 전까지는 출석패드에서 출석이 되지 않아요.`,pay:'지금 재등록하기'});
@@ -3855,6 +3872,7 @@ function popItems(m){
 /* ================= 새 기능 소식 · 도움말 =================
    새 기능을 만들면 FEAT 맨 위에 한 줄 추가하면 회원들에게 자동으로 안내돼요(가입일 이후 기능만). */
 const FEAT=[
+  {id:'s_nmedia',aud:'owner',q:'공지 쓸 때 사진 4장 · 유튜브 영상',d:'2026-10-24',e:'🖼️',t:'공지에 사진·영상',s:'공지에 사진(최대 4장)과 유튜브·인스타 영상 주소를 넣으면 회원 팝업과 공지판에 같이 떠요. 사진은 누르면 크게 보여요',go:'adm:ops'},
   {id:'s_raffle',aud:'owner',q:'운영 탭 맨 위 · 상품·기간 정하고 추첨까지',d:'2026-10-23',e:'🎁',t:'응모 이벤트 만들기',s:'상품·기간을 정하면 회원 앱과 처음 화면에 배너가 떠요. 출석·친구 초대 보너스 응모권, 추첨 화면, 당첨자 발표·지급 체크까지',go:'adm:ops'},
   {id:'s_import',aud:'owner',q:'엑셀로 회원·기간·결제·락커 한 번에',d:'2026-10-22',e:'📥',t:'다른 프로그램에서 가져오기',s:'원알엠 등 엑셀·복사 붙여넣기로 회원·기간·결제를 옮겨요(락커는 락커 칸에서 따로). 미리보기·자동 백업·바뀐 내용 요약, 회원 탭에서 바로 되돌리기',go:'adm:mem'},
   {id:'s_notice',aud:'owner',q:'공지·자동 알림에 쓰면 맵 공지판에도',d:'2026-10-21',e:'📢',t:'맵의 공지판 = 관장님 공지',s:'공지·자동 알림에 올린 공지가 체육관 맵 공지판에도 그대로 떠요',go:'adm:ops'},
@@ -3972,9 +3990,9 @@ let popBusy=false;
 async function showPopups(){if(!ME||popBusy||$('#sheetRoot').innerHTML)return;const items=popItems(ME);if(!items.length){if(!onbStart())autoInstallNudge();return}popBusy=true;
   const imp=items.some(x=>x.cls==='imp'||x.cls==='closed');
   sheet(`<div class="label" style="color:${imp?'var(--red)':'var(--muted)'}">${imp?'꼭 확인해 주세요':'새 소식'} · ${items.length}건</div>
-    ${items.map((x,i)=>`<div class="popn ${x.cls}"><div><span class="ntag ${x.cls}">${esc(x.tag)}</span></div><b class="t">${esc(x.title)}</b><div class="bd">${esc(x.body)}</div>${x.pay?`<button class="btn sm red" data-pp="${i}" style="align-self:flex-start">${esc(x.pay)}</button>`:''}${x.exam?`<button class="btn sm red" data-pe="${i}" style="align-self:flex-start">지금 응시 신청</button>`:''}${x.cert?`<button class="btn sm gold" data-pc="${i}" style="align-self:flex-start">합격증 자랑하기</button>`:''}</div>`).join('')}
+    ${items.map((x,i)=>`<div class="popn ${x.cls}"><div><span class="ntag ${x.cls}">${esc(x.tag)}</span></div><b class="t">${esc(x.title)}</b><div class="bd">${esc(x.body)}</div>${x.med||''}${x.pay?`<button class="btn sm red" data-pp="${i}" style="align-self:flex-start">${esc(x.pay)}</button>`:''}${x.exam?`<button class="btn sm red" data-pe="${i}" style="align-self:flex-start">지금 응시 신청</button>`:''}${x.cert?`<button class="btn sm gold" data-pc="${i}" style="align-self:flex-start">합격증 자랑하기</button>`:''}</div>`).join('')}
     <button class="btn red" id="popOk">확인했어요</button>`,(el,close)=>{
-    const bd=el.parentNode;bd.onclick=null;bd.addEventListener('click',e=>{if(e.target===bd)e.stopImmediatePropagation()},true);
+    nMediaFill(el);const bd=el.parentNode;bd.onclick=null;bd.addEventListener('click',e=>{if(e.target===bd)e.stopImmediatePropagation()},true);
     const ack=async()=>{const m=await DB.get(ME.id)||ME;m.ack=m.ack||{};items.forEach(x=>{m.ack[x.k]=TODAY();if(x.gift&&!(ME.ack||{})[x.k]){m.credits+=x.gift;m.earned+=x.gift}});
       const ks=Object.keys(m.ack);if(ks.length>80)ks.sort((a,b)=>m.ack[a].localeCompare(m.ack[b])).slice(0,ks.length-80).forEach(k=>delete m.ack[k]);
       await DB.save(m);ME=m;try{refreshTop()}catch(e){}};
@@ -4003,9 +4021,14 @@ function openNoticeEditor(n0){const n=Object.assign({kind:'normal',title:'',body
     <div id="neLead" class="field"><label for="neLd">며칠 전부터 팝업</label><select id="neLd">${[3,5,7,10,14].map(d=>`<option value="${d}" ${+n.lead===d?'selected':''}>${d}일 전부터 휴무일까지 매일</option>`).join('')}</select></div>
     <div class="field"><label for="neT">제목</label><input id="neT" value="${esc(n.title)}" placeholder="예: 추석 연휴 휴무 안내"></div>
     <div class="field"><label for="neB">내용</label><textarea id="neB" rows="5" placeholder="회원에게 보여 줄 내용">${esc(n.body)}</textarea></div>
+    <div class="field"><span>사진 <span class="small">(최대 4장 · 눌러서 빼기)</span></span><div class="neimgs" id="neImgs"></div><label class="btn ghost sm" for="neImgIn" style="text-align:center">📷 사진 추가</label><input id="neImgIn" type="file" accept="image/*" multiple hidden></div>
+    <div class="field"><label for="neV">영상 주소 <span class="small">(유튜브·인스타 릴스 · 유튜브는 앱 안에서 바로 재생)</span></label><input id="neV" value="${esc(n.vid||'')}" placeholder="https://youtu.be/..." inputmode="url"><span class="small">휴대폰으로 찍은 영상은 유튜브에 <b>일부 공개</b>로 올리고 주소를 붙여 넣으세요.</span></div>
     <div id="neWin" class="row"><div class="field grow"><label for="neF">팝업 시작일</label><input type="date" id="neF" value="${n.from||TODAY()}"></div><div class="field grow"><label for="neTo">팝업 끝나는 날</label><input type="date" id="neTo" value="${n.to||''}"></div></div>
     <button class="btn red" id="neSave">${n0?'저장':'올리기'}</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
-    let kind=n.kind;
+    let kind=n.kind;let imgs=[];
+    const drawImgs=()=>{const b=el.querySelector('#neImgs');b.innerHTML=imgs.map((d,i)=>`<button type="button" data-ri="${i}"><img src="${d}" alt=""><i>✕</i></button>`).join('');b.querySelectorAll('[data-ri]').forEach(x=>x.onclick=()=>{imgs.splice(+x.dataset.ri,1);drawImgs()});el.querySelector('label[for="neImgIn"]').hidden=imgs.length>=4};
+    if(n0&&+n0.imgN>0){nImgs(n0.id).then(a=>{imgs=a.slice(0,4);drawImgs()})}else drawImgs();
+    el.querySelector('#neImgIn').onchange=async e=>{const fs=[...(e.target.files||[])].slice(0,4-imgs.length);for(const f of fs){try{imgs.push(await nImgFile(f))}catch(x){toast('사진을 열지 못했어요')}}e.target.value='';drawImgs()};
     const sync=()=>{el.querySelectorAll('#neKind [data-k]').forEach(b=>b.classList.toggle('on',b.dataset.k===kind));const c=kind==='closed';el.querySelector('#neClosed').hidden=!c;el.querySelector('#neLead').hidden=!c;el.querySelector('#neWin').hidden=c;
       el.querySelector('#neHelp').textContent=kind==='normal'?'일반: 회원이 한 번 확인하면 다시 뜨지 않아요.':kind==='imp'?'중요: 끝나는 날까지 확인해도 매일 한 번씩 다시 떠요. 끝나는 날을 꼭 정해 주세요.':'휴무: 정한 날짜 전부터 휴무일까지 매일 떠요. 출석패드에도 휴무로 표시돼요.'};
     sync();el.querySelectorAll('#neKind [data-k]').forEach(b=>b.onclick=()=>{kind=b.dataset.k;if(kind==='imp'&&!el.querySelector('#neTo').value)el.querySelector('#neTo').value=dAdd(TODAY(),6);sync()});
@@ -4013,6 +4036,8 @@ function openNoticeEditor(n0){const n=Object.assign({kind:'normal',title:'',body
       const o={id:(n0&&n0.id)||Date.now().toString(36),kind,title:v('#neT'),body:el.querySelector('#neB').value.trim(),at:(n0&&n0.at)||Date.now()};
       if(kind==='closed'){o.cFrom=v('#neCF');o.cTo=v('#neCT')&&v('#neCT')>o.cFrom?v('#neCT'):'';o.lead=+v('#neLd');if(!o.cFrom){toast('휴무 날짜를 골라 주세요');return}if(!o.title)o.title='체육관 휴무 안내'}
       else{o.from=v('#neF')||TODAY();o.to=v('#neTo');if(!o.title){toast('제목을 적어 주세요');return}if(kind==='imp'&&!o.to){toast('중요 공지는 끝나는 날을 정해 주세요');return}if(o.to&&o.to<o.from){toast('끝나는 날이 시작일보다 빨라요');return}}
+      const vu=v('#neV');if(vu&&!/^https?:\/\//i.test(vu)){toast('영상 주소는 https:// 로 시작해야 해요');return}if(vu)o.vid=vu;
+      if(imgs.length){const sb=el.querySelector('#neSave');sb.disabled=true;sb.textContent='사진 올리는 중…';const ok=await hset('nimg/'+o.id,{imgs,at:Date.now()});sb.disabled=false;sb.textContent=n0?'저장':'올리기';if(!ok){toast('사진을 저장하지 못했어요. 보안 규칙을 확인해 주세요',4000);return}o.imgN=imgs.length;NIMG[o.id]=imgs.slice()}else if(n0&&+n0.imgN>0){await hset('nimg/'+o.id,null);delete NIMG[o.id]}
       const list=noticesAll().filter(x=>x.id!==o.id);list.push(o);local.meta.notices=list.slice(-60);
       if(await DB.saveMeta()){toast(n0?'수정했어요':'공지를 올렸어요. 회원이 앱을 열면 팝업으로 떠요',3500);close();renderNotices();renderNoticeNow()}};
   })}
@@ -4033,7 +4058,7 @@ function openNoticeDetail(id,all){const n=noticesAll().find(x=>x.id===id);if(!n)
     <button class="btn" id="ndEdit">수정</button><button class="btn ghost" id="ndDel" style="color:var(--red)">공지 내리기 (삭제)</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelector('#ndNums').onclick=()=>copyText(nums.join(','),'번호를');el.querySelector('#ndTxt').onclick=()=>copyText(text,'문구를');
     el.querySelector('#ndEdit').onclick=()=>{close();openNoticeEditor(n)};
-    el.querySelector('#ndDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요';return}local.meta.notices=noticesAll().filter(x=>x.id!==n.id);if(await DB.saveMeta()){toast('공지를 내렸어요');close();renderNotices();renderNoticeNow()}};
+    el.querySelector('#ndDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요';return}local.meta.notices=noticesAll().filter(x=>x.id!==n.id);if(await DB.saveMeta()){if(+n.imgN>0){try{await hset('nimg/'+n.id,null)}catch(x){}}toast('공지를 내렸어요');close();renderNotices();renderNoticeNow()}};
   })}
 function renderAutoCfg(){const A=autoCfg();
   $('#nvAutoRows').innerHTML=AUTO_DEF.map(([k,n,d])=>`<label class="autorow"><input type="checkbox" data-ak="${k}" ${A[k]?'checked':''}><span class="grow"><b>${n}</b><span class="small" style="display:block">${d}</span>${k==='exp'?`<select id="akDays" style="margin-top:6px;border:2px solid var(--line);border-radius:10px;padding:6px">${[3,5,7,10,14].map(x=>`<option value="${x}" ${+A.expDays===x?'selected':''}>종료 ${x}일 전부터</option>`).join('')}</select>`:''}</span></label>`).join('')+
