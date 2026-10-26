@@ -2915,11 +2915,18 @@ const lkDday=r=>{const d=dDiff(r.end,TODAY());return d<0?`${-d}일 지남`:d===0
 function myLockerHTML(m){const L=Object.values(m.lockers||{}).filter(x=>x&&x.no);if(!L.length)return '';
   return `<div class="qrow" style="margin-top:6px;background:#fff;border-radius:12px;padding:8px 12px">${L.map(x=>{const d=dDiff(x.end,TODAY());return `<div class="grow small"><b>${esc(lkName(x.type,x.no))}</b> · ${md(x.end)}까지 ${d<0?'<b style="color:var(--red)">만료</b>':d<=7?`<b style="color:#B4400C">D-${d}</b>`:''}</div>`}).join('')}</div>`}
 function lockLineHTML(m){const fromLk=Object.values(LKS.data||{}).filter(r=>r&&r.mid===m.id&&r.no);const L=fromLk.length?fromLk:Object.values(m.lockers||{}).filter(x=>x&&x.no);return `<div class="qrow"><div class="grow small"><b>락커·캐비넷</b> ${L.length?L.map(x=>`${esc(lkName(x.type,x.no))} ~${md(x.end)}`).join(', '):'없음'}</div><button class="btn sm ghost" onclick="lkFromMember('${esc(m.id)}')">${L.length?'관리':'배정'}</button></div>`}
-async function lkFromMember(mid){if(closeSheetFn)closeSheetFn();setATab('lock');const m=await DB.get(mid);const L=Object.values((m&&m.lockers)||{}).filter(x=>x&&x.no);if(L.length){LKS.type=L[0].type;renderLockers().then(()=>lkOpen(L[0].type,L[0].no))}else{LKS.q='';renderLockers().then(()=>toast('빈 칸(점선)을 누르면 '+(m?m.name+' 님':'회원')+'을 배정할 수 있어요',3500));LKS.pre=mid}}
+async function lkFromMember(mid){if(closeSheetFn)closeSheetFn();await lkLoad();const m=await DB.get(mid);const L=Object.values(LKS.data||{}).filter(r=>r&&r.mid===mid&&r.no);if(L.length){LKS.type=L[0].type;lkOpen(L[0].type,L[0].no)}else lkPickFree(mid)}
+function lkFreeNos(ty){const C=lkCfg();const o=[];for(let n=1;n<=C[ty].n;n++)if(lkState(LKS.data[lkKey(ty,n)])==='e')o.push(n);return o}
+async function lkPickFree(mid,opts={}){await lkLoad();const C=lkCfg();const m=await DB.get(mid);let ty=opts.type||LKS.type||'L';
+  sheet(`<h2>${esc(m?m.name+' 님':'회원')} 락커 배정</h2><p class="small" style="margin:0">줄 번호를 누르세요. 비어 있는 칸만 보여요.</p><div class="chips" id="lpT"></div><div class="lkgrid" id="lpG"></div><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const draw=()=>{el.querySelector('#lpT').innerHTML=['L','C'].map(k=>`<button type="button" class="chip ${k===ty?'on':''}" data-t="${k}">${esc(C[k].name)} · 월 ${C[k].price.toLocaleString()}원</button>`).join('');
+      el.querySelectorAll('#lpT [data-t]').forEach(b=>b.onclick=()=>{ty=b.dataset.t;draw()});
+      const f=lkFreeNos(ty);el.querySelector('#lpG').innerHTML=f.length?f.map(n=>`<button type="button" class="lkc" data-n="${n}"><b class="num">${n}</b><small>비어 있음</small></button>`).join(''):`<div class="small" style="grid-column:1/-1;padding:10px">빈 ${esc(C[ty].name)}이 없어요</div>`;
+      el.querySelectorAll('#lpG [data-n]').forEach(b=>b.onclick=()=>{close();LKS.type=ty;lkAssign(ty,+b.dataset.n,null,Object.assign({},opts,{mid}))})};draw()})}
 async function lkAfterPay(x){await lkLoad();const C=lkCfg(),ty=x.lk.type;setATab('lock');LKS.type=ty;await renderLockers();
   const cur=Object.values(LKS.data).find(r=>r&&r.mid===x.mid&&r.type===ty);
   if(cur){lkAssign(ty,cur.no,cur,{months:x.lk.months,paid:true});return}
-  LKS.pre=x.mid;LKS.preOpts={months:x.lk.months,paid:true};toast(`${x.name} 님에게 줄 빈 ${C[ty].name} 칸을 눌러 주세요`,4000)}
+  lkPickFree(x.mid,{type:ty,months:x.lk.months,paid:true})}
 async function lkLoad(){LKS.data=(await hget('lockers'))||{};return LKS.data}
 async function renderLockers(){await lkLoad();const C=lkCfg();const ty=LKS.type;const cf=C[ty];
   $('#lkType').innerHTML=['L','C'].map(k=>`<button class="chip ${k===ty?'on':''}" data-lt="${k}">${C[k].name} · 월 ${C[k].price.toLocaleString()}원</button>`).join('');
@@ -2998,7 +3005,7 @@ async function lkAssign(ty,no,cur,opts={}){const C=lkCfg();const cf=C[ty];const 
     const drawList=()=>{if(!lq)return;const q=lq.value.trim();const list=all.filter(m=>!q||m.name.includes(q)||m.id.includes(q)||(m.phone||'').replace(/\D/g,'').includes(q.replace(/\D/g,'')||'#')).sort((a,b)=>(b.last||'').localeCompare(a.last||'')).slice(0,40);
       el.querySelector('#lkList').innerHTML=list.length?list.map(m=>`<button type="button" data-pk="${esc(m.id)}" class="${st.mid===m.id?'on':''}"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span><span class="small">${Object.keys(m.lockers||{}).length?'락커 있음':''}</span></button>`).join(''):'<div class="small" style="padding:10px">찾는 회원이 없어요</div>';
       el.querySelectorAll('#lkList [data-pk]').forEach(b=>b.onclick=()=>{st.mid=b.dataset.pk;drawList()})};
-    if(lq){lq.oninput=drawList;drawList()}
+    if(lq){if(st.mid){const pm0=all.find(x=>x.id===st.mid);if(pm0)lq.value=pm0.name}lq.oninput=drawList;drawList()}
     const off=el.querySelector('#lkOff');if(off)off.onclick=async()=>{const why=(el.querySelector('#lkMemo').value||'').trim();if(await hset('lockers/'+lkKey(ty,no),clean({off:true,memo:why,hist:(cur&&cur.hist)||((LKS.data[lkKey(ty,no)]||{}).hist)||[]}))){toast('사용 불가로 표시했어요');close();renderLockers()}};
     el.querySelector('#lkGo').onclick=async()=>{const m=all.find(x=>x.id===st.mid);if(!m){toast('회원을 골라 주세요');return}
       if(!S.value||!E.value||E.value<S.value){toast('기간을 확인해 주세요');return}
@@ -5226,6 +5233,7 @@ function openMemEditor(m,pre={},onDone){
         <div class="row"><div class="field grow"><label for="mePAmt">결제 금액 (원)</label><input id="mePAmt" inputmode="numeric" placeholder="예: 330,000"></div><div class="field grow"><label for="mePDate">결제일</label><input id="mePDate" class="dpick" readonly value="${TODAY()}"></div></div>
       </div>
     </div>
+    <div class="paybox" id="meLkBox"><div class="row" style="align-items:center"><b class="grow">락커 · 캐비넷</b><span class="small" id="meLkNow"></span></div><div class="chips" id="meLkT"></div><div id="meLkMore"></div></div>
     <div class="field"><label for="meMemo">결제·등록 메모 <span class="small">(관장만 보여요 · 회원 상세에 쌓여요)</span></label><textarea id="meMemo" rows="2" maxlength="500" placeholder="예: 학생 할인 적용 / 계좌이체 다음 주 입금 약속 / 영수증 요청"></textarea></div>
     <button class="btn red" id="meSave">등록 정보 저장</button>${cur.end||cur.pt?'<button class="btn ghost" id="meClear">등록 정보 지우기</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const endIn=el.querySelector('#meEnd'),startIn=el.querySelector('#meStart');
@@ -5266,7 +5274,38 @@ function openMemEditor(m,pre={},onDone){
     const drawHA=()=>{el.querySelectorAll('#meHold [data-ha]').forEach(b=>b.classList.toggle('on',b.dataset.ha===ha));el.querySelector('#meHoldC').hidden=ha!=='custom';const p=holdPolicy({end:'x',months:st.months});el.querySelector('#meHoldD').textContent=ha==='def'?(p?'('+p.label+')':'(3개월 미만은 정지 없음)'):''};
     el.querySelectorAll('#meHold [data-ha]').forEach(b=>b.onclick=()=>{ha=b.dataset.ha;drawHA()});drawHA();el.querySelectorAll('[data-mo]').forEach(b=>b.addEventListener('click',drawHA));
     {const aj=el.querySelector('#meAdj');if(aj)aj.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
+    // ── 락커·캐비넷 같이 등록 ──
+    const lk={ty:'',no:0,months:0,amt:''};
+    const lkCurOf=ty=>Object.values(LKS.data||{}).find(r=>r&&r.mid===m.id&&r.type===ty&&r.no)||null;
+    const lkStartOf=cur=>cur?(cur.end>=TODAY()?dAdd(cur.end,1):TODAY()):(st.months&&startIn.value?startIn.value:TODAY());
+    const lkAmtSet=()=>{lk.amt=(lkCfg()[lk.ty].price*lk.months).toLocaleString()};
+    const drawLk=()=>{const C=lkCfg();const nowL=Object.values(LKS.data||{}).filter(r=>r&&r.mid===m.id&&r.no);
+      el.querySelector('#meLkNow').textContent=nowL.length?'지금 '+nowL.map(r=>lkName(r.type,r.no)+' ~'+md(r.end)).join(', '):'';
+      el.querySelector('#meLkT').innerHTML=[['','안 함'],['L',C.L.name],['C',C.C.name]].map(([k,n])=>`<button type="button" class="chip ${lk.ty===k?'on':''}" data-lt="${k}">${esc(n)}${k?' · 월 '+C[k].price.toLocaleString()+'원':''}</button>`).join('');
+      el.querySelectorAll('#meLkT [data-lt]').forEach(b=>b.onclick=()=>{const k=b.dataset.lt;if(k&&k!==lk.ty){lk.months=lk.months||st.months||1;lk.ty=k;lkAmtSet()}else if(!k)lk.ty='';lk.no=0;drawLk()});
+      const more=el.querySelector('#meLkMore');if(!lk.ty){more.innerHTML='';return}
+      const cur=lkCurOf(lk.ty);const free=lkFreeNos(lk.ty);if(cur)lk.no=cur.no;else if(!free.includes(lk.no))lk.no=free[0]||0;
+      if(!cur&&!free.length){more.innerHTML=`<div class="small" style="color:var(--red);margin-top:6px">빈 ${esc(C[lk.ty].name)}이 없어요</div>`;return}
+      const s=lkStartOf(cur),e=mAdd(s,lk.months);
+      more.innerHTML=`${cur?`<div class="small" style="margin:6px 0"><b>${esc(lkName(lk.ty,cur.no))}</b> 쓰는 중 → 그대로 연장돼요</div>`:`<div class="field" style="margin-top:6px"><label for="meLkNo">번호 <span class="small">(빈 칸만 나와요)</span></label><select id="meLkNo">${free.map(n=>`<option value="${n}" ${n===lk.no?'selected':''}>${n}번</option>`).join('')}</select></div>`}
+        <div class="chips" id="meLkMo">${[1,2,3,6,12].map(n=>`<button type="button" class="chip ${n===lk.months?'on':''}" data-lm="${n}">${n}개월</button>`).join('')}</div>
+        <div class="small num" style="margin-top:4px">기간 ${md(s)} ~ ${md(e)}</div>
+        <div class="field" id="meLkAmtF" ${pOn.checked?'':'hidden'}><label for="meLkAmt">락커 금액 (원) <span class="small">· 같은 결제 방식으로 매출 '락커·캐비넷'에 따로 들어가요</span></label><input id="meLkAmt" inputmode="numeric" value="${lk.amt}"></div>`;
+      const sel=more.querySelector('#meLkNo');if(sel)sel.onchange=()=>{lk.no=+sel.value};
+      more.querySelectorAll('[data-lm]').forEach(b=>b.onclick=()=>{lk.months=+b.dataset.lm;lkAmtSet();drawLk()});
+      const ai=more.querySelector('#meLkAmt');ai.oninput=()=>{const v=+String(ai.value).replace(/\D/g,'')||0;ai.value=v?v.toLocaleString():'';lk.amt=ai.value}};
+    lkLoad().then(drawLk);pOn.addEventListener('change',()=>{const f=el.querySelector('#meLkAmtF');if(f)f.hidden=!pOn.checked});startIn.addEventListener('change',()=>{if(lk.ty)drawLk()});
+    const lkSave=async()=>{const ty=lk.ty,cf=lkCfg()[ty];await lkLoad();const cur=lkCurOf(ty);const no=cur?cur.no:lk.no;
+      const fresh=LKS.data[lkKey(ty,no)]||{};if(!cur&&fresh.mid&&fresh.mid!==m.id){toast(lkName(ty,no)+'은 방금 다른 회원이 쓰게 됐어요 · 락커는 따로 배정해 주세요',4500);return null}
+      const s=lkStartOf(cur),e=mAdd(s,lk.months);
+      const rec=clean({type:ty,no,mid:m.id,name:m.name,start:cur?cur.start:s,end:e,months:(cur?(cur.months||0):0)+lk.months,memo:(cur&&cur.memo)||'',at:Date.now(),hist:fresh.hist||[]});
+      if(!(await hset('lockers/'+lkKey(ty,no),rec)))return null;
+      await lkSetMember(m.id,ty,no,rec);{const m2=await DB.get(m.id);m.lockers=Object.assign({},(m2&&m2.lockers)||m.lockers||{});m.lockers[lkKey(ty,no)]={type:ty,no,start:rec.start,end:rec.end}}
+      let amt=0;if(pOn.checked){amt=+String(lk.amt).replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
+        await DB.addPay(clean({id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:m.id,name:m.name,item:`${cf.name} ${no}번 ${lk.months}개월${cur?' 연장':''}`,amount:amt,method:pm,status:'done',source:'admin',saleDate:pd,at:new Date().toISOString(),doneAt:new Date().toISOString(),months:0,lockMonths:lk.months,kind:'locker'}))}
+      try{renderLockers()}catch(e){}return{ty,no,start:rec.start,end:e,amt,ext:!!cur}};
     el.querySelector('#meSave').onclick=async()=>{
+      if(lk.ty&&!lkCurOf(lk.ty)&&!lk.no){toast('빈 락커가 없어요 · 락커를 "안 함"으로 바꿔 주세요');return}
       if(pOn.checked&&!pm){toast('결제 방식(카드·현금·계좌이체…)을 골라 주세요');el.querySelector('#mePm').scrollIntoView({block:'center'});return}
       if(st.weekly&&st.days.length!==st.weekly){toast(`운동 요일을 ${st.weekly}개 골라 주세요`);return}
       const ptT=+pt.value||0,ptL=Math.min(+ptl.value||0,ptT);
@@ -5283,7 +5322,9 @@ function openMemEditor(m,pre={},onDone){
         if(pre.pay){pr=pre.pay;Object.assign(pr,{method:pm,amount:amt,saleDate:pd,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||pr.item)+(famOn?' (가족할인)':''),months:m.mem.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0});await DB.addPay(clean(pr));if(local.pays)local.pays[pr.id]=pr}
         else{pr={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:m.id,name:m.name,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||planLabel(m.mem))+(famOn?' (가족할인)':''),amount:amt,method:pm,status:'done',source:'admin',saleDate:pd,at:new Date().toISOString(),doneAt:new Date().toISOString(),months:m.mem.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0,kind:(cur.end||cur.pt||(m.memHist||[]).length>1)?'renew':'new'};await DB.addPay(clean(pr))}}
       {const mt=el.querySelector('#meMemo').value.trim();if(mt)await memoAdd(m.id,mt,pOn.checked?'pay':'mem')}
-      toast(m.name+' 님 등록 정보'+(pr?'와 결제('+payName(pm)+')':'')+'를 저장했어요');close();onDone&&onDone(m,pr)};
+      let lkr=null;if(lk.ty){try{lkr=await lkSave()}catch(e){console.error('locker',e)}}
+      if(pr&&lkr)Object.defineProperty(pr,'_lk',{value:lkr,enumerable:false,configurable:true});
+      toast(m.name+' 님 등록 정보'+(pr?'와 결제('+payName(pm)+')':'')+(lkr?' · '+lkName(lkr.ty,lkr.no)+(lkr.ext?' 연장':' 배정'):'')+'를 저장했어요',3500);close();onDone&&onDone(m,pr)};
     const cl=el.querySelector('#meClear');if(cl)cl.onclick=async()=>{m.memHist=(m.memHist||[]).concat([cur]).slice(-10);m.mem=null;await DB.savePriv(m);toast('등록 정보를 지웠어요');close();onDone&&onDone(m)};
   });
 }
@@ -5715,9 +5756,10 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '상품':mem.item||planLabel(mem)||'회원권','기간':mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-'),
     '요일':mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용',
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
-    '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
+    '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}${pay._lk&&pay._lk.amt?` (+ ${lkCfg()[pay._lk.ty].name} ${won(pay._lk.amt)} 별도)`:''}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
     '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
-    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'재안내':m.legacy?'회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!':'','로그인주소':appBase()+'?m='+(m.id||''),'학부모안내':m.gPhone?'학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요. 내 정보 탭에서 \'출석 알림 받기\'를 켜 두시면 자녀가 출석할 때 휴대폰으로 알려 드려요.\n':'','입금계좌':bankLine(),...extra}}
+    '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'재안내':m.legacy?'회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!':'','로그인주소':appBase()+'?m='+(m.id||''),'학부모안내':m.gPhone?'학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요. 내 정보 탭에서 \'출석 알림 받기\'를 켜 두시면 자녀가 출석할 때 휴대폰으로 알려 드려요.\n':'','입금계좌':bankLine(),'락커':lkMsgLine(m)||'없음',...extra}}
+function lkMsgLine(m){const L=Object.values((m&&m.lockers)||{}).filter(x=>x&&x.no&&x.end&&x.end>=TODAY());try{return L.map(x=>`${lkName(x.type,x.no)} (${x.start?x.start+' ~ ':''}${x.end}까지)`).join(', ')}catch(e){return ''}}
 function bankLine(){const P=local.meta.pay||{};return P.acct?`${P.bank||''} ${P.acct}${P.holder?' ('+P.holder+')':''}`.trim():'카운터 문의'}
 const G_KINDS=['pay','hold','exp','after','unpaid'];
 const toGuard=(m,kind)=>!!m.gPhone&&(G_KINDS.includes(kind)||String(kind).startsWith('c:'));
@@ -5735,7 +5777,8 @@ function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpl
   const raw=tplOf(kind);let tx=fillTpl(raw,m,pay).replace(/\n[ \t]*\n([ \t]*\n)+/g,'\n\n').replace(/^([^\n]*)\n\n(▶)/m,'$1\n\n$2');
   if(kind==='pay'||kind==='welcome'){
     if(m.legacy&&!raw.includes('{재안내}')&&!/프로그램을 (교체|바꾸)|새 앱\(NNN WORLD\)/.test(tx)){const nl=tx.indexOf('\n');tx=nl>0?tx.slice(0,nl+1)+LEGACY_NOTE+'\n'+tx.slice(nl+1):LEGACY_NOTE+'\n'+tx}
-    if(!tx.includes('?m='+m.id)&&!raw.includes('{로그인주소}')){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}}
+    if(!tx.includes('?m='+m.id)&&!raw.includes('{로그인주소}')){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}
+    const lkl=kind==='pay'&&!raw.includes('{락커}')?lkMsgLine(m):'';if(lkl){const ls=tx.split('\n');let i=ls.findIndex(l=>/^▶\s*결제/.test(l));if(i<0)i=ls.findIndex(l=>/^▶\s*기간/.test(l));ls.splice(i>=0?i+1:1,0,'▶ 락커·캐비넷: '+lkl);tx=ls.join('\n')}}
   return tx}
 const customTpls=()=>Array.isArray(local.meta.tplCustom)?local.meta.tplCustom:[];
 const kindName=k=>String(k).startsWith('c:')?((customTpls().find(x=>x.id===k.slice(2))||{}).name||'직접 만든 안내'):(TPL_NAME[k]||'안내');
