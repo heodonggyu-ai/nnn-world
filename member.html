@@ -5756,7 +5756,7 @@ function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
     '상품':mem.item||planLabel(mem)||'회원권','기간':mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-'),
     '요일':mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용',
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
-    '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}${pay._lk&&pay._lk.amt?` (+ ${lkCfg()[pay._lk.ty].name} ${won(pay._lk.amt)} 별도)`:''}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
+    '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${pay.saleDate||String(pay.at||'').slice(0,10)}${pay._lk&&pay._lk.amt?` (+ ${lkCfg()[pay._lk.ty].name} ${won(pay._lk.amt)} 별도)`:''}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
     '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
     '남은일':st.left!=null?`${st.left}일`:'-','받는분':m.gPhone?`${m.name} 학생 보호자님`:`${m.name}님`,'재안내':m.legacy?'회원관리 프로그램을 교체하면서 등록정보를 다시 안내드리고 있습니다!':'','로그인주소':appBase()+'?m='+(m.id||''),'학부모안내':m.gPhone?'학부모님도 이 주소로 들어가 자녀의 출석과 등록 기간을 확인하실 수 있어요. 내 정보 탭에서 \'출석 알림 받기\'를 켜 두시면 자녀가 출석할 때 휴대폰으로 알려 드려요.\n':'','입금계좌':bankLine(),'락커':lkMsgLine(m)||'없음',...extra}}
 function lkMsgLine(m){const L=Object.values((m&&m.lockers)||{}).filter(x=>x&&x.no&&x.end&&x.end>=TODAY());try{return L.map(x=>`${lkName(x.type,x.no)} (${x.start?x.start+' ~ ':''}${x.end}까지)`).join(', ')}catch(e){return ''}}
@@ -6037,7 +6037,7 @@ function kakaoVars(m,kind,pay){const mem=m.mem||{};const v={'#{이름}':m.name||
   if(kind==='pay'){v['#{상품}']=mem.item||planLabel(mem)||'회원권';v['#{기간}']=mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-');
     v['#{요일}']=mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용 (요일 제한 없음)';
     v['#{정지규정}']=mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음';
-    v['#{결제}']=pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${String(pay.at||'').slice(0,10)}`:'카운터 결제'}
+    v['#{결제}']=pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${pay.saleDate||String(pay.at||'').slice(0,10)}`:'카운터 결제'}
   if(kind==='hold'&&mem.hold){v['#{정지기간}']=`${mem.hold.start} ~ ${mem.hold.end} (${mem.hold.days}일)`;v['#{종료일}']=mem.end}
   return v}
 async function queueMsg(m,kind,pay,textOverride){
