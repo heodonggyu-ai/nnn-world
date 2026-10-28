@@ -904,7 +904,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div class="padwifi res" id="padWifi" hidden></div>
     </div>
   </div>
-  <div class="row" style="justify-content:flex-end;gap:14px"><button class="link" id="padFull">전체화면 · 가로 고정</button><button class="link" id="padExit">출석패드 종료 (관장 PIN)</button></div>
+  <div class="row" style="justify-content:flex-end;gap:14px"><button class="link" id="padFull">전체화면 · 가로 고정</button><button class="link" id="padExit">출석패드 종료</button></div>
 </section>
 
 <section class="view" id="v-guest" hidden>
@@ -1215,6 +1215,11 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div class="field"><label for="sInsta">인스타그램 (아이디 또는 주소)</label><input id="sInsta" placeholder="@nnnboxing"></div>
     <div class="field"><label for="sOnNote">온누리상품권 안내 문구</label><input id="sOnNote" placeholder="지류 상품권은 카운터에서 받아요"></div>
     <div class="field"><label for="sPin">관장 PIN (4자리)</label><input id="sPin" inputmode="numeric" maxlength="4"></div>
+    <div class="field" style="background:var(--mat);border-radius:12px;padding:10px 12px"><label for="sPadPin">출석패드 비밀번호 <span class="small" id="padPinState"></span></label>
+      <div class="row" style="gap:6px"><input id="sPadPin" class="grow" inputmode="numeric" maxlength="6" type="password" autocomplete="new-password" placeholder="숫자 4~6자리 (관장 PIN과 다르게)"><button type="button" class="btn sm red" id="sPadPinSave">저장</button></div>
+      <span class="small">출석패드를 켜고 끌 때 관장 PIN 대신 이 번호를 써요. 코치에게 알려 줘도 관장 메뉴에는 못 들어가요.</span>
+      <label class="check" style="margin:4px 0 0"><input type="checkbox" id="sPadApprove"><span>정지·만료·보강 출석 승인도 출석패드 비밀번호로 <span class="small">(끄면 관장 PIN 필요)</span></span></label>
+      <button type="button" class="link" id="sPadPinDel" style="align-self:flex-start;padding:0">출석패드 비밀번호 지우기 (관장 PIN으로 되돌리기)</button></div>
     <div class="field" hidden><label for="sFb">Firebase 실시간 DB 주소 <span class="small">(비우면 이 기기에만 저장)</span></label><input id="sFb" placeholder="https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app"></div>
     <button class="btn red" id="saveSet">설정 저장</button>
   </div>
@@ -1327,6 +1332,7 @@ const DB={
     if(!FB_ON())return pin===String(local.meta.pin);
     const reg=async()=>{await gref('admins/'+fuid).set({pin,at:Date.now()})};
     try{await reg();IS_ADMIN=true;return true}catch(e){}
+    try{const mine=(await gref('admins/'+fuid).get()).val();if(mine)return false}catch(e){}
     try{await gref('adminPin').set(pin);await reg();IS_ADMIN=true;toast('관장 PIN을 처음 설정했어요: 이 번호를 기억해 주세요',4000);return true}catch(e){return false}},
   async setAdminPin(pin){if(!FB_ON()){local.meta.pin=pin;return persist()}try{await gref('adminPin').set(pin);await gref('admins/'+fuid).set({pin,at:Date.now()});return true}catch(e){return false}}
 };
@@ -3521,6 +3527,17 @@ $('#logoutBtn').onclick=()=>{stopLive();W.others={};if(meOff){meOff();meOff=null
 
 /* ================= 출석패드 ================= */
 let padBuf='',padTimer=0;
+async function padHash(p){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('nnnpad:'+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return ''}}
+async function padDevOk(){if(!FB_ON())return true;try{return !!(await gref('admins/'+fuid).get()).val()}catch(e){return false}}
+async function padPinSheet(title,ok){try{await fbWait();await DB.meta()}catch(e){}const H=local.meta.padPinH;if(!H){pinSheet(title,ok);return}
+  sheet(`<h2>${esc(title)}</h2><div class="field"><label for="ppIn">출석패드 비밀번호</label><input id="ppIn" inputmode="numeric" maxlength="6" type="password" autocomplete="off"></div><button class="btn red" id="ppOk">확인</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const inp=el.querySelector('#ppIn');setTimeout(()=>inp.focus(),50);
+    const go=async()=>{const v=inp.value.trim();if(!/^\d{4,6}$/.test(v)){toast('숫자 4~6자리를 넣어 주세요');return}
+      if((await padHash(v))!==H){toast('출석패드 비밀번호가 맞지 않아요',3000);inp.value='';return}
+      close();if(await padDevOk()){try{await ok()}catch(e){console.error(e)}return}
+      sheet(`<h2>이 태블릿은 처음이에요</h2><p style="margin:0">출석패드로 쓰려면 <b>관장님이 관장 PIN을 딱 한 번</b> 넣어 주셔야 해요. 그다음부터는 출석패드 비밀번호만 쓰면 돼요.</p><button class="btn red" id="ppReg">관장 PIN 넣기</button><button class="btn ghost" data-close>취소</button>`,(e2,c2)=>{e2.querySelector('#ppReg').onclick=()=>{c2();pinSheet('이 태블릿 출석패드 등록 (최초 1번)',ok)}})};
+    el.querySelector('#ppOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})}
+function padApprove(title,ok){if(local.meta.padApprove&&local.meta.padPinH)padPinSheet(title,ok);else pinSheet(title,ok)}
 function pinSheet(title,ok){
   const bs=bioStaff('admin');
   sheet(`<h2>${esc(title)}</h2>${bs&&BIO_AV?bioStaffBtn('admin','관장님 '+bioWord()+' 확인'):''}<div class="field"><label for="pinIn">관장 PIN</label><input id="pinIn" inputmode="numeric" maxlength="4" type="password"></div><button class="btn red" id="pinOk">확인</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
@@ -3528,8 +3545,8 @@ function pinSheet(title,ok){
     const go=async(fromBio)=>{const v=fromBio||inp.value.trim();if(!/^\d{4}$/.test(v)){toast('PIN 숫자 4자리를 넣어 주세요');return}if(!(await fbWait()))return;let okk=false;try{okk=await DB.adminLogin(v)}catch(e){}if(okk){try{await DB.meta()}catch(e){}close();if(!fromBio&&title==='관장 메뉴')setTimeout(()=>bioStaffOffer('admin',v),1500);try{await ok()}catch(e){console.error(e);toast('화면을 여는 중 문제가 생겼어요: '+(e&&e.message||e),6000)}}else if(fromBio&&FB_ON()){bioStaffSet('admin',null);toast('PIN이 바뀌어서 얼굴 확인이 꺼졌어요. 새 PIN으로 한 번 들어와 주세요',4500)}else{toast(!FB_ON()&&FB_ERR!=='preview'?'서버에 연결되지 않아 PIN을 확인할 수 없어요. 인터넷 확인 후 새로고침해 주세요':'PIN이 맞지 않아요',4500);inp.value=''}};
     el.querySelector('#pinOk').onclick=()=>go();const bb=el.querySelector('[data-biostaff]');if(bb)bb.onclick=async()=>{bb.disabled=true;try{if(await bioCheck(bs.cid)){const v=bioShow(bs.k);if(!v)return;await go(v)}}finally{bb.disabled=false}};inp.onkeydown=e=>{if(e.key==='Enter')go()}});
 }
-$('#goPad').onclick=()=>pinSheet('출석패드 모드 시작',openPad);
-$('#padExit').onclick=()=>pinSheet('출석패드 종료',()=>{show('v-home');try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}try{screen.orientation.unlock()}catch(e){}});
+$('#goPad').onclick=()=>padPinSheet('출석패드 모드 시작',openPad);
+$('#padExit').onclick=()=>padPinSheet('출석패드 종료',()=>{show('v-home');try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}try{screen.orientation.unlock()}catch(e){}});
 async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
 async function updPadCount(){const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
@@ -3576,18 +3593,18 @@ async function doAttend(){
   {const dow=new Date().getDay(),ms=memStatus(m);
   if(!padForce&&ms.state==='hold'){avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='정지(연기) 기간이에요';$('#padSub').textContent=`${m.name} 님 정지 ${md(m.mem.hold.start)} ~ ${md(m.mem.hold.end)}`;
     const pm=$('#padMem');pm.innerHTML=`정지 기간에는 출석할 수 없어요. 정지는 1회만 가능해요.<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
-    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};padTimer=setTimeout(resetPad,9000);return}
+    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);padApprove('출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};padTimer=setTimeout(resetPad,9000);return}
   if(!padForce&&ms.state==='expired'){
     avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='등록 기간이 끝났어요';$('#padSub').textContent=`${m.name} 님 등록 종료일 ${md(m.mem.end)}`;
     m.unpaid=Array.isArray(m.unpaid)?m.unpaid:[];if(!m.unpaid.some(u=>u.d===TODAY())){m.unpaid.push({d:TODAY(),ok:false});m.unpaid=m.unpaid.slice(-20);DB.savePriv(m)}
     const n=m.unpaid.filter(u=>u.ok).length;
     const pm=$('#padMem');pm.innerHTML=`<b style="font-size:18px">재등록 후 출석할 수 있어요</b><br>카운터에서 관장님께 말씀해 주세요.${m.gPhone?'<br>보호자님께 안내 문자가 갑니다.':''}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 · 오늘만 출석${n?` (이전 승인 ${n}회)`:''}</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
-    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('만료 회원 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
+    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);padApprove('만료 회원 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     sfx('bad');padTimer=setTimeout(resetPad,12000);return}
   if(!padForce&&m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='expired'&&ms.state!=='none'){
     avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='오늘은 수강 요일이 아니에요';$('#padSub').textContent=`${m.name} 님 등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)`;
     const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
-    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);pinSheet('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
+    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);padApprove('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     padTimer=setTimeout(resetPad,9000);return}}
   const makeup=padForce;padForce=false;
   const {base,bonus,item,txt,bs}=await applyAttend(m,makeup,'pad');
@@ -3879,6 +3896,7 @@ function popItems(m){
 /* ================= 새 기능 소식 · 도움말 =================
    새 기능을 만들면 FEAT 맨 위에 한 줄 추가하면 회원들에게 자동으로 안내돼요(가입일 이후 기능만). */
 const FEAT=[
+  {id:'s_padpin',aud:'owner',q:'설정 탭 · 관장 PIN 아래',d:'2026-10-28',e:'🔐',t:'출석패드 전용 비밀번호',s:'출석패드를 켜고 끌 때 관장 PIN 대신 쓰는 번호예요. 코치에게 알려 줘도 관장 메뉴에는 못 들어가요',go:'adm:set'},
   {id:'s_nmedia',aud:'owner',q:'공지 쓸 때 사진 4장 · 유튜브 영상',d:'2026-10-24',e:'🖼️',t:'공지에 사진·영상',s:'공지에 사진(최대 4장)과 유튜브·인스타 영상 주소를 넣으면 회원 팝업과 공지판에 같이 떠요. 사진은 누르면 크게 보여요',go:'adm:ops'},
   {id:'s_raffle',aud:'owner',q:'운영 탭 맨 위 · 상품·기간 정하고 추첨까지',d:'2026-10-23',e:'🎁',t:'응모 이벤트 만들기',s:'상품·기간을 정하면 회원 앱과 처음 화면에 배너가 떠요. 출석·친구 초대 보너스 응모권, 추첨 화면, 당첨자 발표·지급 체크까지',go:'adm:ops'},
   {id:'s_import',aud:'owner',q:'엑셀로 회원·기간·결제·락커 한 번에',d:'2026-10-22',e:'📥',t:'다른 프로그램에서 가져오기',s:'원알엠 등 엑셀·복사 붙여넣기로 회원·기간·결제를 옮겨요(락커는 락커 칸에서 따로). 미리보기·자동 백업·바뀐 내용 요약, 회원 탭에서 바로 되돌리기',go:'adm:mem'},
@@ -4334,6 +4352,11 @@ async function qrAttend(tok){
 function wifiAttHTML(){const w=wifiCfg();if(!w)return'';return`<div class="padwifi" style="margin-top:8px"><div class="wt" style="flex:1"><small>📶 체육관 와이파이</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<span class="pw">${esc(w.p||'')}</span>`}</div>${w.t!=='nopass'&&w.p?'<button class="btn sm ghost" id="wfCopy">비번 복사</button>':''}</div>`}
 function wifiAttBind(){const b=document.getElementById('wfCopy');if(b)b.onclick=()=>{const w=wifiCfg();if(w)copyText(w.p,'와이파이 비밀번호를')}}
 $('#padRes').addEventListener('click',e=>{if(e.target.closest('button'))return;if(!$('#padForceBtn'))resetPad()});
+function renderPadPinSet(){const on=!!local.meta.padPinH;$('#padPinState').textContent=on?'· 설정됨':'· 아직 없음 (지금은 관장 PIN 사용)';$('#sPadApprove').checked=!!local.meta.padApprove;$('#sPadPinDel').hidden=!on;$('#sPadPin').value=''}
+async function savePadMeta(k,v){local.meta[k]=v;if(FB_ON()){try{await gref('meta/'+k).set(v==null?null:v);return true}catch(e){toast('저장하지 못했어요',3000);return false}}persist();return true}
+$('#sPadPinSave').onclick=async()=>{const v=$('#sPadPin').value.trim();if(!/^\d{4,6}$/.test(v)){toast('숫자 4~6자리로 정해 주세요');return}if(await savePadMeta('padPinH',await padHash(v))){toast('출석패드 비밀번호를 저장했어요',3000);renderPadPinSet()}};
+$('#sPadPinDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 지워요';return}b.dataset.sure='';b.textContent='출석패드 비밀번호 지우기 (관장 PIN으로 되돌리기)';if(await savePadMeta('padPinH',null)){toast('지웠어요. 이제 관장 PIN으로 켜고 꺼요');renderPadPinSet()}};
+$('#sPadApprove').onchange=async e=>{await savePadMeta('padApprove',e.target.checked||null);toast(e.target.checked?'출석패드 비밀번호로 승인할 수 있어요':'승인은 관장 PIN으로 해요')};
 $('#padFull').onclick=async()=>{try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'})}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}setTimeout(()=>{try{startPadQR();wifiPadIdle()}catch(e){}},400);$('#padFull').hidden=!!document.fullscreenElement};
 document.addEventListener('fullscreenchange',()=>{try{$('#padFull').hidden=!!document.fullscreenElement}catch(e){}});
 $('#padFloorTag').onclick=e=>{e.stopPropagation();choosePadFloor()};
@@ -4391,7 +4414,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
   await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderCompAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
-  $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
+  $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{renderPadPinSet()}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
   try{adminRestructure()}catch(e){console.error('layout',e)}{let k='today';try{k=localStorage.getItem('nnn_atab')||'today'}catch(e){}setATab(k)}renderADash();
@@ -6288,7 +6311,7 @@ function choosePadFloor(){sheet(`<h2>이 출석패드는 몇 층인가요?</h2><
   {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
   if(lsGet('nnn_coach')&&!sid){openCoachMode();return}
-  if(hashv==='pad'){pinSheet('출석패드 모드 시작',openPad);show('v-home');return}
+  if(hashv==='pad'){padPinSheet('출석패드 모드 시작',openPad);show('v-home');return}
   {const qm=new URLSearchParams(location.search).get('m');if(qm&&/^\d{3,6}$/.test(qm)&&!sid&&!userMoved()){try{history.replaceState(null,'',location.pathname)}catch(e){}show('v-login');$('#lId').value=qm;setTimeout(()=>{toast(`회원번호 ${qm} · 비밀번호(휴대폰 뒤 4자리)를 넣어 주세요`,4000);try{$('#lPw').focus()}catch(e){}},300);return}}
   if(userMoved())return;
   if(sid){const m=await DB.get(sid);if(m&&!userMoved()){ME=m;enterWorld();return}}

@@ -84,7 +84,7 @@
     "gym": {
       "adminPin": {
         ".read": false,
-        ".write": "auth != null && (!data.exists() || root.child('gym/admins').child(auth.uid).exists()) && newData.isString() && newData.val().matches(/^[0-9]{4}$/)"
+        ".write": "auth != null && (!data.exists() || (root.child('gym/admins').child(auth.uid).exists() && root.child('gym/admins').child(auth.uid).child('pin').val() === data.val())) && newData.isString() && newData.val().matches(/^[0-9]{4}$/)"
       },
       "admins": {
         "$uid": {
