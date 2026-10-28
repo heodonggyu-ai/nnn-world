@@ -394,6 +394,7 @@ body.tvmode .app{max-width:none;padding:0}
 .padwifi .wq{flex:0 0 auto;background:#fff;padding:5px;border-radius:8px}.padwifi .wq img,.padwifi .wq canvas{display:block}
 .padwifi .wt{display:flex;flex-direction:column;gap:1px;min-width:0}.padwifi .wt small{color:#5B6B85;font-size:12px}.padwifi .wt b{font-size:17px;word-break:break-all}.padwifi .wt .pw{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.03em}
 .padwifi.wlock{justify-content:center;text-align:center}
+.padnext{color:#9AA0AA!important;margin-top:4px}#v-pad .kres .padnext{grid-column:2}
 .padwifi.res{max-width:440px;margin-top:4px}
 body.padmode{background:#fff}
 /* 출석패드 층별 배경 (2층·5층) */
@@ -902,6 +903,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div id="padBonus" class="small" style="color:#FFD98A"></div>
       <div id="padMem" style="border-radius:8px;padding:8px 12px;font-size:15px"></div>
       <div class="padwifi res" id="padWifi" hidden></div>
+      <div class="small padnext">화면을 누르면 바로 다음 사람</div>
     </div>
   </div>
   <div class="row" style="justify-content:flex-end;gap:14px"><button class="link" id="padFull">전체화면 · 가로 고정</button><button class="link" id="padExit">출석패드 종료</button></div>
@@ -1201,7 +1203,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div class="field"><span>📶 체육관 와이파이 <span class="small">(출석패드·출석 완료 화면에 이름·비번·연결 QR이 떠요)</span></span>
       <div class="row" style="gap:6px"><input id="sWifiS" placeholder="와이파이 이름" class="grow" autocomplete="off"><input id="sWifiP" placeholder="비밀번호" class="grow" autocomplete="off"></div>
       <div class="row" style="gap:6px;align-items:center;margin-top:6px"><select id="sWifiT" style="width:auto"><option value="WPA">보안 WPA/WPA2 (보통)</option><option value="WEP">WEP</option><option value="nopass">비밀번호 없음</option></select></div>
-      <label class="check" style="margin:6px 0 0"><input type="checkbox" id="sWifiAfter"><span><b>출석해야 비밀번호 보여주기</b> <span class="small">(출석 유도 · 끄면 출석패드에 항상 보여요)</span></span></label></div>
+      <label class="check" style="margin:6px 0 0" hidden><input type="checkbox" id="sWifiAfter"><span><b>출석해야 비밀번호 보여주기</b> <span class="small">(출석 유도 · 끄면 출석패드에 항상 보여요)</span></span></label></div>
     <div class="field"><label for="sPush">출석 알림 서버 주소 <span class="small">(Cloudflare Worker 주소)</span></label><div class="row" style="gap:6px"><input id="sPush" class="grow" placeholder="https://nnn-push.○○○.workers.dev" inputmode="url" autocapitalize="off"><button type="button" class="btn sm ghost" id="sPushTest">연결 확인</button></div><div class="small">비워 두면 앱을 열어 둔 동안에만 출석 알림이 가요.</div></div>
     <div class="field"><label for="sTerms">이용약관</label><textarea id="sTerms" rows="6"></textarea></div>
     <div class="field"><label for="sRules">이용수칙 <span class="small">(가입 승인·등록 안내 문자에 함께 나가요)</span></label><textarea id="sRules" rows="8"></textarea></div>
@@ -3552,7 +3554,7 @@ async function updPadCount(){const all=await DB.all();$('#padCount').textContent
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
 function updPad(){$('#kdisp').textContent=padBuf||' '}
-document.addEventListener('keydown',e=>{if($('#v-pad').hidden||$('#sheetRoot').innerHTML)return;if(/^\d$/.test(e.key)&&padBuf.length<6){padBuf+=e.key;updPad()}if(e.key==='Backspace'){padBuf=padBuf.slice(0,-1);updPad()}if(e.key==='Enter')doAttend()});
+document.addEventListener('keydown',e=>{if($('#v-pad').hidden||$('#sheetRoot').innerHTML)return;if(!$('#padRes').hidden&&/^\d$/.test(e.key)&&!$('#padForceBtn'))resetPad();if(/^\d$/.test(e.key)&&padBuf.length<6){padBuf+=e.key;updPad()}if(e.key==='Backspace'){padBuf=padBuf.slice(0,-1);updPad()}if(e.key==='Enter')doAttend()});
 let padForce=false;
 /* 코치 출퇴근: 출석패드에 코치 코드 6자리 → 출근, 다시 찍으면 퇴근 (회원번호는 4자리라 겹치지 않음) */
 async function coachPad(code){
@@ -3578,8 +3580,8 @@ function wifiFill(el,full,size){const w=wifiCfg();if(!el)return;if(!w){el.hidden
   if(!full){el.className='padwifi wlock'+(el.classList.contains('res')?' res':'');el.innerHTML=`<div class="wt"><small>📶 무료 와이파이</small><b>${esc(w.s)}</b><small>🔓 출석하면 비밀번호와 연결 QR이 나와요</small></div>`;return}
   el.className='padwifi'+(el.classList.contains('res')?' res':'');el.innerHTML=`<div class="wq"></div><div class="wt"><small>📶 와이파이 · 카메라로 QR 찍으면 바로 연결</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<small>비밀번호</small><span class="pw">${esc(w.p||'')}</span>`}</div>`;
   try{new QRCode(el.querySelector('.wq'),{text:wifiQRText(w),width:size||110,height:size||110,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){el.querySelector('.wq').remove()}}
-function wifiPadIdle(){const w=wifiCfg();const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifiIdle'),w&&!w.after,big?(innerHeight<640?60:innerHeight<760?76:110):100);$('#padGoWifi').hidden=!(w&&w.after);$('#padWifi').hidden=true}
-function wifiPadDone(){const w=wifiCfg();if(!w)return false;const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifi'),true,big?(innerHeight<640?104:150):110);return true}
+function wifiPadIdle(){const w=wifiCfg();const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifiIdle'),!!w,big?(innerHeight<640?60:innerHeight<760?76:110):100);$('#padGoWifi').hidden=true;$('#padWifi').hidden=true}
+function wifiPadDone(){return false;const w=wifiCfg();if(!w)return false;const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifi'),true,big?(innerHeight<640?104:150):110);return true}
 async function doAttend(){
   if(!padBuf)return;const id=padBuf;padBuf='';updPad();
   if(id.length===6){coachPad(id);return}
@@ -3589,7 +3591,7 @@ async function doAttend(){
   clearTimeout(padTimer);
   if(!m){$('#padMsg').textContent='없는 회원번호예요';$('#padSub').textContent=id+' 번을 찾을 수 없어요. 다시 입력해 주세요.';padTimer=setTimeout(resetPad,2500);return}
   fixDay(m);
-  if(m.last===TODAY()){avatarTo(cv,m.equip,{h:46,pose:'guard'});$('#padMsg').textContent=m.name+' 님, 오늘은 이미 출석!';$('#padSub').textContent='좋은 운동 되세요';const wf=wifiPadDone();padTimer=setTimeout(resetPad,wf?12000:3000);return}
+  if(m.last===TODAY()){avatarTo(cv,m.equip,{h:46,pose:'guard'});$('#padMsg').textContent=m.name+' 님, 오늘은 이미 출석!';$('#padSub').textContent='좋은 운동 되세요';padTimer=setTimeout(resetPad,1800);return}
   {const dow=new Date().getDay(),ms=memStatus(m);
   if(!padForce&&ms.state==='hold'){avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='정지(연기) 기간이에요';$('#padSub').textContent=`${m.name} 님 정지 ${md(m.mem.hold.start)} ~ ${md(m.mem.hold.end)}`;
     const pm=$('#padMem');pm.innerHTML=`정지 기간에는 출석할 수 없어요. 정지는 1회만 가능해요.<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
@@ -3613,9 +3615,9 @@ async function doAttend(){
   {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#FDE2E3':'#F1F4F8';el.style.color=pm.warn?'#8A1F24':'#3E4654'}
   let t0=performance.now();const vals=['+10','+20','+50','+100','장비?'];
   const spin=now=>{const t=(now-t0)/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);drawChar(c,150,330,6.6,m.equip,{t,pose:Math.floor(t*4)%2?'jab':'cross'});
-    if(t<1.6){$('#wheel').textContent=vals[Math.floor(t*14)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<5)requestAnimationFrame(spin)}};
+    if(t<0.9){$('#wheel').textContent=vals[Math.floor(t*18)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<3)requestAnimationFrame(spin)}};
   requestAnimationFrame(spin);
-  updPadCount();const wf=wifiPadDone();padTimer=setTimeout(resetPad,wf?15000:6500);
+  updPadCount();padTimer=setTimeout(resetPad,3000);
 }
 /* ================= 홈 화면에 앱 추가 ================= */
 let INST_EVT=null;
