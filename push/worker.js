@@ -2,7 +2,7 @@
    - 회원(학부모) 휴대폰의 알림 구독을 저장하고, 출석하면 그 휴대폰으로 알림을 보냅니다.
    - 필요한 것: KV 바인딩 이름 SUBS 하나. 비밀키는 처음 실행할 때 스스로 만들어 KV에 보관합니다. */
 const DB_URL='https://nnn-world-default-rtdb.asia-southeast1.firebasedatabase.app';
-const ORIGINS=['https://heodonggyu-ai.github.io','http://localhost:8765'];
+const ORIGINS=['https://heodonggyu-ai.github.io','https://curious-dieffenbachia-f5c407.netlify.app','http://localhost:8765'];
 const SUBJECT='https://heodonggyu-ai.github.io/nnn-world/member.html';
 const enc=new TextEncoder();
 const b64u=b=>{let s='';const u=new Uint8Array(b);for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
@@ -43,7 +43,7 @@ async function fbGet(path,token,shallow){const r=await fetch(`${DB_URL}/${path}.
 const okId=id=>/^[0-9A-Za-z_-]{1,20}$/.test(String(id||''));
 /* ================= PT 수업 알림 (nnn-pt) ================= */
 const PT_DB='https://nnn-pt-default-rtdb.asia-southeast1.firebasedatabase.app';
-const PT_URL='https://heodonggyu-ai.github.io/nnn-world/pt/';
+const PT_URL='https://curious-dieffenbachia-f5c407.netlify.app/';
 const okG=x=>/^[0-9A-Za-z_-]{4,64}$/.test(String(x||''));
 const jwtUid=t=>{try{return JSON.parse(new TextDecoder().decode(unb64u(String(t).split('.')[1]))).user_id||''}catch(e){return ''}};
 async function ptGet(path,token){const r=await fetch(`${PT_DB}/${path}.json?auth=${encodeURIComponent(token)}`);if(!r.ok)return {ok:false};return {ok:true,v:await r.json()}}
