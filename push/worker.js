@@ -41,59 +41,6 @@ async function sendPush(env,sub,obj){const body=await encryptPayload(sub,JSON.st
   return fetch(sub.endpoint,{method:'POST',headers:{'Authorization':await vapidAuth(env,sub.endpoint),'Content-Encoding':'aes128gcm','Content-Type':'application/octet-stream','TTL':'7200','Urgency':'high'},body})}
 async function fbGet(path,token,shallow){const r=await fetch(`${DB_URL}/${path}.json?auth=${encodeURIComponent(token)}${shallow?'&shallow=true':''}`);if(!r.ok)return {ok:false};return {ok:true,v:await r.json()}}
 const okId=id=>/^[0-9A-Za-z_-]{1,20}$/.test(String(id||''));
-/* ================= PT 수업 알림 (nnn-pt) ================= */
-const PT_DB='https://nnn-pt-default-rtdb.asia-southeast1.firebasedatabase.app';
-const PT_URL='https://heodonggyu-ai.github.io/nnn-world/pt/';
-const okG=x=>/^[0-9A-Za-z_-]{4,64}$/.test(String(x||''));
-const jwtUid=t=>{try{return JSON.parse(new TextDecoder().decode(unb64u(String(t).split('.')[1]))).user_id||''}catch(e){return ''}};
-async function ptGet(path,token){const r=await fetch(`${PT_DB}/${path}.json?auth=${encodeURIComponent(token)}`);if(!r.ok)return {ok:false};return {ok:true,v:await r.json()}}
-async function ptWho(b){const uid=jwtUid(b.token);if(!uid||!okG(b.gym))return null;
-  if(uid===b.gym){const r=await ptGet(`pt/${b.gym}/data/cfg`,b.token);return r.ok?{role:'coach'}:null}
-  const r=await ptGet(`pt/${b.gym}/claims/${uid}`,b.token);if(!r.ok||!r.v||!okG(r.v.mid))return null;return {role:'member',mid:String(r.v.mid)}}
-const ptKS=g=>'pts:'+g,ptKQ=g=>'ptq:'+g;
-async function ptSubs(env,g){return (await env.SUBS.get(ptKS(g),{type:'json'}))||{c:[],m:{}}}
-const DW=['일','월','화','수','목','금','토'];
-const ptWhen=at=>{const d=new Date(at+9*3600e3);return `${d.getUTCMonth()+1}/${d.getUTCDate()}(${DW[d.getUTCDay()]}) ${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`};
-const ptLeft=ms=>{const m=Math.round(ms/6e4);if(m>=1440){const d=Math.round(m/1440);return d===1?'내일':d+'일 뒤'}if(m>=60){const h=Math.floor(m/60),mm=m%60;return h+'시간'+(mm>=10?' '+mm+'분':'')+' 뒤'}return m+'분 뒤'};
-async function ptSendTo(env,g,subsObj,list,msg){let sent=0,gone=[];for(const s of list){try{const r=await sendPush(env,s,msg);if(r.status===404||r.status===410)gone.push(s.endpoint);else if(r.ok)sent++}catch(e){}}
-  if(gone.length){subsObj.c=(subsObj.c||[]).filter(x=>!gone.includes(x.endpoint));Object.keys(subsObj.m||{}).forEach(k=>{subsObj.m[k]=subsObj.m[k].filter(x=>!gone.includes(x.endpoint));if(!subsObj.m[k].length)delete subsObj.m[k]});await env.SUBS.put(ptKS(g),JSON.stringify(subsObj))}
-  return sent}
-async function ptRoute(p,b,env,J){
-  const who=await ptWho(b);if(!who)return J({error:'auth'},403);const g=b.gym;
-  if(p==='/pt/sub'){const s=b.sub;if(!s||!/^https:\/\//.test(s.endpoint||'')||!s.keys||!s.keys.p256dh||!s.keys.auth)return J({error:'sub'},400);
-    const S=await ptSubs(env,g);const rec={endpoint:s.endpoint,keys:{p256dh:s.keys.p256dh,auth:s.keys.auth},at:Date.now()};
-    const put=L=>[rec,...(L||[]).filter(x=>x.endpoint!==s.endpoint)].slice(0,6);
-    if(who.role==='coach')S.c=put(S.c);else{S.m=S.m||{};S.m[who.mid]=put(S.m[who.mid])}
-    await env.SUBS.put(ptKS(g),JSON.stringify(S));
-    const gl=(await env.SUBS.get('ptg',{type:'json'}))||[];if(!gl.includes(g)){gl.push(g);await env.SUBS.put('ptg',JSON.stringify(gl.slice(-20)))}
-    return J({ok:true,role:who.role})}
-  if(p==='/pt/unsub'){const S=await ptSubs(env,g);const f=L=>(L||[]).filter(x=>x.endpoint!==b.endpoint);if(who.role==='coach')S.c=f(S.c);else if(S.m)S.m[who.mid]=f(S.m[who.mid]);await env.SUBS.put(ptKS(g),JSON.stringify(S));return J({ok:true})}
-  if(p==='/pt/test'){const S=await ptSubs(env,g);const L=who.role==='coach'?S.c:((S.m||{})[who.mid]||[]);
-    const n=await ptSendTo(env,g,S,L,{title:'PT 수업 알림 시험',body:'이 폰으로 PT 알림이 잘 와요 👍',tag:'pt-test',url:PT_URL});return J({ok:true,sent:n})}
-  if(p==='/pt/sched'){if(who.role!=='coach')return J({error:'coach only'},403);
-    const items=(Array.isArray(b.items)?b.items:[]).filter(x=>x&&okG(x.sid)&&okG(x.mid)&&typeof x.at==='number').slice(0,300).map(x=>({sid:x.sid,mid:x.mid,at:x.at,name:String(x.name||'').slice(0,20)}));
-    const al=(Array.isArray(b.al)?b.al:[]).filter(x=>x&&typeof x.ms==='number'&&x.ms>0&&x.ms<=14*864e5).slice(0,6).map(x=>({k:String(x.k).slice(0,12),ms:x.ms}));
-    await env.SUBS.put(ptKQ(g),JSON.stringify({items,al,me:b.me!==false,at:Date.now()}));
-    const gl=(await env.SUBS.get('ptg',{type:'json'}))||[];if(!gl.includes(g)){gl.push(g);await env.SUBS.put('ptg',JSON.stringify(gl.slice(-20)))}
-    return J({ok:true,n:items.length})}
-  if(p==='/pt/event'){const S=await ptSubs(env,g);const at=+b.at||0;const when=at?ptWhen(at):'';
-    if(who.role==='member'){if(b.kind!=='req')return J({error:'kind'},400);
-      const nm=await ptGet(`pt/${g}/mv/${who.mid}/name`,b.token);const name=(nm.ok&&nm.v)||'회원';
-      const n=await ptSendTo(env,g,S,S.c||[],{title:'새 PT 예약 요청',body:`${name}님이 ${when} 수업을 요청했어요. 앱에서 승인해 주세요.`,tag:'ptreq-'+who.mid+'-'+at,url:PT_URL});return J({ok:true,sent:n})}
-    if(!okG(b.mid))return J({error:'mid'},400);
-    const T={booked:['PT 수업 예약 완료',`${when} PT 수업이 예약됐어요. 수업 전에 한 번 더 알려 드릴게요 🥊`],canceled:['PT 수업 취소',`${when} PT 수업이 취소됐어요.`],rejected:['PT 예약 요청 안내',`${when} 예약 요청은 어려워요. 앱에서 다른 시간을 골라 주세요.`],moved:['PT 수업 시간 변경',`PT 수업이 ${when}(으)로 바뀌었어요.`]}[b.kind];
-    if(!T)return J({error:'kind'},400);
-    const n=await ptSendTo(env,g,S,(S.m||{})[b.mid]||[],{title:T[0],body:T[1],tag:'ptev-'+b.mid+'-'+at,url:PT_URL});return J({ok:true,sent:n})}
-  return J({error:'not found'},404)}
-async function ptCron(env){const now=Date.now();const gl=(await env.SUBS.get('ptg',{type:'json'}))||[];let total=0;
-  for(const g of gl){const Q=await env.SUBS.get(ptKQ(g),{type:'json'});if(!Q||!Q.items||!Q.items.length||!Q.al||!Q.al.length)continue;let S=null;
-    for(const it of Q.items){if(it.at<=now)continue;for(const a of Q.al){const fire=it.at-a.ms;if(now<fire||now-fire>40*6e4)continue;
-      const dk=`ptx:${g}:${it.sid}:${it.at}:${a.k}`;if(await env.SUBS.get(dk))continue;await env.SUBS.put(dk,'1',{expirationTtl:15*86400});
-      if(!S)S=await ptSubs(env,g);const left=ptLeft(it.at-now),when=ptWhen(it.at);
-      total+=await ptSendTo(env,g,S,(S.m||{})[it.mid]||[],{title:'PT 수업 알림',body:`${it.name?it.name+'님, ':''}${left} ${when} PT 수업이 있어요 🥊`,tag:'ptal-'+it.sid,url:PT_URL});
-      if(Q.me!==false)total+=await ptSendTo(env,g,S,S.c||[],{title:'PT 수업 알림 (관장)',body:`${it.name||'회원'}님 수업 ${left} · ${when}`,tag:'ptalc-'+it.sid,url:PT_URL})}}}
-  return total}
-
 const subKey=(id,ep)=>'sub:'+id+':'+ep.slice(-40).replace(/[^A-Za-z0-9_-]/g,'');
 
 export default {async fetch(req,env){
@@ -103,11 +50,9 @@ export default {async fetch(req,env){
   const p=new URL(req.url).pathname;
   try{
     if(p==='/vapid')return J({key:(await vapid(env)).pub});
-    if(p==='/'||p==='/ping')return J({ok:true,name:'NNN WORLD 출석 · PT 수업 알림 서버',pt:true});
+    if(p==='/'||p==='/ping')return J({ok:true,name:'NNN WORLD 출석 알림 서버'});
     if(req.method!=='POST')return J({error:'method'},405);
-    const b=await req.json();
-    if(p.startsWith('/pt/')){if(!b||!b.token)return J({error:'bad'},400);return await ptRoute(p,b,env,J)}
-    if(!okId(b.id)||!b.token)return J({error:'bad'},400);
+    const b=await req.json();if(!okId(b.id)||!b.token)return J({error:'bad'},400);
     if(p==='/sub'){const s=b.sub;if(!s||!/^https:\/\//.test(s.endpoint||'')||!s.keys||!s.keys.p256dh||!s.keys.auth)return J({error:'sub'},400);
       const r=await fbGet(`gym/private/${b.id}`,b.token,1);if(!r.ok||r.v==null)return J({error:'auth'},403);
       await env.SUBS.put(subKey(b.id,s.endpoint),JSON.stringify({endpoint:s.endpoint,keys:{p256dh:s.keys.p256dh,auth:s.keys.auth},at:Date.now()}));return J({ok:true})}
@@ -128,5 +73,4 @@ export default {async fetch(req,env){
       return J({ok:true,sent,gone})}
     return J({error:'not found'},404)
   }catch(e){return J({error:String(e&&e.message||e)},500)}
-},
-async scheduled(ev,env,ctx){ctx.waitUntil(ptCron(env).catch(()=>{}))}};
+}};
