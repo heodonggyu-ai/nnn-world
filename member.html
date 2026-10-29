@@ -387,6 +387,8 @@ body.tvmode .app{max-width:none;padding:0}
 .kres canvas{width:150px;height:170px}
 .wheel{font-family:var(--display);font-size:40px;color:var(--gold);min-height:52px}
 /* 출석패드 · 흰색 테마 */
+.padhead{flex-wrap:wrap;gap:8px 12px}.padhead .padttl{order:1}.padhead #padCount{order:2}.padhead .padgo{order:3;flex-basis:100%}
+.kdisp:empty::before{content:'회원번호 입력';color:#B4B8C0;font-size:.55em;letter-spacing:.05em}
 .padgo{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;background:var(--red);color:#fff;border-radius:16px;padding:10px 14px;animation:padgo 2.2s ease-in-out infinite}
 .padgo>b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.2}.padgo span{font-size:14px;opacity:.95}.padgo i{font-style:normal}
 @keyframes padgo{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(230,57,70,.35)}50%{transform:scale(1.015);box-shadow:0 0 0 8px rgba(230,57,70,0)}}
@@ -416,6 +418,8 @@ body.padmode[data-padfloor="5"]{background:#F1F5FD repeating-linear-gradient(135
 #v-pad[data-floor="2"]::before,#v-pad[data-floor="5"]::before{position:fixed;left:2vw;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:left center;font-family:var(--display);font-size:5vh;letter-spacing:.3em;z-index:-1;pointer-events:none;white-space:nowrap}
 #v-pad[data-floor="2"]::before{content:"NNN BOXING · 2F";color:rgba(230,57,70,.12)}
 #v-pad[data-floor="5"]::before{content:"NNN BOXING · 5F";color:rgba(31,78,156,.13)}
+/* 태블릿 세로 */
+@media (min-width:700px) and (orientation:portrait){body.padmode .app{max-width:none;padding:16px 24px}#v-pad .padgrid{grid-template-columns:1.5fr 1fr;gap:20px}#v-pad .keys button{min-height:110px;font-size:42px}#v-pad .kdisp{font-size:48px}#v-pad .padhint{display:none}}
 /* 태블릿 가로 (갤럭시탭 A7 등) : 화면 꽉 차게 */
 @media (min-width:700px) and (orientation:landscape){
   body.padmode .app{max-width:none;padding:14px 22px 10px}
@@ -465,6 +469,15 @@ body.padmode[data-padfloor="5"]{background:#F1F5FD repeating-linear-gradient(135
   #v-pad .wheel{font-size:clamp(36px,8vh,64px);min-height:clamp(40px,9vh,72px)}
   body.padmode .app{padding:clamp(6px,1.6vh,14px) 22px 4px;height:100vh;box-sizing:border-box;display:flex;flex-direction:column}
   #v-pad{min-height:0!important;flex:1}
+  #v-pad .padhead{flex-wrap:nowrap}#v-pad .padhead .padgo{order:2;flex:1 1 auto;flex-basis:auto;min-width:0;padding:6px 14px;gap:2px 12px;flex-wrap:wrap;justify-content:center}
+  #v-pad .padhead .padgo>b{font-size:clamp(18px,3.2vh,26px)}#v-pad .padhead .padgo span{font-size:clamp(12px,1.9vh,15px)}#v-pad .padhead #padCount{order:3;flex:0 0 auto}
+  #v-pad .padhint{display:none}
+  #v-pad .padttl{flex-wrap:nowrap;flex:0 0 auto;gap:10px}#v-pad .padttl h2{white-space:nowrap}#v-pad #padNext{white-space:nowrap;max-width:28vw;overflow:hidden;text-overflow:ellipsis}
+  #v-pad .padgrid{grid-template-columns:1.75fr 1fr;gap:clamp(12px,2vw,24px)}
+  #v-pad .kdisp{min-height:clamp(46px,8.5vh,72px);line-height:clamp(40px,7.5vh,64px);font-size:clamp(32px,6.5vh,54px);padding:4px}
+  #v-pad .keys{margin-top:clamp(6px,1.2vh,10px)!important;gap:clamp(6px,1.2vh,12px)}
+  #v-pad .keys button{font-size:clamp(28px,6vh,48px)}
+  #v-pad .padqr #padFeed:empty{display:none}
 }
 .kiosk{background:#fff;color:var(--ink);border:1px solid #E4E6EB;border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(20,26,39,.08)}
 .kiosk h2{color:var(--ink)}
@@ -887,8 +900,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 <!-- 출석패드 -->
 <section class="view" id="v-pad" hidden>
   <div class="kiosk">
-    <div class="row" style="justify-content:space-between"><div class="row"><span id="padLogo" style="width:44px;display:block"></span><div><h2 style="font-size:24px">출석패드 <button class="floortag" id="padFloorTag" type="button">층 선택</button></h2><div class="small" id="padNext" style="color:#C8C8CC"></div></div></div><span class="pill num" id="padCount" style="background:#2C3549;color:#fff"></span></div>
-    <div class="padgo" id="padGo"><b>들어오면 먼저 출석 찍기!</b><span>회원번호 입력 또는 QR 찍기 → <b>크레딧 +50 · 룰렛</b><i id="padGoWifi"> · <b>와이파이 비밀번호</b></i></span></div>
+    <div class="row padhead" style="justify-content:space-between"><div class="row padttl"><span id="padLogo" style="width:44px;display:block"></span><div><h2 style="font-size:24px">출석패드 <button class="floortag" id="padFloorTag" type="button">층 선택</button></h2><div class="small" id="padNext" style="color:#C8C8CC"></div></div></div><div class="padgo" id="padGo"><b>들어오면 먼저 출석 찍기!</b><span>회원번호 입력 또는 QR 찍기 → <b>크레딧 +50 · 룰렛</b><i id="padGoWifi"> · <b>와이파이 비밀번호</b></i></span></div><span class="pill num" id="padCount" style="background:#2C3549;color:#fff"></span></div>
     <div id="padInput" class="padgrid">
       <div><div class="small padhint" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요<br><span style="font-size:12px">코치는 코치 코드 6자리 → 출근 · 퇴근</span></div>
       <div class="kdisp num" id="kdisp"></div>
@@ -3553,7 +3565,7 @@ async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()
 async function updPadCount(){const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
-function updPad(){$('#kdisp').textContent=padBuf||' '}
+function updPad(){$('#kdisp').textContent=padBuf||''}
 document.addEventListener('keydown',e=>{if($('#v-pad').hidden||$('#sheetRoot').innerHTML)return;if(!$('#padRes').hidden&&/^\d$/.test(e.key)&&!$('#padForceBtn'))resetPad();if(/^\d$/.test(e.key)&&padBuf.length<6){padBuf+=e.key;updPad()}if(e.key==='Backspace'){padBuf=padBuf.slice(0,-1);updPad()}if(e.key==='Enter')doAttend()});
 let padForce=false;
 /* 코치 출퇴근: 출석패드에 코치 코드 6자리 → 출근, 다시 찍으면 퇴근 (회원번호는 4자리라 겹치지 않음) */
@@ -3591,7 +3603,7 @@ async function doAttend(){
   clearTimeout(padTimer);
   if(!m){$('#padMsg').textContent='없는 회원번호예요';$('#padSub').textContent=id+' 번을 찾을 수 없어요. 다시 입력해 주세요.';padTimer=setTimeout(resetPad,2500);return}
   fixDay(m);
-  if(m.last===TODAY()){avatarTo(cv,m.equip,{h:46,pose:'guard'});$('#padMsg').textContent=m.name+' 님, 오늘은 이미 출석!';$('#padSub').textContent='좋은 운동 되세요';padTimer=setTimeout(resetPad,1800);return}
+  if(m.last===TODAY()){avatarTo(cv,m.equip,{h:46,pose:'guard'});$('#padMsg').textContent=m.name+' 님, 오늘은 이미 출석!';$('#padSub').textContent='좋은 운동 되세요';padTimer=setTimeout(resetPad,1000);return}
   {const dow=new Date().getDay(),ms=memStatus(m);
   if(!padForce&&ms.state==='hold'){avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='정지(연기) 기간이에요';$('#padSub').textContent=`${m.name} 님 정지 ${md(m.mem.hold.start)} ~ ${md(m.mem.hold.end)}`;
     const pm=$('#padMem');pm.innerHTML=`정지 기간에는 출석할 수 없어요. 정지는 1회만 가능해요.<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
@@ -3615,9 +3627,9 @@ async function doAttend(){
   {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#FDE2E3':'#F1F4F8';el.style.color=pm.warn?'#8A1F24':'#3E4654'}
   let t0=performance.now();const vals=['+10','+20','+50','+100','장비?'];
   const spin=now=>{const t=(now-t0)/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);drawChar(c,150,330,6.6,m.equip,{t,pose:Math.floor(t*4)%2?'jab':'cross'});
-    if(t<0.9){$('#wheel').textContent=vals[Math.floor(t*18)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<3)requestAnimationFrame(spin)}};
+    if(t<0.45){$('#wheel').textContent=vals[Math.floor(t*18)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<1.3)requestAnimationFrame(spin)}};
   requestAnimationFrame(spin);
-  updPadCount();padTimer=setTimeout(resetPad,3000);
+  updPadCount();padTimer=setTimeout(resetPad,1200);
 }
 /* ================= 홈 화면에 앱 추가 ================= */
 let INST_EVT=null;
