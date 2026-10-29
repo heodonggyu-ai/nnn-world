@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16181d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NNN 녹음기">
+<title>NNN 녹음기</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 한 화면 앱: 위 녹음 패널(파형·타이머·버튼), 아래 녹음 목록 */
+:root{
+  --bg:#f3f3f1; --panel:#ffffff; --fg:#17181b; --muted:#6b6e76; --line:#e2e2de;
+  --rec:#e0362c; --rec-soft:#fde4e2; --wave:#17181b;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111215; --panel:#1b1d22; --fg:#eceae6; --muted:#8d9099; --line:#2a2d34;
+  --rec:#ff4a3d; --rec-soft:#3a1c1a; --wave:#eceae6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111215; --panel:#1b1d22; --fg:#eceae6; --muted:#8d9099; --line:#2a2d34;
+  --rec:#ff4a3d; --rec-soft:#3a1c1a; --wave:#eceae6; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans)}
+body{padding:env(safe-area-inset-top,0) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0) max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:520px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;justify-content:space-between;align-items:baseline}
+h1{font-size:18px;margin:0;letter-spacing:.02em}
+.small{font-size:12px;color:var(--muted)}
+.deck{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:16px;align-items:center}
+canvas{width:100%;height:96px;display:block}
+.time{font-family:var(--mono);font-size:44px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.status{font-size:13px;color:var(--muted);min-height:1.2em}
+.status.on{color:var(--rec)}
+.controls{display:flex;gap:28px;align-items:center}
+button{font:inherit;color:inherit;cursor:pointer}
+.round{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center}
+.round:disabled{opacity:.35;cursor:default}
+.recbtn{width:78px;height:78px;border-radius:50%;border:4px solid var(--fg);background:transparent;display:grid;place-items:center;padding:0}
+.recbtn i{display:block;width:56px;height:56px;border-radius:50%;background:var(--rec);transition:all .2s}
+.recbtn.on i{width:28px;height:28px;border-radius:6px}
+button:focus-visible{outline:3px solid var(--rec);outline-offset:3px}
+.list{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.item{padding:14px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.name{font-weight:600;border:0;background:transparent;color:var(--fg);font:inherit;font-weight:600;padding:2px 0;min-width:0;flex:1}
+.name:focus{outline:none;border-bottom:1px solid var(--rec)}
+.meta{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+audio{width:100%;height:36px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:13px}
+.chip.del{color:var(--rec)}
+.chip.danger{background:var(--rec);color:#fff;border-color:var(--rec)}
+.empty{color:var(--muted);font-size:14px;padding:24px 0;text-align:center}
+.err{background:var(--rec-soft);color:var(--fg);border-radius:12px;padding:12px 14px;font-size:14px}
+@media (prefers-reduced-motion:reduce){.recbtn i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>NNN 녹음기</h1><span class="small" id="count"></span></header>
+
+  <section class="deck">
+    <canvas id="wave" width="960" height="192"></canvas>
+    <div class="time" id="time">00:00</div>
+    <div class="status" id="status">빨간 버튼을 누르면 녹음이 시작됩니다</div>
+    <div class="controls">
+      <button class="round" id="pause" disabled aria-label="일시정지">
+        <svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="2" width="4" height="14" rx="1" fill="currentColor"/><rect x="11" y="2" width="4" height="14" rx="1" fill="currentColor"/></svg>
+      </button>
+      <button class="recbtn" id="rec" aria-label="녹음 시작"><i></i></button>
+      <button class="round" id="cancel" disabled aria-label="녹음 취소">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="err" id="err" hidden></div>
+  </section>
+
+  <section>
+    <div class="list" id="list"></div>
+  </section>
+  <p class="small">녹음 파일은 이 폰 안에만 저장됩니다. 중요한 건 ‘저장’이나 ‘공유’로 따로 보관하세요.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const recBtn=$('rec'),pauseBtn=$('pause'),cancelBtn=$('cancel'),timeEl=$('time'),statusEl=$('status'),errEl=$('err'),listEl=$('list');
+const cv=$('wave'),cx=cv.getContext('2d');
+
+/* ---------- IndexedDB ---------- */
+let dbp;
+function db(){ if(!dbp) dbp=new Promise((res,rej)=>{const r=indexedDB.open('nnn-recorder',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('clips',{keyPath:'id'});
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);}); return dbp;}
+async function tx(mode,fn){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('clips',mode);const s=t.objectStore('clips');const out=fn(s);t.oncomplete=()=>res(out&&out.result);t.onerror=()=>rej(t.error);});}
+const allClips=()=>tx('readonly',s=>s.getAll());
+const putClip=c=>tx('readwrite',s=>s.put(c));
+const delClip=id=>tx('readwrite',s=>s.delete(id));
+
+/* ---------- 녹음 ---------- */
+let stream,recorder,chunks=[],actx,analyser,raf,startAt=0,elapsed=0,tick,cancelled=false,mime='';
+function pickMime(){for(const m of['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'])if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m))return m;return '';}
+const fmt=ms=>{const s=Math.floor(ms/1000);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;const p=n=>String(n).padStart(2,'0');return h?`${h}:${p(m)}:${p(x)}`:`${p(m)}:${p(x)}`;};
+function showErr(t){errEl.textContent=t;errEl.hidden=false;}
+
+async function start(){
+  errEl.hidden=true;
+  if(!navigator.mediaDevices||!window.MediaRecorder){showErr('이 브라우저는 녹음을 지원하지 않아요. 크롬이나 사파리 최신 버전으로 열어 주세요.');return;}
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}
+  catch(e){showErr('마이크 권한이 꺼져 있어요. 주소창 왼쪽 자물쇠 → 권한 → 마이크 → 허용으로 바꾼 뒤 다시 눌러 주세요.');return;}
+  mime=pickMime(); chunks=[]; cancelled=false;
+  recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+  recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  recorder.onstop=save;
+  recorder.start(1000);
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  analyser=actx.createAnalyser(); analyser.fftSize=1024;
+  actx.createMediaStreamSource(stream).connect(analyser);
+  elapsed=0; startAt=Date.now(); tick=setInterval(updTime,250);
+  try{await navigator.wakeLock?.request('screen');}catch(e){}
+  setUI('rec'); draw();
+}
+function updTime(){const t=elapsed+(recorder&&recorder.state==='recording'?Date.now()-startAt:0);timeEl.textContent=fmt(t);}
+function togglePause(){
+  if(recorder.state==='recording'){recorder.pause();elapsed+=Date.now()-startAt;setUI('pause');}
+  else if(recorder.state==='paused'){recorder.resume();startAt=Date.now();setUI('rec');}
+}
+function stop(c){cancelled=!!c; if(recorder.state==='recording')elapsed+=Date.now()-startAt; recorder.stop();}
+async function save(){
+  clearInterval(tick); cancelAnimationFrame(raf);
+  stream.getTracks().forEach(t=>t.stop()); try{actx.close();}catch(e){}
+  setUI('idle'); timeEl.textContent='00:00'; clearWave();
+  if(cancelled||!chunks.length){statusEl.textContent='녹음을 취소했습니다';return;}
+  const type=recorder.mimeType||mime||'audio/webm';
+  const blob=new Blob(chunks,{type});
+  const d=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  const clip={id:d.getTime(),name:`${d.getMonth()+1}월 ${d.getDate()}일 ${p(d.getHours())}:${p(d.getMinutes())} 녹음`,
+    created:d.getTime(),dur:elapsed,type,blob};
+  await putClip(clip); statusEl.textContent='저장했습니다'; render();
+}
+function setUI(s){
+  recBtn.classList.toggle('on',s!=='idle');
+  recBtn.setAttribute('aria-label',s==='idle'?'녹음 시작':'녹음 끝내고 저장');
+  pauseBtn.disabled=cancelBtn.disabled=s==='idle';
+  pauseBtn.setAttribute('aria-label',s==='pause'?'이어서 녹음':'일시정지');
+  pauseBtn.innerHTML=s==='pause'
+    ?'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="currentColor"/></svg>'
+    :'<svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="2" width="4" height="14" rx="1" fill="currentColor"/><rect x="11" y="2" width="4" height="14" rx="1" fill="currentColor"/></svg>';
+  statusEl.className='status'+(s==='rec'?' on':'');
+  statusEl.textContent=s==='rec'?'● 녹음 중 — 빨간 버튼을 누르면 저장':s==='pause'?'일시정지됨':'빨간 버튼을 누르면 녹음이 시작됩니다';
+}
+recBtn.onclick=()=>{if(!recorder||recorder.state==='inactive')start();else stop(false);};
+pauseBtn.onclick=togglePause;
+cancelBtn.onclick=()=>stop(true);
+
+/* ---------- 파형 ---------- */
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let bars=[];
+function clearWave(){bars=[];cx.clearRect(0,0,cv.width,cv.height);drawBars();}
+function drawBars(){
+  const W=cv.width,H=cv.height,bw=8,gap=4,n=Math.floor(W/(bw+gap));
+  cx.clearRect(0,0,W,H);
+  const col=css('--wave'),rc=css('--rec');
+  for(let i=0;i<n;i++){
+    const v=bars[bars.length-n+i]; const h=v==null?4:Math.max(4,v*H*0.95);
+    cx.fillStyle=v==null?css('--line'):(i>n-4?rc:col);
+    cx.fillRect(i*(bw+gap),(H-h)/2,bw,h);
+  }
+}
+let last=0;
+function draw(){
+  raf=requestAnimationFrame(draw);
+  const now=performance.now(); if(now-last<70)return; last=now;
+  if(recorder.state!=='recording'){drawBars();return;}
+  const a=new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(a);
+  let s=0; for(const x of a){const d=(x-128)/128;s+=d*d;}
+  bars.push(Math.min(1,Math.sqrt(s/a.length)*4)); if(bars.length>400)bars.shift();
+  drawBars();
+}
+clearWave();
+
+/* ---------- 목록 ---------- */
+const urls=[];
+async function render(){
+  urls.forEach(u=>URL.revokeObjectURL(u)); urls.length=0;
+  let clips=[]; try{clips=await allClips();}catch(e){showErr('저장 공간을 열 수 없어요. 사파리 개인정보 보호 모드라면 일반 모드로 열어 주세요.');}
+  clips.sort((a,b)=>b.created-a.created);
+  $('count').textContent=clips.length?`녹음 ${clips.length}개`:'';
+  listEl.innerHTML='';
+  if(!clips.length){listEl.innerHTML='<div class="empty">아직 녹음이 없어요. 위의 빨간 버튼으로 첫 녹음을 해 보세요.</div>';return;}
+  for(const c of clips){
+    const u=URL.createObjectURL(c.blob); urls.push(u);
+    const ext=c.type.includes('mp4')?'m4a':c.type.includes('ogg')?'ogg':'webm';
+    const el=document.createElement('div'); el.className='item';
+    el.innerHTML=`<div class="row"><input class="name" id="n${c.id}" aria-label="녹음 이름"><span class="meta">${fmt(c.dur)} · ${(c.blob.size/1024/1024).toFixed(1)}MB</span></div>
+      <audio controls preload="metadata" src="${u}"></audio>
+      <div class="acts"><a class="chip" download style="text-decoration:none;color:inherit">저장</a><button class="chip share">공유</button><button class="chip del">삭제</button></div>`;
+    const inp=el.querySelector('.name'); inp.value=c.name;
+    inp.onchange=async()=>{c.name=inp.value.trim()||c.name;inp.value=c.name;await putClip(c);};
+    const a=el.querySelector('a'); a.href=u; a.download=`${c.name.replace(/[\\/:*?"<>|]/g,'-')}.${ext}`;
+    const sh=el.querySelector('.share');
+    const file=new File([c.blob],a.download,{type:c.type});
+    if(!(navigator.canShare&&navigator.canShare({files:[file]})))sh.hidden=true;
+    sh.onclick=()=>navigator.share({files:[file],title:c.name}).catch(()=>{});
+    const del=el.querySelector('.del');
+    del.onclick=async()=>{
+      if(!del.classList.contains('danger')){del.classList.add('danger');del.textContent='한 번 더 누르면 삭제';setTimeout(()=>{del.classList.remove('danger');del.textContent='삭제';},3000);return;}
+      await delClip(c.id); render();
+    };
+    listEl.appendChild(el);
+  }
+}
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
