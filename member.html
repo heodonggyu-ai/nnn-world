@@ -419,7 +419,28 @@ body.padmode[data-padfloor="5"]{background:#F1F5FD repeating-linear-gradient(135
 #v-pad[data-floor="2"]::before{content:"NNN BOXING · 2F";color:rgba(230,57,70,.12)}
 #v-pad[data-floor="5"]::before{content:"NNN BOXING · 5F";color:rgba(31,78,156,.13)}
 /* 태블릿 세로 */
-@media (min-width:700px) and (orientation:portrait){body.padmode .app{max-width:none;padding:16px 24px}#v-pad .padgrid{grid-template-columns:1.5fr 1fr;gap:20px}#v-pad .keys button{min-height:110px;font-size:42px}#v-pad .kdisp{font-size:48px}#v-pad .padhint{display:none}}
+@media (min-width:560px) and (orientation:portrait){
+  body.padmode .app{max-width:none;padding:clamp(8px,1.4vh,16px) clamp(14px,3vw,28px) 4px;height:100vh;box-sizing:border-box;display:flex;flex-direction:column}
+  #v-pad{flex:1;min-height:0;gap:4px}
+  #v-pad .kiosk{flex:1;display:flex;flex-direction:column;gap:clamp(8px,1.3vh,14px);padding:clamp(12px,1.8vh,22px) clamp(14px,2.6vw,26px);border-radius:26px}
+  #v-pad .kiosk>.row:first-child h2{font-size:clamp(22px,2.6vh,32px)!important}#v-pad #padLogo{width:52px!important}#v-pad #padCount{font-size:clamp(15px,1.7vh,20px);padding:5px 14px}
+  #v-pad .padgo{padding:8px 14px}#v-pad .padgo>b{font-size:clamp(20px,2.6vh,30px)}#v-pad .padgo span{font-size:clamp(13px,1.5vh,17px)}
+  #v-pad .padhint{display:none}
+  #v-pad .padgrid{flex:1;min-height:0;display:flex!important;flex-direction:column;align-items:stretch!important;gap:clamp(10px,1.4vh,16px)}
+  #v-pad .padgrid[hidden]{display:none!important}
+  #v-pad .padgrid>div:first-child{flex:1;min-height:0;display:flex;flex-direction:column}
+  #v-pad .kdisp{font-size:clamp(40px,5.2vh,64px);min-height:clamp(64px,8vh,100px);line-height:clamp(56px,7vh,88px);padding:4px}
+  #v-pad .keys{flex:1;grid-auto-rows:1fr;gap:clamp(8px,1.2vh,14px);margin-top:clamp(8px,1.2vh,14px)!important}
+  #v-pad .keys button{font-size:clamp(34px,5vh,60px);padding:0;min-height:0}
+  #v-pad .keys button[data-k="지움"],#v-pad .keys .ok{font-size:clamp(24px,3.4vh,40px)!important}
+  #v-pad .padqr{flex:0 0 auto;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto 1fr;column-gap:18px;row-gap:4px;align-items:start;text-align:left;padding:14px 16px;border-radius:18px}
+  #v-pad .padqr>b{grid-column:2;font-size:clamp(18px,2.2vh,26px)}#v-pad .padqr>span{grid-column:2;font-size:clamp(12px,1.4vh,15px)}
+  #v-pad #padQR{grid-column:1;grid-row:1 / span 3;min-height:0}
+  #v-pad #padFeed{grid-column:2}#v-pad #padFeed:empty{display:none}
+  #v-pad #padWifiIdle{grid-column:2;margin-top:4px}
+  #v-pad .kres{flex:1;justify-content:center;gap:10px}#v-pad .kres canvas{width:clamp(180px,26vh,300px);height:auto;aspect-ratio:300/340}
+  #v-pad #padMsg{font-size:clamp(30px,4vh,48px)!important}#v-pad #padSub{font-size:clamp(15px,1.8vh,20px)}#v-pad .wheel{font-size:clamp(40px,6vh,70px)}#v-pad #padMem{font-size:clamp(16px,2vh,22px)!important}
+}
 /* 태블릿 가로 (갤럭시탭 A7 등) : 화면 꽉 차게 */
 @media (min-width:700px) and (orientation:landscape){
   body.padmode .app{max-width:none;padding:14px 22px 10px}
@@ -918,7 +939,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div class="small padnext">화면을 누르면 바로 다음 사람</div>
     </div>
   </div>
-  <div class="row" style="justify-content:flex-end;gap:14px"><button class="link" id="padFull">전체화면 · 가로 고정</button><button class="link" id="padExit">출석패드 종료</button></div>
+  <div class="row" style="justify-content:flex-end;gap:14px"><button class="link" id="padFull">전체화면 · 세로 고정</button><button class="link" id="padExit">출석패드 종료</button></div>
 </section>
 
 <section class="view" id="v-guest" hidden>
@@ -3592,7 +3613,7 @@ function wifiFill(el,full,size){const w=wifiCfg();if(!el)return;if(!w){el.hidden
   if(!full){el.className='padwifi wlock'+(el.classList.contains('res')?' res':'');el.innerHTML=`<div class="wt"><small>📶 무료 와이파이</small><b>${esc(w.s)}</b><small>🔓 출석하면 비밀번호와 연결 QR이 나와요</small></div>`;return}
   el.className='padwifi'+(el.classList.contains('res')?' res':'');el.innerHTML=`<div class="wq"></div><div class="wt"><small>📶 와이파이 · 카메라로 QR 찍으면 바로 연결</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<small>비밀번호</small><span class="pw">${esc(w.p||'')}</span>`}</div>`;
   try{new QRCode(el.querySelector('.wq'),{text:wifiQRText(w),width:size||110,height:size||110,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){el.querySelector('.wq').remove()}}
-function wifiPadIdle(){const w=wifiCfg();const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifiIdle'),!!w,big?(innerHeight<640?60:innerHeight<760?76:110):100);$('#padGoWifi').hidden=true;$('#padWifi').hidden=true}
+function wifiPadIdle(){const w=wifiCfg();const big=innerWidth>=700&&innerWidth>innerHeight;const tp=innerWidth>=560&&innerHeight>innerWidth;wifiFill($('#padWifiIdle'),!!w,big?(innerHeight<640?60:innerHeight<760?76:110):tp?84:100);$('#padGoWifi').hidden=true;$('#padWifi').hidden=true}
 function wifiPadDone(){return false;const w=wifiCfg();if(!w)return false;const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifi'),true,big?(innerHeight<640?104:150):110);return true}
 async function doAttend(){
   if(!padBuf)return;const id=padBuf;padBuf='';updPad();
@@ -4341,7 +4362,7 @@ let padTokTimer=0,padPoll=0,padSeen=null;
 const newTok=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
 async function rotatePadTok(){const cur=newTok();const old=(local.meta.padtok&&local.meta.padtok.t||[])[0];const pt={t:old?[cur,old]:[cur],at:Date.now()};local.meta.padtok=pt;
   if(FB_ON()){try{await gref('meta/padtok').set(pt)}catch(e){}}else persist();
-  const box=$('#padQR');if(box){box.innerHTML='';try{const qs=(innerWidth>=700&&innerWidth>innerHeight)?(innerHeight<640?130:innerHeight<760?180:230):168;new QRCode(box,{text:appBase()+'?att='+cur,width:qs,height:qs,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){box.textContent='QR 오류'}}}
+  const box=$('#padQR');if(box){box.innerHTML='';try{const qs=(innerWidth>=700&&innerWidth>innerHeight)?(innerHeight<640?130:innerHeight<760?180:230):(innerWidth>=560&&innerHeight>innerWidth)?Math.round(Math.min(220,Math.max(150,innerHeight*.16))):168;new QRCode(box,{text:appBase()+'?att='+cur,width:qs,height:qs,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){box.textContent='QR 오류'}}}
 async function pollPad(){if($('#v-pad').hidden){stopPadQR();return}const all=await DB.all();const today=all.filter(m=>m.last===TODAY());
   if(padSeen){const fresh=today.filter(m=>!padSeen.has(m.id)&&(m.qrAtt||[]).includes(TODAY()));fresh.forEach(m=>{const f=$('#padFeed');const d=document.createElement('div');d.className='pfeed';d.innerHTML=`<canvas width="64" height="64"></canvas><b>${esc(maskName(m.name))}</b><span>QR 출석 완료!</span>`;f.prepend(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true});sfx('coin');while(f.children.length>4)f.lastChild.remove()})}
   padSeen=new Set(today.map(m=>m.id));$('#padCount').textContent='오늘 출석 '+today.length+'명'}
@@ -4371,7 +4392,7 @@ async function savePadMeta(k,v){local.meta[k]=v;if(FB_ON()){try{await gref('meta
 $('#sPadPinSave').onclick=async()=>{const v=$('#sPadPin').value.trim();if(!/^\d{4,6}$/.test(v)){toast('숫자 4~6자리로 정해 주세요');return}if(await savePadMeta('padPinH',await padHash(v))){toast('출석패드 비밀번호를 저장했어요',3000);renderPadPinSet()}};
 $('#sPadPinDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 지워요';return}b.dataset.sure='';b.textContent='출석패드 비밀번호 지우기 (관장 PIN으로 되돌리기)';if(await savePadMeta('padPinH',null)){toast('지웠어요. 이제 관장 PIN으로 켜고 꺼요');renderPadPinSet()}};
 $('#sPadApprove').onchange=async e=>{await savePadMeta('padApprove',e.target.checked||null);toast(e.target.checked?'출석패드 비밀번호로 승인할 수 있어요':'승인은 관장 PIN으로 해요')};
-$('#padFull').onclick=async()=>{try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'})}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape')}catch(e){}setTimeout(()=>{try{startPadQR();wifiPadIdle()}catch(e){}},400);$('#padFull').hidden=!!document.fullscreenElement};
+$('#padFull').onclick=async()=>{try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'})}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('portrait')}catch(e){}setTimeout(()=>{try{startPadQR();wifiPadIdle()}catch(e){}},400);$('#padFull').hidden=!!document.fullscreenElement};
 document.addEventListener('fullscreenchange',()=>{try{$('#padFull').hidden=!!document.fullscreenElement}catch(e){}});
 $('#padFloorTag').onclick=e=>{e.stopPropagation();choosePadFloor()};
 function resetPad(){clearTimeout(padTimer);$('#padInput').hidden=false;$('#padRes').hidden=true;try{$('#padWifi').hidden=true}catch(e){}}
