@@ -4025,11 +4025,15 @@ const ONB=(()=>{try{return localStorage.getItem('nnn_onb')||'hybrid'}catch(e){re
 const HLP=(()=>{try{return localStorage.getItem('nnn_hlp')||'tips'}catch(e){return 'tips'}})();    // tips | tour | none
 const onbKey=()=>'nnn_feat_seen_'+(ME&&ME.id||'');
 const onbSeen=()=>{const v=lsGet(onbKey());return v&&typeof v==='object'?v:{}};
-function onbMark(ids){const v=onbSeen();ids.forEach(i=>v[i]=TODAY());lsSet(onbKey(),v);onbDot()}
+const ONB_MAX=3,ONB_DAYS=21;
+const onbV=x=>x==null?{n:0,d:''}:typeof x==='string'?{n:1,d:x}:{n:+x.n||0,d:x.d||''};
+function onbMark(ids){const v=onbSeen();ids.forEach(i=>{const o=onbV(v[i]);v[i]={n:o.n+1,d:TODAY()}});lsSet(onbKey(),v);onbDot()}
+function onbDone(ids){const v=onbSeen();ids.forEach(i=>{v[i]={n:99,d:TODAY()}});lsSet(onbKey(),v);onbDot()}
 const featOk=f=>(f.aud?(ME&&(f.aud==='owner'?isOwner(ME):f.aud==='coach'?isCoachRec(ME):isStaff(ME))):(!f.who||(f.who==='student'&&ME&&(ME.student||isStaff(ME)))))&&(!f.need||f.need());
 function onbNew(){if(!ME||(ME.demo&&!isStaff(ME))||(typeof isGuest==='function'&&isGuest()))return [];const seen=onbSeen(),j=isStaff(ME)?'':(ME.joined||ME.approvedAt||'');
-  const old=FEAT.filter(f=>!seen[f.id]&&j&&j>=f.d);if(old.length)onbMark(old.map(f=>f.id)); // 기능 나온 뒤 가입한 회원에겐 '새 기능' 아님
-  return FEAT.filter(f=>!onbSeen()[f.id]&&featOk(f))}
+  const old=FEAT.filter(f=>!seen[f.id]&&j&&j>=f.d);if(old.length)onbDone(old.map(f=>f.id)); // 기능 나온 뒤 가입한 회원에겐 '새 기능' 아님
+  const lim=dAdd(TODAY(),-ONB_DAYS),S2=onbSeen();
+  return FEAT.filter(f=>{const o=onbV(S2[f.id]);if(!featOk(f))return false;if(o.n===0)return true;return o.n<ONB_MAX&&o.d!==TODAY()&&f.d>=lim})}
 function onbDot(){const d=$('#helpDot');if(d)d.hidden=!onbNew().length}
 function onbGo(go){const T=t=>{setTab(t);window.scrollTo(0,0)};const scrollTo=(sel,fn)=>setTimeout(()=>{const e=$(sel);if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.classList.add('flash');setTimeout(()=>e.classList.remove('flash'),1600)}fn&&fn(e)},250);
   switch(go){case 'arcade':T('map');openArcade();break;case 'fun':T('map');openFun();break;case 'grape':T('more');openGrape(ME);break;case 'combos':T('feed');openCombos();break;case 'raffle':T('map');rfSheet();break;
@@ -4064,10 +4068,12 @@ function onbShowNew(list,force){if(!list.length)return false;const ids=list.map(
   const style=force||ONB;
   const dots=()=>{list.forEach(f=>{const e=f.sel&&$(f.sel);if(e&&!e.classList.contains('ndot')){e.classList.add('ndot');e.addEventListener('click',()=>e.classList.remove('ndot'),{once:true,capture:true})}})};
   if(style==='hybrid'){dots();if(ME&&isStaff(ME)){const so=list.filter(f=>f.aud),mo=list.filter(f=>!f.aud);list=[...so,...mo]}const TOPN=ME&&isStaff(ME)?4:3;const top=list.slice(0,TOPN),rest=list.slice(TOPN);
-    const r=(L,o)=>L.map((f,i)=>`<div class="onrow"><div class="oe">${f.e}</div><div class="grow"><b>${esc(f.t)}${ME&&isStaff(ME)&&!f.aud?' <span class="small" style="color:#888">· 회원 화면</span>':''}</b><span>${esc(f.q||f.s)}</span></div>${f.go&&!(ME&&isStaff(ME)&&!f.aud&&['attal','hold','bio'].includes(f.go))?`<button class="btn sm gold" data-og="${i+o}">${String(f.go).startsWith('adm:')?'열기':'해보기'}</button>`:''}</div>`).join('');
-    sheet(`<div data-onb hidden></div><div class="label" style="color:var(--red)">${ME&&isStaff(ME)?(isOwner(ME)?'관장님 업데이트 소식':'코치 업데이트 소식'):'새 기능'} ${list.length}개</div><div id="onTop">${r(top,0)}</div>${rest.length?`<div id="onRest" hidden>${r(rest,3)}</div><button class="link" id="onMore" style="align-self:flex-start">나머지 ${rest.length}개 더 보기</button>`:''}<button class="btn red" data-close>확인</button>`,(el,close)=>{
+    const r=(L,o)=>L.map((f,i)=>`<div class="onrow"${f.go?` data-og="${i+o}" style="cursor:pointer"`:''}><div class="oe">${f.e}</div><div class="grow"><b>${esc(f.t)}${ME&&isStaff(ME)&&!f.aud?' <span class="small" style="color:#888">· 회원 화면</span>':''}</b><span>${esc(f.q||f.s)}</span></div>${f.go&&!(ME&&isStaff(ME)&&!f.aud&&['attal','hold','bio'].includes(f.go))?`<button class="btn sm gold" data-og="${i+o}">${String(f.go).startsWith('adm:')?'열기':'바로 가기 ›'}</button>`:''}</div>`).join('');
+    const cnt=Math.max(...list.map(f=>onbV(onbSeen()[f.id]).n))+1;
+    sheet(`<div data-onb hidden></div><div class="label" style="color:var(--red)">${ME&&isStaff(ME)?(isOwner(ME)?'관장님 업데이트 소식':'코치 업데이트 소식'):'새 기능'} ${list.length}개</div><div id="onTop">${r(top,0)}</div>${rest.length?`<div id="onRest" hidden>${r(rest,3)}</div><button class="link" id="onMore" style="align-self:flex-start">나머지 ${rest.length}개 더 보기</button>`:''}<div class="small" style="color:var(--muted)">${ME&&isStaff(ME)?'':`눌러서 바로 써 보세요 · 새 기능은 ${ONB_MAX}번까지 알려 드려요${cnt>1?` (${Math.min(cnt,ONB_MAX)}/${ONB_MAX})`:''}`}</div><button class="btn red" data-close>확인</button><button class="link" id="onStop" style="align-self:center">이 소식 그만 보기</button>`,(el,close)=>{
       onbMark(ids);const m=el.querySelector('#onMore');if(m)m.onclick=()=>{el.querySelector('#onRest').hidden=false;m.remove()};
-      el.querySelectorAll('[data-og]').forEach(b=>b.onclick=()=>{close();onbGo(list[+b.dataset.og].go)})});return true}
+      el.querySelector('#onStop').onclick=()=>{onbDone(ids);close();toast('다시 보려면 위의 ? 버튼에서 볼 수 있어요')};
+      el.querySelectorAll('[data-og]').forEach(b=>b.onclick=e=>{e.stopPropagation();const f=list[+b.dataset.og];onbDone([f.id]);close();setTimeout(()=>onbGo(f.go),200)})});return true}
   if(style==='dots'){list.forEach(f=>{const e=f.sel&&$(f.sel);if(e)e.classList.add('ndot')});$$('#nav button').forEach(b=>{if(list.some(f=>f.tab===b.dataset.tab&&b.dataset.tab!=='map'))b.classList.add('ndot')});toast(`새 기능 ${list.length}개! 오른쪽 위 ? 를 눌러 보세요`,3500);onbMark(ids);return false}
   if(style==='marks'){onbMark(ids);spotlight(list.map(f=>Object.assign({},f)),()=>{setTab('map');window.scrollTo(0,0)});return true}
   if(style==='cards'){let i=0;sheet(`<div data-onb hidden></div><div class="label">새 기능 · ${list.length}개</div><div id="onc"></div><div class="ondots" id="ond"></div><div class="row" style="gap:8px"><button class="btn ghost grow" id="onP">이전</button><button class="btn red grow" id="onN">다음</button></div>`,(el,close)=>{
