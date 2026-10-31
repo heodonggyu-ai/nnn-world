@@ -238,6 +238,30 @@ body.tvmode .app{max-width:none;padding:0}
 .nview{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}.nview img{max-width:100%;max-height:82vh;object-fit:contain}
 .nvbar{display:flex;gap:10px;align-items:center;color:#fff}.nvbar button{background:#fff;color:var(--ink);border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:16px}
 .neimgs{display:flex;gap:6px;flex-wrap:wrap}.neimgs button{position:relative;width:72px;height:72px;border:0;padding:0;border-radius:10px;overflow:hidden;background:var(--mat)}.neimgs img{width:100%;height:100%;object-fit:cover}.neimgs i{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:20px;height:20px;font-style:normal;font-size:12px;line-height:20px}
+.funban{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:linear-gradient(120deg,#FFF7D6,#FFE7C2);border:2px solid var(--gold);border-radius:14px;padding:10px 12px;color:var(--ink);cursor:pointer;font:inherit}
+.funban .fi{font-size:28px;line-height:1}.funban b{display:block;font-family:var(--display);font-weight:400;font-size:18px}.funban span{font-size:13px}.funban .rftag{background:#E0A100}
+.funban.pulse{animation:rfp 1.6s ease-in-out infinite}
+.funsec{background:#fff;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.bingo{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.bingo .bg{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;background:var(--mat);font-family:var(--display);font-size:18px;color:#9AA0AA}
+.bingo .bg.on{background:var(--red);color:#fff}.bingo .bg.last{outline:3px solid var(--gold);animation:padgo 1.6s infinite}
+.stamps{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}.stp{aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:var(--mat);font-size:12px;color:#9AA0AA}.stp.on{background:#FFE0E2;font-size:16px}.stp.ms{outline:2px dashed var(--gold)}
+.boxes{display:flex;gap:6px}.bx{flex:1;display:flex;flex-direction:column;align-items:center;background:var(--mat);border-radius:12px;padding:6px 0;font-size:24px}.bx small{font-size:12px;color:var(--muted)}.bx.on{background:#FFF1C9}
+.scr{position:relative;width:100%;height:170px;border-radius:14px;overflow:hidden;background:#FFFDF5;border:2px solid #F0E2B6;touch-action:none}
+.scr-res{position:absolute;inset:0;display:grid;place-items:center;text-align:center}.scr-win,.scr-miss{display:flex;flex-direction:column;align-items:center;gap:2px}.scr-win b{font-family:var(--display);font-size:24px;color:var(--red)}.scr-miss b{font-family:var(--display);font-size:22px}.scr-res span{font-size:13px;color:var(--muted)}
+.scr-cv{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}.scr-tip{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:12px;color:#5B616E;pointer-events:none;transition:opacity .3s}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:130;overflow:hidden}.confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:cf 2s ease-in forwards}@keyframes cf{to{top:105%;transform:rotate(540deg) translateX(30px)}}
+.cpn{display:flex;gap:12px;align-items:center;background:#fff;border:2px dashed var(--gold);border-radius:14px;padding:10px 12px;margin-bottom:6px}.cpn .ce{font-size:34px}.cpn b{display:block;font-size:17px}.cpn span{display:block;font-size:13px;color:var(--muted)}.cpn small{font-size:12px;color:#9AA0AA}.cpn.off{opacity:.55;border-style:solid;border-color:var(--line)}
+.padcel{position:fixed;left:50%;top:12%;transform:translateX(-50%);z-index:60;background:#fff;border:4px solid var(--gold);border-radius:22px;padding:18px 28px;box-shadow:0 14px 40px rgba(0,0,0,.25);text-align:center;animation:pf .4s}
+.padcel .pc-in{display:flex;flex-direction:column;align-items:center;gap:4px}.padcel b{font-family:var(--display);font-weight:400;font-size:30px;color:var(--red)}.padcel span{font-size:15px;color:var(--muted)}
+.grapecard{display:flex;align-items:center;gap:10px;width:100%;border:0;font:inherit;color:inherit;cursor:pointer}.gmini{display:flex;gap:4px;align-items:flex-start}
+.gcl{background:#fff;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}.gcl.full{background:#F5EDFB;outline:2px solid #B07CD8}
+.gsvg{flex:0 0 auto}.gtags{display:flex;flex-wrap:wrap;gap:5px}.gt{border:1.5px solid #D9CBE6;background:#fff;border-radius:999px;padding:3px 10px;font-size:13px;color:#6B5A7A;font-family:inherit}.gt.on{background:#7B3FA0;border-color:#7B3FA0;color:#fff}
+button.gt{cursor:pointer;padding:6px 12px;font-size:14px}
+.cbcard{display:flex;align-items:center;gap:10px;width:100%;border:2px solid var(--red);font:inherit;color:inherit;cursor:pointer}
+.cbrow{display:flex;align-items:center;gap:10px;width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;color:inherit;margin-bottom:6px;cursor:pointer}
+.cbseq{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.cbseq i{font-style:normal;font-size:12px;background:#2F2F2F;color:#fff;border-radius:6px;padding:1px 7px}.cbseq.big i{font-size:15px;padding:3px 10px;background:var(--red)}
+.cvgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cv{background:#fff;border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}.cvimg{aspect-ratio:4/3;background:var(--mat);border-radius:8px;overflow:hidden;display:grid;place-items:center}.cvimg img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.cv .gvid iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px}.lkb{border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 8px;font:inherit;font-size:12px;cursor:pointer}.lkb.on{background:#FFE0E2;border-color:#F3B9BD;color:var(--red)}
 .rfhead{display:flex;gap:12px;align-items:center}.rfp{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;background:var(--mat);margin-bottom:4px}.rfp.me{background:#FFE0E2;outline:2px solid var(--red)}
 .rfstage{min-height:84px;display:grid;place-items:center;text-align:center;background:#2F2F2F;color:#FFD54A;border-radius:14px;font-family:var(--display);font-size:28px;padding:10px;line-height:1.2}
 .ev{display:flex;gap:10px;align-items:center;background:#2A1B33;color:#FFD9A8;border-radius:14px;padding:10px 14px;font-size:14px}
@@ -836,6 +860,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div data-face style="margin-bottom:10px"></div>
     <button class="rfban" data-raffle hidden style="margin-bottom:10px"></button>
     <div class="pinrow" data-pins hidden style="margin-bottom:10px"></div>
+    <button class="funban" data-fun hidden style="margin-bottom:10px"></button>
     <div data-mem style="margin-bottom:10px"></div>
     <div data-attme style="margin-bottom:10px"></div>
     <div data-fam style="margin-bottom:10px"></div>
@@ -870,6 +895,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   </div>
 
   <div class="tab" id="t-feed" hidden>
+    <button class="card cbcard" id="cbOpen" style="margin-bottom:12px"><div class="grow" style="text-align:left"><div class="label">체육관 콤비네이션 게시판</div><b style="font-family:var(--display);font-weight:400;font-size:20px">🥊 콤비 연습 영상 보기 · 올리기</b><div class="small">관장님 콤비를 연습하고 미트 영상을 GIF로 공유해요</div></div><span style="font-size:22px">›</span></button>
     <div class="owc" id="owanCard"></div>
     <button class="btn gold" id="snsOnly" style="margin-top:8px">SNS 자랑 카드 만들기 (인스타 · 스토리)</button>
     <div class="card" style="margin-top:12px"><div class="label">이달 오운완 TOP</div><div id="owanTop"></div></div>
@@ -895,6 +921,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div data-fam="full" style="margin-top:12px"></div>
     <button class="card vcard" id="voiceBtn" style="margin-top:12px"><div class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:19px">의견함 · 건의함</b><div class="small">관장님·코치에게 하고 싶은 말, 칭찬, 불편한 점을 남겨요</div></div><i class="cbadge" id="voiceN" hidden></i><span style="font-size:22px">›</span></button>
     <div data-exam style="margin-top:12px"></div>
+    <div data-grape style="margin-top:12px"></div>
     <div class="card" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
       <div class="label">내 정보</div>
       <div class="row"><span class="grow">회원번호</span><b class="num" id="mId"></b></div>
@@ -928,6 +955,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div class="keys" style="margin-top:12px" id="keys"></div></div>
       <div class="padqr"><b>휴대폰으로 QR 출석</b><div id="padQR"></div><span>카메라로 찍으면 바로 출석돼요<br>QR은 30초마다 바뀌어요</span><div id="padFeed"></div><div class="padwifi" id="padWifiIdle" hidden></div></div>
     </div>
+    <div class="padcel" id="padCel" hidden></div>
     <div class="kres" id="padRes" hidden>
       <canvas id="padAv" width="300" height="340"></canvas>
       <div id="padMsg" style="font-family:var(--display);font-size:28px"></div>
@@ -1103,6 +1131,21 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <h3 style="font-size:20px">결제 확인 <span class="small num" id="payCnt"></span></h3>
     <p class="small" style="margin:0">회원이 '결제했어요'를 누르면 여기에 올라와요. 실제 입금·결제 내역과 맞춰 보고 확인을 눌러 주세요.</p>
     <div id="payRows"></div>
+  </div>
+  <div class="card" data-atab="ops" id="funAdm" style="display:flex;flex-direction:column;gap:8px;border:2px solid var(--gold)">
+    <h3 style="font-size:20px">🎟️ 출석 복권 · 빙고 · 도장판</h3>
+    <p class="small" style="margin:0">출석할 때마다 복권 1장·빙고 번호 1개가 생겨요. 회원은 앱에서 복권을 긁고, 당첨 쿠폰은 회원 상세의 <b>🎟️ 쿠폰</b>에서 사용 처리해요. 하루·주간 최대 개수를 넘으면 자동으로 꽝 처리돼요.</p>
+    <div id="funAdmBox" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div class="card" data-atab="ops" id="cuAdm" style="display:flex;flex-direction:column;gap:8px">
+    <h3 style="font-size:20px">🍇 커리큘럼 포도판</h3>
+    <p class="small" style="margin:0">레벨별로 배울 기술 목록이에요. 한 줄에 <b>레벨 | 기술, 기술, …</b> 회원 상세의 <b>🍇 포도판</b>에서 통과한 기술을 채워 주세요.</p>
+    <textarea id="cuTxt" rows="7"></textarea><div class="row" style="gap:6px"><button class="btn red grow" id="cuSave">저장</button><button class="btn ghost sm" id="cuReset">기본값</button></div>
+  </div>
+  <div class="card" data-atab="ops" style="display:flex;flex-direction:column;gap:8px">
+    <h3 style="font-size:20px">🥊 콤비네이션 게시판</h3>
+    <p class="small" style="margin:0">관장님이 콤비를 만들면 회원이 <b>인증</b> 탭 맨 위 게시판에서 연습 영상(GIF·유튜브)을 올려 같이 봐요.</p>
+    <div class="row" style="gap:6px"><button class="btn red grow" id="cbAdmBtn">콤비 관리</button><button class="btn ghost grow" id="cbSeeBtn">게시판 보기</button></div>
   </div>
   <div class="card" data-atab="ops" id="cmpAdm" style="display:flex;flex-direction:column;gap:8px">
     <h3 style="font-size:20px">🥊 생체 대회 출전 명단</h3>
@@ -2044,7 +2087,7 @@ function refreshTop(){
   if(!ME)return;const L=levelOf(ME);fixDay(ME);if(ME.lvSeen&&L.lv>ME.lvSeen)levelUpSheet(L);if(ME.lvSeen!==L.lv){ME.lvSeen=L.lv;saveMe()}
   $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
-  avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});
+  avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});try{funBanner();renderGrapeCard()}catch(e){}
   const safe=(n,f)=>{try{const r=f();if(r&&r.catch)r.catch(e=>console.error(n,e))}catch(e){console.error(n,e);try{ERRLOG.push(n+': '+e.message)}catch(_){}}};
   safe('bring',renderBring);safe('mem',renderMemCard);safe('face',renderFaceCard);safe('fam',renderFamCard);safe('cap',()=>{$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`});
   safe('qbar',renderQbar);safe('mis',renderMisCard);setTimeout(()=>safe('live',renderLiveCards),200);
@@ -2236,7 +2279,7 @@ function nImgView(imgs,i){const r=document.createElement('div');r.className='nvi
 async function nImgFile(f){const im=await loadImg(f);const M=1280,k=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);let q=.8,d=cv.toDataURL('image/jpeg',q);while(d.length>420000&&q>.4){q-=.1;d=cv.toDataURL('image/jpeg',q)}return d}
 function noticeCardHTML(n){const w=nWindow(n);return `<div class="popn ${n.kind==='normal'?'':n.kind}" style="background:#fff;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px"><div><span class="ntag ${n.kind==='normal'?'':n.kind}">${NKIND[n.kind]||'공지'}</span>${n.kind==='closed'?` <span class="small">${esc(closedRange(n))}</span>`:''}</div><b style="font-size:17px">${esc(n.title||'')}</b>${nBody(n)?`<div style="white-space:pre-wrap;line-height:1.5">${esc(nBody(n))}</div>`:''}${nMediaHTML(n)}${n.kind!=='closed'&&w.to&&w.to!=='9999'?`<div class="small">${md(w.to)}까지</div>`:''}</div>`}
 function openNotice(){const all=noticesAll().slice().sort((x,y)=>(y.at||0)-(x.at||0)||String(y.from||y.cFrom||'').localeCompare(String(x.from||x.cFrom||'')));const act=all.filter(n=>nActive(n));const past=all.filter(n=>!nActive(n)&&nWindow(n).to<TODAY()).slice(0,5);
-  sheet(`<h2>체육관 공지</h2>${pinsHTML()?`<div class="pinrow" style="flex-direction:column">${pinsHTML()}</div>`:''}${act.length?act.map(noticeCardHTML).join(''):'<div class="small">지금 게시 중인 공지가 없어요.</div>'}${past.length?`<details><summary class="small" style="cursor:pointer;padding:6px 0">지난 공지 ${past.length}개</summary><div style="display:flex;flex-direction:column;gap:8px;opacity:.75">${past.map(noticeCardHTML).join('')}</div></details>`:''}${(local.meta.notice||'').trim()?`<div class="label" style="margin-top:4px">체육관 안내</div><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>`:''}${snsHTML()}<button class="btn ghost" id="ntVoice">관장님께 의견 남기기 · 건의함</button><button class="btn" data-close>닫기</button>`,(el,close)=>{nMediaFill(el);el.querySelector('#ntVoice').onclick=()=>{close();openVoice()};el.querySelectorAll('[data-pin]').forEach(b=>b.onclick=()=>{close();setTimeout(()=>b.dataset.pin==='wifi'?openWifi():openComp(),200)})})}
+  sheet(`<h2>체육관 공지</h2>${pinsHTML()?`<div class="pinrow" style="flex-direction:column">${pinsHTML()}</div>`:''}${act.length?act.map(noticeCardHTML).join(''):'<div class="small">지금 게시 중인 공지가 없어요.</div>'}${past.length?`<details><summary class="small" style="cursor:pointer;padding:6px 0">지난 공지 ${past.length}개</summary><div style="display:flex;flex-direction:column;gap:8px;opacity:.75">${past.map(noticeCardHTML).join('')}</div></details>`:''}${(local.meta.notice||'').trim()?`<div class="label" style="margin-top:4px">체육관 안내</div><div class="bubble" style="white-space:pre-wrap">${esc(local.meta.notice)}</div>`:''}${snsHTML()}<button class="btn ghost" id="ntVoice">관장님께 의견 남기기 · 건의함</button><button class="btn" data-close>닫기</button>`,(el,close)=>{nMediaFill(el);winsHTML().then(h=>{if(h){const d=document.createElement('div');d.innerHTML=h;el.querySelector('#ntVoice').before(d)}});el.querySelector('#ntVoice').onclick=()=>{close();openVoice()};el.querySelectorAll('[data-pin]').forEach(b=>b.onclick=()=>{close();setTimeout(()=>b.dataset.pin==='wifi'?openWifi():openComp(),200)})})}
 function openPadInfo(){sheet(`<h2>출석패드</h2><p style="margin:0">체육관 입구 출석패드에 회원번호 <b class="num">${esc(ME.id)}</b>를 입력하면 출석 완료!</p>
   <div class="qrow"><div class="grow">기본 출석</div><b class="num">+50</b></div><div class="qrow"><div class="grow">연속 출석 보너스 (하루마다)</div><b class="num">+10 · 최대 +50</b></div><div class="qrow"><div class="grow">출석 룰렛</div><b>최대 +100 · 깜짝 장비</b></div>
   <p class="small" style="margin:0">오늘 출석: ${ME.last===TODAY()?'완료':'아직'}</p><button class="btn" data-close>확인</button>`)}
@@ -2273,7 +2316,7 @@ function openAnimal(a){
       W.animals=W.animals.filter(x=>x!==a);saveMe();refreshTop();close()}});
 }
 $('#rcRun').onclick=async()=>{if(!FB_ON()){toast('서버에 연결된 상태에서만 점검할 수 있어요');return}const box=$('#rcBox');box.innerHTML='<div class="small">점검 중…</div>';
-  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups'],['중복 가입 막기','phoneidx'],['응모 이벤트','raffle'],['대회 출전 희망','compwant'],['공지 사진','nimg']];
+  const T=[['코치 대화방','staffchat'],['직원 공지','staffnotice'],['관장 메모','memos'],['락커·캐비넷','lockers'],['가족','families'],['맵 대화','wchat'],['대화 신고','wrep'],['앱 접속 표시','online'],['스파링 매칭','spar'],['의견함(공개)','voice/pub'],['의견함(비공개)','voice/prv'],['맵 오류 기록','diag'],['시간대별 출석','hourly'],['코치 근태','hr/att'],['체험 신청','trials'],['백업','backups'],['중복 가입 막기','phoneidx'],['응모 이벤트','raffle'],['대회 출전 희망','compwant'],['공지 사진','nimg'],['출석 복권','lotto'],['당첨자','wins'],['콤비 게시판','combos'],['콤비 영상','cvid']];
   const out=[];for(const [n,p] of T){let ok=false;try{await Promise.race([gref(p).limitToFirst?gref(p).limitToFirst(1).get():gref(p).get(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),8000))]);ok=true}catch(e){ok=false}out.push([n,ok])}
   let wok=false;try{await gref('hourly/_check/0').set(null);wok=true}catch(e){}
   const bad=out.filter(x=>!x[1]).length;
@@ -3937,6 +3980,10 @@ function popItems(m){
 /* ================= 새 기능 소식 · 도움말 =================
    새 기능을 만들면 FEAT 맨 위에 한 줄 추가하면 회원들에게 자동으로 안내돼요(가입일 이후 기능만). */
 const FEAT=[
+  {id:'fun1',q:'출석마다 복권 1장 · 빙고 · 도장판 · 연속 상자',d:'2026-10-31',e:'🎟️',t:'출석 복권 · 빙고',s:'출석할 때마다 복권을 긁어 음료 쿠폰 등을 받아요! 빙고 줄을 완성하고 도장판·연속 출석 상자도 채워 보세요',go:'fun',sel:null},
+  {id:'grape1',q:'배울 기술이 포도알로',d:'2026-10-31',e:'🍇',t:'커리큘럼 포도판',s:'레벨별 기술이 포도송이로 보여요. 관장님 심사를 통과하면 포도알이 채워져요',go:'grape',sel:null},
+  {id:'combo1',q:'관장님 콤비 연습 영상 공유',d:'2026-10-31',e:'🥊',t:'콤비네이션 게시판',s:'인증 탭 맨 위! 콤비를 연습하고 미트 영상을 GIF로 만들어 올려 같이 봐요',go:'combos',sel:null},
+  {id:'s_fun',aud:'owner',q:'운영 탭 · 복권·포도판·콤비',d:'2026-10-31',e:'🎟️',t:'출석 복권·포도판·콤비 게시판',s:'복권 상품·확률·하루/주간 한도 설정, 회원 상세에서 쿠폰 사용 처리·포도판 심사, 콤비 게시판 관리',go:'adm:ops'},
   {id:'s_padpin',aud:'owner',q:'설정 탭 · 관장 PIN 아래',d:'2026-10-28',e:'🔐',t:'출석패드 전용 비밀번호',s:'출석패드를 켜고 끌 때 관장 PIN 대신 쓰는 번호예요. 코치에게 알려 줘도 관장 메뉴에는 못 들어가요',go:'adm:set'},
   {id:'s_nmedia',aud:'owner',q:'공지 쓸 때 사진 4장 · 유튜브 영상',d:'2026-10-24',e:'🖼️',t:'공지에 사진·영상',s:'공지에 사진(최대 4장)과 유튜브·인스타 영상 주소를 넣으면 회원 팝업과 공지판에 같이 떠요. 사진은 누르면 크게 보여요',go:'adm:ops'},
   {id:'s_raffle',aud:'owner',q:'운영 탭 맨 위 · 상품·기간 정하고 추첨까지',d:'2026-10-23',e:'🎁',t:'응모 이벤트 만들기',s:'상품·기간을 정하면 회원 앱과 처음 화면에 배너가 떠요. 출석·친구 초대 보너스 응모권, 추첨 화면, 당첨자 발표·지급 체크까지',go:'adm:ops'},
@@ -3980,7 +4027,7 @@ function onbNew(){if(!ME||(ME.demo&&!isStaff(ME))||(typeof isGuest==='function'&
   return FEAT.filter(f=>!onbSeen()[f.id]&&featOk(f))}
 function onbDot(){const d=$('#helpDot');if(d)d.hidden=!onbNew().length}
 function onbGo(go){const T=t=>{setTab(t);window.scrollTo(0,0)};const scrollTo=(sel,fn)=>setTimeout(()=>{const e=$(sel);if(e){e.scrollIntoView({behavior:'smooth',block:'center'});e.classList.add('flash');setTimeout(()=>e.classList.remove('flash'),1600)}fn&&fn(e)},250);
-  switch(go){case 'arcade':T('map');openArcade();break;case 'raffle':T('map');rfSheet();break;
+  switch(go){case 'arcade':T('map');openArcade();break;case 'fun':T('map');openFun();break;case 'grape':T('more');openGrape(ME);break;case 'combos':T('feed');openCombos();break;case 'raffle':T('map');rfSheet();break;
     case 'attal':T('more');scrollTo('[data-attme="full"]',()=>{if(!attAlarmOn(ME.id))attAlarmToggle()});break;
     case 'bio':T('more');scrollTo('#bioBtn',e=>{if(e&&!e.hidden)e.click()});break;
     case 'spar':T('map');openSparBoard();break;
@@ -4355,6 +4402,7 @@ async function applyAttend(m,makeup,via){
   else if(roll<.13)bonus=100;else if(roll<.28)bonus=50;else if(roll<.58)bonus=20;else bonus=10;
   if(bonus){earn(m,bonus,'attend');txt=txt||'룰렛 보너스 +'+bonus}
   if(HW&&Math.random()<.5){m.candy=(m.candy||0)+3;txt+=' · 할로윈 사탕 +3'}
+  try{const ft=funOnAttend(m);if(ft)txt+=(txt?' · ':'')+ft}catch(e){console.error('fun',e)}
   const wasExp=memStatus(m).state==='expired';
   if(makeup&&wasExp){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m);txt+=' · 만료 후 출석(관장 승인)'}
   else if(makeup)txt+=' · 보강 출석(관장 승인)';
@@ -4371,7 +4419,7 @@ async function rotatePadTok(){const cur=newTok();const old=(local.meta.padtok&&l
   const box=$('#padQR');if(box){box.innerHTML='';try{const qs=(innerWidth>=700&&innerWidth>innerHeight)?(innerHeight<640?130:innerHeight<760?180:230):(innerWidth>=560&&innerHeight>innerWidth)?Math.round(Math.min(220,Math.max(150,innerHeight*.16))):168;new QRCode(box,{text:appBase()+'?att='+cur,width:qs,height:qs,colorDark:'#1C1C1C',colorLight:'#ffffff'})}catch(e){box.textContent='QR 오류'}}}
 async function pollPad(){if($('#v-pad').hidden){stopPadQR();return}const all=await DB.all();const today=all.filter(m=>m.last===TODAY());
   if(padSeen){const fresh=today.filter(m=>!padSeen.has(m.id)&&(m.qrAtt||[]).includes(TODAY()));fresh.forEach(m=>{const f=$('#padFeed');const d=document.createElement('div');d.className='pfeed';d.innerHTML=`<canvas width="64" height="64"></canvas><b>${esc(maskName(m.name))}</b><span>QR 출석 완료!</span>`;f.prepend(d);avatarTo(d.querySelector('canvas'),m.equip,{h:44,noFx:true});sfx('coin');while(f.children.length>4)f.lastChild.remove()})}
-  padSeen=new Set(today.map(m=>m.id));$('#padCount').textContent='오늘 출석 '+today.length+'명'}
+  padSeen=new Set(today.map(m=>m.id));$('#padCount').textContent='오늘 출석 '+today.length+'명';try{padWins()}catch(e){}}
 function startPadQR(){stopPadQR();setTimeout(autoSnapshot,5000);padSeen=null;rotatePadTok();padTokTimer=setInterval(rotatePadTok,30000);pollPad();padPoll=setInterval(pollPad,4000)}
 function stopPadQR(){clearInterval(padTokTimer);clearInterval(padPoll)}
 function attSheet(ok,title,sub,extra='',m){
@@ -4389,7 +4437,7 @@ async function qrAttend(tok){
     attSheet(false,'등록 기간이 끝났어요',`${md(m.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 후 출석할 수 있어요.</b>`,'<button class="btn red" id="qaPay" style="margin-top:6px">지금 재등록하기</button>',m);{const b=$('#qaPay');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openPay()}}return}
   if(m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='none'){attSheet(false,'오늘은 수강 요일이 아니에요',`등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)<br>${esc(WEEKLY_RULE(m.mem.weekly))}`,'',m);return}
   const r=await applyAttend(m,false,'qr');sfx('win');
-  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+wifiAttHTML(),m);wifiAttBind();try{refreshTop()}catch(e){}}
+  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(funCfg().on!==false&&+m.tk>0?`<button class="btn red" id="qaFun" style="margin-top:8px">🎟️ 출석 복권 긁기 (${+m.tk}장)</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}try{refreshTop()}catch(e){}}
 function wifiAttHTML(){const w=wifiCfg();if(!w)return'';return`<div class="padwifi" style="margin-top:8px"><div class="wt" style="flex:1"><small>📶 체육관 와이파이</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<span class="pw">${esc(w.p||'')}</span>`}</div>${w.t!=='nopass'&&w.p?'<button class="btn sm ghost" id="wfCopy">비번 복사</button>':''}</div>`}
 function wifiAttBind(){const b=document.getElementById('wfCopy');if(b)b.onclick=()=>{const w=wifiCfg();if(w)copyText(w.p,'와이파이 비밀번호를')}}
 $('#padRes').addEventListener('click',e=>{if(e.target.closest('button'))return;if(!$('#padForceBtn'))resetPad()});
@@ -4400,6 +4448,10 @@ $('#sPadPinDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.d
 $('#sPadApprove').onchange=async e=>{await savePadMeta('padApprove',e.target.checked||null);toast(e.target.checked?'출석패드 비밀번호로 승인할 수 있어요':'승인은 관장 PIN으로 해요')};
 $('#padFull').onclick=async()=>{try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'})}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('portrait')}catch(e){}setTimeout(()=>{try{startPadQR();wifiPadIdle()}catch(e){}},400);$('#padFull').hidden=!!document.fullscreenElement};
 document.addEventListener('fullscreenchange',()=>{try{$('#padFull').hidden=!!document.fullscreenElement}catch(e){}});
+$('#cbOpen').onclick=()=>openCombos();$('#cbAdmBtn').onclick=()=>cbAdmin();$('#cbSeeBtn').onclick=()=>openCombos();
+$('#cuSave').onclick=async()=>{const L=$('#cuTxt').value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const a=l.split('|');const lv=parseInt(a[0])||2;return{lv,t:(a[1]||'').split(/[,，]/).map(x=>x.trim()).filter(Boolean).slice(0,12)}}).filter(x=>x.t.length);
+  if(!L.length){toast('기술을 적어 주세요');return}local.meta.curri=L;if(FB_ON()){try{await gref('meta/curri').set(clean(L))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('포도판 기술 목록을 저장했어요');renderCurriAdm()};
+$('#cuReset').onclick=()=>{$('#cuTxt').value=CURRI_DEF.map(c=>c.lv+' | '+c.t.join(', ')).join('\n')};
 $('#padFloorTag').onclick=e=>{e.stopPropagation();choosePadFloor()};
 function resetPad(){clearTimeout(padTimer);$('#padInput').hidden=false;$('#padRes').hidden=true;try{$('#padWifi').hidden=true}catch(e){}}
 
@@ -4454,7 +4506,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
 
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderCompAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{renderPadPinSet()}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -4512,6 +4564,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div><button class="btn sm ghost" id="admHold">정지·기간 조정</button></div>`:''}
     <div class="qrow"><div class="grow small">${m.gPhone?`<b>보호자</b> ${esc(m.gName||'보호자')} ${esc(m.gPhone)}<br>결제·만료 안내는 보호자에게 가요`:'<b>보호자</b> 없음 (성인 회원)'}</div><button class="btn sm ghost" id="admGuard">${m.gPhone?'수정':'학생으로 지정'}</button></div>
     ${(m.unpaid||[]).length?`<div class="qrow" style="background:#FDECEC;border-radius:10px;padding:8px"><div class="grow small" style="color:#8A1F24"><b>만료 후 출석 ${m.unpaid.length}회</b><br>${m.unpaid.slice(-5).map(u=>md(u.d)+(u.ok?' 승인 출석':' 출석 막힘')).join(' · ')}</div></div>`:''}
+    <div class="row" style="gap:6px"><button class="btn ghost grow" id="admCps">🎟️ 쿠폰 ${funArr(m.cps).filter(c=>!c.used).length}장</button><button class="btn ghost grow" id="admGrp">🍇 포도판 ${grapeCount(m).a}/${grapeCount(m).t}</button></div>
     <button class="btn" id="admSend">안내 보내기 (문자·카톡)</button>
     ${m.phone?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="sms:${String(m.phone).replace(/[^\d]/g,'')}">문자 대화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="tel:${String(m.phone).replace(/[^\d]/g,'')}">전화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a></div>`:''}
 
@@ -4529,11 +4582,12 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     el.querySelector('#admFaceIn').onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const d=await faceFromFile(f);if(await FDB.save(m.id,d)){m.hasFace=true;await DB.savePriv(m);el.querySelector('#admFace').innerHTML=`<img src="${d}" alt="" style="width:100%;height:100%;object-fit:cover">`;toast('얼굴 사진을 등록했어요')}else toast('저장하지 못했어요')}catch(err){toast('사진을 열지 못했어요')}};
     {const h=el.querySelector('#admHold');if(h)h.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
     el.querySelector('#admSend').onclick=()=>{close();openSendPicker(m)};
+    el.querySelector('#admCps').onclick=()=>{close();admCoupons(m.id)};el.querySelector('#admGrp').onclick=()=>{close();openGrape(m,true,()=>{renderAdmRows();admDetail(m.id)})};
     el.querySelector('#admGuard').onclick=()=>{close();openGuardSheet(m)};
     el.querySelector('#admDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (되돌릴 수 없어요)';return}if(await deleteMember(m)){close();renderAdmRows()}};
     el.querySelector('#admVcf').onclick=()=>download(`NNN_${m.id}_${m.name}.vcf`,vcard(m),'text/vcard')});
 }
-async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());stampAtt(m);m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');checkBadges(m);m.inAt=Date.now();await DB.save(m);liveCheckIn(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
+async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());stampAtt(m);m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');try{funOnAttend(m)}catch(e){}checkBadges(m);m.inAt=Date.now();await DB.save(m);liveCheckIn(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
 function vcard(m){return`BEGIN:VCARD\nVERSION:3.0\nFN:NNN ${m.name}(${m.id})\nN:${m.name};;;;\nTEL;TYPE=CELL:${m.phone}\nNOTE:NNN복싱 회원번호 ${m.id} / 가입 ${m.joined}\nEND:VCARD\n`}
 $('#expVcf').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);if(!all.length){toast('내보낼 회원이 없어요');return}download('NNN_회원연락처_'+TODAY()+'.vcf',all.map(vcard).join(''),'text/vcard')};
 $('#expCsv').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);const rows=[['회원번호','이름','연락처','생년월일','성별','목적','경력','유입','참고사항','마케팅수신','가입일','총출석','최근출석','크레딧']].concat(all.map(m=>[m.id,m.name,m.phone,m.birth,m.gender,m.goal.join('/'),m.exp,m.path,m.note,m.agreeMkt?'Y':'N',m.joined,m.attend.length,m.last,m.credits]));
@@ -6339,6 +6393,249 @@ async function compEdit(){const c0=local.meta.comp||{};const C=Object.assign({ti
 const padFloor=()=>{try{return localStorage.getItem('nnn_padfloor')||''}catch(e){return ''}};
 function applyPadFloor(){const f=padFloor();const v=$('#v-pad');v.dataset.floor=f;$('#padFloorTag').textContent=f?f+'층':'층 선택';document.body.dataset.padfloor=f}
 function choosePadFloor(){sheet(`<h2>이 출석패드는 몇 층인가요?</h2><p class="small" style="margin:0">층마다 배경 색이 달라져요. 이 기기에만 저장돼요.</p><div class="row" style="gap:8px"><button class="btn red grow" data-fl="2" style="font-size:22px">2층</button><button class="btn grow" data-fl="5" style="font-size:22px;background:#1F4E9C;color:#fff">5층</button></div><button class="btn ghost" data-fl="">층 표시 안 함</button>`,(el,close)=>{el.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('nnn_padfloor',b.dataset.fl);localStorage.setItem('nnn_padfloor_set','1')}catch(e){}applyPadFloor();close()})})}
+/* ================= 출석 재미: 복권 · 빙고 · 도장판 · 연속 출석 상자 · 쿠폰 ================= */
+const FUN_DEF={on:true,pity:10,days:14,cr:[10,20,30,50],
+  prizes:[{id:'drink',name:'음료 쿠폰',emo:'🥤',p:8,day:3,week:10},{id:'bar',name:'단백질바',emo:'🍫',p:3,day:2,week:5},{id:'wrap',name:'핸드랩',emo:'🧤',p:0.6,day:1,week:1},{id:'pt',name:'PT 1회권',emo:'🥊',p:0.2,day:1,week:1}]};
+const STAMP_STEPS=[{n:8,tk:1},{n:12,tk:2},{n:16,cp:1}];
+const BOX_STEPS=[{w:2,tk:2},{w:4,tk:3},{w:8,tk:4,cp:1},{w:12,tk:5,cp:1}];
+const funArr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x).filter(v=>v!=null):[]);
+function funCfg(){const f=(local.meta&&local.meta.fun)||{};const o=Object.assign({},FUN_DEF,f);const P=funArr(f.prizes);o.prizes=(P.length?P:FUN_DEF.prizes).map(z=>Object.assign({},z));o.cr=funArr(o.cr).map(Number).filter(n=>n>0);if(!o.cr.length)o.cr=FUN_DEF.cr;return o}
+const monOf=d=>{const x=new Date(d+'T00:00:00');const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return dstr(x)};
+function bingoLines(nums){const s=new Set(nums.map(Number));let c=0;const has=i=>s.has(i+1);
+  for(let r=0;r<5;r++){let ok=1;for(let k=0;k<5;k++)if(!has(r*5+k))ok=0;c+=ok}
+  for(let k=0;k<5;k++){let ok=1;for(let r=0;r<5;r++)if(!has(r*5+k))ok=0;c+=ok}
+  let d1=1,d2=1;for(let i=0;i<5;i++){if(!has(i*5+i))d1=0;if(!has(i*5+4-i))d2=0}return c+d1+d2}
+function weekStreak(m){const set=new Set(funArr(m.attend).map(String));const need=Math.max(1,Math.min(2,(m.mem&&+m.mem.weekly)||2));let w0=monOf(TODAY()),st=0,first='';
+  for(let w=0;w<60;w++){const mon=dAdd(w0,-7*w);let c=0;for(let i=0;i<7;i++)if(set.has(dAdd(mon,i)))c++;
+    if(c>=need){st++;first=mon}else if(w===0)continue;else break}
+  return{n:st,start:first,need}}
+function funGrant(m,pid,src){const F=funCfg();const z=F.prizes.find(x=>x.id===pid)||F.prizes[0];if(!z)return null;
+  const cp={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),pz:z.id,name:z.name,emo:z.emo||'🎁',at:Date.now(),exp:dAdd(TODAY(),+F.days||14),src:src||''};
+  m.cps=funArr(m.cps).filter(c=>!(c.used&&Date.now()-c.used>30*864e5)).concat([cp]).slice(-40);return cp}
+/* 출석할 때 (출석패드·QR·관장 처리 모두) */
+function funOnAttend(m){const F=funCfg();if(F.on===false)return '';const out=[];
+  m.tk=(+m.tk||0)+1;out.push('🎟️ 복권 +1');
+  let B=m.bingo&&typeof m.bingo==='object'?Object.assign({},m.bingo):{c:1,n:[]};B.n=funArr(B.n).map(Number);if(B.done)B={c:(+B.c||1)+1,n:[]};
+  const left=[];for(let i=1;i<=25;i++)if(!B.n.includes(i))left.push(i);
+  if(left.length){const num=pick(left);const l0=bingoLines(B.n);B.n.push(num);const nl=bingoLines(B.n)-l0;B.last=num;
+    if(nl>0){m.tk+=nl;out.push(`빙고 ${num}번 · ${nl}줄 완성! 복권 +${nl}`)}else out.push(`빙고 ${num}번`)}
+  if(B.n.length>=25){B.done=1;m.tk+=3;out.push('빙고판 완성! 복권 +3')}
+  m.bingo=B;
+  const mon=TODAY().slice(0,7),cnt=funArr(m.attend).filter(d=>String(d).startsWith(mon)).length;
+  const SR=m.stampR&&typeof m.stampR==='object'?m.stampR:{};const got=funArr(SR[mon]).map(Number);
+  for(const s of STAMP_STEPS){if(cnt>=s.n&&!got.includes(s.n)){got.push(s.n);if(s.tk){m.tk+=s.tk;out.push(`도장 ${s.n}개! 복권 +${s.tk}`)}if(s.cp){const c=funGrant(m,F.prizes[0]&&F.prizes[0].id,'도장판 '+s.n+'개');if(c)out.push(`도장 ${s.n}개! ${c.emo} ${c.name}`)}}}
+  m.stampR={[mon]:got};
+  const ws=weekStreak(m);let BR=m.boxR&&typeof m.boxR==='object'?m.boxR:{};if(BR.run!==ws.start)BR={run:ws.start,got:[]};const bg=funArr(BR.got).map(Number);
+  for(const b of BOX_STEPS){if(ws.n>=b.w&&!bg.includes(b.w)){bg.push(b.w);m.tk+=b.tk;let t=`🎁 ${b.w}주 연속 상자! 복권 +${b.tk}`;if(b.cp){const c=funGrant(m,F.prizes[0]&&F.prizes[0].id,b.w+'주 연속 상자');if(c)t+=` · ${c.emo} ${c.name}`}out.push(t)}}
+  m.boxR={run:BR.run,got:bg};
+  return out.join(' · ')}
+/* 복권 긁기 */
+async function ctrTake(path,max){if(!(max>0))return false;if(!FB_ON()){const v=+(lget(path)||0);if(v>=max)return false;lset(path,v+1);persist();return true}
+  try{const r=await gref(path).transaction(v=>{v=+v||0;if(v>=max)return;return v+1});return !!(r&&r.committed)}catch(e){return false}}
+async function ctrBack(path){if(!FB_ON()){lset(path,Math.max(0,(+(lget(path)||0))-1));persist();return}try{await gref(path).transaction(v=>Math.max(0,(+v||1)-1))}catch(e){}}
+async function lottoTake(z){const d='lotto/'+TODAY()+'/'+z.id,w='lotto/w'+monOf(TODAY())+'/'+z.id;if(!(await ctrTake(d,+z.day||0)))return false;if(!(await ctrTake(w,+z.week||0))){await ctrBack(d);return false}return true}
+let LOTTO_BUSY=false;
+async function lottoDraw(){if(!ME||LOTTO_BUSY)return null;LOTTO_BUSY=true;try{
+  const m=(await DB.get(ME.id))||ME;if(!(+m.tk>0)){ME=m;return null}m.tk=(+m.tk)-1;const F=funCfg();
+  const r=Math.random()*100;let acc=0,hit=null;for(const z of F.prizes){acc+=+z.p||0;if(r<acc){hit=z;break}}
+  const miss=(+m.lmiss||0)+1,pity=+F.pity||0;let byPity=false;
+  if(!hit&&pity>0&&miss>=pity){hit=F.prizes[0];byPity=true}
+  if(hit&&!(await lottoTake(hit)))hit=null;
+  let res;
+  if(hit){const cp=funGrant(m,hit.id,byPity?'꽝 '+pity+'번 보상':'출석 복권');m.lmiss=0;res={kind:'cp',cp,big:hit!==F.prizes[0]||!byPity};
+    try{await hset('wins/'+cp.id,{mid:m.id,nick:maskName(m.name||m.nick||''),name:cp.name,emo:cp.emo,at:Date.now()})}catch(e){}}
+  else{m.lmiss=miss;const c=pick(F.cr);m.credits=(+m.credits||0)+c;m.earned=(+m.earned||0)+c;res={kind:'cr',n:c,left:pity>0?Math.max(0,pity-miss):0}}
+  await DB.save(m);ME=m;try{refreshTop()}catch(e){}return res}finally{LOTTO_BUSY=false}}
+function confetti(root,n){const box=document.createElement('div');box.className='confetti';const C=['#E63946','#FFD54A','#2E7D5B','#3E7BFA','#FF8FB1','#9B5DE5'];
+  for(let i=0;i<(n||60);i++){const s=document.createElement('i');s.style.left=Math.random()*100+'%';s.style.background=C[i%C.length];s.style.animationDelay=(Math.random()*.4)+'s';s.style.animationDuration=(1.4+Math.random()*1.2)+'s';s.style.transform=`rotate(${Math.random()*360}deg)`;box.appendChild(s)}
+  (root||document.body).appendChild(box);setTimeout(()=>box.remove(),3200)}
+function scratchCard(host,resultHTML,onReveal){host.innerHTML=`<div class="scr"><div class="scr-res">${resultHTML}</div><canvas class="scr-cv"></canvas><div class="scr-tip">손가락으로 긁어 보세요</div></div>`;
+  const wrap=host.querySelector('.scr'),cv=wrap.querySelector('canvas'),tip=wrap.querySelector('.scr-tip');const W=wrap.clientWidth||300,H=wrap.clientHeight||170;const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;
+  const c=cv.getContext('2d');c.scale(dpr,dpr);const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#C9CED6');g.addColorStop(.5,'#EEF1F5');g.addColorStop(1,'#B9BFC9');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.fillStyle='rgba(47,47,47,.55)';c.font='bold 20px sans-serif';c.textAlign='center';c.fillText('NNN 출석 복권',W/2,H/2-6);c.font='14px sans-serif';c.fillText('긁으면 당첨 확인!',W/2,H/2+18);
+  c.globalCompositeOperation='destination-out';let done=false,down=false,last=null,moves=0;
+  const pos=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+  const reveal=()=>{if(done)return;done=true;cv.style.transition='opacity .35s';cv.style.opacity='0';tip.remove();setTimeout(()=>cv.remove(),400);onReveal&&onReveal()};
+  const check=()=>{if(done||++moves%6)return;const d=c.getImageData(0,0,cv.width,cv.height).data;let cl=0,t=0;for(let i=3;i<d.length;i+=4*40){t++;if(d[i]<20)cl++}if(cl/t>.42)reveal()};
+  const line=(a,b)=>{c.lineWidth=34;c.lineCap='round';c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()};
+  cv.addEventListener('pointerdown',e=>{down=true;last=pos(e);line(last,last);try{cv.setPointerCapture(e.pointerId)}catch(x){}tip.style.opacity='0'});
+  cv.addEventListener('pointermove',e=>{if(!down)return;const p=pos(e);line(last,p);last=p;check()});
+  const up=()=>{down=false;check()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  return reveal}
+/* 회원: 출석 보상 화면 */
+function funBanner(){const F=funCfg();$$('[data-fun]').forEach(el=>{const show=F.on!==false&&ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());el.hidden=!show;if(!show){el.innerHTML='';return}
+  const tk=+ME.tk||0,cps=funArr(ME.cps).filter(c=>!c.used&&c.exp>=TODAY()).length,bn=funArr(ME.bingo&&ME.bingo.n).length;
+  el.className='funban'+(tk>0?' pulse':'');el.innerHTML=`<div class="fi">🎟️</div><div class="grow"><b>${tk>0?`복권 ${tk}장 · 지금 긁어 보세요!`:'출석 보상'}</b><span>빙고 ${bn}/25 · 이달 도장 ${funArr(ME.attend).filter(d=>String(d).startsWith(TODAY().slice(0,7))).length}개${cps?` · 쿠폰 ${cps}장`:''}</span></div><span class="rftag">${tk>0?'긁기':'보기'}</span>`;el.onclick=()=>openFun()})}
+async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)ME=m}catch(e){}const F=funCfg();const m=ME;
+  const tk=+m.tk||0;const B=m.bingo||{n:[]};const bn=funArr(B.n).map(Number);const lines=bingoLines(bn);
+  const mon=TODAY().slice(0,7);const cnt=funArr(m.attend).filter(d=>String(d).startsWith(mon)).length;const ws=weekStreak(m);
+  const cps=funArr(m.cps).filter(c=>!c.used).sort((a,b)=>b.at-a.at);const live=cps.filter(c=>c.exp>=TODAY());
+  const nextBox=BOX_STEPS.find(b=>ws.n<b.w);
+  const grid=Array.from({length:25},(_,i)=>`<div class="bg${bn.includes(i+1)?' on':''}${B.last===i+1&&!B.done?' last':''}">${i+1}</div>`).join('');
+  const maxS=Math.max(16,cnt);const stamps=Array.from({length:maxS},(_,i)=>{const st=STAMP_STEPS.find(s=>s.n===i+1);return `<div class="stp${i<cnt?' on':''}${st?' ms':''}">${i<cnt?'🥊':(st?(st.cp?'🎁':'🎟️'):i+1)}</div>`}).join('');
+  sheet(`<h2>🎟️ 출석 보상</h2>
+    <div class="funsec"><div class="row" style="align-items:center"><b class="grow" style="font-size:18px">출석 복권 <span class="num" style="color:var(--red)">${tk}</span>장</b><button class="btn sm ghost" id="fnCp">쿠폰함 ${live.length?`<b style="color:var(--red)">${live.length}</b>`:''}</button></div>
+      <div class="small">출석할 때마다 1장. 당첨되면 ${F.prizes.map(z=>esc(z.emo+' '+z.name)).join(' · ')}! 꽝이어도 크레딧${+F.pity>0?`, 꽝 ${F.pity}번이면 ${esc(F.prizes[0].name)} 확정`:''}</div>
+      <div id="fnScr"></div>
+      <button class="btn red" id="fnGo" ${tk>0?'':'disabled'}>${tk>0?'복권 긁기':'출석하면 복권이 생겨요'}</button>
+      ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}</div>
+    <div class="funsec"><div class="row"><b class="grow" style="font-size:18px">출석 빙고 <span class="small">${bn.length}/25</span></b><span class="pill">${lines}줄</span></div>
+      <div class="small">출석할 때마다 번호 하나가 찍혀요. 한 줄 완성마다 복권 +1, 판 전체 완성 복권 +3</div><div class="bingo">${grid}</div></div>
+    <div class="funsec"><div class="row"><b class="grow" style="font-size:18px">${Number(mon.slice(5))}월 도장판</b><span class="pill">${cnt}개</span></div>
+      <div class="small">${STAMP_STEPS.map(s=>`${s.n}개 ${s.cp?esc(F.prizes[0].emo+' '+F.prizes[0].name):'복권 +'+s.tk}`).join(' · ')}</div><div class="stamps">${stamps}</div></div>
+    <div class="funsec"><div class="row"><b class="grow" style="font-size:18px">연속 출석 상자</b><span class="pill">${ws.n}주 연속</span></div>
+      <div class="small">한 주에 ${ws.need}번 이상 나오면 연속 1주. ${nextBox?`<b>${nextBox.w}주</b> 달성하면 🎁 상자 (복권 +${nextBox.tk}${nextBox.cp?' · '+esc(F.prizes[0].name):''})`:'모든 상자를 열었어요! 계속 이어가요'}</div>
+      <div class="boxes">${BOX_STEPS.map(b=>`<div class="bx${ws.n>=b.w?' on':''}"><span>${ws.n>=b.w?'🎁':'📦'}</span><small>${b.w}주</small></div>`).join('')}</div></div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#fnCp').onclick=()=>{close();openCoupons()};
+    const go=el.querySelector('#fnGo');go.onclick=async()=>{go.disabled=true;go.textContent='복권 꺼내는 중…';const res=await lottoDraw();if(!res){toast('복권이 없어요');go.textContent='출석하면 복권이 생겨요';return}
+      const host=el.querySelector('#fnScr');const html=res.kind==='cp'?`<div class="scr-win"><div style="font-size:44px">${res.cp.emo}</div><b>${esc(res.cp.name)} 당첨!</b><span>쿠폰함에 넣어 뒀어요 · ${md(res.cp.exp)}까지</span></div>`:`<div class="scr-miss"><b>아쉽지만 꽝</b><span>대신 +${res.n} 크레딧${res.left?` · 확정까지 꽝 ${res.left}번`:''}</span></div>`;
+      scratchCard(host,html,()=>{if(res.kind==='cp'){sfx('win');confetti(el.parentNode);try{navigator.vibrate&&navigator.vibrate([60,40,120])}catch(e){}}else sfx('coin');
+        const t=+ME.tk||0;go.disabled=t<=0;go.textContent=t>0?`다음 복권 긁기 (${t}장)`:'복권을 다 긁었어요';try{funBanner()}catch(e){}});
+      go.textContent='위 카드를 긁어 보세요';};
+    if(sec==='lotto'&&tk>0)setTimeout(()=>go.click(),300)})}
+function openCoupons(){const m=ME;const all=funArr(m.cps).sort((a,b)=>b.at-a.at);const live=all.filter(c=>!c.used&&c.exp>=TODAY()),old=all.filter(c=>c.used||c.exp<TODAY()).slice(0,10);
+  sheet(`<h2>🎟️ 내 쿠폰함</h2>${live.length?live.map(c=>`<div class="cpn"><div class="ce">${c.emo}</div><div class="grow"><b>${esc(c.name)}</b><span>${md(c.exp)}까지 · 데스크에서 이 화면을 보여 주세요</span><small class="num">No. ${esc(c.id.slice(-6).toUpperCase())}</small></div></div>`).join(''):'<div class="small">아직 쓸 수 있는 쿠폰이 없어요. 출석 복권을 긁어 보세요!</div>'}
+    ${old.length?`<details><summary class="small">지난 쿠폰 ${old.length}장</summary>${old.map(c=>`<div class="cpn off"><div class="ce">${c.emo}</div><div class="grow"><b>${esc(c.name)}</b><span>${c.used?'사용함 '+new Date(c.used).toLocaleDateString('ko-KR'):'기간 지남'}</span></div></div>`).join('')}</details>`:''}
+    <button class="btn" id="cpBack">출석 보상으로</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{el.querySelector('#cpBack').onclick=()=>{close();openFun()}})}
+/* 관장: 쿠폰 사용 처리 */
+async function admCoupons(id,after){const m=await DB.get(id);if(!m)return;const all=funArr(m.cps).sort((a,b)=>b.at-a.at);const live=all.filter(c=>!c.used);
+  sheet(`<h2>${esc(m.name)} 님 쿠폰</h2>${live.length?live.map(c=>`<div class="cpn${c.exp<TODAY()?' off':''}"><div class="ce">${c.emo}</div><div class="grow"><b>${esc(c.name)}</b><span>${c.exp<TODAY()?'기간 지남 ':''}${md(c.exp)}까지 · ${esc(c.src||'')}</span><small class="num">No. ${esc(c.id.slice(-6).toUpperCase())}</small></div><button class="btn sm red" data-use="${esc(c.id)}">사용 완료</button></div>`).join(''):'<div class="small">안 쓴 쿠폰이 없어요.</div>'}
+    <div class="row" style="gap:6px"><select id="acpZ" class="grow">${funCfg().prizes.map(z=>`<option value="${esc(z.id)}">${esc(z.emo+' '+z.name)}</option>`).join('')}</select><button class="btn sm ghost" id="acpGive">쿠폰 직접 주기</button></div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelectorAll('[data-use]').forEach(b=>b.onclick=async()=>{const c=funArr(m.cps).find(x=>x.id===b.dataset.use);if(!c)return;c.used=Date.now();m.cps=funArr(m.cps);await DB.save(m);toast(c.name+' 사용 처리했어요');close();admCoupons(id,after)});
+    el.querySelector('#acpGive').onclick=async()=>{const c=funGrant(m,el.querySelector('#acpZ').value,'관장님 선물');if(c){await DB.save(m);toast(m.name+' 님에게 '+c.name+' 쿠폰');close();admCoupons(id,after)}}})}
+function funPrizeTxt(F){return F.prizes.map(z=>`${z.emo||'🎁'} ${z.name} | ${z.p} | ${z.day} | ${z.week}`).join('\n')}
+async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=funCfg();const day=(await hget('lotto/'+TODAY()))||{},wk=(await hget('lotto/w'+monOf(TODAY())))||{};
+  const W=funArr(await hget('wins')).sort((a,b)=>b.at-a.at).slice(0,8);
+  box.innerHTML=`<label class="check" style="margin:0"><input type="checkbox" id="fnOn" ${F.on!==false?'checked':''}><span><b>출석 복권·빙고·도장판·연속 상자 켜기</b></span></label>
+    <div class="field"><label for="fnPz">상품 · 한 줄에 하나 <span class="small">(이모지 이름 | 당첨 확률% | 하루 최대 | 주간 최대) 첫 줄 상품이 '꽝 보상·도장판·상자' 확정 상품</span></label><textarea id="fnPz" rows="5">${esc(funPrizeTxt(F))}</textarea></div>
+    <div class="row"><div class="field grow"><label for="fnPity">꽝 몇 번이면 확정</label><input id="fnPity" type="number" min="0" max="50" value="${+F.pity||0}"></div><div class="field grow"><label for="fnDays">쿠폰 유효기간(일)</label><input id="fnDays" type="number" min="1" max="90" value="${+F.days||14}"></div></div>
+    <div class="field"><label for="fnCr">꽝일 때 크레딧 <span class="small">(쉼표로)</span></label><input id="fnCr" value="${esc(F.cr.join(', '))}"></div>
+    <button class="btn red" id="fnSave">저장</button>
+    <div class="memsum"><b>오늘 · 이번 주 나간 쿠폰</b><div class="small">${F.prizes.map(z=>`${esc(z.emo+' '+z.name)} 오늘 ${+day[z.id]||0}/${z.day} · 주간 ${+wk[z.id]||0}/${z.week}`).join('<br>')}</div></div>
+    ${W.length?`<div class="memsum"><b>최근 당첨</b><div class="small">${W.map(w=>`${new Date(w.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})} ${esc(w.nick||'')} ${esc((w.emo||'')+' '+(w.name||''))}`).join('<br>')}</div></div>`:''}
+    <div class="row" style="gap:6px"><input id="fnFind" class="grow" inputmode="numeric" placeholder="회원번호로 쿠폰 확인·사용 처리"><button class="btn sm ghost" id="fnFindGo">열기</button></div>`;
+  box.querySelector('#fnFindGo').onclick=async()=>{const id=box.querySelector('#fnFind').value.trim();if(!(await DB.get(id))){toast('없는 회원번호예요');return}admCoupons(id)};
+  box.querySelector('#fnSave').onclick=async()=>{const prizes=box.querySelector('#fnPz').value.split('\n').map(l=>l.trim()).filter(Boolean).map((l,i)=>{const a=l.split('|').map(x=>x.trim());const nm=a[0]||'상품';const em=(nm.match(/^(\p{Extended_Pictographic}️?)/u)||[])[1]||'🎁';
+      return{id:'p'+i+'_'+nm.replace(/[^\w가-힣]/g,'').slice(0,10),name:nm.replace(em,'').trim()||nm,emo:em,p:Math.max(0,Math.min(100,parseFloat(a[1])||0)),day:Math.max(0,parseInt(a[2])||0),week:Math.max(0,parseInt(a[3])||0)}});
+    if(!prizes.length){toast('상품을 하나 이상 적어 주세요');return}
+    const old=funCfg().prizes;prizes.forEach((z,i)=>{const o=old.find(x=>x.name===z.name);if(o)z.id=o.id});
+    const f={on:box.querySelector('#fnOn').checked,prizes,pity:Math.max(0,parseInt(box.querySelector('#fnPity').value)||0),days:Math.max(1,parseInt(box.querySelector('#fnDays').value)||14),cr:box.querySelector('#fnCr').value.split(/[,\s]+/).map(Number).filter(n=>n>0).slice(0,8)};
+    local.meta.fun=f;if(FB_ON()){try{await gref('meta/fun').set(clean(f))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('저장했어요');renderFunAdm()};
+  box.querySelector('#fnOn').onchange=()=>box.querySelector('#fnSave').click()}
+/* 당첨 연출: 출석패드 · 공지 */
+let PAD_WIN_T=0;const PAD_WIN_SEEN=new Set();
+async function padWins(){if($('#v-pad').hidden)return;if(!PAD_WIN_T)PAD_WIN_T=Date.now()-60e3;let W=null;try{W=await hget('wins')}catch(e){}if(!W)return;
+  const L=Object.entries(W).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>a.at-b.at);
+  const old=L.filter(w=>Date.now()-w.at>9*864e5);if(old.length&&IS_ADMIN)old.slice(0,20).forEach(w=>{hset('wins/'+w.k,null)});
+  const fresh=L.filter(w=>w.at>PAD_WIN_T&&!PAD_WIN_SEEN.has(w.k));fresh.forEach(w=>PAD_WIN_SEEN.add(w.k));
+  if(fresh.length){const w=fresh[fresh.length-1];const el=$('#padCel');el.innerHTML=`<div class="pc-in"><div style="font-size:54px">${esc(w.emo||'🎉')}</div><b>${esc(w.nick||'회원')}님 ${esc(w.name||'')} 당첨!</b><span>출석 복권은 앱에서 긁어요 🎟️</span></div>`;el.hidden=false;confetti(el,80);try{sfx('win')}catch(e){}clearTimeout(el._t);el._t=setTimeout(()=>{el.hidden=true},3500)}}
+async function winsHTML(){let W=null;try{W=await hget('wins')}catch(e){}const L=funArr(W).filter(w=>Date.now()-w.at<7*864e5).sort((a,b)=>b.at-a.at).slice(0,8);
+  return L.length?`<div class="label" style="margin-top:4px">🎉 이번 주 출석 복권 당첨</div><div class="bubble" style="display:flex;flex-direction:column;gap:2px">${L.map(w=>`<div class="small">${esc(w.emo||'')} <b>${esc(w.nick||'')}</b>님 ${esc(w.name||'')} <span style="color:var(--muted)">${new Date(w.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})}</span></div>`).join('')}</div>`:''}
+/* ================= 커리큘럼 포도판 ================= */
+const CURRI_DEF=[{lv:2,t:['스탠스','가드','잽','원투','전후 스텝','좌우 스텝']},{lv:3,t:['왼 훅','오른 훅','어퍼컷','바디 샷','원투훅','미트 3연타']},{lv:4,t:['더킹','위빙','패링','블로킹','백스텝','사이드스텝']},{lv:5,t:['방어 후 반격','거리 조절','카운터 잽','로프 탈출','매스 스파링']},{lv:6,t:['4연타 콤비','압박 스텝','클린치 대처','3라운드 체력','실전 스파링 3R']},{lv:7,t:['경기 운영','스위치 스탠스','카운터 훅','대회 출전']}];
+function curri(){const c=funArr(local.meta&&local.meta.curri).map(x=>({lv:+x.lv||2,t:funArr(x.t).map(String).filter(Boolean)})).filter(x=>x.t.length);return c.length?c:CURRI_DEF}
+const grpOf=m=>(m&&m.grp&&typeof m.grp==='object')?m.grp:{};
+function grapeSVG(names,got,size){const n=names.length;let rows=[],w=1;while(rows.reduce((a,b)=>a+b,0)<n){rows.push(w);w++}rows.reverse();let rem=rows.reduce((a,b)=>a+b,0)-n;
+  for(let i=rows.length-1;i>=0&&rem>0;i--){const k=Math.min(rem,rows[i]-1);rows[i]-=k;rem-=k}rows=rows.filter(r=>r>0);
+  const R=size||13,G=R*2+2,mw=Math.max(...rows)*G;let idx=0,cs='';
+  rows.forEach((r,ri)=>{const x0=(mw-r*G)/2+R+1;for(let i=0;i<r;i++){const nm=names[idx++];const on=!!got[nm];const cx=x0+i*G,cy=R*2+6+ri*(G-3);
+    cs+=on?`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#7B3FA0"/><circle cx="${cx-R*.35}" cy="${cy-R*.35}" r="${R*.28}" fill="#fff" opacity=".45"/>`:`<circle cx="${cx}" cy="${cy}" r="${R-1}" fill="#fff" stroke="#B9A2CC" stroke-width="2" stroke-dasharray="4 3"/>`}});
+  const H=R*2+6+rows.length*(G-3)+R;return `<svg viewBox="0 0 ${mw+2} ${H}" width="${mw+2}" height="${H}" aria-hidden="true"><path d="M${mw/2+1} 2 q4 6 0 ${R+2}" stroke="#5B8C3A" stroke-width="3" fill="none"/><path d="M${mw/2+3} ${R/2+2} q${R} -${R/2} ${R*1.6} ${R/3}" stroke="#5B8C3A" stroke-width="2.5" fill="#8BC34A"/>${cs}</svg>`}
+function grapeCount(m){const g=grpOf(m);let a=0,t=0;curri().forEach(c=>c.t.forEach(x=>{t++;if(g[x])a++}));return{a,t}}
+function renderGrapeCard(){$$('[data-grape]').forEach(el=>{if(!ME||ME.demo||isStaff(ME)||(typeof isGuest==='function'&&isGuest())){el.innerHTML='';return}const g=grpOf(ME),{a,t}=grapeCount(ME);
+  el.innerHTML=`<button class="card grapecard"><div class="grow" style="text-align:left"><div class="label">커리큘럼 포도판</div><b style="font-family:var(--display);font-weight:400;font-size:20px">🍇 ${a} / ${t}알</b><div class="small">관장님 심사를 통과하면 포도알이 채워져요</div></div><div class="gmini">${curri().slice(0,3).map(c=>grapeSVG(c.t,g,6)).join('')}</div></button>`;el.querySelector('button').onclick=()=>openGrape(ME)})}
+function openGrape(m,admin,after){const g=Object.assign({},grpOf(m));const C=curri();
+  const body=()=>C.map(c=>{const got=c.t.filter(x=>g[x]).length,full=got===c.t.length;return `<div class="gcl${full?' full':''}"><div class="row" style="align-items:center"><b class="grow">${SKL[c.lv]?esc(c.lv+'레벨 · '+SKL[c.lv]):esc(c.lv+'레벨')}</b><span class="pill">${got}/${c.t.length}${full?' 🍇완성':''}</span></div>
+    <div class="row" style="align-items:center;gap:12px"><div class="gsvg">${grapeSVG(c.t,g,14)}</div><div class="gtags">${c.t.map(x=>admin?`<button type="button" class="gt${g[x]?' on':''}" data-gt="${esc(x)}">${g[x]?'✓ ':''}${esc(x)}</button>`:`<span class="gt${g[x]?' on':''}">${g[x]?'✓ ':''}${esc(x)}</span>`).join('')}</div></div></div>`}).join('');
+  sheet(`<h2>🍇 ${admin?esc(m.name)+' 님 포도판 심사':'내 포도판'}</h2><p class="small" style="margin:0">${admin?'통과한 기술을 눌러 포도알을 채우세요. 다시 누르면 빠져요.':'배워야 할 기술이 포도알이에요. 테스트·승급심사에서 관장님께 통과받으면 하나씩 채워져요.'}</p>
+    <div id="grBody" style="display:flex;flex-direction:column;gap:10px">${body()}</div>${admin?'<button class="btn red" id="grSave">저장</button>':''}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    if(!admin)return;const bind=()=>el.querySelectorAll('[data-gt]').forEach(b=>b.onclick=()=>{const k=b.dataset.gt;if(g[k])delete g[k];else g[k]=TODAY();el.querySelector('#grBody').innerHTML=body();bind()});bind();
+    el.querySelector('#grSave').onclick=async()=>{const before=grapeCount(m).a;m.grp=g;await DB.save(m);const now=grapeCount(m).a;toast(`${m.name} 님 포도판 저장 · ${now}알${now>before?` (+${now-before})`:''}`);close();after&&after()}})}
+function renderCurriAdm(){const ta=$('#cuTxt');if(!ta)return;ta.value=curri().map(c=>c.lv+' | '+c.t.join(', ')).join('\n')}
+/* ================= 콤비네이션 게시판 ================= */
+const CB={list:{},vids:{}};
+async function cbLoad(){CB.list=(await hget('combos'))||{};return CB.list}
+const cbSeq=s=>String(s||'').split(/\s*[-–>→,·]+\s*/).map(x=>x.trim()).filter(Boolean);
+async function openCombos(){await cbLoad();let counts={};try{const v=(await hget('cvid'))||{};Object.keys(v).forEach(k=>counts[k]=Object.keys(v[k]||{}).length)}catch(e){}
+  const L=Object.entries(CB.list).map(([id,c])=>Object.assign({id},c)).sort((a,b)=>(+a.lv||0)-(+b.lv||0)||(a.at||0)-(b.at||0));
+  sheet(`<h2>🥊 체육관 콤비네이션</h2><p class="small" style="margin:0">관장님이 만든 콤비네이션이에요. 연습하고 미트 친 영상을 올려서 같이 봐요.</p>
+    ${L.length?L.map(c=>`<button class="cbrow" data-cb="${esc(c.id)}"><div class="grow" style="text-align:left"><b>${esc(c.t)}</b><div class="cbseq">${cbSeq(c.s).map(x=>`<i>${esc(x)}</i>`).join('')}</div></div><span class="small">${c.lv&&SKL[c.lv]?esc(SKL[c.lv])+'<br>':''}🎬 ${counts[c.id]||0}</span></button>`).join(''):'<div class="small">아직 등록된 콤비가 없어요.</div>'}
+    ${ME&&isOwner(ME)||IS_ADMIN?'<button class="btn ghost sm" id="cbAdm">콤비 관리 (관장)</button>':''}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelectorAll('[data-cb]').forEach(b=>b.onclick=()=>{close();openCombo(b.dataset.cb)});const a=el.querySelector('#cbAdm');if(a)a.onclick=()=>{close();cbAdmin()}})}
+async function cvGif(vid){if(CB.vids[vid])return CB.vids[vid];const v=await hget('cvgif/'+vid);const d=v&&v.d||'';CB.vids[vid]=d;return d}
+async function openCombo(cid){if(!CB.list[cid])await cbLoad();const c=CB.list[cid];if(!c){toast('없는 콤비예요');return}
+  const V=Object.entries((await hget('cvid/'+cid))||{}).map(([k,v])=>Object.assign({},v,{k})).sort((a,b)=>(b.at||0)-(a.at||0));
+  const me=ME&&ME.id,admin=IS_ADMIN||(ME&&isOwner(ME));
+  sheet(`<div class="label">콤비네이션${c.lv&&SKL[c.lv]?' · '+esc(SKL[c.lv]):''}</div><h2 style="margin:0">${esc(c.t)}</h2><div class="cbseq big">${cbSeq(c.s).map(x=>`<i>${esc(x)}</i>`).join('')}</div>${c.d?`<p style="margin:0;white-space:pre-line">${esc(c.d)}</p>`:''}
+    ${me&&!(typeof isGuest==='function'&&isGuest())?'<button class="btn red" id="cvUp">🎬 내 연습 영상 올리기</button>':''}
+    <div class="label">연습 영상 ${V.length}개</div><div class="cvgrid">${V.map(v=>{const lk=Object.keys(v.lk||{}).length,mine=me&&v.mid===me,liked=me&&(v.lk||{})[me];
+      return `<div class="cv" data-v="${esc(v.k)}">${v.u?nVidHTML(v.u):`<div class="cvimg" data-g="${esc(v.k)}"><span class="small">불러오는 중…</span></div>`}<div class="row" style="align-items:center;gap:6px"><b class="grow small">${esc(v.nick||'회원')}</b><button class="lkb${liked?' on':''}" data-lk="${esc(v.k)}">❤ ${lk}</button>${mine||admin?`<button class="lkb" data-del="${esc(v.k)}">삭제</button>`:''}</div></div>`}).join('')||'<div class="small">아직 영상이 없어요. 첫 영상을 올려 보세요!</div>'}</div>
+    <button class="btn ghost" id="cvBack">콤비 목록</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelectorAll('[data-g]').forEach(async b=>{const d=await cvGif(b.dataset.g);b.innerHTML=d?`<img src="${d}" alt="연습 영상">`:'<span class="small">영상을 찾을 수 없어요</span>';const im=b.querySelector('img');if(im)im.onclick=()=>nImgView([d],0)});
+    el.querySelector('#cvBack').onclick=()=>{close();openCombos()};const up=el.querySelector('#cvUp');if(up)up.onclick=()=>{close();cvUpload(cid)};
+    el.querySelectorAll('[data-lk]').forEach(b=>b.onclick=async()=>{if(!me)return;const v=V.find(x=>x.k===b.dataset.lk);const on=!(v.lk||{})[me];if(await hset(`cvid/${cid}/${v.k}/lk/${me}`,on?true:null)){v.lk=v.lk||{};if(on)v.lk[me]=true;else delete v.lk[me];b.classList.toggle('on',on);b.textContent='❤ '+Object.keys(v.lk).length}});
+    el.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}const k=b.dataset.del;await hset('cvgif/'+k,null);if(await hset(`cvid/${cid}/${k}`,null)){toast('영상을 지웠어요');close();openCombo(cid)}})})}
+let GIFENC=null;
+async function gifLib(){if(GIFENC)return GIFENC;GIFENC=await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');return GIFENC}
+async function videoToGif(file,opt,onp){const lib=await gifLib();const url=URL.createObjectURL(file);const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+  await new Promise((res,rej)=>{v.onloadeddata=res;v.onerror=()=>rej(new Error('영상을 열지 못했어요'));setTimeout(()=>rej(new Error('영상을 여는 데 너무 오래 걸려요')),15000)});
+  const dur=v.duration||0;const start=Math.max(0,Math.min(opt.start||0,Math.max(0,dur-0.5)));const len=Math.min(opt.len||4,Math.max(0.5,dur-start));
+  const seek=t=>new Promise(r=>{const f=()=>{v.removeEventListener('seeked',f);r()};v.addEventListener('seeked',f);v.currentTime=Math.min(t,Math.max(0,dur-0.05))});
+  const tries=[{w:320,fps:8},{w:260,fps:7},{w:220,fps:6},{w:180,fps:5}];let out=null;
+  for(const T of tries){const w=Math.min(T.w,v.videoWidth||T.w),h=Math.round(w*(v.videoHeight||240)/(v.videoWidth||320));const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d',{willReadFrequently:true});
+    const n=Math.max(2,Math.round(len*T.fps));const gif=lib.GIFEncoder();
+    for(let i=0;i<n;i++){await seek(start+i/T.fps);c.drawImage(v,0,0,w,h);const d=c.getImageData(0,0,w,h).data;const pal=lib.quantize(d,96);const idx=lib.applyPalette(d,pal);gif.writeFrame(idx,w,h,{palette:pal,delay:Math.round(1000/T.fps)});onp&&onp((i+1)/n)}
+    gif.finish();const bytes=gif.bytes();out={bytes,w,h,fps:T.fps,len};if(bytes.length<=1100000)break}
+  URL.revokeObjectURL(url);const blob=new Blob([out.bytes],{type:'image/gif'});const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});
+  return Object.assign(out,{blob,dataUrl})}
+function cvUpload(cid){const c=CB.list[cid]||{};let G=null,file=null,dur=0;
+  sheet(`<h2>🎬 연습 영상 올리기</h2><div class="small">${esc(c.t||'')}</div>
+    <div class="chips" id="cvMode"><button class="chip on" data-m="gif">GIF로 변환해서 올리기</button><button class="chip" data-m="url">유튜브·인스타 링크</button></div>
+    <div id="cvGifBox" style="display:flex;flex-direction:column;gap:8px">
+      <label class="btn" for="cvFile" style="text-align:center">📹 영상 고르기 · 찍기</label><input id="cvFile" type="file" accept="video/*" hidden>
+      <video id="cvPrev" playsinline muted controls hidden style="width:100%;border-radius:12px;background:#000;max-height:40vh"></video>
+      <div id="cvOpt" hidden><div class="field"><label for="cvStart">시작 위치 <b id="cvStartT">0.0</b>초</label><input id="cvStart" type="range" min="0" max="0" step="0.1" value="0"></div>
+        <div class="field"><label for="cvLen">길이</label><select id="cvLen"><option value="3">3초</option><option value="4" selected>4초</option><option value="5">5초</option><option value="6">6초</option></select></div>
+        <button class="btn red" id="cvMake">GIF 만들기</button></div>
+      <div id="cvProg" class="small" hidden></div>
+      <div id="cvOut" hidden style="display:flex;flex-direction:column;gap:8px;align-items:center"><img id="cvImg" alt="GIF 미리보기" style="max-width:100%;border-radius:12px"><span class="small" id="cvInfo"></span>
+        <div class="row" style="gap:6px;width:100%"><button class="btn red grow" id="cvPost">게시판에 올리기</button><button class="btn ghost" id="cvSave">GIF 저장</button></div></div></div>
+    <div id="cvUrlBox" hidden style="display:flex;flex-direction:column;gap:8px"><div class="field"><label for="cvUrl">영상 주소</label><input id="cvUrl" inputmode="url" placeholder="https://youtube.com/shorts/..."></div><button class="btn red" id="cvUrlPost">올리기</button></div>
+    <button class="btn ghost" id="cvCancel">취소</button>`,(el,close)=>{
+    const $e=s=>el.querySelector(s);
+    el.querySelectorAll('#cvMode [data-m]').forEach(b=>b.onclick=()=>{el.querySelectorAll('#cvMode [data-m]').forEach(x=>x.classList.toggle('on',x===b));$e('#cvGifBox').hidden=b.dataset.m!=='gif';$e('#cvUrlBox').hidden=b.dataset.m!=='url'});
+    $e('#cvCancel').onclick=()=>{close();openCombo(cid)};
+    $e('#cvFile').onchange=e=>{file=e.target.files&&e.target.files[0];if(!file)return;const pv=$e('#cvPrev');pv.src=URL.createObjectURL(file);pv.hidden=false;$e('#cvOut').hidden=true;
+      pv.onloadedmetadata=()=>{dur=pv.duration||0;const st=$e('#cvStart');st.max=Math.max(0,dur-1).toFixed(1);st.value=0;$e('#cvStartT').textContent='0.0';$e('#cvOpt').hidden=false}};
+    $e('#cvStart').oninput=e=>{$e('#cvStartT').textContent=(+e.target.value).toFixed(1);try{$e('#cvPrev').currentTime=+e.target.value}catch(x){}};
+    $e('#cvMake').onclick=async()=>{if(!file)return;const b=$e('#cvMake'),pg=$e('#cvProg');b.disabled=true;pg.hidden=false;pg.textContent='GIF 만드는 중… 0%';
+      try{G=await videoToGif(file,{start:+$e('#cvStart').value,len:+$e('#cvLen').value},p=>{pg.textContent='GIF 만드는 중… '+Math.round(p*100)+'%'});
+        $e('#cvImg').src=G.dataUrl;$e('#cvInfo').textContent=`${G.w}×${G.h} · ${G.len.toFixed(1)}초 · ${(G.bytes.length/1024).toFixed(0)}KB`;$e('#cvOut').hidden=false;pg.hidden=true}
+      catch(e){pg.textContent='GIF를 만들지 못했어요: '+(e.message||e)+' · 링크로 올리기를 써 주세요'}b.disabled=false;b.textContent='다시 만들기'};
+    $e('#cvSave').onclick=()=>{if(!G)return;const a=document.createElement('a');a.href=URL.createObjectURL(G.blob);a.download=`NNN_${(c.t||'combo').replace(/[^\w가-힣]/g,'')}_${TODAY()}.gif`;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);toast('GIF를 저장했어요 (다운로드 폴더·사진첩)')};
+    const post=async(rec,gif)=>{const vid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      if(gif&&!(await hset('cvgif/'+vid,{mid:ME.id,d:gif}))){toast('영상을 올리지 못했어요. 보안 규칙을 확인해 주세요',4000);return false}
+      if(!(await hset(`cvid/${cid}/${vid}`,Object.assign({mid:ME.id,nick:ME.nick||maskName(ME.name||''),at:Date.now()},rec)))){if(gif)await hset('cvgif/'+vid,null);return false}
+      if(gif)CB.vids[vid]=gif;toast('올렸어요! 🥊');close();openCombo(cid);return true};
+    $e('#cvPost').onclick=async()=>{if(!G)return;if(G.dataUrl.length>1500000){toast('GIF가 너무 커요. 길이를 줄여 다시 만들어 주세요');return}const b=$e('#cvPost');b.disabled=true;b.textContent='올리는 중…';if(!(await post({ty:'gif',w:G.w,h:G.h},G.dataUrl))){b.disabled=false;b.textContent='게시판에 올리기'}};
+    $e('#cvUrlPost').onclick=async()=>{const u=$e('#cvUrl').value.trim();if(!/^https:\/\//i.test(u)){toast('https:// 로 시작하는 주소를 넣어 주세요');return}await post({ty:'url',u:u.slice(0,300)})}})}
+const CB_SEED=()=>BAG_COMBOS.slice(0,8).map((cmb,i)=>({t:cmb.map(n=>PUNCH[n][0]).join(' - '),s:cmb.map(n=>PUNCH[n][0]).join('-'),lv:cmb.length<=2?2:3,d:'',at:Date.now()+i}));
+async function cbAdmin(){await cbLoad();const L=Object.entries(CB.list).map(([id,c])=>Object.assign({id},c)).sort((a,b)=>(a.at||0)-(b.at||0));
+  sheet(`<h2>콤비네이션 관리</h2>${L.map(c=>`<div class="cbrow"><div class="grow" style="text-align:left"><b>${esc(c.t)}</b><div class="cbseq">${cbSeq(c.s).map(x=>`<i>${esc(x)}</i>`).join('')}</div></div><button class="btn sm ghost" data-ed="${esc(c.id)}">수정</button></div>`).join('')||'<div class="small">아직 없어요.</div>'}
+    <button class="btn red" id="cbNew">+ 새 콤비</button>${L.length?'':'<button class="btn ghost" id="cbSeed">기본 콤비 8개 불러오기</button>'}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#cbNew').onclick=()=>{close();cbEdit(null)};el.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{close();cbEdit(b.dataset.ed)});
+    const sd=el.querySelector('#cbSeed');if(sd)sd.onclick=async()=>{for(const c of CB_SEED()){await hset('combos/c'+c.at.toString(36),c)}toast('기본 콤비를 넣었어요');close();cbAdmin()}})}
+function cbEdit(id){const c=Object.assign({t:'',s:'',d:'',lv:2},id?CB.list[id]:{});
+  sheet(`<h2>${id?'콤비 수정':'새 콤비'}</h2><div class="field"><label for="ceT">이름</label><input id="ceT" maxlength="40" value="${esc(c.t)}" placeholder="예: NNN 기본 4연타"></div>
+    <div class="field"><label for="ceS">순서 <span class="small">(- 로 구분)</span></label><input id="ceS" maxlength="120" value="${esc(c.s)}" placeholder="잽-스트레이트-왼 훅-오른 어퍼"></div>
+    <div class="field"><label for="ceL">레벨</label><select id="ceL">${[2,3,4,5,6,7].map(l=>`<option value="${l}" ${+c.lv===l?'selected':''}>${l} · ${SKL[l]}</option>`).join('')}</select></div>
+    <div class="field"><label for="ceD">설명 <span class="small">(포인트·주의할 점)</span></label><textarea id="ceD" rows="3" maxlength="400">${esc(c.d||'')}</textarea></div>
+    <button class="btn red" id="ceSv">저장</button>${id?'<button class="btn ghost sm" id="ceDel">삭제</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    el.querySelector('#ceSv').onclick=async()=>{const t=el.querySelector('#ceT').value.trim(),s=el.querySelector('#ceS').value.trim();if(!t||!s){toast('이름과 순서를 적어 주세요');return}
+      const o={t,s,lv:+el.querySelector('#ceL').value,d:el.querySelector('#ceD').value.trim(),at:c.at||Date.now()};const k=id||('c'+Date.now().toString(36));if(await hset('combos/'+k,o)){CB.list[k]=o;toast('저장했어요');close();cbAdmin()}};
+    const d=el.querySelector('#ceDel');if(d)d.onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제';return}await hset('combos/'+id,null);delete CB.list[id];close();cbAdmin()}})}
 /* ================= 시작 ================= */
 (async()=>{
   show('v-home');syncInstUI();setTimeout(renderHomeQR,300);renderSNS();FB_READY=fbInit();const fbok=await FB_READY;if(fbok)await DB.meta();renderSNS();try{renderRaffle()}catch(e){}try{if(!LIVE.off)startLive();setTimeout(renderLiveCards,800)}catch(e){}renderBring();showInviteBanner();

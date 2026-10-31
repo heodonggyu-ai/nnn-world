@@ -398,6 +398,31 @@
           ".validate": "!newData.exists() || (newData.child('nick').isString() && (!newData.child('note').exists() || newData.child('note').val().length <= 80))"
         }
       },
+      "lotto": {
+        ".read": "auth != null",
+        "$k": { "$p": { ".write": "auth != null && newData.isNumber() && newData.val() >= 0 && newData.val() <= 500" } }
+      },
+      "wins": {
+        ".read": "auth != null",
+        "$w": { ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists()))" }
+      },
+      "combos": {
+        ".read": "auth != null",
+        "$c": { ".write": "auth != null && root.child('gym/admins').child(auth.uid).exists()" }
+      },
+      "cvid": {
+        ".read": "auth != null",
+        "$c": { "$v": {
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists()) || (data.exists() && !newData.exists() && root.child('gym/mdev').child(data.child('mid').val()).child(auth.uid).exists()))",
+          "lk": { "$m": { ".write": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists() && (!newData.exists() || newData.val() === true)" } }
+        } }
+      },
+      "cvgif": {
+        "$v": {
+          ".read": "auth != null",
+          ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (!data.exists() && newData.exists() && newData.child('mid').isString() && root.child('gym/mdev').child(newData.child('mid').val()).child(auth.uid).exists() && newData.child('d').isString() && newData.child('d').val().length < 1600000) || (data.exists() && !newData.exists() && root.child('gym/mdev').child(data.child('mid').val()).child(auth.uid).exists()))"
+        }
+      },
       "nimg": {
         ".read": "auth != null",
         "$nid": {
