@@ -167,6 +167,10 @@ const GAMES=[
   {id:'kart',isNew:1,grp:'action',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로 3바퀴 스피드전! 드리프트로 게이지를 채워 부스터를 모으고, 순간부스터로 역전해요.',href:'kart/',img:'shared/img/kart-cover.jpg',tags:['레이싱','드리프트','3D']},
   {id:'quiz',isNew:1,grp:'party study',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성·속담·나라와 수도! 혼자 도전하거나, TV에 띄우고 팀끼리 대결해요.',href:'quiz/',img:'shared/img/quiz-cover.jpg',tags:['퀴즈','넌센스','다 같이']},
   {id:'english',isNew:1,grp:'study',name:'NNN 잉글리시',desc:'10단원 영어 여행! 단어·표현·문법을 레슨으로 익히고, 듣고 따라 말하며 공부해요.',href:'english/',img:'shared/img/english-cover.jpg',tags:['영어','듣기·말하기','매일 학습']},
+  {id:'omok',isNew:1,grp:'board',name:'NNN 오목',desc:'다섯 개를 먼저 잇는 사람이 승리! 컴퓨터 3단계 또는 폰 하나로 둘이서. 쌍삼 금지 규칙도 켤 수 있어요.',href:'omok/',img:'shared/img/omok-cover.jpg',tags:['오목','컴퓨터 대결','둘이서']},
+  {id:'baduk',isNew:1,grp:'board',name:'NNN 바둑',desc:'9·13·19줄 바둑판. 따내기·패·계가까지 진짜 규칙 그대로! 컴퓨터와 두거나 둘이서 둬요.',href:'baduk/',img:'shared/img/baduk-cover.jpg',tags:['바둑','9줄 입문','자동 계가']},
+  {id:'janggi',isNew:1,grp:'board',name:'NNN 장기',desc:'차·포·마·상·궁성 대각선까지 정식 규칙! 장군·외통 알림, 상차림 4가지, 한글/한자 말.',href:'janggi/',img:'shared/img/janggi-cover.jpg',tags:['장기','컴퓨터 대결','둘이서']},
+  {id:'alkkagi',isNew:1,grp:'board party',name:'NNN 알까기',desc:'알을 뒤로 당겼다 튕겨서 상대 알을 판 밖으로! 바둑알·장기알 알까기와 30단계 도전 모드.',href:'alkkagi/',img:'shared/img/alkkagi-cover.jpg',tags:['알까기','일타이피','도전 30단계']},
   {id:'charades',isNew:1,grp:'party',name:'몸으로 말해요',desc:'말은 금지! 폰에 뜬 제시어를 몸짓으로만 설명하고 우리 팀이 맞혀요. 스포츠·동물·속담·직업·음식·생활 동작·복싱·사물 주제를 골라요.',href:'charades/',img:'shared/img/charades-cover.jpg',art:'🙆<br>몸으로 말해요',tags:['여럿이 한 폰','팀 대결','몸짓']},
 ];
 let mode='new',ME=null,AV=null,TRY=null,TAB='base',SEL=null;
@@ -177,7 +181,7 @@ $('#form').onsubmit=async e=>{e.preventDefault();const nick=$('#nick').value.tri
   try{const s=mode==='new'?await World.signup(nick,pin):await World.login(nick,pin);$('#msg').textContent='';showHome(s);toast(mode==='new'?`${s.nick}, NNN 월드에 온 걸 환영해요!`:`${s.nick}, 다시 왔구나!`)}
   catch(err){$('#msg').textContent=(err&&err.msg)||'잠시 후 다시 해 주세요.'}
   finally{$('#go').disabled=false}};
-const GRPS=[['all','전체'],['action','🏎️ 3D·액션'],['party','🎉 여럿이 한 폰'],['study','📚 공부·퀴즈'],['online','👥 친구랑 온라인']];
+const GRPS=[['all','전체'],['action','🏎️ 3D·액션'],['party','🎉 여럿이 한 폰'],['study','📚 공부·퀴즈'],['board','♟️ 보드게임'],['online','👥 친구랑 온라인']];
 let GRP=(()=>{try{return localStorage.getItem('nnnw_grp')||'all'}catch(e){return 'all'}})();
 function renderGames(){
   $('#gameCount').textContent=`${GAMES.filter(g=>!g.soon).length}개`;

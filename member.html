@@ -2481,6 +2481,10 @@ const ARCADE=[
   {id:'kart',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로를 달리는 드리프트 스피드전!',href:GHUB+'kart/',img:GHUB+'shared/img/kart-cover.jpg',col:'#1F6FB0',art:'드리프트<br>카트',tags:['레이싱','3D']},
   {id:'quiz',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성 퀴즈! 팀 대결도 돼요.',href:GHUB+'quiz/',img:GHUB+'shared/img/quiz-cover.jpg',col:'#FF8A2F',art:'퀴즈왕',tags:['퀴즈','넌센스']},
   {id:'english',name:'NNN 잉글리시',desc:'단어·표현·문법을 레슨으로! 듣고 따라 말하는 영어 공부.',href:GHUB+'english/',img:GHUB+'shared/img/english-cover.jpg',col:'#36B37E',art:'잉글리시',tags:['영어','공부']},
+  {id:'omok',name:'NNN 오목',desc:'다섯 개 먼저 잇기! 컴퓨터 또는 둘이서.',href:GHUB+'omok/',img:GHUB+'shared/img/omok-cover.jpg',col:'#3B2A14',art:'오목',tags:['오목','보드게임']},
+  {id:'baduk',name:'NNN 바둑',desc:'9·13·19줄, 따내기·패·계가까지.',href:GHUB+'baduk/',img:GHUB+'shared/img/baduk-cover.jpg',col:'#555',art:'바둑',tags:['바둑','보드게임']},
+  {id:'janggi',name:'NNN 장기',desc:'정식 규칙 장기! 장군·외통 알림.',href:GHUB+'janggi/',img:GHUB+'shared/img/janggi-cover.jpg',col:'#1F6F4A',art:'장기',tags:['장기','보드게임']},
+  {id:'alkkagi',name:'NNN 알까기',desc:'튕겨서 판 밖으로! 일타이피 도전.',href:GHUB+'alkkagi/',img:GHUB+'shared/img/alkkagi-cover.jpg',col:'#2E5E4E',art:'알까기',tags:['알까기','보드게임']},
   {id:'charades',name:'몸으로 말해요',desc:'말은 금지! 몸짓으로만 설명하고 팀이 맞혀요. 스포츠·동물·속담·복싱 등 주제 선택.',href:GHUB+'charades/',img:GHUB+'shared/img/charades-cover.jpg',col:'#FF7A59',art:'🙆<br>몸으로 말해요',tags:['여럿이 한 폰','팀 대결']}];
 function openArcade(){sheet(`<h2>게임장</h2><p class="small" style="margin:0">관장님이 직접 만든 게임들이에요. 하루 처음 한 판은 <b>+10 크레딧</b>!</p>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">${ARCADE.map(g=>`<button class="qrow" data-ag="${g.id}" style="border:0;text-align:left;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#fff;gap:0">

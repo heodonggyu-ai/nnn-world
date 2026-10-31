@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 바둑</title>
+<meta name="theme-color" content="#EFE4CF">
+<link rel="icon" href="../shared/img/samsaek.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 세로 화면: 위=흑/백 이름표(따낸 돌), 가운데=정사각형 바둑판, 아래=무르기·한 수 쉬기·기권 */
+:root{--paper:#EFE4CF;--ink:#2B2118;--mute:#7A6A55;--line:rgba(43,33,24,.18);--red:#E5534B;--blue:#3B6FD8;--green:#3E8E5E;
+  --f-display:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;--f-body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;color-scheme:light}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+h1,h2{font-family:var(--f-display);font-weight:400;margin:0}
+.wrap{max-width:640px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 12px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(10px,env(safe-area-inset-left,0px));min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;gap:10px}
+.top{display:flex;align-items:center;gap:8px}.top .g{flex:1}
+.icon{width:42px;height:42px;border-radius:12px;border:2.5px solid var(--ink);background:#fff;font-size:17px;display:grid;place-items:center;text-decoration:none;color:var(--ink)}
+.top h1{font-size:26px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{display:flex;align-items:center;gap:8px;background:#fff;border:2.5px solid var(--line);border-radius:14px;padding:8px 10px;transition:all .2s}
+.pl.on{border-color:var(--ink);box-shadow:0 3px 0 var(--ink);transform:translateY(-2px)}
+.pl .st{width:26px;height:26px;border-radius:50%;flex:none}
+.pl .st.b{background:radial-gradient(circle at 35% 30%,#666,#111 60%)}
+.pl .st.w{background:radial-gradient(circle at 35% 30%,#fff,#d8d8d8 70%);border:1px solid #aaa}
+.pl b{font-family:var(--f-display);font-weight:400;font-size:17px;display:block;line-height:1.1}
+.pl small{color:var(--mute);font-size:12px}
+.boardbox{position:relative;width:100%;aspect-ratio:1;border-radius:8px;box-shadow:0 6px 0 #8E6A3A,0 10px 24px rgba(0,0,0,.18)}
+canvas{display:block;width:100%;height:100%;border-radius:8px;touch-action:manipulation}
+.msg{min-height:26px;text-align:center;font-family:var(--f-display);font-size:18px}
+.msg.warn{color:var(--red)}
+.btns{display:flex;gap:8px}
+.btn{flex:1;min-height:52px;border:2.5px solid var(--ink);border-radius:14px;background:#fff;font-family:var(--f-display);font-size:17px;box-shadow:0 4px 0 var(--ink);padding:0 6px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.main{background:var(--red);color:#fff}
+.btn.blue{background:var(--blue);color:#fff}
+.btn:disabled{opacity:.4;pointer-events:none}
+.panel{background:#fff;border:2.5px solid var(--ink);border-radius:18px;padding:16px;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.lbl{font-family:var(--f-display);font-size:15px;color:var(--mute);margin:12px 0 6px}
+.seg{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:6px}
+.seg button{border:2.5px solid var(--ink);border-radius:12px;background:#fff;padding:9px 4px;font-family:var(--f-display);font-size:16px;line-height:1.15}
+.seg button small{display:block;font-family:var(--f-body);font-size:11.5px;color:var(--mute)}
+.seg button.on{background:var(--ink);color:#fff}.seg button.on small{color:#ddd}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:700}
+.chk input{width:20px;height:20px}
+.over{position:fixed;inset:0;background:rgba(43,33,24,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:5}
+.over .panel{max-width:390px;width:100%;text-align:center;max-height:92vh;overflow:auto}
+.over .big{font-size:60px;line-height:1}
+.score{display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;text-align:left;margin:12px auto;max-width:280px;font-size:15px}
+.score b{font-family:var(--f-display);font-weight:400}
+.help{font-size:13.5px;color:var(--mute);line-height:1.55;text-align:left;margin-top:10px;background:#F7F1E4;border-radius:12px;padding:10px 12px}
+.rec{font-size:13px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="icon" id="back" href="../" aria-label="NNN 월드로">←</a><div class="g"><h1>⚪ NNN 바둑</h1></div><button class="icon" id="menuBtn" aria-label="설정">⚙</button></div>
+  <div class="players"><div class="pl" id="pB"><span class="st b"></span><div><b id="nB">나</b><small id="sB">흑 · 따낸 돌 0</small></div></div><div class="pl" id="pW"><span class="st w"></span><div><b id="nW">컴퓨터</b><small id="sW">백 · 덤 6.5</small></div></div></div>
+  <div class="boardbox"><canvas id="cv"></canvas></div>
+  <div class="msg" id="msg">상대 돌을 둘러싸서 따내고, 집을 더 많이 지으면 이겨요!</div>
+  <div class="btns" id="playBtns"><button class="btn" id="undo">↶ 무르기</button><button class="btn main" id="place" hidden>여기에 두기</button><button class="btn" id="pass">한 수 쉬기</button><button class="btn" id="resign">🏳️ 기권</button></div>
+  <div class="btns" id="scoreBtns" hidden><button class="btn" id="resume">계속 두기</button><button class="btn blue" id="confirm">계가 확정</button></div>
+  <div class="rec" id="rec"></div>
+</div>
+
+<div class="over" id="setup" hidden><div class="panel">
+  <h2>바둑 시작</h2>
+  <div class="lbl">판 크기</div>
+  <div class="seg" id="sSize"><button data-v="9">9줄<small>입문 · 짧게</small></button><button data-v="13">13줄<small>중간</small></button><button data-v="19">19줄<small>정식</small></button></div>
+  <div class="lbl">누구랑 할까요?</div>
+  <div class="seg" style="--n:2" id="sMode"><button data-v="ai">🤖 컴퓨터<small>혼자 하기</small></button><button data-v="two">👫 둘이서<small>폰 하나로 번갈아</small></button></div>
+  <div id="aiOpts"><div class="lbl">컴퓨터 실력</div><div class="seg" id="sLv"><button data-v="0">쉬움</button><button data-v="1">보통</button><button data-v="2">어려움</button></div>
+    <div class="lbl">내 돌</div><div class="seg" style="--n:2" id="sCol"><button data-v="b">⚫ 흑 (먼저)</button><button data-v="w">⚪ 백 (덤 받음)</button></div></div>
+  <label class="chk"><input type="checkbox" id="tap2"> 두 번 눌러서 두기 (실수 방지)</label>
+  <div class="help">📖 <b>규칙 한눈에</b><br>· 돌의 숨구멍(바로 옆 빈칸)을 모두 막으면 따내요.<br>· 바로 되따내는 "패"는 한 수 쉬었다가 따낼 수 있어요.<br>· 둘 다 "한 수 쉬기"를 하면 끝! 죽은 돌을 확인하고 집+돌을 세요. 백은 덤 6.5집.</div>
+  <div style="margin-top:14px"><button class="btn main" style="width:100%" id="go">시작!</button></div>
+</div></div>
+
+<div class="over" id="end" hidden><div class="panel"><div class="big" id="eE">🏆</div><h2 id="eT">흑 승리!</h2><div class="score" id="eS"></div><div class="btns"><button class="btn" id="eView">판 보기</button><button class="btn main" id="eAgain">한 판 더</button></div></div></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+if(window.top!==window)$('back').hidden=true;
+const store={get(k,d){try{const v=localStorage.getItem('nnnbaduk.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('nnnbaduk.'+k,JSON.stringify(v))}catch(e){}}};
+const O=Object.assign({size:9,mode:'ai',lv:1,col:'b',tap2:matchMedia('(pointer:coarse)').matches},store.get('opt',{}));
+const KOMI=6.5,BL=1,WH=2;
+
+/* =========== 엔진: 테두리 있는 1차원 판 =========== */
+let N=9,W=11,D4,DG,PTS;
+let mark,stack,stampV=0,mark2,stamp2=0;
+function setSize(n){N=n;W=n+2;D4=[1,-1,W,-W];DG=[W+1,W-1,-W+1,-W-1];PTS=[];for(let y=0;y<N;y++)for(let x=0;x<N;x++)PTS.push((y+1)*W+x+1);mark=new Int32Array(W*W);mark2=new Int32Array(W*W);stack=new Int32Array(W*W)}
+const ix=(x,y)=>(y+1)*W+x+1,cx=i=>i%W-1,cy=i=>((i/W)|0)-1;
+function newState(){const b=new Int8Array(W*W).fill(3);const emp=new Int16Array(N*N),epos=new Int16Array(W*W).fill(-1);let k=0;for(const i of PTS){b[i]=0;emp[k]=i;epos[i]=k;k++}return{b,ko:-1,cap:[0,0,0],emp,epos,ec:k}}
+function clone(S){return{b:S.b.slice(),ko:S.ko,cap:S.cap.slice(),emp:S.emp.slice(),epos:S.epos.slice(),ec:S.ec}}
+function eAdd(S,i){S.epos[i]=S.ec;S.emp[S.ec++]=i}
+function eDel(S,i){const p=S.epos[i],last=S.emp[--S.ec];S.emp[p]=last;S.epos[last]=p;S.epos[i]=-1}
+function hasLib(b,i){const c=b[i];stampV++;let sp=0;stack[sp++]=i;mark[i]=stampV;while(sp){const j=stack[--sp];for(let k=0;k<4;k++){const n=j+D4[k],v=b[n];if(v===0)return true;if(v===c&&mark[n]!==stampV){mark[n]=stampV;stack[sp++]=n}}}return false}
+function libCount(b,i,max=99){const c=b[i];stampV++;stamp2++;let sp=0,L=0;stack[sp++]=i;mark[i]=stampV;while(sp){const j=stack[--sp];for(let k=0;k<4;k++){const n=j+D4[k],v=b[n];if(v===0){if(mark2[n]!==stamp2){mark2[n]=stamp2;if(++L>=max)return L}}else if(v===c&&mark[n]!==stampV){mark[n]=stampV;stack[sp++]=n}}}return L}
+function groupOf(b,i){const c=b[i],out=[i];stampV++;mark[i]=stampV;for(let h=0;h<out.length;h++){const j=out[h];for(let k=0;k<4;k++){const n=j+D4[k];if(b[n]===c&&mark[n]!==stampV){mark[n]=stampV;out.push(n)}}}return out}
+function removeGroup(S,i){const b=S.b,c=b[i];let sp=0,n0=0;stack[sp++]=i;b[i]=0;eAdd(S,i);while(sp){const j=stack[--sp];n0++;for(let k=0;k<4;k++){const n=j+D4[k];if(b[n]===c){b[n]=0;eAdd(S,n);stack[sp++]=n}}}return n0}
+// 반환: true=둠, false=못 둠(S.why에 이유)
+function tryPlay(S,i,c){const b=S.b;if(b[i]!==0){S.why='occupied';return false}if(i===S.ko){S.why='ko';return false}
+  b[i]=c;const o=3-c;let cap=0,capPt=-1;
+  for(let k=0;k<4;k++){const n=i+D4[k];if(b[n]===o&&!hasLib(b,n)){cap+=removeGroup(S,n);capPt=n}}
+  if(!cap&&!hasLib(b,i)){b[i]=0;S.why='suicide';return false}
+  eDel(S,i);S.ko=-1;
+  if(cap===1){let own=0,lib=0;for(let k=0;k<4;k++){const v=b[i+D4[k]];if(v===c)own++;else if(v===0)lib++}if(!own&&lib===1)S.ko=capPt}
+  S.cap[c]+=cap;S.lastCap=cap;return true}
+function isEye(b,i,c){for(let k=0;k<4;k++){const v=b[i+D4[k]];if(v!==c&&v!==3)return false}let bad=0,edge=0;for(let k=0;k<4;k++){const v=b[i+DG[k]];if(v===3)edge=1;else if(v===3-c)bad++}return edge?bad===0:bad<=1}
+// 랜덤 끝까지 두기 (자기 눈은 메우지 않음)
+function playout(S,c,amaf){let passes=0,moves=0;const lim=N*N*3;
+  while(passes<2&&moves<lim){let n=S.ec,played=false;const st=(Math.random()*n)|0;
+    for(let t=0;t<n;t++){const i=S.emp[(st+t)%n];if(isEye(S.b,i,c))continue;if(tryPlay(S,i,c)){played=true;if(amaf&&!amaf[i])amaf[i]=c;break}}
+    passes=played?0:passes+1;c=3-c;moves++}
+  return areaScore(S.b)}
+function areaScore(b){let s=0;for(const i of PTS){const v=b[i];if(v===1)s++;else if(v===2)s--;else{let bb=0,ww=0;for(let k=0;k<4;k++){const u=b[i+D4[k]];if(u===1)bb=1;else if(u===2)ww=1}if(bb&&!ww)s++;else if(ww&&!bb)s--}}return s-KOMI}
+
+/* =========== 컴퓨터 =========== */
+const LV=[{ms:220,noise:.12},{ms:800,noise:.02},{ms:1700,noise:0}];
+function aiThink(c){const L=LV[O.lv],t0=performance.now(),n=W*W;
+  const vis=new Float32Array(n),win=new Float32Array(n),own=new Float32Array(n);const amaf=new Int8Array(n);let runs=0,wins=0;
+  while(performance.now()-t0<L.ms||runs<60){const S=clone(G);amaf.fill(0);const sc=playout(S,c,amaf);const w=(sc>0)===(c===BL);runs++;if(w)wins++;
+    for(const i of PTS){if(amaf[i]===c){vis[i]++;if(w)win[i]++}const v=S.b[i];own[i]+=v===1?1:v===2?-1:0}
+    if(runs>6000)break}
+  for(const i of PTS)own[i]/=runs;
+  const overall=wins/runs;let best=-1,bs=-9;const sgn=c===BL?1:-1;const early=hist.length<N*1.2;
+  for(const i of PTS){if(G.b[i]!==0||vis[i]<3)continue;if(isEye(G.b,i,c))continue;
+    const S=clone(G);if(!tryPlay(S,i,c))continue;
+    let s=win[i]/vis[i];
+    // 정해진 땅(거의 확실히 내 땅/상대 땅)은 두지 않음
+    const o=own[i]*sgn;if(o>.92||o<-.92)s-=.25;
+    // 따내기 · 단수 살리기 · 자충 피하기
+    if(S.lastCap)s+=.06+.01*Math.min(S.lastCap,10);
+    for(let k=0;k<4;k++){const nb=i+D4[k];if(G.b[nb]===c&&libCount(G.b,nb,2)===1&&libCount(S.b,i,3)>=2)s+=.08}
+    const myL=libCount(S.b,i,3);if(myL===1&&groupOf(S.b,i).length>1)s-=.12;else if(myL===1)s-=.04;
+    if(early){const x=cx(i),y=cy(i),e=Math.min(x,y,N-1-x,N-1-y);if(e===0)s-=.08;else if(e===1&&N>9)s-=.03;else if((e===2||e===3)&&N>9)s+=.02}
+    s+=(Math.random()-.5)*L.noise*2;
+    if(s>bs){bs=s;best=i}}
+  return{move:best,rate:overall,own}}
+
+/* =========== 진행 =========== */
+let G,hist=[],turn=BL,phase='play',passes=0,last=-1,ghost=-1,thinking=false,dead=null,terr=null,lastOwn=null;
+const human=c=>O.mode==='two'||(O.col==='b'?c===BL:c===WH);
+const cname=c=>c===BL?'흑':'백';
+function who(c){return O.mode==='two'?cname(c):human(c)?'나':'컴퓨터'}
+function snap(){return{G:clone(G),turn,passes,last}}
+function say(t,warn){$('msg').textContent=t;$('msg').classList.toggle('warn',!!warn)}
+function ui(){$('nB').textContent=who(BL);$('nW').textContent=who(WH);$('sB').textContent=`흑 · 따낸 돌 ${G.cap[1]}`;$('sW').textContent=`백 · 따낸 돌 ${G.cap[2]} · 덤 ${KOMI}`;
+  $('pB').classList.toggle('on',phase==='play'&&turn===BL);$('pW').classList.toggle('on',phase==='play'&&turn===WH);
+  $('playBtns').hidden=phase!=='play';$('scoreBtns').hidden=phase!=='score';$('place').hidden=!(O.tap2&&ghost>=0);
+  $('pass').hidden=!$('place').hidden;$('undo').disabled=!hist.length||thinking;$('pass').disabled=thinking||!human(turn);$('resign').disabled=thinking||!human(turn)}
+let AC=null;function tick(n=1){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime;for(let k=0;k<Math.min(n,4);k++){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(k?520:240,t+k*.07);o.frequency.exponentialRampToValueAtTime(k?380:120,t+k*.07+.06);g.gain.setValueAtTime(.22,t+k*.07);g.gain.exponentialRampToValueAtTime(.0001,t+k*.07+.09);o.connect(g).connect(AC.destination);o.start(t+k*.07);o.stop(t+k*.07+.1)}}catch(e){}}
+function move(i){const h=snap();if(i<0){hist.push(h);passes++;last=-1;ghost=-1;say(`${who(turn)} 한 수 쉬었어요`);turn=3-turn;afterMove();return true}
+  if(!tryPlay(G,i,turn)){say(G.why==='ko'?'패! 바로 되따낼 수 없어요. 다른 곳에 한 수 두고 오세요':G.why==='suicide'?'거기는 숨구멍이 없어서 둘 수 없어요(자충수)':'이미 돌이 있어요',true);ghost=-1;draw();ui();return false}
+  hist.push(h);passes=0;last=i;ghost=-1;tick(1+(G.lastCap?1:0));if(G.lastCap)say(`${who(turn)} 돌 ${G.lastCap}개 따냄! ✨`);else say(human(3-turn)?(O.mode==='two'?`${cname(3-turn)} 차례예요`:'내 차례예요'):'컴퓨터가 생각 중…');
+  turn=3-turn;afterMove();return true}
+function afterMove(){draw();ui();if(passes>=2){startScoring();return}
+  if(!human(turn)){thinking=true;ui();setTimeout(aiTurn,60)}}
+function aiTurn(){if(phase!=='play'){thinking=false;return}const r=aiThink(turn);thinking=false;lastOwn=r.own;
+  const myRate=r.rate;
+  if(myRate<.03&&hist.length>N*N*.4&&O.lv>0){finish({resign:turn});return}
+  if(r.move<0||(passes===1&&quickEstimate(r.own)*(turn===BL?1:-1)>0)){move(-1);return}
+  move(r.move)}
+function quickEstimate(own){let s=0;for(const i of PTS)s+=own[i]>.2?1:own[i]<-.2?-1:0;return s-KOMI}
+/* ---------- 계가 ---------- */
+function ownership(ms){const n=W*W,own=new Float32Array(n);let runs=0;const t0=performance.now();while(performance.now()-t0<ms||runs<40){const S=clone(G);playout(S,turn,null);for(const i of PTS){const v=S.b[i];own[i]+=v===1?1:v===2?-1:0}runs++;if(runs>1500)break}for(const i of PTS)own[i]/=runs;return own}
+function startScoring(){phase='score';thinking=false;say('계가 준비 중…');ui();setTimeout(()=>{const own=ownership(N===9?500:N===13?700:900);dead=new Uint8Array(W*W);
+    const seen=new Uint8Array(W*W);for(const i of PTS){const v=G.b[i];if(!v||seen[i])continue;const grp=groupOf(G.b,i);let a=0;for(const j of grp){seen[j]=1;a+=own[j]}a/=grp.length;if((v===BL&&a<-.3)||(v===WH&&a>.3))for(const j of grp)dead[j]=1}
+    calcTerr();draw();ui();say('죽은 돌을 눌러서 바꿀 수 있어요. 맞으면 "계가 확정"!')},50)}
+function calcTerr(){const b=G.b.slice();for(const i of PTS)if(dead[i])b[i]=0;terr=new Int8Array(W*W);const seen=new Uint8Array(W*W);
+  for(const i of PTS){if(b[i]||seen[i])continue;const reg=[i];seen[i]=1;let bb=0,ww=0;for(let h=0;h<reg.length;h++){const j=reg[h];for(let k=0;k<4;k++){const n=j+D4[k],v=b[n];if(v===0&&!seen[n]){seen[n]=1;reg.push(n)}else if(v===1)bb=1;else if(v===2)ww=1}}
+    const o=bb&&!ww?1:ww&&!bb?2:0;for(const j of reg)terr[j]=o}
+  let s={1:{st:0,te:0},2:{st:0,te:0}};for(const i of PTS){if(b[i])s[b[i]].st++;else if(terr[i])s[terr[i]].te++}return s}
+function finish(o){phase='end';thinking=false;const R=store.get('rec',{w:0,l:0});let winC,html='';
+  if(o.resign){winC=3-o.resign;html=`<span>${who(o.resign)} 기권</span>`}
+  else{const s=calcTerr();const bt=s[1].st+s[1].te,wt=s[2].st+s[2].te+KOMI;winC=bt>wt?BL:WH;
+    html=`<span></span><b>⚫ 흑</b><b>⚪ 백</b><span>살아 있는 돌</span><span>${s[1].st}</span><span>${s[2].st}</span><span>집</span><span>${s[1].te}</span><span>${s[2].te}</span><span>덤</span><span>-</span><span>${KOMI}</span><b>합계</b><b>${bt}</b><b>${wt}</b>`;
+    html+=`<span style="grid-column:1/-1;text-align:center;margin-top:6px;color:var(--mute)">${cname(winC)}이 ${Math.abs(bt-wt)}집 이겼어요</span>`}
+  let e='🏆',t=`${cname(winC)} 승리!`;
+  if(O.mode==='ai'){if(human(winC)){R.w++;t='내가 이겼어요!'}else{R.l++;e='🤖';t='컴퓨터가 이겼어요'}store.set('rec',R)}
+  $('eE').textContent=e;$('eT').textContent=t;$('eS').innerHTML=html;$('end').hidden=false;draw();ui();rec();say(t)}
+function rec(){const R=store.get('rec',{w:0,l:0});$('rec').textContent=O.mode==='ai'?`컴퓨터와 전적 ${R.w}승 ${R.l}패 · ${O.size}줄 · ${['쉬움','보통','어려움'][O.lv]}`:''}
+
+/* =========== 그리기 =========== */
+const cv=$('cv'),g=cv.getContext('2d');let S=0,M=0,CELL=0;
+function resize(){const r=cv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2.5);cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);S=cv.width;CELL=S/(N+.2);M=CELL*.6;draw()}
+addEventListener('resize',resize);
+const P=i=>M+i*CELL;
+function stone(x,y,c,a=1){const X=P(x),Y=P(y),r=CELL*.475;g.save();g.globalAlpha=a;g.beginPath();g.arc(X+r*.07,Y+r*.1,r,0,7);g.fillStyle='rgba(0,0,0,.25)';g.fill();
+  const gr=g.createRadialGradient(X-r*.35,Y-r*.35,r*.1,X,Y,r);if(c===BL){gr.addColorStop(0,'#6b6b6b');gr.addColorStop(.6,'#1a1a1a');gr.addColorStop(1,'#000')}else{gr.addColorStop(0,'#fff');gr.addColorStop(.7,'#e8e8e3');gr.addColorStop(1,'#bcbcb4')}
+  g.beginPath();g.arc(X,Y,r,0,7);g.fillStyle=gr;g.fill();g.restore()}
+function stars(){if(N===9)return[[2,2],[6,2],[4,4],[2,6],[6,6]];if(N===13)return[[3,3],[9,3],[6,6],[3,9],[9,9]];return[3,9,15].flatMap(a=>[3,9,15].map(b=>[a,b]))}
+function draw(){if(!S||!G)return;const wg=g.createLinearGradient(0,0,S,S);wg.addColorStop(0,'#E6BE7A');wg.addColorStop(1,'#D6A55C');g.fillStyle=wg;g.fillRect(0,0,S,S);
+  g.strokeStyle='rgba(120,80,30,.1)';g.lineWidth=S/300;for(let i=0;i<36;i++){g.beginPath();const y=(i/36)*S;g.moveTo(0,y);g.bezierCurveTo(S*.3,y+9,S*.6,y-9,S,y+4);g.stroke()}
+  g.strokeStyle='#3b2a14';g.lineWidth=Math.max(1,S/(N>13?700:500));for(let i=0;i<N;i++){g.beginPath();g.moveTo(P(0),P(i));g.lineTo(P(N-1),P(i));g.stroke();g.beginPath();g.moveTo(P(i),P(0));g.lineTo(P(i),P(N-1));g.stroke()}
+  g.lineWidth=Math.max(2,S/260);g.strokeRect(P(0),P(0),CELL*(N-1),CELL*(N-1));
+  g.fillStyle='#3b2a14';stars().forEach(([x,y])=>{g.beginPath();g.arc(P(x),P(y),CELL*.11,0,7);g.fill()});
+  for(const i of PTS){const v=G.b[i];if(v)stone(cx(i),cy(i),v,dead&&dead[i]&&phase!=='play'?.45:1)}
+  if(phase!=='play'&&terr){for(const i of PTS){const x=P(cx(i)),y=P(cy(i)),own=(G.b[i]===0||dead[i])?terr[i]:0;if(own){const s=CELL*.32;g.fillStyle=own===1?'#111':'#fff';g.strokeStyle='#555';g.lineWidth=1;g.fillRect(x-s/2,y-s/2,s,s);g.strokeRect(x-s/2,y-s/2,s,s)}
+      if(dead[i]&&G.b[i]){g.strokeStyle='#E5534B';g.lineWidth=CELL*.09;const s=CELL*.2;g.beginPath();g.moveTo(x-s,y-s);g.lineTo(x+s,y+s);g.moveTo(x+s,y-s);g.lineTo(x-s,y+s);g.stroke()}}}
+  if(last>=0&&G.b[last]){g.beginPath();g.arc(P(cx(last)),P(cy(last)),CELL*.17,0,7);g.strokeStyle='#E5534B';g.lineWidth=CELL*.08;g.stroke()}
+  if(ghost>=0&&!G.b[ghost]){stone(cx(ghost),cy(ghost),turn,.55);g.strokeStyle='#E5534B';g.lineWidth=S/300;g.strokeRect(P(cx(ghost))-CELL/2,P(cy(ghost))-CELL/2,CELL,CELL)}}
+
+/* =========== 입력 =========== */
+cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect(),d=cv.width/r.width;const x=Math.round(((e.clientX-r.left)*d-M)/CELL),y=Math.round(((e.clientY-r.top)*d-M)/CELL);if(x<0||y<0||x>=N||y>=N)return;const i=ix(x,y);
+  if(phase==='score'){if(!G.b[i])return;const grp=groupOf(G.b,i);const v=dead[i]?0:1;for(const j of grp)dead[j]=v;calcTerr();draw();return}
+  if(phase!=='play'||thinking||!human(turn))return;if(G.b[i])return;
+  if(O.tap2&&ghost!==i){ghost=i;draw();ui();say('한 번 더 누르거나 "여기에 두기"를 눌러요');return}move(i)});
+$('place').onclick=()=>{if(ghost>=0)move(ghost)};
+$('pass').onclick=()=>{if(thinking||!human(turn)||phase!=='play')return;move(-1)};
+$('resign').onclick=()=>{if(thinking||phase!=='play')return;if(!confirmResign){confirmResign=true;$('resign').textContent='정말 기권?';setTimeout(()=>{confirmResign=false;$('resign').textContent='🏳️ 기권'},2500);return}confirmResign=false;$('resign').textContent='🏳️ 기권';finish({resign:turn})};
+let confirmResign=false;
+$('undo').onclick=()=>{if(thinking||!hist.length)return;let n=O.mode==='ai'?2:1;if(O.mode==='ai'&&hist.length===1)n=1;
+  for(let k=0;k<n&&hist.length;k++){const h=hist.pop();G=h.G;turn=h.turn;passes=h.passes;last=h.last}
+  if(O.mode==='ai'&&!human(turn)){/* 컴퓨터가 첫 수였던 경우 */thinking=true;setTimeout(aiTurn,200)}ghost=-1;phase='play';dead=null;terr=null;$('end').hidden=true;draw();ui();say('한 수 물렀어요')};
+$('resume').onclick=()=>{phase='play';passes=0;dead=null;terr=null;draw();ui();say(`${who(turn)} 차례예요`);if(!human(turn)){thinking=true;ui();setTimeout(aiTurn,60)}};
+$('confirm').onclick=()=>finish({});
+function newGame(){setSize(O.size);G=newState();hist=[];turn=BL;phase='play';passes=0;last=-1;ghost=-1;thinking=false;dead=null;terr=null;$('end').hidden=true;resize();ui();rec();
+  say(O.mode==='two'?'흑부터 두세요!':human(BL)?'내가 흑, 먼저 둬요!':'컴퓨터가 흑으로 먼저 둬요');if(!human(BL)){thinking=true;ui();setTimeout(aiTurn,300)}}
+/* =========== 설정 =========== */
+function seg(id,key){const el=$(id);const paint=()=>el.querySelectorAll('button').forEach(b=>b.classList.toggle('on',String(O[key])===b.dataset.v));el.onclick=e=>{const b=e.target.closest('button');if(!b)return;O[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;paint();$('aiOpts').hidden=O.mode!=='ai'};paint()}
+function openSetup(){seg('sSize','size');seg('sMode','mode');seg('sLv','lv');seg('sCol','col');$('tap2').checked=O.tap2;$('aiOpts').hidden=O.mode!=='ai';$('setup').hidden=false}
+$('go').onclick=()=>{O.tap2=$('tap2').checked;store.set('opt',O);$('setup').hidden=true;newGame()};
+$('menuBtn').onclick=openSetup;
+$('eAgain').onclick=()=>{$('end').hidden=true;openSetup()};$('eView').onclick=()=>$('end').hidden=true;
+setSize(O.size);G=newState();resize();ui();openSetup();
+</script>
+</body>
+</html>
