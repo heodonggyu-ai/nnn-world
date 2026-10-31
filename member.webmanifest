@@ -11,8 +11,44 @@
   "background_color": "#EDEEF0",
   "theme_color": "#2F2F2F",
   "icons": [
-    {"src": "member-icons/v2/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "member-icons/v2/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "member-icons/v2/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
-  ]
+    {
+      "src": "member-icons/v2/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "member-icons/v2/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "member-icons/v2/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "share_target": {
+    "action": "member.html?share=1",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            "video/*",
+            "image/gif",
+            ".mp4",
+            ".mov",
+            ".gif"
+          ]
+        }
+      ]
+    }
+  }
 }

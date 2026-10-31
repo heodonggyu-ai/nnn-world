@@ -2079,7 +2079,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
+async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -4506,7 +4506,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
 
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},800);try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{renderPadPinSet()}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -6568,8 +6568,18 @@ async function openCombos(){await cbLoad();let counts={};try{const v=(await hget
     ${ME&&isOwner(ME)||IS_ADMIN?'<button class="btn ghost sm" id="cbAdm">콤비 관리 (관장)</button>':''}<button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelectorAll('[data-cb]').forEach(b=>b.onclick=()=>{close();openCombo(b.dataset.cb)});{const t=el.querySelector('#cbUpTop');if(t)t.onclick=()=>{close();cvPick()}}const a=el.querySelector('#cbAdm');if(a)a.onclick=()=>{close();cbAdmin()}})}
 function cvWho(){if(ME&&!ME.demo&&!(typeof isGuest==='function'&&isGuest()))return{id:ME.id,nick:isOwner(ME)?'관장님':(ME.nick||maskName(ME.name||''))};if(IS_ADMIN)return{id:OWNER_ID,nick:'관장님'};return null}
-function cvPick(){const L=Object.entries(CB.list).map(([id,c])=>Object.assign({id},c)).sort((a,b)=>(+a.lv||0)-(+b.lv||0)||(a.at||0)-(b.at||0));
-  sheet(`<h2>🎬 어떤 콤비 영상인가요?</h2><p class="small" style="margin:0">연습한 콤비를 고르면 영상을 올릴 수 있어요.</p>${L.map(c=>`<button class="cbrow" data-pk="${esc(c.id)}"><div class="grow" style="text-align:left"><b>${esc(c.t)}</b><div class="cbseq">${cbSeq(c.s).map(x=>`<i>${esc(x)}</i>`).join('')}</div></div><span style="font-size:20px">›</span></button>`).join('')}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{el.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{close();cvUpload(b.dataset.pk)})})}
+/* 사진첩 → 공유 → NNN WORLD 로 들어온 영상 */
+async function shareTake(){try{if(!('caches' in window))return null;const c=await caches.open('nnn-share');const r=await c.match('shared-media');if(!r)return null;const b=await r.blob();const nm=decodeURIComponent(r.headers.get('X-Name')||'shared');await c.delete('shared-media');return new File([b],nm,{type:b.type||r.headers.get('Content-Type')||''})}catch(e){return null}}
+let SHARE_F=null;
+async function shareCheck(){if(!SHARE_F)SHARE_F=await shareTake();if(!SHARE_F)return;
+  if(!cvWho()){toast('회원번호로 입장하면 받은 영상을 바로 올릴 수 있어요',4000);return}
+  const f=SHARE_F;SHARE_F=null;await cbLoad();try{$('#sheetRoot').innerHTML=''}catch(e){}
+  const isV=/^video|gif/i.test(f.type);
+  sheet(`<h2>📥 받은 ${isV?'영상':'사진'}을 어디에 올릴까요?</h2><div class="small">${esc(f.name)} · ${(f.size/1048576).toFixed(1)}MB</div>
+    ${isV?'<button class="btn red" id="shCb">🥊 콤비네이션 게시판</button>':'<div class="small">콤비 게시판은 영상·GIF만 올릴 수 있어요.</div>'}
+    <button class="btn ghost" data-close>취소</button>`,(el,close)=>{const b=el.querySelector('#shCb');if(b)b.onclick=()=>{close();cvPick(f)}})}
+function cvPick(preset){const L=Object.entries(CB.list).map(([id,c])=>Object.assign({id},c)).sort((a,b)=>(+a.lv||0)-(+b.lv||0)||(a.at||0)-(b.at||0));
+  sheet(`<h2>🎬 어떤 콤비 영상인가요?</h2><p class="small" style="margin:0">연습한 콤비를 고르면 영상을 올릴 수 있어요.</p>${L.map(c=>`<button class="cbrow" data-pk="${esc(c.id)}"><div class="grow" style="text-align:left"><b>${esc(c.t)}</b><div class="cbseq">${cbSeq(c.s).map(x=>`<i>${esc(x)}</i>`).join('')}</div></div><span style="font-size:20px">›</span></button>`).join('')}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{el.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{close();cvUpload(b.dataset.pk,preset)})})}
 async function cvGif(vid){if(CB.vids[vid])return CB.vids[vid];const v=await hget('cvgif/'+vid);const d=v&&v.d||'';CB.vids[vid]=d;return d}
 async function openCombo(cid){if(!CB.list[cid])await cbLoad();const c=CB.list[cid];if(!c){toast('없는 콤비예요');return}
   const V=Object.entries((await hget('cvid/'+cid))||{}).map(([k,v])=>Object.assign({},v,{k})).sort((a,b)=>(b.at||0)-(a.at||0));
@@ -6596,7 +6606,7 @@ async function videoToGif(file,opt,onp){const lib=await gifLib();const url=URL.c
     gif.finish();const bytes=gif.bytes();out={bytes,w,h,fps:T.fps,len};if(bytes.length<=1100000)break}
   URL.revokeObjectURL(url);const blob=new Blob([out.bytes],{type:'image/gif'});const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});
   return Object.assign(out,{blob,dataUrl})}
-function cvUpload(cid){const c=CB.list[cid]||{};let G=null,file=null,dur=0;
+function cvUpload(cid,preset){const c=CB.list[cid]||{};let G=null,file=null,dur=0;
   sheet(`<h2>🎬 연습 영상 올리기</h2><div class="small">${esc(c.t||'')}</div>
     <div class="chips" id="cvMode"><button class="chip on" data-m="gif">GIF로 변환해서 올리기</button><button class="chip" data-m="url">유튜브·인스타 링크</button></div>
     <div id="cvGifBox" style="display:flex;flex-direction:column;gap:8px">
@@ -6613,8 +6623,11 @@ function cvUpload(cid){const c=CB.list[cid]||{};let G=null,file=null,dur=0;
     const $e=s=>el.querySelector(s);
     el.querySelectorAll('#cvMode [data-m]').forEach(b=>b.onclick=()=>{el.querySelectorAll('#cvMode [data-m]').forEach(x=>x.classList.toggle('on',x===b));$e('#cvGifBox').hidden=b.dataset.m!=='gif';$e('#cvUrlBox').hidden=b.dataset.m!=='url'});
     $e('#cvCancel').onclick=()=>{close();openCombo(cid)};
-    $e('#cvFile').onchange=e=>{file=e.target.files&&e.target.files[0];if(!file)return;const pv=$e('#cvPrev');pv.src=URL.createObjectURL(file);pv.hidden=false;$e('#cvOut').hidden=true;
+    const useFile=f=>{file=f;if(!file)return;
+      if(/gif$/i.test(file.type)){const fr=new FileReader();fr.onload=()=>{G={dataUrl:fr.result,blob:file,bytes:{length:file.size},w:0,h:0,len:0};$e('#cvImg').src=fr.result;$e('#cvInfo').textContent=`GIF · ${(file.size/1024).toFixed(0)}KB`+(file.size>1100000?' · 너무 커요(1MB 이하만)':'');$e('#cvOut').hidden=false;$e('#cvOpt').hidden=true;$e('#cvPrev').hidden=true};fr.readAsDataURL(file);return}
+      const pv=$e('#cvPrev');pv.src=URL.createObjectURL(file);pv.hidden=false;$e('#cvOut').hidden=true;
       pv.onloadedmetadata=()=>{dur=pv.duration||0;const st=$e('#cvStart');st.max=Math.max(0,dur-1).toFixed(1);st.value=0;$e('#cvStartT').textContent='0.0';$e('#cvOpt').hidden=false}};
+    $e('#cvFile').onchange=e=>useFile(e.target.files&&e.target.files[0]);if(preset)useFile(preset);
     $e('#cvStart').oninput=e=>{$e('#cvStartT').textContent=(+e.target.value).toFixed(1);try{$e('#cvPrev').currentTime=+e.target.value}catch(x){}};
     $e('#cvMake').onclick=async()=>{if(!file)return;const b=$e('#cvMake'),pg=$e('#cvProg');b.disabled=true;pg.hidden=false;pg.textContent='GIF 만드는 중… 0%';
       try{G=await videoToGif(file,{start:+$e('#cvStart').value,len:+$e('#cvLen').value},p=>{pg.textContent='GIF 만드는 중… '+Math.round(p*100)+'%'});
@@ -6646,6 +6659,7 @@ function cbEdit(id){const c=Object.assign({t:'',s:'',d:'',lv:2},id?CB.list[id]:{
 (async()=>{
   show('v-home');syncInstUI();setTimeout(renderHomeQR,300);renderSNS();FB_READY=fbInit();const fbok=await FB_READY;if(fbok)await DB.meta();renderSNS();try{renderRaffle()}catch(e){}try{if(!LIVE.off)startLive();setTimeout(renderLiveCards,800)}catch(e){}renderBring();showInviteBanner();
   const userMoved=()=>!!ME||$('#v-home').hidden;
+  if(new URLSearchParams(location.search).get('shared')){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>{if(!ME)toast('회원번호로 입장하면 받은 영상을 바로 올릴 수 있어요',4500)},1500)}
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
