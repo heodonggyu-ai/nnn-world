@@ -1252,6 +1252,11 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <p class="small" style="margin:0">만료 7일 전부터 여기에 올라와요. 문자를 보내고, 연장하면 결제까지 한 번에 기록돼요.</p>
     <div id="lkDue"></div>
   </div>
+  <div class="card" data-atab="set" id="featAdm" style="display:flex;flex-direction:column;gap:8px;border:2px solid var(--red)">
+    <h3 style="font-size:20px">🔌 기능 켜고 끄기</h3>
+    <p class="small" style="margin:0">끄면 회원 앱에서 바로 사라져요. 다시 켜면 기록(쿠폰·포도알·빙고·영상)은 그대로 돌아와요. 복권을 끄면 빙고·도장판 보상은 크레딧으로 줘요.</p>
+    <div id="featBox" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
   <div class="card" data-atab="set" style="display:flex;flex-direction:column;gap:8px">
     <div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">보안 규칙 점검</h3><button class="btn sm red" id="rcRun">점검하기</button></div>
     <p class="small" style="margin:0">Firebase에 최신 보안 규칙이 제대로 들어갔는지 기능별로 확인해요.</p>
@@ -2079,7 +2084,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
+async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{featApply()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -3655,7 +3660,7 @@ async function coachPad(code){
     $('#padMem').style.background=isIn?'#1565C0':'#37474F';$('#padMem').innerHTML=`<b style="color:#fff;font-size:18px">${isIn?'출근 기록 완료':'퇴근 기록 완료'}</b>`}
   else{$('#padMsg').textContent='기록하지 못했어요';$('#padSub').textContent='관장님께 알려 주세요.'}
   padTimer=setTimeout(resetPad,3500)}
-const wifiCfg=()=>{const w=local.meta&&local.meta.wifi;if(!w)return WIFI_DEF;return w.s?w:null};
+const wifiCfg=()=>{if(!FT('wifi'))return null;const w=local.meta&&local.meta.wifi;if(!w)return WIFI_DEF;return w.s?w:null};
 const wifiEsc=x=>String(x||'').replace(/([\\;,:"])/g,'\\$1');
 const wifiQRText=w=>w.t==='nopass'?`WIFI:T:nopass;S:${wifiEsc(w.s)};;`:`WIFI:T:${w.t||'WPA'};S:${wifiEsc(w.s)};P:${wifiEsc(w.p)};;`;
 function wifiFill(el,full,size){const w=wifiCfg();if(!el)return;if(!w){el.hidden=true;el.innerHTML='';return}el.hidden=false;
@@ -3980,9 +3985,9 @@ function popItems(m){
 /* ================= 새 기능 소식 · 도움말 =================
    새 기능을 만들면 FEAT 맨 위에 한 줄 추가하면 회원들에게 자동으로 안내돼요(가입일 이후 기능만). */
 const FEAT=[
-  {id:'fun1',q:'출석마다 복권 1장 · 빙고 · 도장판 · 연속 상자',d:'2026-10-31',e:'🎟️',t:'출석 복권 · 빙고',s:'출석할 때마다 복권을 긁어 음료 쿠폰 등을 받아요! 빙고 줄을 완성하고 도장판·연속 출석 상자도 채워 보세요',go:'fun',sel:null},
-  {id:'grape1',q:'배울 기술이 포도알로',d:'2026-10-31',e:'🍇',t:'커리큘럼 포도판',s:'레벨별 기술이 포도송이로 보여요. 관장님 심사를 통과하면 포도알이 채워져요',go:'grape',sel:null},
-  {id:'combo1',q:'관장님 콤비 연습 영상 공유',d:'2026-10-31',e:'🥊',t:'콤비네이션 게시판',s:'인증 탭 맨 위! 콤비를 연습하고 미트 영상을 GIF로 만들어 올려 같이 봐요',go:'combos',sel:null},
+  {id:'fun1',q:'출석마다 복권 1장 · 빙고 · 도장판 · 연속 상자',d:'2026-10-31',e:'🎟️',t:'출석 복권 · 빙고',s:'출석할 때마다 복권을 긁어 음료 쿠폰 등을 받아요! 빙고 줄을 완성하고 도장판·연속 출석 상자도 채워 보세요',go:'fun',sel:null,need:()=>FT('lotto')||FT('bingo')},
+  {id:'grape1',q:'배울 기술이 포도알로',d:'2026-10-31',e:'🍇',t:'커리큘럼 포도판',s:'레벨별 기술이 포도송이로 보여요. 관장님 심사를 통과하면 포도알이 채워져요',go:'grape',sel:null,need:()=>FT('grape')},
+  {id:'combo1',q:'관장님 콤비 연습 영상 공유',d:'2026-10-31',e:'🥊',t:'콤비네이션 게시판',s:'인증 탭 맨 위! 콤비를 연습하고 미트 영상을 GIF로 만들어 올려 같이 봐요',go:'combos',sel:null,need:()=>FT('combo')},
   {id:'s_fun',aud:'owner',q:'운영 탭 · 복권·포도판·콤비',d:'2026-10-31',e:'🎟️',t:'출석 복권·포도판·콤비 게시판',s:'복권 상품·확률·하루/주간 한도 설정, 회원 상세에서 쿠폰 사용 처리·포도판 심사, 콤비 게시판 관리',go:'adm:ops'},
   {id:'s_padpin',aud:'owner',q:'설정 탭 · 관장 PIN 아래',d:'2026-10-28',e:'🔐',t:'출석패드 전용 비밀번호',s:'출석패드를 켜고 끌 때 관장 PIN 대신 쓰는 번호예요. 코치에게 알려 줘도 관장 메뉴에는 못 들어가요',go:'adm:set'},
   {id:'s_nmedia',aud:'owner',q:'공지 쓸 때 사진 4장 · 유튜브 영상',d:'2026-10-24',e:'🖼️',t:'공지에 사진·영상',s:'공지에 사진(최대 4장)과 유튜브·인스타 영상 주소를 넣으면 회원 팝업과 공지판에 같이 떠요. 사진은 누르면 크게 보여요',go:'adm:ops'},
@@ -4437,7 +4442,7 @@ async function qrAttend(tok){
     attSheet(false,'등록 기간이 끝났어요',`${md(m.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 후 출석할 수 있어요.</b>`,'<button class="btn red" id="qaPay" style="margin-top:6px">지금 재등록하기</button>',m);{const b=$('#qaPay');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openPay()}}return}
   if(m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='none'){attSheet(false,'오늘은 수강 요일이 아니에요',`등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)<br>${esc(WEEKLY_RULE(m.mem.weekly))}`,'',m);return}
   const r=await applyAttend(m,false,'qr');sfx('win');
-  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(funCfg().on!==false&&+m.tk>0?`<button class="btn red" id="qaFun" style="margin-top:8px">🎟️ 출석 복권 긁기 (${+m.tk}장)</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}try{refreshTop()}catch(e){}}
+  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(funCfg().on!==false&&FT('lotto')&&+m.tk>0?`<button class="btn red" id="qaFun" style="margin-top:8px">🎟️ 출석 복권 긁기 (${+m.tk}장)</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}try{refreshTop()}catch(e){}}
 function wifiAttHTML(){const w=wifiCfg();if(!w)return'';return`<div class="padwifi" style="margin-top:8px"><div class="wt" style="flex:1"><small>📶 체육관 와이파이</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<span class="pw">${esc(w.p||'')}</span>`}</div>${w.t!=='nopass'&&w.p?'<button class="btn sm ghost" id="wfCopy">비번 복사</button>':''}</div>`}
 function wifiAttBind(){const b=document.getElementById('wfCopy');if(b)b.onclick=()=>{const w=wifiCfg();if(w)copyText(w.p,'와이파이 비밀번호를')}}
 $('#padRes').addEventListener('click',e=>{if(e.target.closest('button'))return;if(!$('#padForceBtn'))resetPad()});
@@ -4506,7 +4511,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
 
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
 async function openAdmin(){
-  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},800);try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
+  await DB.meta();const M=local.meta;const PY=M.pay;$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderFeatAdm()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},800);try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{renderPadPinSet()}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
   $('#storeWarn').hidden=true;{const cw=$('#connWarn');cw.hidden=FB_ON();if(!FB_ON())cw.innerHTML=FB_ERR==='preview'?'<b style="color:#fff">미리보기 화면이에요</b><span>여기서 바꾼 설정은 회원들에게 안 보이고 곧 사라져요. 설정은 GitHub 주소에서 해 주세요: '+esc(DEFAULT_APP_URL)+'</span>':'<b style="color:#fff">서버에 연결되지 않았어요</b><span>지금은 이 기기에만 저장돼요. 인터넷을 확인하고 새로 고침 해 주세요. (원인: '+esc(FB_ERR||'알 수 없음')+')</span>'}drawQR();show('v-admin');renderAdmRows();
@@ -4564,7 +4569,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     ${m.mem&&m.mem.end?`<div class="qrow"><div class="grow small">${esc(holdLine(m.mem))}</div><button class="btn sm ghost" id="admHold">정지·기간 조정</button></div>`:''}
     <div class="qrow"><div class="grow small">${m.gPhone?`<b>보호자</b> ${esc(m.gName||'보호자')} ${esc(m.gPhone)}<br>결제·만료 안내는 보호자에게 가요`:'<b>보호자</b> 없음 (성인 회원)'}</div><button class="btn sm ghost" id="admGuard">${m.gPhone?'수정':'학생으로 지정'}</button></div>
     ${(m.unpaid||[]).length?`<div class="qrow" style="background:#FDECEC;border-radius:10px;padding:8px"><div class="grow small" style="color:#8A1F24"><b>만료 후 출석 ${m.unpaid.length}회</b><br>${m.unpaid.slice(-5).map(u=>md(u.d)+(u.ok?' 승인 출석':' 출석 막힘')).join(' · ')}</div></div>`:''}
-    <div class="row" style="gap:6px"><button class="btn ghost grow" id="admCps">🎟️ 쿠폰 ${funArr(m.cps).filter(c=>!c.used).length}장</button><button class="btn ghost grow" id="admGrp">🍇 포도판 ${grapeCount(m).a}/${grapeCount(m).t}</button></div>
+    <div class="row" style="gap:6px"><button class="btn ghost grow" id="admCps" ${FT('lotto')?'':'hidden'}>🎟️ 쿠폰 ${funArr(m.cps).filter(c=>!c.used).length}장</button><button class="btn ghost grow" id="admGrp" ${FT('grape')?'':'hidden'}>🍇 포도판 ${grapeCount(m).a}/${grapeCount(m).t}</button></div>
     <button class="btn" id="admSend">안내 보내기 (문자·카톡)</button>
     ${m.phone?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="sms:${String(m.phone).replace(/[^\d]/g,'')}">문자 대화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="tel:${String(m.phone).replace(/[^\d]/g,'')}">전화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a></div>`:''}
 
@@ -6197,7 +6202,7 @@ function renderFaceCard(){
 $('#tplBtn').onclick=openTplEditor;
 $('#logQ').oninput=()=>renderSendLog();
 /* ================= 응모 이벤트 ================= */
-const RF=()=>{const r=local.meta&&local.meta.raffle;return r&&r.id&&!r.hidden?r:null};
+const RF=()=>{if(!FT('raffle'))return null;const r=local.meta&&local.meta.raffle;return r&&r.id&&!r.hidden?r:null};
 const rfArr=x=>Array.isArray(x)?x.filter(Boolean):Object.values(x||{}).filter(Boolean);
 const rfPrizes=r=>rfArr(r.prizes).filter(p=>p&&p.name);
 const rfWinners=r=>rfArr(r.winners);
@@ -6341,7 +6346,7 @@ function openWifi(){const w=wifiCfg();if(!w){toast('와이파이 정보가 아�
     const g=el.querySelector('#wfGo');if(g)g.onclick=()=>{copyText(w.p,'와이파이 비밀번호를');g.textContent='✓ 복사했어요 · 이제 와이파이 설정에서 붙여넣기';g.className='btn';
       if(isA){setTimeout(()=>{try{location.href='intent:#Intent;action=android.settings.WIFI_SETTINGS;end'}catch(e){}},500)}
 }})}
-const compCfg=()=>{const c=local.meta&&local.meta.comp;return c&&c.title&&!c.hidden?c:null};
+const compCfg=()=>{if(!FT('comp'))return null;const c=local.meta&&local.meta.comp;return c&&c.title&&!c.hidden?c:null};
 const compIds=c=>rfArr(c.ids).map(String);
 async function openComp(){const c=compCfg();if(!c){toast('지금 올라간 대회 소식이 없어요');return}
   let all=[];try{all=await DB.all()}catch(e){}const by={};all.forEach(m=>by[m.id]=m);let ros={};
@@ -6393,6 +6398,14 @@ async function compEdit(){const c0=local.meta.comp||{};const C=Object.assign({ti
 const padFloor=()=>{try{return localStorage.getItem('nnn_padfloor')||''}catch(e){return ''}};
 function applyPadFloor(){const f=padFloor();const v=$('#v-pad');v.dataset.floor=f;$('#padFloorTag').textContent=f?f+'층':'층 선택';document.body.dataset.padfloor=f}
 function choosePadFloor(){sheet(`<h2>이 출석패드는 몇 층인가요?</h2><p class="small" style="margin:0">층마다 배경 색이 달라져요. 이 기기에만 저장돼요.</p><div class="row" style="gap:8px"><button class="btn red grow" data-fl="2" style="font-size:22px">2층</button><button class="btn grow" data-fl="5" style="font-size:22px;background:#1F4E9C;color:#fff">5층</button></div><button class="btn ghost" data-fl="">층 표시 안 함</button>`,(el,close)=>{el.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('nnn_padfloor',b.dataset.fl);localStorage.setItem('nnn_padfloor_set','1')}catch(e){}applyPadFloor();close()})})}
+/* ================= 기능 켜고 끄기 ================= */
+const FEATS=[['lotto','🎟️','출석 복권 · 쿠폰함','출석할 때마다 복권 1장, 앱에서 긁어 쿠폰 당첨'],['bingo','🔢','출석 빙고','출석마다 번호 하나, 줄 완성 보상'],['stamp','🥊','월 도장판','이달 출석 8·12·16개 보상'],['box','🎁','연속 출석 상자','주 2회 이상 연속 주 보상'],
+  ['celebrate','🎉','당첨 연출','당첨되면 출석패드에 축하 화면 · 공지에 당첨자'],['grape','🍇','커리큘럼 포도판','회원 내 정보에 포도판 · 관장 심사'],['combo','📹','콤비네이션 게시판','인증 탭 맨 위 · 연습 영상 GIF 공유'],['wifi','📶','와이파이 안내','회원 앱 공지 · 출석패드에 와이파이 표시'],['raffle','🎫','응모 이벤트 배너','진행 중인 응모 이벤트 배너·팝업'],['comp','🏅','생체 대회 출전 공지','맵 위 대회 출전 명단 버튼']];
+const FT=k=>!((local.meta&&local.meta.feat)||{})[k+'_off'];
+function featApply(){try{const cb=$('#cbOpen');if(cb)cb.hidden=!FT('combo')}catch(e){}try{renderPins()}catch(e){}try{funBanner()}catch(e){}try{renderGrapeCard()}catch(e){}try{renderRaffle()}catch(e){}try{if(!$('#v-pad').hidden)wifiPadIdle()}catch(e){}}
+function renderFeatAdm(){const box=$('#featBox');if(!box)return;box.innerHTML=FEATS.map(([k,e,t,d])=>`<label class="check" style="margin:0"><input type="checkbox" data-ft="${k}" ${FT(k)?'checked':''}><span><b>${e} ${t}</b><br><span class="small">${d}</span></span></label>`).join('');
+  box.querySelectorAll('[data-ft]').forEach(c=>c.onchange=async()=>{const k=c.dataset.ft;local.meta.feat=Object.assign({},local.meta.feat||{});if(c.checked)delete local.meta.feat[k+'_off'];else local.meta.feat[k+'_off']=true;
+    if(FB_ON()){try{await gref('meta/feat/'+k+'_off').set(c.checked?null:true)}catch(e){toast('저장하지 못했어요');c.checked=!c.checked;return}}else persist();toast((c.checked?'켰어요: ':'껐어요: ')+FEATS.find(f=>f[0]===k)[2]);featApply()})}
 /* ================= 출석 재미: 복권 · 빙고 · 도장판 · 연속 출석 상자 · 쿠폰 ================= */
 const FUN_DEF={on:true,pity:10,days:14,cr:[10,20,30,50],
   prizes:[{id:'drink',name:'음료 쿠폰',emo:'🥤',p:8,day:3,week:10},{id:'bar',name:'단백질바',emo:'🍫',p:3,day:2,week:5},{id:'wrap',name:'핸드랩',emo:'🧤',p:0.6,day:1,week:1},{id:'pt',name:'PT 1회권',emo:'🥊',p:0.2,day:1,week:1}]};
@@ -6413,20 +6426,22 @@ function funGrant(m,pid,src){const F=funCfg();const z=F.prizes.find(x=>x.id===pi
   const cp={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),pz:z.id,name:z.name,emo:z.emo||'🎁',at:Date.now(),exp:dAdd(TODAY(),+F.days||14),src:src||''};
   m.cps=funArr(m.cps).filter(c=>!(c.used&&Date.now()-c.used>30*864e5)).concat([cp]).slice(-40);return cp}
 /* 출석할 때 (출석패드·QR·관장 처리 모두) */
-function funOnAttend(m){const F=funCfg();if(F.on===false)return '';const out=[];
-  m.tk=(+m.tk||0)+1;out.push('🎟️ 복권 +1');
+function funOnAttend(m){const F=funCfg();if(F.on===false)return '';const out=[];const L=FT('lotto');
+  const addTk=n=>{if(L){m.tk=(+m.tk||0)+n;return '복권 +'+n}const c=30*n;m.credits=(+m.credits||0)+c;m.earned=(+m.earned||0)+c;return '크레딧 +'+c};
+  if(L){m.tk=(+m.tk||0)+1;out.push('🎟️ 복권 +1')}
+  if(FT('bingo')){
   let B=m.bingo&&typeof m.bingo==='object'?Object.assign({},m.bingo):{c:1,n:[]};B.n=funArr(B.n).map(Number);if(B.done)B={c:(+B.c||1)+1,n:[]};
   const left=[];for(let i=1;i<=25;i++)if(!B.n.includes(i))left.push(i);
   if(left.length){const num=pick(left);const l0=bingoLines(B.n);B.n.push(num);const nl=bingoLines(B.n)-l0;B.last=num;
-    if(nl>0){m.tk+=nl;out.push(`빙고 ${num}번 · ${nl}줄 완성! 복권 +${nl}`)}else out.push(`빙고 ${num}번`)}
-  if(B.n.length>=25){B.done=1;m.tk+=3;out.push('빙고판 완성! 복권 +3')}
-  m.bingo=B;
+    if(nl>0){out.push(`빙고 ${num}번 · ${nl}줄 완성! ${addTk(nl)}`)}else out.push(`빙고 ${num}번`)}
+  if(B.n.length>=25){B.done=1;out.push('빙고판 완성! '+addTk(3))}
+  m.bingo=B;}
   const mon=TODAY().slice(0,7),cnt=funArr(m.attend).filter(d=>String(d).startsWith(mon)).length;
   const SR=m.stampR&&typeof m.stampR==='object'?m.stampR:{};const got=funArr(SR[mon]).map(Number);
-  for(const s of STAMP_STEPS){if(cnt>=s.n&&!got.includes(s.n)){got.push(s.n);if(s.tk){m.tk+=s.tk;out.push(`도장 ${s.n}개! 복권 +${s.tk}`)}if(s.cp){const c=funGrant(m,F.prizes[0]&&F.prizes[0].id,'도장판 '+s.n+'개');if(c)out.push(`도장 ${s.n}개! ${c.emo} ${c.name}`)}}}
+  if(FT('stamp'))for(const s of STAMP_STEPS){if(cnt>=s.n&&!got.includes(s.n)){got.push(s.n);if(s.tk){out.push(`도장 ${s.n}개! ${addTk(s.tk)}`)}if(s.cp){const c=funGrant(m,F.prizes[0]&&F.prizes[0].id,'도장판 '+s.n+'개');if(c)out.push(`도장 ${s.n}개! ${c.emo} ${c.name}`)}}}
   m.stampR={[mon]:got};
   const ws=weekStreak(m);let BR=m.boxR&&typeof m.boxR==='object'?m.boxR:{};if(BR.run!==ws.start)BR={run:ws.start,got:[]};const bg=funArr(BR.got).map(Number);
-  for(const b of BOX_STEPS){if(ws.n>=b.w&&!bg.includes(b.w)){bg.push(b.w);m.tk+=b.tk;let t=`🎁 ${b.w}주 연속 상자! 복권 +${b.tk}`;if(b.cp){const c=funGrant(m,F.prizes[0]&&F.prizes[0].id,b.w+'주 연속 상자');if(c)t+=` · ${c.emo} ${c.name}`}out.push(t)}}
+  if(FT('box'))for(const b of BOX_STEPS){if(ws.n>=b.w&&!bg.includes(b.w)){bg.push(b.w);let t=`🎁 ${b.w}주 연속 상자! ${addTk(b.tk)}`;if(b.cp){const c=funGrant(m,F.prizes[0]&&F.prizes[0].id,b.w+'주 연속 상자');if(c)t+=` · ${c.emo} ${c.name}`}out.push(t)}}
   m.boxR={run:BR.run,got:bg};
   return out.join(' · ')}
 /* 복권 긁기 */
@@ -6463,9 +6478,9 @@ function scratchCard(host,resultHTML,onReveal){host.innerHTML=`<div class="scr">
   const up=()=>{down=false;check()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   return reveal}
 /* 회원: 출석 보상 화면 */
-function funBanner(){const F=funCfg();$$('[data-fun]').forEach(el=>{const show=F.on!==false&&ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());el.hidden=!show;if(!show){el.innerHTML='';return}
+function funBanner(){const F=funCfg();const anyF=FT('lotto')||FT('bingo')||FT('stamp')||FT('box');$$('[data-fun]').forEach(el=>{const show=anyF&&F.on!==false&&ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());el.hidden=!show;if(!show){el.innerHTML='';return}
   const tk=+ME.tk||0,cps=funArr(ME.cps).filter(c=>!c.used&&c.exp>=TODAY()).length,bn=funArr(ME.bingo&&ME.bingo.n).length;
-  el.className='funban'+(tk>0?' pulse':'');el.innerHTML=`<div class="fi">🎟️</div><div class="grow"><b>${tk>0?`복권 ${tk}장 · 지금 긁어 보세요!`:'출석 보상'}</b><span>빙고 ${bn}/25 · 이달 도장 ${funArr(ME.attend).filter(d=>String(d).startsWith(TODAY().slice(0,7))).length}개${cps?` · 쿠폰 ${cps}장`:''}</span></div><span class="rftag">${tk>0?'긁기':'보기'}</span>`;el.onclick=()=>openFun()})}
+  const tk2=FT('lotto')?tk:0;el.className='funban'+(tk2>0?' pulse':'');el.innerHTML=`<div class="fi">🎟️</div><div class="grow"><b>${tk2>0?`복권 ${tk2}장 · 지금 긁어 보세요!`:'출석 보상'}</b><span>${[FT('bingo')?`빙고 ${bn}/25`:'',FT('stamp')?`이달 도장 ${funArr(ME.attend).filter(d=>String(d).startsWith(TODAY().slice(0,7))).length}개`:'',FT('lotto')&&cps?`쿠폰 ${cps}장`:''].filter(Boolean).join(' · ')}</span></div><span class="rftag">${tk2>0?'긁기':'보기'}</span>`;el.onclick=()=>openFun()})}
 async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)ME=m}catch(e){}const F=funCfg();const m=ME;
   const tk=+m.tk||0;const B=m.bingo||{n:[]};const bn=funArr(B.n).map(Number);const lines=bingoLines(bn);
   const mon=TODAY().slice(0,7);const cnt=funArr(m.attend).filter(d=>String(d).startsWith(mon)).length;const ws=weekStreak(m);
@@ -6474,26 +6489,26 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
   const grid=Array.from({length:25},(_,i)=>`<div class="bg${bn.includes(i+1)?' on':''}${B.last===i+1&&!B.done?' last':''}">${i+1}</div>`).join('');
   const maxS=Math.max(16,cnt);const stamps=Array.from({length:maxS},(_,i)=>{const st=STAMP_STEPS.find(s=>s.n===i+1);return `<div class="stp${i<cnt?' on':''}${st?' ms':''}">${i<cnt?'🥊':(st?(st.cp?'🎁':'🎟️'):i+1)}</div>`}).join('');
   sheet(`<h2>🎟️ 출석 보상</h2>
-    <div class="funsec"><div class="row" style="align-items:center"><b class="grow" style="font-size:18px">출석 복권 <span class="num" style="color:var(--red)">${tk}</span>장</b><button class="btn sm ghost" id="fnCp">쿠폰함 ${live.length?`<b style="color:var(--red)">${live.length}</b>`:''}</button></div>
+    ${FT('lotto')?`<div class="funsec"><div class="row" style="align-items:center"><b class="grow" style="font-size:18px">출석 복권 <span class="num" style="color:var(--red)">${tk}</span>장</b><button class="btn sm ghost" id="fnCp">쿠폰함 ${live.length?`<b style="color:var(--red)">${live.length}</b>`:''}</button></div>
       <div class="small">출석할 때마다 1장. 당첨되면 ${F.prizes.map(z=>esc(z.emo+' '+z.name)).join(' · ')}! 꽝이어도 크레딧${+F.pity>0?`, 꽝 ${F.pity}번이면 ${esc(F.prizes[0].name)} 확정`:''}</div>
       <div id="fnScr"></div>
       <button class="btn red" id="fnGo" ${tk>0?'':'disabled'}>${tk>0?'복권 긁기':'출석하면 복권이 생겨요'}</button>
-      ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}</div>
-    <div class="funsec"><div class="row"><b class="grow" style="font-size:18px">출석 빙고 <span class="small">${bn.length}/25</span></b><span class="pill">${lines}줄</span></div>
-      <div class="small">출석할 때마다 번호 하나가 찍혀요. 한 줄 완성마다 복권 +1, 판 전체 완성 복권 +3</div><div class="bingo">${grid}</div></div>
-    <div class="funsec"><div class="row"><b class="grow" style="font-size:18px">${Number(mon.slice(5))}월 도장판</b><span class="pill">${cnt}개</span></div>
-      <div class="small">${STAMP_STEPS.map(s=>`${s.n}개 ${s.cp?esc(F.prizes[0].emo+' '+F.prizes[0].name):'복권 +'+s.tk}`).join(' · ')}</div><div class="stamps">${stamps}</div></div>
-    <div class="funsec"><div class="row"><b class="grow" style="font-size:18px">연속 출석 상자</b><span class="pill">${ws.n}주 연속</span></div>
+      ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}</div>`:''}
+    ${FT('bingo')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">출석 빙고 <span class="small">${bn.length}/25</span></b><span class="pill">${lines}줄</span></div>
+      <div class="small">출석할 때마다 번호 하나가 찍혀요. 한 줄 완성마다 복권 +1, 판 전체 완성 복권 +3</div><div class="bingo">${grid}</div></div>`:''}
+    ${FT('stamp')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">${Number(mon.slice(5))}월 도장판</b><span class="pill">${cnt}개</span></div>
+      <div class="small">${STAMP_STEPS.map(s=>`${s.n}개 ${s.cp?esc(F.prizes[0].emo+' '+F.prizes[0].name):'복권 +'+s.tk}`).join(' · ')}</div><div class="stamps">${stamps}</div></div>`:''}
+    ${FT('box')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">연속 출석 상자</b><span class="pill">${ws.n}주 연속</span></div>
       <div class="small">한 주에 ${ws.need}번 이상 나오면 연속 1주. ${nextBox?`<b>${nextBox.w}주</b> 달성하면 🎁 상자 (복권 +${nextBox.tk}${nextBox.cp?' · '+esc(F.prizes[0].name):''})`:'모든 상자를 열었어요! 계속 이어가요'}</div>
-      <div class="boxes">${BOX_STEPS.map(b=>`<div class="bx${ws.n>=b.w?' on':''}"><span>${ws.n>=b.w?'🎁':'📦'}</span><small>${b.w}주</small></div>`).join('')}</div></div>
+      <div class="boxes">${BOX_STEPS.map(b=>`<div class="bx${ws.n>=b.w?' on':''}"><span>${ws.n>=b.w?'🎁':'📦'}</span><small>${b.w}주</small></div>`).join('')}</div></div>`:''}
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
-    el.querySelector('#fnCp').onclick=()=>{close();openCoupons()};
-    const go=el.querySelector('#fnGo');go.onclick=async()=>{go.disabled=true;go.textContent='복권 꺼내는 중…';const res=await lottoDraw();if(!res){toast('복권이 없어요');go.textContent='출석하면 복권이 생겨요';return}
+    {const cpb=el.querySelector('#fnCp');if(cpb)cpb.onclick=()=>{close();openCoupons()}}
+    const go=el.querySelector('#fnGo');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='복권 꺼내는 중…';const res=await lottoDraw();if(!res){toast('복권이 없어요');go.textContent='출석하면 복권이 생겨요';return}
       const host=el.querySelector('#fnScr');const html=res.kind==='cp'?`<div class="scr-win"><div style="font-size:44px">${res.cp.emo}</div><b>${esc(res.cp.name)} 당첨!</b><span>쿠폰함에 넣어 뒀어요 · ${md(res.cp.exp)}까지</span></div>`:`<div class="scr-miss"><b>아쉽지만 꽝</b><span>대신 +${res.n} 크레딧${res.left?` · 확정까지 꽝 ${res.left}번`:''}</span></div>`;
       scratchCard(host,html,()=>{if(res.kind==='cp'){sfx('win');confetti(el.parentNode);try{navigator.vibrate&&navigator.vibrate([60,40,120])}catch(e){}}else sfx('coin');
         const t=+ME.tk||0;go.disabled=t<=0;go.textContent=t>0?`다음 복권 긁기 (${t}장)`:'복권을 다 긁었어요';try{funBanner()}catch(e){}});
       go.textContent='위 카드를 긁어 보세요';};
-    if(sec==='lotto'&&tk>0)setTimeout(()=>go.click(),300)})}
+    if(go&&sec==='lotto'&&tk>0)setTimeout(()=>go.click(),300)})}
 function openCoupons(){const m=ME;const all=funArr(m.cps).sort((a,b)=>b.at-a.at);const live=all.filter(c=>!c.used&&c.exp>=TODAY()),old=all.filter(c=>c.used||c.exp<TODAY()).slice(0,10);
   sheet(`<h2>🎟️ 내 쿠폰함</h2>${live.length?live.map(c=>`<div class="cpn"><div class="ce">${c.emo}</div><div class="grow"><b>${esc(c.name)}</b><span>${md(c.exp)}까지 · 데스크에서 이 화면을 보여 주세요</span><small class="num">No. ${esc(c.id.slice(-6).toUpperCase())}</small></div></div>`).join(''):'<div class="small">아직 쓸 수 있는 쿠폰이 없어요. 출석 복권을 긁어 보세요!</div>'}
     ${old.length?`<details><summary class="small">지난 쿠폰 ${old.length}장</summary>${old.map(c=>`<div class="cpn off"><div class="ce">${c.emo}</div><div class="grow"><b>${esc(c.name)}</b><span>${c.used?'사용함 '+new Date(c.used).toLocaleDateString('ko-KR'):'기간 지남'}</span></div></div>`).join('')}</details>`:''}
@@ -6508,7 +6523,7 @@ async function admCoupons(id,after){const m=await DB.get(id);if(!m)return;const 
 function funPrizeTxt(F){return F.prizes.map(z=>`${z.emo||'🎁'} ${z.name} | ${z.p} | ${z.day} | ${z.week}`).join('\n')}
 async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=funCfg();const day=(await hget('lotto/'+TODAY()))||{},wk=(await hget('lotto/w'+monOf(TODAY())))||{};
   const W=funArr(await hget('wins')).sort((a,b)=>b.at-a.at).slice(0,8);
-  box.innerHTML=`<label class="check" style="margin:0"><input type="checkbox" id="fnOn" ${F.on!==false?'checked':''}><span><b>출석 복권·빙고·도장판·연속 상자 켜기</b></span></label>
+  box.innerHTML=`<input type="checkbox" id="fnOn" checked hidden><div class="small">켜고 끄기: 관장 메뉴 → 설정 탭 → 🔌 기능 켜고 끄기</div>
     <div class="field"><label for="fnPz">상품 · 한 줄에 하나 <span class="small">(이모지 이름 | 당첨 확률% | 하루 최대 | 주간 최대) 첫 줄 상품이 '꽝 보상·도장판·상자' 확정 상품</span></label><textarea id="fnPz" rows="5">${esc(funPrizeTxt(F))}</textarea></div>
     <div class="row"><div class="field grow"><label for="fnPity">꽝 몇 번이면 확정</label><input id="fnPity" type="number" min="0" max="50" value="${+F.pity||0}"></div><div class="field grow"><label for="fnDays">쿠폰 유효기간(일)</label><input id="fnDays" type="number" min="1" max="90" value="${+F.days||14}"></div></div>
     <div class="field"><label for="fnCr">꽝일 때 크레딧 <span class="small">(쉼표로)</span></label><input id="fnCr" value="${esc(F.cr.join(', '))}"></div>
@@ -6526,12 +6541,12 @@ async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=f
   box.querySelector('#fnOn').onchange=()=>box.querySelector('#fnSave').click()}
 /* 당첨 연출: 출석패드 · 공지 */
 let PAD_WIN_T=0;const PAD_WIN_SEEN=new Set();
-async function padWins(){if($('#v-pad').hidden)return;if(!PAD_WIN_T)PAD_WIN_T=Date.now()-60e3;let W=null;try{W=await hget('wins')}catch(e){}if(!W)return;
+async function padWins(){if($('#v-pad').hidden||!FT('celebrate'))return;if(!PAD_WIN_T)PAD_WIN_T=Date.now()-60e3;let W=null;try{W=await hget('wins')}catch(e){}if(!W)return;
   const L=Object.entries(W).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>a.at-b.at);
   const old=L.filter(w=>Date.now()-w.at>9*864e5);if(old.length&&IS_ADMIN)old.slice(0,20).forEach(w=>{hset('wins/'+w.k,null)});
   const fresh=L.filter(w=>w.at>PAD_WIN_T&&!PAD_WIN_SEEN.has(w.k));fresh.forEach(w=>PAD_WIN_SEEN.add(w.k));
   if(fresh.length){const w=fresh[fresh.length-1];const el=$('#padCel');el.innerHTML=`<div class="pc-in"><div style="font-size:54px">${esc(w.emo||'🎉')}</div><b>${esc(w.nick||'회원')}님 ${esc(w.name||'')} 당첨!</b><span>출석 복권은 앱에서 긁어요 🎟️</span></div>`;el.hidden=false;confetti(el,80);try{sfx('win')}catch(e){}clearTimeout(el._t);el._t=setTimeout(()=>{el.hidden=true},3500)}}
-async function winsHTML(){let W=null;try{W=await hget('wins')}catch(e){}const L=funArr(W).filter(w=>Date.now()-w.at<7*864e5).sort((a,b)=>b.at-a.at).slice(0,8);
+async function winsHTML(){if(!FT('celebrate')||!FT('lotto'))return '';let W=null;try{W=await hget('wins')}catch(e){}const L=funArr(W).filter(w=>Date.now()-w.at<7*864e5).sort((a,b)=>b.at-a.at).slice(0,8);
   return L.length?`<div class="label" style="margin-top:4px">🎉 이번 주 출석 복권 당첨</div><div class="bubble" style="display:flex;flex-direction:column;gap:2px">${L.map(w=>`<div class="small">${esc(w.emo||'')} <b>${esc(w.nick||'')}</b>님 ${esc(w.name||'')} <span style="color:var(--muted)">${new Date(w.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})}</span></div>`).join('')}</div>`:''}
 /* ================= 커리큘럼 포도판 ================= */
 const CURRI_DEF=[{lv:2,t:['스탠스','가드','잽','원투','전후 스텝','좌우 스텝']},{lv:3,t:['왼 훅','오른 훅','어퍼컷','바디 샷','원투훅','미트 3연타']},{lv:4,t:['더킹','위빙','패링','블로킹','백스텝','사이드스텝']},{lv:5,t:['방어 후 반격','거리 조절','카운터 잽','로프 탈출','매스 스파링']},{lv:6,t:['4연타 콤비','압박 스텝','클린치 대처','3라운드 체력','실전 스파링 3R']},{lv:7,t:['경기 운영','스위치 스탠스','카운터 훅','대회 출전']}];
@@ -6544,7 +6559,7 @@ function grapeSVG(names,got,size){const n=names.length;let rows=[],w=1;while(row
     cs+=on?`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#7B3FA0"/><circle cx="${cx-R*.35}" cy="${cy-R*.35}" r="${R*.28}" fill="#fff" opacity=".45"/>`:`<circle cx="${cx}" cy="${cy}" r="${R-1}" fill="#fff" stroke="#B9A2CC" stroke-width="2" stroke-dasharray="4 3"/>`}});
   const H=R*2+6+rows.length*(G-3)+R;return `<svg viewBox="0 0 ${mw+2} ${H}" width="${mw+2}" height="${H}" aria-hidden="true"><path d="M${mw/2+1} 2 q4 6 0 ${R+2}" stroke="#5B8C3A" stroke-width="3" fill="none"/><path d="M${mw/2+3} ${R/2+2} q${R} -${R/2} ${R*1.6} ${R/3}" stroke="#5B8C3A" stroke-width="2.5" fill="#8BC34A"/>${cs}</svg>`}
 function grapeCount(m){const g=grpOf(m);let a=0,t=0;curri().forEach(c=>c.t.forEach(x=>{t++;if(g[x])a++}));return{a,t}}
-function renderGrapeCard(){$$('[data-grape]').forEach(el=>{if(!ME||ME.demo||isStaff(ME)||(typeof isGuest==='function'&&isGuest())){el.innerHTML='';return}const g=grpOf(ME),{a,t}=grapeCount(ME);
+function renderGrapeCard(){$$('[data-grape]').forEach(el=>{if(!FT('grape')||!ME||ME.demo||isStaff(ME)||(typeof isGuest==='function'&&isGuest())){el.innerHTML='';return}const g=grpOf(ME),{a,t}=grapeCount(ME);
   el.innerHTML=`<button class="card grapecard"><div class="grow" style="text-align:left"><div class="label">커리큘럼 포도판</div><b style="font-family:var(--display);font-weight:400;font-size:20px">🍇 ${a} / ${t}알</b><div class="small">관장님 심사를 통과하면 포도알이 채워져요</div></div><div class="gmini">${curri().slice(0,3).map(c=>grapeSVG(c.t,g,6)).join('')}</div></button>`;el.querySelector('button').onclick=()=>openGrape(ME)})}
 function openGrape(m,admin,after){const g=Object.assign({},grpOf(m));const C=curri();
   const body=()=>C.map(c=>{const got=c.t.filter(x=>g[x]).length,full=got===c.t.length;return `<div class="gcl${full?' full':''}"><div class="row" style="align-items:center"><b class="grow">${SKL[c.lv]?esc(c.lv+'레벨 · '+SKL[c.lv]):esc(c.lv+'레벨')}</b><span class="pill">${got}/${c.t.length}${full?' 🍇완성':''}</span></div>
