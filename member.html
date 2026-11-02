@@ -632,6 +632,18 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .atcal button b{font-size:13px;font-weight:600}.atcal button small{font-size:10px;line-height:1}
 .atcal button.td{box-shadow:inset 0 0 0 2px var(--gold)}.atcal button.on{outline:3px solid var(--red);outline-offset:-1px}
 .atcal button:disabled{opacity:.35}
+.stban.pulse{animation:rfp 1.6s ease-in-out infinite}
+.ovcard{background:linear-gradient(140deg,#FFF6D8,#FFE3A6);border:2px solid #E0A100;border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.ovst{display:flex;align-items:center;gap:8px;background:#fff;border-radius:9px;padding:5px 9px;font-size:13px}.ovst span:first-child{flex:1}.ovst b{font-size:12.5px}.ovst b.ok{color:#1E6B45}.ovst b.no{color:var(--red)}.ovst b.w{color:#8A5A00}
+.ovleft{background:#fff;border-radius:10px;padding:4px 8px;font-size:11px;text-align:center;color:#8A5A00;line-height:1.2}.ovleft b{font-size:16px;color:var(--red)}
+.ovsteps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.ovsteps button{position:relative;background:#fff;border:1.5px solid #F0C75E;border-radius:12px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font:inherit;color:var(--ink);cursor:pointer}
+.ovsteps button i{position:absolute;top:-8px;left:-6px;width:20px;height:20px;border-radius:50%;background:#2F2F2F;color:#fff;font-style:normal;font-size:12px;font-weight:700;display:grid;place-items:center}.ovsteps b{font-size:13.5px}.ovsteps span{font-size:11px;color:#6B6E76;line-height:1.3}
+.ovsteps button.hl{background:#D9343A;border-color:#D9343A;color:#fff}.ovsteps button.hl span{color:#FFE1E3}.ovsteps button.hl i{background:#FFD24A;color:#2F2F2F}
+.ovhow{background:#F4F6FA;border-radius:10px;padding:8px 10px;line-height:1.55}
+.ovrow{display:flex;gap:8px;align-items:flex-start;border-top:1px solid var(--mat);padding-top:8px}
+.stgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}.stit{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}.stit.ok{border-color:#E0A100;background:#FFFBEA}
+.stit .se{font-size:30px;line-height:1}.stit b{font-size:14px}.stit span{font-size:12px;color:#6B4A00}.stit small{font-size:11px;color:var(--muted)}.stit .btn{width:100%;padding:6px 4px}.stbar{width:100%;height:5px;background:var(--mat);border-radius:9px;overflow:hidden}.stbar i{display:block;height:100%;background:#E0A100}
+.stban{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:linear-gradient(120deg,#FFF7D6,#FFE7C2);border:2px solid #E0A100;border-radius:14px;padding:10px 12px;margin-bottom:10px;font:inherit;color:var(--ink);cursor:pointer}.stban .se{font-size:28px}.stban b{display:block;font-family:var(--display);font-weight:400;font-size:18px}.stban small{font-size:12.5px;color:#6B4A00}.stban .stag{background:#E0A100;color:#fff;border-radius:999px;padding:4px 11px;font-weight:700;font-size:12.5px}
 .tkbuy{display:flex;align-items:center;gap:10px;background:#FFF8E1;border:1.5px dashed #E0A100;border-radius:12px;padding:8px 10px;margin-top:8px}.tkbuy b{display:block;font-size:14px}.tkbuy span{font-size:12px;color:#6B4A00}
 #t-map .bellbtn{display:none}
 #t-map .mstrip{gap:6px}#t-map .mstrip-b{padding:5px 4px;border-radius:10px;border-width:1.5px}#t-map .mstrip-b b{font-size:16px}#t-map .mstrip-b span{font-size:10.5px}
@@ -922,6 +934,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   </div>
 
   <div class="tab" id="t-shop" hidden>
+    <button class="stban" id="storeBan" hidden><span class="se">🛒</span><span class="grow"><b>크레딧 매점</b><small id="storeSub">크레딧으로 음료·용품 쿠폰 교환</small></span><span class="stag">열기</span></button>
     <div class="card avatarstage">
       <canvas id="shopAv" width="240" height="280"></canvas>
       <div class="grow" style="display:flex;flex-direction:column;gap:6px">
@@ -936,6 +949,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   </div>
 
   <div class="tab" id="t-feed" hidden>
+    <div class="ovcard" id="ovCard" hidden></div>
     <button class="card cbcard" id="cbOpen" style="margin-bottom:12px"><div class="grow" style="text-align:left"><div class="label">체육관 콤비네이션 게시판</div><b style="font-family:var(--display);font-weight:400;font-size:20px">🥊 콤비 연습 영상 보기 · 올리기</b><div class="small">관장님 콤비를 연습하고 미트 영상을 GIF로 공유해요</div></div><span style="font-size:22px">›</span></button>
     <div class="owc" id="owanCard"></div>
     <button class="btn gold" id="snsOnly" style="margin-top:8px">SNS 자랑 카드 만들기 (인스타 · 스토리)</button>
@@ -1131,6 +1145,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px">
     <div class="row" style="align-items:center"><div class="grow"><h3 style="font-size:20px">회원 의견함 <span class="small num" id="vsCnt" style="color:var(--red)"></span></h3><div class="small" id="vsSub">회원이 남긴 건의·칭찬·불편 사항이에요</div></div><button class="btn sm red" id="vsOpen">열기</button></div>
   </div>
+  <div class="card" data-atab="today" id="ovAdm" hidden style="display:flex;flex-direction:column;gap:8px;border:2px solid #E0A100"></div>
   <div class="card" data-atab="today" id="hrCard" hidden style="display:flex;flex-direction:column;gap:6px;border:2px solid var(--red)">
     <h3 style="font-size:20px">정지(연기) 신청 <span class="small num" id="hrCnt"></span></h3>
     <p class="small" style="margin:0">회원이 앱에서 보낸 신청이에요. <b>처리</b>를 누르면 날짜를 고쳐서 승인하거나 거절할 수 있어요.</p>
@@ -1545,7 +1560,7 @@ const ITEMS=[
   {id:'b_buddy',slot:'belt',name:'버디 벨트',col:['#C9CED6','#2B9B66'],price:-1,r:'e',note:'친구 3명이 등록하면 받는 한정 벨트'},
   {id:'b_champ',slot:'belt',name:'챔피언 벨트',col:['#E9B92F','#B3122B'],price:-1,r:'l',note:'출석 100회 달성 보상'}
 ];
-ITEMS.forEach(i=>{if(i.slot==='char')i.name=CHARS[i.ch].name});
+ITEMS.forEach(i=>{if(i.slot==='char')i.name=CHARS[i.ch].name;i.p0=i.price;if(i.price>0)i.price=Math.max(10,Math.round(i.price*0.2/10)*10)});/* 꾸미기는 가볍게: 원래 가격의 20% */
 const IT=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 const SLOTS=[['char','캐릭터'],['glove','글러브'],['head','헤드기어'],['shoes','복싱화'],['trunks','트렁크'],['belt','벨트']];
 
@@ -2783,7 +2798,7 @@ async function sparLoad(){SP.data=(await hget('spar'))||{};return SP.data}
 function sparNorm(id,v){if(!v||!v.post)return null;const s=Object.assign({id},v);s.post=Object.assign({},v.post);const p=s.post;
   if(p.type==='chal'){const talk=Object.entries(v.talk||{}).map(([k,x])=>Object.assign({k},x)).sort((a,b)=>a.at-b.at);const L=talk[talk.length-1]||null;const ok=v.ok||{};const to=p.to||{};
     if(L){p.date=L.date;p.time=L.time;p.kind=L.kind||p.kind;p.rounds=L.rounds||p.rounds}
-    const agreed=!!(L&&ok[p.by]===L.k&&ok[to.id]===L.k);const declined=ok[to.id]==='no';
+    const agreed=!!(L&&ok[p.by]===L.k&&ok[to.id]===L.k);const declined=ok[to.id]==='no'||(!!p.rec&&ok[p.by]==='no');
     s.chal={talk,L,ok,agreed,declined};s.match=agreed?{id:to.id,nick:to.nick,lv:to.lv||1}:null}
   return s}
 function sparList(){return Object.entries(SP.data||{}).map(([id,v])=>sparNorm(id,v)).filter(Boolean)}
@@ -2827,7 +2842,7 @@ async function sparBadge(){if(!ME||isGuest()||isStaff(ME))return;await sparLoad(
     if(sparMine(s,me)&&s.match&&(sparAuto()||(s.staff&&s.staff.ok))&&s.post.date<=TODAY()&&!(s.fb&&s.fb[me]))n++});
   const b=$('#sparN');if(b){b.textContent=n;b.hidden=!n}try{sparBanner()}catch(e){}}
 function sparCard(s,me){const p=s.post,k=SPK[p.kind]||SPK.mass;const [st,sc]=sparState(s);const d=new Date(p.date+'T00:00:00');
-  return `<div class="spc"${s.chal?' style="border-color:#D9343A"':''}><div class="sph"><b>${s.chal?`🥊 ${esc(p.nick)} → ${esc((p.to||{}).nick||'')}`:esc(p.nick)} <span class="small">${s.chal?'도전장':`Lv.${p.lv||1}${p.sk?' · 심사 '+p.sk+'레벨':''}`}</span></b><span class="spk ${k[2]}">${k[0]}</span></div>
+  return `<div class="spc"${s.chal?' style="border-color:#D9343A"':''}><div class="sph"><b>${s.chal?(p.rec?`🧑‍🏫 ${esc(p.nick)} vs ${esc((p.to||{}).nick||'')}`:`🥊 ${esc(p.nick)} → ${esc((p.to||{}).nick||'')}`):esc(p.nick)} <span class="small">${s.chal?(p.rec?'코치 추천':'도전장'):`Lv.${p.lv||1}${p.sk?' · 심사 '+p.sk+'레벨':''}`}</span></b><span class="spk ${k[2]}">${k[0]}</span></div>
     <div class="small"><b class="num">${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(p.time)}</b> · ${p.rounds}라운드${p.stu?' · 학생':''}${p.body?' · '+esc(p.body):''}</div>
     ${p.note?`<div class="small">${esc(p.note)}</div>`:''}
     ${s.match&&!s.chal?`<div class="small">상대: <b>${esc(s.match.nick)}</b> Lv.${s.match.lv||1}</div>`:''}
@@ -2873,7 +2888,7 @@ function sparNew(){const why=skillOf(ME)<sparMinSkill()?`심사 ${sparMinSkill()
 async function openSparPost(id){await sparLoad();const s=sparGet(id)||{};if(!s.post){toast('글을 찾지 못했어요');return}const p=s.post,me=ME.id,mine=p.by===me,isMatch=s.match&&s.match.id===me;const [st,sc]=sparState(s);const k=SPK[p.kind]||SPK.mass;
   const reqs=Object.entries(s.req||{}).map(([mid,v])=>Object.assign({mid},v));const conf=s.match&&(sparAuto()||(s.staff&&s.staff.ok));const past=p.date<=TODAY();
   const fbs=Object.entries(s.fb||{}).map(([mid,v])=>Object.assign({mid},v));const vids=Object.entries(s.video||{}).map(([mid,v])=>Object.assign({mid},v));
-  sheet(`<h2>${s.chal?'도전장':esc(p.nick)+'님의 스파링'}</h2>${sparCard(s,me).replace(/<button[^>]*data-so[^>]*>[^<]*<\/button>/,'')}
+  sheet(`<h2>${s.chal?(p.rec?'코치 추천 스파링':'도전장'):esc(p.nick)+'님의 스파링'}</h2>${sparCard(s,me).replace(/<button[^>]*data-so[^>]*>[^<]*<\/button>/,'')}
     ${s.chal?sparChalHTML(s,me):''}
     ${!s.chal&&mine&&!s.match&&p.status!=='cancel'?`<div class="label">신청한 사람 ${reqs.length}명</div>${reqs.map(r=>`<div class="qrow"><div class="grow"><b>${esc(r.nick)}</b> <span class="small">Lv.${r.lv||1}${r.sk?' · 심사 '+r.sk+'레벨':''}</span>${r.msg?`<div class="small">${esc(r.msg)}</div>`:''}</div><button class="btn sm red" data-acc="${esc(r.mid)}">수락</button></div>`).join('')||'<div class="small">아직 신청이 없어요</div>'}`:''}
     ${!s.chal&&!mine&&!s.match&&p.status!=='cancel'&&p.date>=TODAY()?(s.req&&s.req[me]?'<div class="mhint info">신청했어요 · 상대가 수락하면 매칭돼요</div><button class="btn ghost" id="spReqX">신청 취소</button>':`<div class="field"><label for="spMsg">한마디 <span class="small">(선택)</span></label><input id="spMsg" maxlength="60" placeholder="예: 저도 3라운드 가볍게 좋아요!"></div><button class="btn red" id="spReq">스파링 신청하기</button>`):''}
@@ -2883,7 +2898,7 @@ async function openSparPost(id){await sparLoad();const s=sparGet(id)||{};if(!s.p
     ${vids.length?`<div class="label">영상</div>${vids.map(v=>`<a class="btn ghost sm" href="${esc(v.url)}" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none">${esc(v.nick||'')} 영상 보기 ↗</a>`).join('')}`:''}
     ${fbs.length?`<div class="label">피드백</div>${fbs.map(f=>`<div class="spc"><div class="small"><b>${esc(f.nick||'')}</b> → ${esc(f.toNick||'상대')}</div>${f.sc?`<div class="small">${Object.entries(FBK).map(([k2,n])=>`${n} ${'★'.repeat(f.sc[k2]||0)}`).join(' · ')}</div>`:''}${f.good?`<div class="small"><b>잘한 점</b> ${esc(f.good)}</div>`:''}${f.imp?`<div class="small"><b>보완할 점</b> ${esc(f.imp)}</div>`:''}</div>`).join('')}`:''}
     ${s.cfb?`<div class="spc" style="border-color:#2E5AAC"><div class="small"><b>코치 피드백</b> (${esc(s.cfb.by||'')})</div><div class="small" style="white-space:pre-wrap">${esc(s.cfb.text)}</div></div>`:''}
-    ${mine&&p.status!=='cancel'&&p.date>=TODAY()?'<button class="btn ghost" id="spCancel" style="color:var(--red)">스파링 취소</button>':''}
+    ${mine&&!p.rec&&p.status!=='cancel'&&p.date>=TODAY()?'<button class="btn ghost" id="spCancel" style="color:var(--red)">스파링 취소</button>':''}
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelectorAll('[data-acc]').forEach(b=>b.onclick=async()=>{const r=reqs.find(x=>x.mid===b.dataset.acc);if(await hset(`spar/${id}/match`,{id:r.mid,nick:r.nick,lv:r.lv||1,at:Date.now()})){await hset(`spar/${id}/post`,Object.assign({},p,{status:'matched'}));toast(sparAuto()?'매칭 확정!':'매칭됐어요! 관장님 확인 후 확정돼요',3000);openSparPost(id)}});
     const rq=el.querySelector('#spReq');if(rq)rq.onclick=async()=>{const why=sparCanJoin(p);if(why){toast(why,3000);return}const msg=chatClean(el.querySelector('#spMsg').value);if(chatBlocked(msg)){toast('연락처·링크는 적을 수 없어요');return}
@@ -2896,7 +2911,7 @@ async function openSparPost(id){await sparLoad();const s=sparGet(id)||{};if(!s.p
     const cnw=el.querySelector('#chNew');if(cnw)cnw.onclick=()=>sparProposeForm('다른 일정 제안',{date:p.date,time:p.time,kind:p.kind,rounds:p.rounds,btn:'제안 보내기'},async f=>{const k='t'+Date.now().toString(36);const nick=ME.nick||maskName(ME.name);
       if(!(await hset(`spar/${id}/talk/${k}`,clean({by:me,nick,date:f.date,time:f.time,kind:f.kind,rounds:f.rounds,msg:f.msg,at:Date.now()}))))return false;await hset(`spar/${id}/ok/${me}`,k);
       const other=p.by===me?p.to:{id:p.by,nick:p.nick};try{await sendGreet(other.id,other.nick,'📅 스파링 일정을 새로 제안했어요')}catch(e){}toast('새 일정을 제안했어요');setTimeout(()=>openSparPost(id),200);return true});
-    const cno=el.querySelector('#chNo');if(cno)cno.onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 거절돼요';return}if(await hset(`spar/${id}/ok/${me}`,'no')){toast('도전을 거절했어요');sparBadge();openSparPost(id)}}})}
+    const cno=el.querySelector('#chNo');if(cno)cno.onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 거절돼요';return}if(await hset(`spar/${id}/ok/${me}`,'no')){toast(p.rec?'이번 추천은 패스했어요':'도전을 거절했어요');sparBadge();openSparPost(id)}}})}
 function sparSchedRow(s,me){const p=s.post,k=SPK[p.kind]||SPK.mass;const d=new Date(p.date+'T00:00:00');const conf=sparAuto()||(s.staff&&s.staff.ok);const today=p.date===TODAY();
   return `<button class="spc" data-so="${esc(s.id)}" style="text-align:left;font:inherit;color:inherit;${today?'border-color:var(--red);':''}"><div class="sph"><b>${esc(p.nick)} <span style="color:var(--red)">VS</span> ${esc(s.match.nick)}</b><span class="spk ${k[2]}">${k[0]}</span></div>
     <div class="small"><b class="num">${today?'오늘 ':''}${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(p.time)}</b> · ${p.rounds}라운드 · <span class="spst ${conf?'ok':'w'}">${conf?'확정':'관장님 확인 전'}</span>${sparMine(s,me)?' · <b>내 경기</b>':''}</div></button>`}
@@ -2988,8 +3003,9 @@ function sparChalHTML(s,me){const c=s.chal,p=s.post,to=p.to||{};const part=p.by=
       <div><b class="num">${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(x.time)}</b> · ${(SPK[x.kind]||SPK.mass)[0]} · ${x.rounds}R</div>${x.msg?`<div class="small">"${esc(x.msg)}"</div>`:''}${okBy.length?`<div class="small" style="color:var(--green)">OK: ${okBy.map(esc).join(', ')}</div>`:''}</div>`}).join('');
   let act='';if(part&&p.status!=='cancel'&&!c.declined&&!c.agreed){const mineL=L&&L.by===me;
     act=`${mineL?`<div class="mhint info">${esc(p.by===me?to.nick:p.nick)}님의 답을 기다리고 있어요</div>`:`<button class="btn red" id="chOk">이 일정 OK! (${L?((d=>`${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(L.time)}`)(new Date(L.date+'T00:00:00'))):''})</button>`}
-      <button class="btn ghost" id="chNew">다른 날짜·시간 제안하기</button>${to.id===me?'<button class="btn ghost" id="chNo" style="color:var(--red)">도전 거절</button>':''}`}
-  return `<div class="label">일정 이야기</div>${thread}${act}`}
+      <button class="btn ghost" id="chNew">다른 날짜·시간 제안하기</button>${to.id===me||(p.rec&&p.by===me)?`<button class="btn ghost" id="chNo" style="color:var(--red)">${p.rec?'이번 추천은 패스할게요':'도전 거절'}</button>`:''}`}
+  const recH=p.rec?`<div class="mhint info">🧑‍🏫 <b>${esc(p.rec.by||'코치')}</b>님이 두 분을 스파링 상대로 추천했어요!${p.note?`<br>"${esc(p.note)}"`:''}<br><span class="small">${esc(p.nick)}님과 ${esc(to.nick||'')}님이 둘 다 OK하면 바로 확정돼요.</span></div>`:'';
+  return `${recH}<div class="label">일정 이야기</div>${thread}${act}`}
 const FBK={jab:'잽',step:'스텝',guard:'가드',stam:'체력',manner:'매너'};
 async function sparFeedback(id){await sparLoad();const s=sparGet(id);if(!s)return;const me=ME.id,p=s.post;const other=p.by===me?{id:s.match.id,nick:s.match.nick}:{id:p.by,nick:p.nick};
   const cur=(s.fb&&s.fb[me])||{sc:{}};const sc=Object.assign({jab:3,step:3,guard:3,stam:3,manner:5},cur.sc||{});const myV=(s.video&&s.video[me])||{};
@@ -3011,14 +3027,55 @@ async function sparFeedback(id){await sparLoad();const s=sparGet(id);if(!s)retur
 /* 관장·코치: 스파링 확인 */
 async function openSparStaff(){await sparLoad();const T=TODAY();const L=sparList().filter(s=>s.post.status!=='cancel'&&s.post.date>=dAdd(T,-14)).sort((a,b)=>(a.post.date+a.post.time).localeCompare(b.post.date+b.post.time));
   const wait=L.filter(s=>s.match&&!s.staff&&!sparAuto());
-  sheet(`<h2>스파링 확인</h2><div class="small">${sparAuto()?'자동 확정으로 설정돼 있어요':'매칭된 스파링을 확인해 확정하거나 반려해요'}</div>
+  sheet(`<h2>스파링 확인</h2><button class="btn red" id="spRec">🧑‍🏫 코치 추천 매칭 만들기</button><div class="small">${sparAuto()?'자동 확정으로 설정돼 있어요':'매칭된 스파링을 확인해 확정하거나 반려해요'}</div>
     ${wait.length?`<div class="label" style="color:var(--red)">확인 대기 ${wait.length}건</div>`:''}
     <div style="display:flex;flex-direction:column;gap:8px">${L.map(s=>{const p=s.post;const [st,sc]=sparState(s);return `<div class="spc"><div class="sph"><b>${esc(p.nick)} vs ${s.match?esc(s.match.nick):'(모집 중)'}</b><span class="spk ${(SPK[p.kind]||SPK.mass)[2]}">${(SPK[p.kind]||SPK.mass)[0]}</span></div><div class="small num">${md(p.date)} ${esc(p.time)} · ${p.rounds}R${p.stu?' · 학생':''} · 작성 ${esc(p.by)}${s.match?' / 상대 '+esc(s.match.id):''}</div><div class="row" style="align-items:center"><span class="spst ${sc} grow">${st}</span>${s.match&&!s.staff&&!sparAuto()?`<button class="btn sm red" data-ok="${esc(s.id)}">확정</button><button class="btn sm ghost" data-no="${esc(s.id)}">반려</button>`:''}${s.match?`<button class="btn sm ghost" data-cf="${esc(s.id)}">코치 피드백</button>`:''}</div></div>`}).join('')||'<div class="small">최근 스파링이 없어요</div>'}</div>
     <button class="btn ghost" data-close>닫기</button>`,(el)=>{
     const who=isOwner(ME)||!ME?'관장':(ME.name||'코치');
+    el.querySelector('#spRec').onclick=()=>sparRecOpen();
     el.querySelectorAll('[data-ok]').forEach(b=>b.onclick=async()=>{if(await hset(`spar/${b.dataset.ok}/staff`,{ok:true,by:who,at:Date.now()})){toast('확정했어요');openSparStaff()}});
     el.querySelectorAll('[data-no]').forEach(b=>b.onclick=async()=>{const why=prompt('반려 사유 (회원에게 보여요)','체급·레벨 차이가 커요')||'';if(await hset(`spar/${b.dataset.no}/staff`,{ok:false,why:why.slice(0,40),by:who,at:Date.now()})){toast('반려했어요');openSparStaff()}});
     el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{const s=SP.data[b.dataset.cf];sheet(`<h2>코치 피드백</h2><div class="field"><label for="cfT">두 사람 모두에게 보여요</label><textarea id="cfT" rows="5" maxlength="400">${esc((s.cfb&&s.cfb.text)||'')}</textarea></div><button class="btn red" id="cfGo">저장</button><button class="btn ghost" data-close>닫기</button>`,(e2,c2)=>{e2.querySelector('#cfGo').onclick=async()=>{if(await hset(`spar/${b.dataset.cf}/cfb`,{text:e2.querySelector('#cfT').value.trim(),by:who,at:Date.now()})){toast('저장했어요');c2();openSparStaff()}}})})})}
+
+/* 관장·코치: 추천 매칭 (두 회원을 골라 대신 도전장) */
+const SRC={a:null,b:null,q:''};
+function recWho(){try{return !ME||isOwner(ME)?'관장':(ME.name||'코치')+(isCoachRec(ME)||isStaff(ME)?' 코치':'')}catch(e){return '코치'}}
+async function sparRecOpen(){SRC.a=null;SRC.b=null;SRC.q='';
+  sheet('<div style="padding:40px 0;text-align:center"><div class="spin"></div><div class="small" style="margin-top:10px">회원 불러오는 중…</div></div>');
+  const [all,prof]=await Promise.all([DB.all(),hget('spprof')]);await sparLoad();const P=prof||{};const T=TODAY();
+  const elig=all.filter(m=>m&&m.id&&!m.demo&&!isStaff(m)&&!isCoachRec(m)&&!isOwner(m)&&m.approvedAt!==''&&skillOf(m)>=sparMinSkill()&&(!m.mem||['active','soon'].includes(memStatus(m).state)));
+  const busy=new Set();sparList().forEach(x=>{if(x.post.status==='cancel'||x.post.date<T)return;if(x.chal&&x.chal.declined)return;const a=x.post.by,b=x.match?x.match.id:(x.post.to||{}).id;if(a&&b)busy.add([a,b].sort().join('|'))});
+  const stu=m=>{const pp=P[m.id];return pp&&pp.stu!=null?!!pp.stu:isStu(m)};const wOf=m=>+((P[m.id]||{}).w)||0;const nm=m=>m.name||m.nick||m.id;
+  const pairs=[];for(let i=0;i<elig.length;i++)for(let j=i+1;j<elig.length;j++){const a=elig[i],b=elig[j];if(stu(a)!==stu(b))continue;if(busy.has([a.id,b.id].sort().join('|')))continue;
+    const wa=wcIdx(wOf(a)),wb=wcIdx(wOf(b));const wd=wa>=0&&wb>=0?Math.abs(wa-wb):1.5;if(wd>1)continue;const sd=Math.abs(skillOf(a)-skillOf(b));if(sd>1)continue;
+    const la=lfgActive(P[a.id]),lb=lfgActive(P[b.id]);const recent=(m=>(m.attend||[]).filter(d=>d>=dAdd(T,-14)).length);
+    const sc=wd*3+sd*2-(la?2:0)-(lb?2:0)-Math.min(4,(recent(a)+recent(b))/4);pairs.push({a,b,sc,wd,sd,la,lb})}
+  pairs.sort((x,y)=>x.sc-y.sc);const top=pairs.slice(0,10);
+  const info=m=>{const pp=P[m.id]||{};return `${esc(nm(m))} <span class="small num">${esc(m.id)}</span><span class="small"> · 심사 ${skillOf(m)}${pp.w?' · '+pp.w+'kg':''}${lfgActive(pp)?' · <b style="color:var(--green)">상대 찾는 중</b>':''}</span>`};
+  sheet(`<h2>🧑‍🏫 코치 추천 매칭</h2><p class="small" style="margin:0">두 회원을 골라 스파링을 추천해요. 두 사람 모두 앱에 <b>"코치 추천"</b>이 뜨고, 둘 다 OK하면 바로 확정돼요. 학생은 학생끼리만.</p>
+    <div class="label">추천 짝 (체급·심사 레벨·최근 출석 기준)</div>
+    <div style="display:flex;flex-direction:column;gap:6px">${top.map((x,i)=>`<div class="spc"><div class="small">${info(x.a)}</div><div class="small" style="color:var(--red);font-weight:700">vs</div><div class="small">${info(x.b)}</div><button class="btn sm red" data-pr="${i}">이 둘 추천하기</button></div>`).join('')||'<div class="small">조건이 맞는 짝이 없어요. 아래에서 직접 골라 주세요.</div>'}</div>
+    <div class="label" style="margin-top:6px">직접 고르기</div>
+    <div class="row" style="gap:6px"><button class="btn ghost sm grow" id="srA">선수 A: 고르기</button><button class="btn ghost sm grow" id="srB">선수 B: 고르기</button></div>
+    <div class="field" style="margin:0"><input id="srQ" placeholder="이름·회원번호로 찾기"></div><div id="srL" class="lkpick" style="max-height:34vh;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
+    <button class="btn red" id="srGo" disabled>A · B 추천하기</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    let slot='a';const draw=()=>{el.querySelector('#srA').innerHTML=SRC.a?'A: '+esc(nm(SRC.a)):'선수 A: 고르기';el.querySelector('#srB').innerHTML=SRC.b?'B: '+esc(nm(SRC.b)):'선수 B: 고르기';
+      el.querySelector('#srA').classList.toggle('red',slot==='a');el.querySelector('#srB').classList.toggle('red',slot==='b');el.querySelector('#srGo').disabled=!(SRC.a&&SRC.b);
+      const q=el.querySelector('#srQ').value.trim();const nz=x=>String(x||'').replace(/\s+/g,'').toLowerCase();
+      const L=elig.filter(m=>!q||nz(nm(m)).includes(nz(q))||m.id.includes(q)||choOf(nz(nm(m))).includes(nz(q))).slice(0,30);
+      el.querySelector('#srL').innerHTML=L.map(m=>`<button class="qrow" data-sm="${esc(m.id)}" style="border:0;text-align:left;background:${(SRC.a&&SRC.a.id===m.id)||(SRC.b&&SRC.b.id===m.id)?'#FFF4D6':'#fff'}"><div class="grow">${info(m)}</div></button>`).join('')||'<div class="small">찾는 회원이 없어요</div>';
+      el.querySelectorAll('[data-sm]').forEach(b=>b.onclick=()=>{const m=elig.find(x=>x.id===b.dataset.sm);if(slot==='a'){SRC.a=m;slot='b'}else{SRC.b=m;slot='a'}if(SRC.a&&SRC.b&&SRC.a.id===SRC.b.id){SRC.b=null;slot='b'}draw()})};
+    el.querySelector('#srA').onclick=()=>{slot='a';draw()};el.querySelector('#srB').onclick=()=>{slot='b';draw()};el.querySelector('#srQ').oninput=draw;draw();
+    el.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{const x=top[+b.dataset.pr];sparRecSend(x.a,x.b,stu(x.a))});
+    el.querySelector('#srGo').onclick=()=>{if(stu(SRC.a)!==stu(SRC.b)){toast('학생과 성인은 같이 스파링할 수 없어요');return}sparRecSend(SRC.a,SRC.b,stu(SRC.a))}})}
+function sparRecSend(a,b,isS){const who=recWho();const nk=m=>m.nick||maskName(m.name);
+  sparProposeForm(`${nk(a)} vs ${nk(b)} 추천`,{btn:'두 사람에게 추천 보내기',ph:'예: 체급 비슷해서 좋은 연습 상대예요!'},async f=>{
+    const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);const k='t'+Date.now().toString(36);
+    const post=clean({type:'chal',rec:{by:who,at:Date.now()},by:a.id,nick:nk(a),lv:levelOf(a).lv,sk:skillOf(a),stu:isS||undefined,to:{id:b.id,nick:nk(b),lv:levelOf(b).lv},date:f.date,time:f.time,kind:f.kind,rounds:f.rounds,note:f.msg,at:Date.now(),status:'open'});
+    if(!(await hset(`spar/${id}/post`,post)))return false;
+    await hset(`spar/${id}/talk/${k}`,clean({by:'staff',nick:who,date:f.date,time:f.time,kind:f.kind,rounds:f.rounds,msg:f.msg,at:Date.now()}));
+    await hset(`spar/${id}/staff`,{ok:true,by:who,at:Date.now(),rec:true});
+    toast(`${nk(a)} · ${nk(b)}님에게 추천을 보냈어요. 둘 다 OK하면 확정돼요`,3500);setTimeout(()=>openSparStaff(),300);return true})}
 
 /* ================= 가족 ================= */
 const FAM={list:{},at:0};
@@ -3612,7 +3669,7 @@ function closeGame(){if(G)G.over=true;G=null;$('#gameRoot').innerHTML='';startWo
 
 /* ================= 꾸미기 ================= */
 let shopCat='glove';
-function renderShop(){
+function renderShop(){try{const sb=$('#storeBan');const L=funCfg().store.filter(z=>+z.p>0);const show=FT('store')&&L.length&&ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());sb.hidden=!show;if(show){const cr=+ME.credits||0;const nx=L.slice().sort((a,b)=>a.p-b.p).find(z=>cr<+z.p);const can=L.filter(z=>cr>=+z.p);$('#storeSub').textContent=can.length?`지금 바꿀 수 있어요: ${can.map(z=>(z.emo||'')+z.name).join(' · ')}`:nx?`${nx.emo||''}${nx.name}까지 ${(+nx.p-cr).toLocaleString()} 크레딧 남음`:'크레딧으로 음료·용품 쿠폰 교환';sb.classList.toggle('pulse',!!can.length);sb.onclick=()=>openStore()}}catch(e){}
   avatarTo($('#shopAv'),ME.equip,{pose:'guard',h:46,t:performance.now()/1000});
   $('#shopCoin').textContent=ME.credits.toLocaleString();
   $('#eqList').innerHTML=SLOTS.map(([s,n])=>{const id=s==='char'?'c_'+ME.equip.char:ME.equip[s];return id&&IT[id]?`<div>${n}: <b>${esc(IT[id].name)}</b></div>`:''}).join('');
@@ -4099,6 +4156,8 @@ const FEAT=[
   {id:'bio',q:'번호 없이 얼굴로 입장',d:'2026-10-20',e:'🙂',t:'Face ID·지문으로 로그인',s:'다음부터 번호 입력 없이 얼굴만 보여 주면 들어와요',go:'bio',sel:'#bioBtn',tab:'more',need:()=>BIO_AV},
   {id:'strip',q:'맨 위 칸에 기간·출석',d:'2026-10-20',e:'📋',t:'남은 기간·출석을 맨 위에서',s:'체육관 화면 맨 위 칸을 누르면 자세히 볼 수 있어요',go:null,sel:'#t-map [data-mem]',tab:'map'},
   {id:'spar2',q:'상대 찾고 도전장 보내기',d:'2026-11-02',e:'🥊',t:'스파링 매칭',s:'홈 화면 빨간 스파링 배너에서 바로! 프로필을 올리면 비슷한 체급 회원이 도전장을 보내요',go:'spar',sel:'#t-map [data-sparban]',tab:'map'},
+  {id:'ovsns',q:'SNS 인증하고 +500',d:'2026-11-02',e:'📲',t:'오운완 SNS 인증',s:'인스타·블로그에 오운완 올리고 링크 붙여넣으면 +500 크레딧! 2번이면 음료 한 잔',go:'feed',sel:'#ovCard',tab:'feed'},
+  {id:'store',q:'크레딧으로 음료 바꾸기',d:'2026-11-02',e:'🛒',t:'크레딧 매점',s:'모은 크레딧으로 음료·단백질바·핸드랩 쿠폰 교환 (꾸미기 탭 맨 위)',go:'store',sel:'#storeBan',tab:'shop'},
   {id:'chat',q:'맵 친구들과 인사',d:'2026-10-19',e:'💬',t:'체육관 대화',s:'맵에 들어온 회원끼리 인사를 주고받아요',go:'chat',sel:'#wchat',tab:'map'},
   {id:'voice',q:'관장님께 건의·칭찬',d:'2026-10-19',e:'📮',t:'의견함',s:'관장님·코치에게 건의·칭찬을 남겨요 (비공개 가능)',go:'voice',sel:'#voiceBtn',tab:'more'},
   {id:'hold',q:'앱에서 바로 신청',d:'2026-10-18',e:'⏸️',t:'정지(연기) 신청',s:'다치거나 바쁠 때 앱에서 바로 신청해요',go:'hold',sel:'[data-holdreq]',tab:'more',need:()=>ME&&typeof canReqHold==='function'&&canReqHold(ME)}];
@@ -4130,6 +4189,7 @@ function onbGo(go){const T=t=>{setTab(t);window.scrollTo(0,0)};const scrollTo=(s
     case 'attal':T('more');scrollTo('[data-attme="full"]',()=>{if(!attAlarmOn(ME.id))attAlarmToggle()});break;
     case 'bio':T('more');scrollTo('#bioBtn',e=>{if(e&&!e.hidden)e.click()});break;
     case 'spar':T('map');openSparBoard();break;
+    case 'store':T('shop');setTimeout(()=>openStore(),300);break;
     case 'chat':T('map');scrollTo('#wchat',()=>{const i=$('#wcIn');if(i)i.focus({preventScroll:true})});break;
     case 'voice':openVoice();break;
     case 'hold':T('more');scrollTo('[data-holdreq]',e=>e&&e.click());break;
@@ -4499,7 +4559,7 @@ async function applyAttend(m,makeup,via){
   const lvBefore=levelOf(m).lv;m.xp+=ATT_XP;const base=50+Math.min(m.streak-1,5)*10;earn(m,base,'attend');
   // 룰렛
   const roll=Math.random();let bonus=0,item=null,txt='';
-  if(roll<.05){const pool=ITEMS.filter(i=>i.price>0&&i.price<=250&&!m.owned.includes(i.id)&&!i.ev&&i.slot!=='char');if(pool.length){item=pick(pool);m.owned.push(item.id);txt='깜짝 장비: '+item.name}else{bonus=100}}
+  if(roll<.05){const pool=ITEMS.filter(i=>i.price>0&&(i.p0||i.price)<=250&&!m.owned.includes(i.id)&&!i.ev&&i.slot!=='char');if(pool.length){item=pick(pool);m.owned.push(item.id);txt='깜짝 장비: '+item.name}else{bonus=100}}
   else if(roll<.13)bonus=100;else if(roll<.28)bonus=50;else if(roll<.58)bonus=20;else bonus=10;
   if(bonus){earn(m,bonus,'attend');txt=txt||'룰렛 보너스 +'+bonus}
   if(HW&&Math.random()<.5){m.candy=(m.candy||0)+3;txt+=' · 할로윈 사탕 +3'}
@@ -4622,7 +4682,7 @@ async function openAdmin(){
 }
 function setATab(k){if(k==='mem')setTimeout(renderAttAdmin,50);if(ALAY!=='old'){if(k==='biz')k='ops';if(k==='lock')k='mem'}if(!['today','mem','biz','staff','lock','ops','set'].includes(k))k='today';if(k==='lock'||(k==='mem'&&ALAY!=='old'))renderLockers();if(k==='staff'){renderStaffAdmin();chatBadge('owner')}$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner'||el.id==='hrCard')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
 $$('#atabs [data-at]').forEach(b=>b.onclick=()=>{setATab(b.dataset.at);window.scrollTo({top:0,behavior:'smooth'})});
-async function renderADash(){const box=$('#adash');if(!box)return;const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
+async function renderADash(){const box=$('#adash');if(!box)return;try{renderOvAdm()}catch(e){}const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
   const pend=all.filter(m=>!m.approvedAt).length,payN=pays.filter(x=>x.status==='pending').length,dueN=dueItems(all).length,today=all.filter(m=>m.last===TODAY()).length,soon=all.filter(m=>memGroup(m)==='soon').length,valid=all.filter(m=>['active','soon'].includes(memGroup(m))).length;
   const mon=TODAY().slice(0,7);const sales=pays.filter(x=>x&&x.status==='done').map(normSale).filter(x=>x.date.startsWith(mon)).reduce((s,x)=>s+x.amount,0);
   const tiles=[['승인 대기',pend,'mem','pending',pend?'hot':''],['결제 확인',payN,'today','pay',payN?'hot':''],['보낼 안내',dueN,'today','due',dueN?'warn':''],['오늘 출석',today,'mem','all',''],['7일 내 만료',soon,'mem','soon',soon?'warn':''],['유효 회원',valid,'mem','valid',''],['이달 매출',manS(sales)+'원','sales','',''],['공지 팝업',noticesAll().filter(n=>nActive(n)).length,'notice','','']];
@@ -5697,8 +5757,10 @@ function openSnsStudio(im,o={}){const S={fmt:o.fmt||'feed',tpl:o.tpl||'classic',
     <div class="field"><label for="snCap">캡션 (해시태그 포함 · 자동 복사돼요)</label><textarea id="snCap" rows="6"></textarea></div>
     <button class="btn red" id="snShare">인스타 · 카톡으로 공유하기</button>
     <div class="row"><button class="btn ghost sm grow" id="snSave">이미지 저장</button><button class="btn ghost sm grow" id="snCopy">캡션 복사</button></div>
+    ${FT('owvid')&&ME&&!isStaff(ME)?`<button class="btn gold" id="snPosted">✅ SNS에 올렸어요! 링크 붙여넣고 +${(+funCfg().ovCr).toLocaleString()}</button>`:''}
     <p class="small" style="margin:0">공유하면 하루 한 번 <b>+${SNS_BONUS} 크레딧</b>! 인스타 앱 → 새 게시물(또는 스토리) → 사진 고르고 캡션 붙여넣기.</p>
     <button class="btn ghost" data-close>닫기</button></div>`,(el,close)=>{
+    {const pb=el.querySelector('#snPosted');if(pb)pb.onclick=()=>{close();ovUpload('url')}}
     const cv=el.querySelector('#snC'),cap=el.querySelector('#snCap');
     const qrC=(()=>{try{const d=document.createElement('div');new QRCode(d,{text:joinUrl(),width:220,height:220,colorDark:'#1C1C1C',colorLight:'#ffffff'});return d.querySelector('canvas')}catch(e){return null}})();
     const draw=()=>{const [W,H]=F[S.fmt];cv.width=W;cv.height=H;const c=cv.getContext('2d');c.textBaseline='alphabetic';
@@ -5735,6 +5797,69 @@ function openSnsStudio(im,o={}){const S={fmt:o.fmt||'feed',tpl:o.tpl||'classic',
     el.querySelector('#snSave').onclick=async()=>{const b=await blob();download('nnn_owan.jpg',b,'image/jpeg');try{navigator.clipboard&&navigator.clipboard.writeText(cap.value).catch(()=>{})}catch(e){}toast('저장했어요 · 캡션도 복사됨');bonus()};
     el.querySelector('#snCopy').onclick=()=>copyText(cap.value,'캡션을')})}
 $('#snsOnly').onclick=()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;try{const im=await loadImg(f);openSnsStudio(im,{counted:false})}catch(e){toast('사진을 열지 못했어요')}};inp.click()};
+
+/* ===== 오운완 영상 · SNS 인증 (관장 확인 후 큰 크레딧) ===== */
+const OV={list:{},at:0};
+async function ovLoad(force){if(!force&&Date.now()-OV.at<20000)return OV.list;OV.list=(await hget('cvid/owan'))||{};OV.at=Date.now();return OV.list}
+const ovWeek=()=>{const d=new Date(TODAY()+'T00:00:00');const dow=d.getDay()||7;return dAdd(TODAY(),1-dow)};
+function ovPaidWeek(L,mid){const w=ovWeek();return Object.values(L).filter(v=>v&&v.mid===mid&&v.rv&&v.rv.ok&&+v.rv.cr>0&&dstr(new Date(v.rv.at))>=w).length}
+async function renderOvCard(){const box=$('#ovCard');if(!box)return;const F=funCfg();
+  if(!FT('owvid')||!ME||ME.demo||isStaff(ME)||(typeof isGuest==='function'&&isGuest())){box.hidden=true;return}
+  const L=await ovLoad();const mine=Object.entries(L).map(([k,v])=>Object.assign({k},v)).filter(v=>v.mid===ME.id).sort((a,b)=>b.at-a.at).slice(0,4);
+  const paid=ovPaidWeek(L,ME.id),left=Math.max(0,+F.ovWk-paid);const drink=(F.store||[]).find(z=>/음료/.test(z.name));
+  box.hidden=false;box.innerHTML=`<div class="row" style="align-items:center"><div class="grow"><div class="label" style="color:#8A5A00">오운완 SNS 인증 · 큰 보상</div><b style="font-family:var(--display);font-weight:400;font-size:21px">📲 SNS에 올리면 +${(+F.ovCr).toLocaleString()} 크레딧</b></div><span class="ovleft num">이번 주<br><b>${left}/${F.ovWk}</b></span></div>
+    <div class="small" style="color:#6B4A00">${drink?`2번 인증하면 ${esc(drink.emo||'')} ${esc(drink.name)} 한 잔! · `:''}관장님이 확인하면 바로 들어와요</div>
+    <div class="ovsteps"><button data-ovs="card"><i>1</i><b>📸 자랑 카드</b><span>사진 고르면 인스타용으로 꾸며 줘요</span></button><button data-ovs="tag"><i>2</i><b>#️⃣ 캡션 복사</b><span>해시태그·체육관 태그 그대로</span></button><button data-ovs="url" class="hl"><i>3</i><b>🔗 링크 붙여넣기</b><span>올린 게시물 주소 → 크레딧</span></button></div>
+    <button class="btn ghost sm" data-ov="vid" style="width:100%;margin-top:6px">📹 SNS 없이 영상으로 인증하기</button>
+    ${mine.length?`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">${mine.map(v=>`<div class="ovst"><span>${v.ty==='gif'?'📹 영상':'🔗 '+esc(ovHost(v.url))}</span><span class="small num">${md(dstr(new Date(v.at)))}</span><b class="${v.rv?(v.rv.ok?'ok':'no'):'w'}">${v.rv?(v.rv.ok?(+v.rv.cr>0?`+${(+v.rv.cr).toLocaleString()} 지급`:'확인됨'):'반려'+(v.rv.why?' · '+esc(v.rv.why):'')):'관장님 확인 중'}</b></div>`).join('')}</div>`:''}`;
+  box.querySelectorAll('[data-ov]').forEach(b=>b.onclick=()=>ovUpload(b.dataset.ov));
+  box.querySelectorAll('[data-ovs]').forEach(b=>b.onclick=()=>{const k=b.dataset.ovs;if(k==='url')ovUpload('url');else if(k==='tag')copyText(snsCaption({quote:'오늘도 오운완 🥊',counted:ME.shotDay===TODAY(),day:owanCount(ME)}),'캡션을');else $('#snsOnly').click()})}
+const ovHost=u=>{try{const h=new URL(u).hostname.replace(/^www\.|^m\./,'');return /instagram/.test(h)?'인스타그램':/blog\.naver|naver/.test(h)?'네이버 블로그':/youtu/.test(h)?'유튜브':/tiktok/.test(h)?'틱톡':/threads/.test(h)?'스레드':/facebook/.test(h)?'페이스북':h}catch(e){return '링크'}};
+function ovUpload(mode){const U=cvWho();if(!U){toast('회원번호로 입장한 뒤 올려 주세요');return}let G=null,file=null;
+  sheet(`<h2>🎬 오운완 인증</h2>
+    <div class="chips" id="ovMode"><button class="chip ${mode!=='url'?'on':''}" data-m="vid">📹 영상 올리기</button><button class="chip ${mode==='url'?'on':''}" data-m="url">🔗 SNS 링크</button></div>
+    <div id="ovVid" ${mode==='url'?'hidden':''} style="display:flex;flex-direction:column;gap:8px">
+      <div class="small">운동하는 모습 영상을 고르면 짧은 움짤(GIF)로 바꿔서 올려요. 다른 사람이 나오면 동의를 받아 주세요.</div>
+      <label class="btn" for="ovFile" style="text-align:center">📹 영상 고르기 · 찍기</label><input id="ovFile" type="file" accept="video/*" hidden>
+      <video id="ovPrev" playsinline muted controls hidden style="width:100%;border-radius:12px;background:#000;max-height:36vh"></video>
+      <div id="ovOpt" hidden><div class="field"><label for="ovStart">시작 위치 <b id="ovStartT">0.0</b>초</label><input id="ovStart" type="range" min="0" max="0" step="0.1" value="0"></div><button class="btn red" id="ovMake" style="width:100%">움짤 만들기 (5초)</button></div>
+      <div id="ovProg" class="small" hidden></div>
+      <div id="ovOut" hidden style="display:flex;flex-direction:column;gap:8px;align-items:center"><img id="ovImg" alt="오운완 움짤 미리보기" style="max-width:100%;border-radius:12px"><button class="btn red" id="ovPost" style="width:100%">인증 올리기</button></div></div>
+    <div id="ovUrl" ${mode==='url'?'':'hidden'} style="display:flex;flex-direction:column;gap:8px">
+      <div class="small">인스타·네이버 블로그·유튜브·틱톡 등에 <b>오운완 게시물</b>을 올리고 주소를 붙여 주세요. 체육관 태그(@nnnboxing 등)가 있으면 더 좋아요.</div>
+      <div class="ovhow small"><b>링크 복사하는 법</b><br>인스타: 내 게시물 → ⋯ (또는 종이비행기) → <b>링크 복사</b><br>블로그: 글 → 공유 → <b>URL 복사</b> · 유튜브: 공유 → <b>복사</b></div>
+      <button class="btn gold" id="ovPaste">📋 복사한 링크 붙여넣기</button>
+      <div class="field" style="margin:0"><label for="ovU">게시물 주소</label><input id="ovU" inputmode="url" placeholder="https://www.instagram.com/p/..."></div><div class="small" id="ovUHost"></div><button class="btn red" id="ovUGo">링크 올리고 +${(+funCfg().ovCr).toLocaleString()} 받기</button>
+      <button class="btn ghost sm" id="ovCap">#️⃣ 아직 안 올렸어요 · 캡션 복사</button></div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{const $e=q=>el.querySelector(q);
+    el.querySelectorAll('#ovMode [data-m]').forEach(b=>b.onclick=()=>{el.querySelectorAll('#ovMode [data-m]').forEach(x=>x.classList.toggle('on',x===b));$e('#ovVid').hidden=b.dataset.m!=='vid';$e('#ovUrl').hidden=b.dataset.m!=='url'});
+    const send=async(rec,gif)=>{const vid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      if(gif&&!(await hset('cvgif/'+vid,{mid:U.id,d:gif}))){toast('올리지 못했어요',3500);return false}
+      if(!(await hset(`cvid/owan/${vid}`,Object.assign({mid:U.id,nick:U.nick,at:Date.now()},rec)))){if(gif)await hset('cvgif/'+vid,null);return false}
+      OV.at=0;toast('올렸어요! 관장님이 확인하면 크레딧이 들어와요 🎉',3500);close();renderOvCard();return true};
+    $e('#ovFile').onchange=e=>{file=e.target.files&&e.target.files[0];if(!file)return;const pv=$e('#ovPrev');pv.src=URL.createObjectURL(file);pv.hidden=false;$e('#ovOut').hidden=true;pv.onloadedmetadata=()=>{const st=$e('#ovStart');st.max=Math.max(0,(pv.duration||0)-1).toFixed(1);$e('#ovOpt').hidden=false}};
+    $e('#ovStart').oninput=e=>{$e('#ovStartT').textContent=(+e.target.value).toFixed(1);try{$e('#ovPrev').currentTime=+e.target.value}catch(x){}};
+    $e('#ovMake').onclick=async()=>{if(!file)return;const b=$e('#ovMake'),pg=$e('#ovProg');b.disabled=true;pg.hidden=false;
+      try{G=await videoToGif(file,{start:+$e('#ovStart').value,len:5},p=>{pg.textContent='움짤 만드는 중… '+Math.round(p*100)+'%'});$e('#ovImg').src=G.dataUrl;$e('#ovOut').hidden=false;pg.hidden=true}catch(e){pg.textContent='움짤을 못 만들었어요. SNS 링크로 올려 주세요'}b.disabled=false;b.textContent='다시 만들기'};
+    $e('#ovPost').onclick=async()=>{if(!G)return;if(G.dataUrl.length>1500000){toast('움짤이 너무 커요. 다시 만들어 주세요');return}const b=$e('#ovPost');b.disabled=true;b.textContent='올리는 중…';if(!(await send({ty:'gif',w:G.w,h:G.h},G.dataUrl))){b.disabled=false;b.textContent='인증 올리기'}};
+    const hostShow=()=>{const u=$e('#ovU').value.trim();$e('#ovUHost').innerHTML=/^https?:\/\//.test(u)?`✅ <b>${esc(ovHost(u))}</b> 게시물이에요`:''};$e('#ovU').oninput=hostShow;
+    $e('#ovCap').onclick=()=>copyText(snsCaption({quote:'오늘도 오운완 🥊',counted:ME&&ME.shotDay===TODAY(),day:owanCount(ME)}),'캡션을');
+    $e('#ovPaste').onclick=async()=>{try{const t=await navigator.clipboard.readText();const m=(t||'').match(/https?:\/\/\S+/);if(m){$e('#ovU').value=m[0];hostShow()}else toast('복사한 링크가 없어요. 게시물에서 "링크 복사"를 먼저 눌러 주세요',3500)}catch(e){$e('#ovU').focus();toast('주소칸을 길게 눌러 붙여넣기 해 주세요',3000)}};
+    $e('#ovUGo').onclick=async()=>{const u=$e('#ovU').value.trim();if(!/^https?:\/\/\S+\.\S+/.test(u)){toast('게시물 주소(https://…)를 붙여 주세요');return}
+      const L=await ovLoad(true);if(Object.values(L).some(v=>v&&v.url===u)){toast('이미 올린 링크예요');return}const b=$e('#ovUGo');b.disabled=true;if(!(await send({ty:'url',url:u.slice(0,300)})))b.disabled=false}})}
+async function renderOvAdm(){const box=$('#ovAdm');if(!box)return;if(!FT('owvid')){box.hidden=true;return}const F=funCfg();
+  const L=await ovLoad(true);const W=Object.entries(L).map(([k,v])=>Object.assign({k},v)).filter(v=>v&&!v.rv).sort((a,b)=>a.at-b.at);
+  if(!W.length){box.hidden=true;return}box.hidden=false;
+  box.innerHTML=`<h3 style="font-size:20px">🎬 오운완 영상·SNS 확인 <span class="pill fire">${W.length}</span></h3><div class="small">확인하면 +${(+F.ovCr).toLocaleString()} 크레딧이 들어가요 (한 주 ${F.ovWk}번까지)</div>
+    ${W.map(v=>`<div class="ovrow" data-k="${esc(v.k)}"><div class="grow"><b>${esc(v.nick||'')}</b> <span class="small num">${esc(v.mid)}</span> · <span class="small">${md(dstr(new Date(v.at)))}</span><div class="small">이번 주 지급 ${ovPaidWeek(L,v.mid)}/${F.ovWk}</div>
+      ${v.ty==='gif'?`<img data-g="${esc(v.k)}" alt="오운완 움짤" style="max-width:160px;border-radius:8px;margin-top:4px;background:var(--mat);min-height:60px">`:`<a href="${esc(v.url)}" target="_blank" rel="noopener" style="word-break:break-all;font-size:13px">🔗 ${esc(ovHost(v.url))} 열어 보기</a>`}</div>
+      <div style="display:flex;flex-direction:column;gap:4px"><button class="btn sm red" data-ovok="${esc(v.k)}">확인 · 지급</button><button class="btn sm ghost" data-ovno="${esc(v.k)}">반려</button></div></div>`).join('')}`;
+  box.querySelectorAll('[data-g]').forEach(async im=>{try{const g=await hget('cvgif/'+im.dataset.g);if(g&&g.d)im.src=g.d}catch(e){}});
+  const who=isOwner(ME)||!ME?'관장':(ME.name||'코치');
+  box.querySelectorAll('[data-ovok]').forEach(b=>b.onclick=async()=>{const v=L[b.dataset.ovok];if(!v)return;b.disabled=true;const over=ovPaidWeek(L,v.mid)>=+F.ovWk;let cr=over?0:+F.ovCr;
+    if(cr>0){const m=await DB.get(v.mid);if(m){m.credits=(+m.credits||0)+cr;m.earned=(+m.earned||0)+cr;m.ovN=(+m.ovN||0)+1;await DB.save(m)}else cr=0}
+    if(await hset(`cvid/owan/${b.dataset.ovok}/rv`,{ok:true,cr,at:Date.now(),by:who})){toast(cr?`${v.nick}님 +${cr.toLocaleString()} 크레딧 지급`:`확인했어요 (이번 주 한도라 크레딧 없음)`);renderOvAdm()}});
+  box.querySelectorAll('[data-ovno]').forEach(b=>b.onclick=async()=>{const why=(prompt('반려 사유 (회원에게 보여요)','오운완 게시물이 아니에요')||'').slice(0,40);if(await hset(`cvid/owan/${b.dataset.ovno}/rv`,{ok:false,why,at:Date.now(),by:who})){toast('반려했어요');renderOvAdm()}})}
 
 /* ================= 오운완 인증샷 ================= */
 const SHOT_CREDIT=20,OWAN_GOAL=12,OWAN_MILES=[[4,40],[8,80],[12,150]];
@@ -5798,7 +5923,7 @@ function openShotUpload(){
   });
 }
 async function renderFeed(){
-  if(!ME)return;const box=$('#feedBox');const n=owanCount(ME);const mon=Number(monKey().slice(5));
+  if(!ME)return;try{renderOvCard()}catch(e){}const box=$('#feedBox');const n=owanCount(ME);const mon=Number(monKey().slice(5));
   const cl=((ME.owanClaimed||{})[monKey()])||[];
   $('#owanCard').innerHTML=`<div class="mtop"><div class="label">${mon}월 오운완 챌린지</div><span class="pill">${n}/${OWAN_GOAL}일</span></div>
     <div class="owbar"><i style="width:${Math.min(100,n/OWAN_GOAL*100)}%"></i>${OWAN_MILES.map(([k,cr])=>`<span style="left:${k/OWAN_GOAL*100}%" class="${n>=k?'on':''}">${k}<small>+${cr}</small></span>`).join('')}</div>
@@ -6611,18 +6736,30 @@ function applyPadFloor(){const f=padFloor();const v=$('#v-pad');v.dataset.floor=
 function choosePadFloor(){sheet(`<h2>이 출석패드는 몇 층인가요?</h2><p class="small" style="margin:0">층마다 배경 색이 달라져요. 이 기기에만 저장돼요.</p><div class="row" style="gap:8px"><button class="btn red grow" data-fl="2" style="font-size:22px">2층</button><button class="btn grow" data-fl="5" style="font-size:22px;background:#1F4E9C;color:#fff">5층</button></div><button class="btn ghost" data-fl="">층 표시 안 함</button>`,(el,close)=>{el.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('nnn_padfloor',b.dataset.fl);localStorage.setItem('nnn_padfloor_set','1')}catch(e){}applyPadFloor();close()})})}
 /* ================= 기능 켜고 끄기 ================= */
 const FEATS=[['lotto','🎟️','출석 복권 · 쿠폰함','출석할 때마다 복권 1장, 앱에서 긁어 쿠폰 당첨'],['bingo','🔢','출석 빙고','출석마다 번호 하나, 줄 완성 보상'],['stamp','🥊','월 도장판','이달 출석 8·12·16개 보상'],['box','🎁','연속 출석 상자','주 2회 이상 연속 주 보상'],
-  ['celebrate','🎉','당첨 연출','당첨되면 출석패드에 축하 화면 · 공지에 당첨자'],['grape','🍇','커리큘럼 포도판','회원 내 정보에 포도판 · 관장 심사'],['combo','📹','콤비네이션 게시판','인증 탭 맨 위 · 연습 영상 GIF 공유'],['wifi','📶','와이파이 안내','회원 앱 공지 · 출석패드에 와이파이 표시'],['raffle','🎫','응모 이벤트 배너','진행 중인 응모 이벤트 배너·팝업'],['comp','🏅','생체 대회 출전 공지','맵 위 대회 출전 명단 버튼'],['spar','🥊','스파링 매칭 배너','회원 홈에 스파링 배너 · 출석패드에 오늘의 스파링 대진']];
+  ['celebrate','🎉','당첨 연출','당첨되면 출석패드에 축하 화면 · 공지에 당첨자'],['grape','🍇','커리큘럼 포도판','회원 내 정보에 포도판 · 관장 심사'],['combo','📹','콤비네이션 게시판','인증 탭 맨 위 · 연습 영상 GIF 공유'],['wifi','📶','와이파이 안내','회원 앱 공지 · 출석패드에 와이파이 표시'],['raffle','🎫','응모 이벤트 배너','진행 중인 응모 이벤트 배너·팝업'],['comp','🏅','생체 대회 출전 공지','맵 위 대회 출전 명단 버튼'],['owvid','🎬','오운완 영상·SNS 인증','영상이나 SNS 링크 올리면 관장 확인 후 큰 크레딧'],['store','🛒','크레딧 매점','크레딧으로 음료·용품 쿠폰 교환'],['spar','🥊','스파링 매칭 배너','회원 홈에 스파링 배너 · 출석패드에 오늘의 스파링 대진']];
 const FT=k=>!((local.meta&&local.meta.feat)||{})[k+'_off'];
 function featApply(){try{const cb=$('#cbOpen');if(cb)cb.hidden=!FT('combo')}catch(e){}try{renderPins()}catch(e){}try{funBanner()}catch(e){}try{renderGrapeCard()}catch(e){}try{renderRaffle()}catch(e){}try{if(!$('#v-pad').hidden)wifiPadIdle()}catch(e){}}
 function renderFeatAdm(){const box=$('#featBox');if(!box)return;box.innerHTML=FEATS.map(([k,e,t,d])=>`<label class="check" style="margin:0"><input type="checkbox" data-ft="${k}" ${FT(k)?'checked':''}><span><b>${e} ${t}</b><br><span class="small">${d}</span></span></label>`).join('');
   box.querySelectorAll('[data-ft]').forEach(c=>c.onchange=async()=>{const k=c.dataset.ft;local.meta.feat=Object.assign({},local.meta.feat||{});if(c.checked)delete local.meta.feat[k+'_off'];else local.meta.feat[k+'_off']=true;
     if(FB_ON()){try{await gref('meta/feat/'+k+'_off').set(c.checked?null:true)}catch(e){toast('저장하지 못했어요');c.checked=!c.checked;return}}else persist();toast((c.checked?'켰어요: ':'껐어요: ')+FEATS.find(f=>f[0]===k)[2]);featApply()})}
 /* ================= 출석 재미: 복권 · 빙고 · 도장판 · 연속 출석 상자 · 쿠폰 ================= */
-const FUN_DEF={on:true,pity:10,days:14,cr:[10,20,30,50],buyP:300,buyDay:2,
+const FUN_DEF={on:true,ovCr:500,ovWk:2,pity:10,days:14,cr:[10,20,30,50],buyP:300,buyDay:2,store:[{id:'s_drink',name:'음료',emo:'🥤',p:1000},{id:'s_bar',name:'단백질바',emo:'🍫',p:1500},{id:'s_wrap',name:'핸드랩',emo:'🧤',p:5000}],
   prizes:[{id:'drink',name:'음료 쿠폰',emo:'🥤',p:8,day:3,week:10},{id:'bar',name:'단백질바',emo:'🍫',p:3,day:2,week:5},{id:'wrap',name:'핸드랩',emo:'🧤',p:0.6,day:1,week:1},{id:'pt',name:'PT 1회권',emo:'🥊',p:0.2,day:1,week:1}]};
 const STAMP_STEPS=[{n:8,tk:1},{n:12,tk:2},{n:16,cp:1}];
 const BOX_STEPS=[{w:2,tk:2},{w:4,tk:3},{w:8,tk:4,cp:1},{w:12,tk:5,cp:1}];
 const funArr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x).filter(v=>v!=null):[]);
+/* 크레딧 매점: 크레딧 → 음료·용품 쿠폰 */
+function storeHTML(m){if(!FT('store'))return'';const L=funCfg().store.filter(z=>z&&+z.p>0);if(!L.length)return'';const cr=+m.credits||0;
+  return `<div class="funsec"><div class="row" style="align-items:center"><b class="grow" style="font-size:18px">🛒 크레딧 매점</b><span class="coin num">${cr.toLocaleString()}</span></div>
+    <div class="small">크레딧으로 쿠폰을 사서 데스크에서 보여 주면 받을 수 있어요.</div>
+    <div class="stgrid">${L.map(z=>{const ok=cr>=+z.p;const pct=Math.min(100,Math.round(cr/+z.p*100));return `<div class="stit${ok?' ok':''}"><div class="se">${esc(z.emo||'🎁')}</div><b>${esc(z.name)}</b><span class="num">${(+z.p).toLocaleString()} 크레딧</span>${ok?`<button class="btn sm red" data-buy="${esc(z.id)}">교환</button>`:`<div class="stbar"><i style="width:${pct}%"></i></div><small class="num">${(+z.p-cr).toLocaleString()} 더 모으기</small>`}</div>`}).join('')}</div></div>`}
+function storeBind(el){el.querySelectorAll('[data-buy]').forEach(b=>b.onclick=async()=>{const z=funCfg().store.find(x=>x.id===b.dataset.buy);if(!z)return;
+  if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=`${(+z.p).toLocaleString()} 쓰기?`;setTimeout(()=>{if(b.isConnected){b.dataset.sure='';b.textContent='교환'}},4000);return}
+  b.disabled=true;try{const f=await DB.get(ME.id);if(f)ME=f}catch(e){}if((+ME.credits||0)<+z.p){toast('크레딧이 모자라요');return}
+  ME.credits=(+ME.credits||0)-(+z.p);const F=funCfg();const cp={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),pz:z.id,name:z.name,emo:z.emo||'🎁',at:Date.now(),exp:dAdd(TODAY(),Math.max(30,+F.days||14)),src:'크레딧 매점'};
+  ME.cps=funArr(ME.cps).filter(c=>!(c.used&&Date.now()-c.used>30*864e5)).concat([cp]).slice(-40);await DB.save(ME);try{sfx('coin')}catch(e){}try{refreshTop()}catch(e){}
+  sheet(`<div class="tkpop"><div class="tke">${esc(cp.emo)}</div><div class="label" style="color:#8A5A00">크레딧 매점</div><h2>${esc(cp.name)} 쿠폰을 받았어요!</h2><p style="margin:0">데스크에서 <b>쿠폰함</b> 화면을 보여 주세요.<br>${md(cp.exp)}까지 쓸 수 있어요.</p><div class="tkn">남은 크레딧 <b class="num">${(+ME.credits).toLocaleString()}</b></div></div><button class="btn red" id="stCp">쿠폰함 보기</button><button class="btn ghost" data-close>확인</button>`,(e2,c2)=>{e2.querySelector('#stCp').onclick=()=>{c2();openCoupons()}})})}
+async function openStore(){if(!ME)return;try{const m=await DB.get(ME.id);if(m)ME=m}catch(e){}sheet(`<h2>🛒 크레딧 매점</h2>${storeHTML(ME)||'<div class="small">지금은 매점이 닫혀 있어요.</div>'}<button class="btn ghost" data-close>닫기</button>`,el=>storeBind(el))}
 /* 크레딧 → 복권 바꾸기 */
 function tkBuyState(m){const F=funCfg();const P=+F.buyP||0,D=+F.buyDay||0;const b=m.tkBuy&&m.tkBuy.d===TODAY()?+m.tkBuy.n||0:0;return{on:P>0&&D>0,P,D,used:b,left:Math.max(0,D-b),cr:+m.credits||0}}
 function tkBuyHTML(m){const s=tkBuyState(m);if(!s.on)return'';const ok=s.left>0&&s.cr>=s.P;
@@ -6632,7 +6769,7 @@ async function tkBuy(btn){if(!ME)return;if(btn.dataset.sure!=='1'){const s0=tkBu
   if(!s.on||s.left<=0||s.cr<s.P){toast(s.left<=0?'오늘은 더 바꿀 수 없어요':'크레딧이 모자라요');return}
   ME.credits=s.cr-s.P;ME.tk=(+ME.tk||0)+1;ME.tkBuy={d:TODAY(),n:s.used+1};await DB.save(ME);try{sfx('coin')}catch(e){}try{refreshTop()}catch(e){}
   toast(`🎟️ 복권 1장으로 바꿨어요! (크레딧 -${s.P})`,2500);openFun('lotto')}
-function funCfg(){const f=(local.meta&&local.meta.fun)||{};const o=Object.assign({},FUN_DEF,f);const P=funArr(f.prizes);o.prizes=(P.length?P:FUN_DEF.prizes).map(z=>Object.assign({},z));o.cr=funArr(o.cr).map(Number).filter(n=>n>0);if(!o.cr.length)o.cr=FUN_DEF.cr;return o}
+function funCfg(){const f=(local.meta&&local.meta.fun)||{};const o=Object.assign({},FUN_DEF,f);{const st=funArr(f.store);o.store=(f.store!=null?st:FUN_DEF.store).map(z=>Object.assign({},z))}const P=funArr(f.prizes);o.prizes=(P.length?P:FUN_DEF.prizes).map(z=>Object.assign({},z));o.cr=funArr(o.cr).map(Number).filter(n=>n>0);if(!o.cr.length)o.cr=FUN_DEF.cr;return o}
 const monOf=d=>{const x=new Date(d+'T00:00:00');const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return dstr(x)};
 function bingoLines(nums){const s=new Set(nums.map(Number));let c=0;const has=i=>s.has(i+1);
   for(let r=0;r<5;r++){let ok=1;for(let k=0;k<5;k++)if(!has(r*5+k))ok=0;c+=ok}
@@ -6715,6 +6852,7 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
       <button class="btn red" id="fnGo" ${tk>0?'':'disabled'}>${tk>0?'복권 긁기':'출석하면 복권이 생겨요'}</button>
       ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}
       ${tkBuyHTML(m)}</div>`:''}
+    ${storeHTML(m)}
     ${FT('bingo')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">출석 빙고 <span class="small">${bn.length}/25</span></b><span class="pill">${lines}줄</span></div>
       <div class="small">출석할 때마다 번호 하나가 찍혀요. 한 줄 완성마다 복권 +1, 판 전체 완성 복권 +3</div><div class="bingo">${grid}</div></div>`:''}
     ${FT('stamp')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">${Number(mon.slice(5))}월 도장판</b><span class="pill">${cnt}개</span></div>
@@ -6724,7 +6862,7 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
       <div class="boxes">${BOX_STEPS.map(b=>`<div class="bx${ws.n>=b.w?' on':''}"><span>${ws.n>=b.w?'🎁':'📦'}</span><small>${b.w}주</small></div>`).join('')}</div></div>`:''}
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     {const cpb=el.querySelector('#fnCp');if(cpb)cpb.onclick=()=>{close();openCoupons()}}
-    {const bb=el.querySelector('#fnBuy');if(bb)bb.onclick=()=>tkBuy(bb)}
+    {const bb=el.querySelector('#fnBuy');if(bb)bb.onclick=()=>tkBuy(bb)}storeBind(el);
     const go=el.querySelector('#fnGo');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='복권 꺼내는 중…';const res=await lottoDraw();if(!res){toast('복권이 없어요');go.textContent='출석하면 복권이 생겨요';return}
       const host=el.querySelector('#fnScr');const html=res.kind==='cp'?`<div class="scr-win"><div style="font-size:44px">${res.cp.emo}</div><b>${esc(res.cp.name)} 당첨!</b><span>쿠폰함에 넣어 뒀어요 · ${md(res.cp.exp)}까지</span></div>`:`<div class="scr-miss"><b>아쉽지만 꽝</b><span>대신 +${res.n} 크레딧${res.left?` · 확정까지 꽝 ${res.left}번`:''}</span></div>`;
       scratchCard(host,html,()=>{if(res.kind==='cp'){sfx('win');confetti(el.parentNode);try{navigator.vibrate&&navigator.vibrate([60,40,120])}catch(e){}}else sfx('coin');
@@ -6746,6 +6884,8 @@ function funPrizeTxt(F){return F.prizes.map(z=>`${z.emo||'🎁'} ${z.name} | ${z
 async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=funCfg();const day=(await hget('lotto/'+TODAY()))||{},wk=(await hget('lotto/w'+monOf(TODAY())))||{};
   const W=funArr(await hget('wins')).sort((a,b)=>b.at-a.at).slice(0,8);
   box.innerHTML=`<input type="checkbox" id="fnOn" checked hidden><div class="small">켜고 끄기: 관장 메뉴 → 설정 탭 → 🔌 기능 켜고 끄기</div>
+    <div class="row"><div class="field grow"><label for="fnOvC">🎬 오운완 영상·SNS 인증 크레딧</label><input id="fnOvC" type="number" min="0" step="50" value="${+F.ovCr||0}"></div><div class="field grow"><label for="fnOvW">한 주 최대 지급 횟수</label><input id="fnOvW" type="number" min="0" max="14" value="${+F.ovWk||0}"></div></div>
+    <div class="field"><label for="fnSt">🛒 크레딧 매점 상품 · 한 줄에 하나 <span class="small">(이모지 이름 | 크레딧) · 출석 1번에 평균 100 크레딧쯤 쌓여요</span></label><textarea id="fnSt" rows="4">${esc(F.store.map(z=>`${z.emo||''}${z.name} | ${z.p}`).join('\n'))}</textarea></div>
     <div class="field"><label for="fnPz">상품 · 한 줄에 하나 <span class="small">(이모지 이름 | 당첨 확률% | 하루 최대 | 주간 최대) 첫 줄 상품이 '꽝 보상·도장판·상자' 확정 상품</span></label><textarea id="fnPz" rows="5">${esc(funPrizeTxt(F))}</textarea></div>
     <div class="row"><div class="field grow"><label for="fnPity">꽝 몇 번이면 확정</label><input id="fnPity" type="number" min="0" max="50" value="${+F.pity||0}"></div><div class="field grow"><label for="fnDays">쿠폰 유효기간(일)</label><input id="fnDays" type="number" min="1" max="90" value="${+F.days||14}"></div></div>
     <div class="field"><label for="fnCr">꽝일 때 크레딧 <span class="small">(쉼표로)</span></label><input id="fnCr" value="${esc(F.cr.join(', '))}"></div>
@@ -6760,7 +6900,7 @@ async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=f
       return{id:'p'+i+'_'+nm.replace(/[^\w가-힣]/g,'').slice(0,10),name:nm.replace(em,'').trim()||nm,emo:em,p:Math.max(0,Math.min(100,parseFloat(a[1])||0)),day:Math.max(0,parseInt(a[2])||0),week:Math.max(0,parseInt(a[3])||0)}});
     if(!prizes.length){toast('상품을 하나 이상 적어 주세요');return}
     const old=funCfg().prizes;prizes.forEach((z,i)=>{const o=old.find(x=>x.name===z.name);if(o)z.id=o.id});
-    const f={on:box.querySelector('#fnOn').checked,prizes,pity:Math.max(0,parseInt(box.querySelector('#fnPity').value)||0),days:Math.max(1,parseInt(box.querySelector('#fnDays').value)||14),cr:box.querySelector('#fnCr').value.split(/[,\s]+/).map(Number).filter(n=>n>0).slice(0,8),buyP:Math.max(0,parseInt(box.querySelector('#fnBuyP').value)||0),buyDay:Math.max(0,parseInt(box.querySelector('#fnBuyD').value)||0)};
+    const f={on:box.querySelector('#fnOn').checked,prizes,pity:Math.max(0,parseInt(box.querySelector('#fnPity').value)||0),days:Math.max(1,parseInt(box.querySelector('#fnDays').value)||14),cr:box.querySelector('#fnCr').value.split(/[,\s]+/).map(Number).filter(n=>n>0).slice(0,8),buyP:Math.max(0,parseInt(box.querySelector('#fnBuyP').value)||0),buyDay:Math.max(0,parseInt(box.querySelector('#fnBuyD').value)||0),ovCr:Math.max(0,parseInt(box.querySelector('#fnOvC').value)||0),ovWk:Math.max(0,parseInt(box.querySelector('#fnOvW').value)||0),store:(()=>{const old=funCfg().store;return box.querySelector('#fnSt').value.split('\n').map(l=>l.trim()).filter(Boolean).map((l,i)=>{const a=l.split('|').map(x=>x.trim());const nm=a[0]||'상품';const em=(nm.match(/^(\p{Extended_Pictographic}️?)/u)||[])[1]||'🎁';const name=nm.replace(em,'').trim()||nm;const o=old.find(x=>x.name===name);return{id:o?o.id:'s'+i+'_'+name.replace(/[^\w가-힣]/g,'').slice(0,10),name,emo:em,p:Math.max(0,parseInt(String(a[1]||'').replace(/\D/g,''))||0)}}).filter(z=>z.p>0)})()};
     local.meta.fun=f;if(FB_ON()){try{await gref('meta/fun').set(clean(f))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('저장했어요');renderFunAdm()};
   box.querySelector('#fnOn').onchange=()=>box.querySelector('#fnSave').click()}
 /* 당첨 연출: 출석패드 · 공지 */
