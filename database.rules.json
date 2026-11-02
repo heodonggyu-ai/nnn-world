@@ -346,6 +346,12 @@
        ".write": "auth != null && ((root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').exists() && root.child('gym/coachcodes').child(root.child('gym/coaches').child(auth.uid).child('code').val()).exists())) || (root.child('gym/mdev').child($m).child(auth.uid).exists() && ($m === root.child('gym/spar').child($pid).child('post/by').val() || $m === root.child('gym/spar').child($pid).child('post/to/id').val())))",
        ".validate": "!newData.exists() || newData.isString()"
       }
+     },
+     "cheer": {
+      "$m": {
+       ".write": "auth != null && root.child('gym/mdev').child($m).child(auth.uid).exists()",
+       ".validate": "!newData.exists() || newData.val() === 'a' || newData.val() === 'b'"
+      }
      }
     }
    },

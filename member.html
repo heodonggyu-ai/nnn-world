@@ -714,6 +714,18 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .crg h2{margin:0;font-size:26px}.crg h2 span{color:var(--red)}
 .crg-me{background:#fff;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}.crg-me b.num{font-size:24px}.crg-bar{height:10px;background:#F1EAD2;border-radius:9px;overflow:hidden}.crg-bar i{display:block;height:100%;background:linear-gradient(90deg,#E0A100,#2B9B66)}
 .crg-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crg-col{background:rgba(255,255,255,.7);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;font-size:13px}.crg-col>b{font-size:15px;margin-bottom:2px}.crg-col span b{color:#1E6B45}.crg-col.use span b{color:var(--red)}
+.fcwrap{background:radial-gradient(circle at 50% 0,#3A1418 0,#141414 70%);border-radius:16px;padding:12px;color:#fff;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.fchd{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:2px 8px}.fchd span{font-family:var(--display);font-size:19px;white-space:nowrap;letter-spacing:.04em;background:linear-gradient(90deg,#FFD24A,#FF6B73);-webkit-background-clip:text;background-clip:text;color:transparent}.fchd .fce{font-style:normal;-webkit-text-fill-color:initial;color:initial}.fchd small{font-size:11.5px;color:#bbb;white-space:nowrap}
+.fcb{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px;cursor:pointer}.fcb.ok{border-color:#D9343A;background:linear-gradient(180deg,rgba(217,52,58,.18),rgba(255,255,255,.04))}.fcb.wait{opacity:.85;border-style:dashed}
+.fct{display:flex;justify-content:space-between;align-items:center;font-size:13px}.fcd{color:#FFD24A;font-weight:700}.fclive{background:#D9343A;color:#fff;border-radius:5px;padding:1px 6px;animation:rfp 1.6s ease-in-out infinite}.fck{font-size:11.5px;border-radius:99px;padding:2px 8px;background:rgba(255,255,255,.12)}
+.fcm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:4px}.fcf{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}.fcf canvas{width:64px;height:70px;border-radius:12px}.fcf.r canvas{background:linear-gradient(180deg,#7A1E24,#3A1014)}.fcf.b canvas{background:linear-gradient(180deg,#1F3E7A,#0F1E3A)}
+.fcf b{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fcf span{font-size:11px;color:#bbb}.fcvs{font-family:var(--display);font-size:26px;color:#FFD24A;text-shadow:0 0 12px rgba(255,90,90,.6);font-style:italic}
+.fcb.big .fcf canvas{width:84px;height:92px}.fcb.big .fcvs{font-size:34px}.fcb.big .fcf b{font-size:17px}
+.fcst{text-align:center;font-size:12px;font-weight:700;color:#bbb}.fcst.ok{color:#7CE3A6}.fcst.w{color:#FFD24A}
+.fcch{display:flex;align-items:center;gap:6px}.fcch button{border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:99px;padding:3px 10px;font:inherit;font-size:12.5px;cursor:pointer;flex:0 0 auto}.fcch button.on{background:#D9343A;border-color:#D9343A}.fcch button:last-child.on{background:#2E5AAC;border-color:#2E5AAC}
+.fcg{flex:1;height:6px;border-radius:9px;background:#2E5AAC;overflow:hidden}.fcg i{display:block;height:100%;background:#D9343A}
+.fcpast{border-top:1px solid rgba(255,255,255,.12);padding-top:8px;display:flex;flex-direction:column;gap:3px;font-size:13px}.fcpast>b{font-size:13px;color:#FFD24A}.fcpast i{color:#FF6B73;font-style:normal}.fcpast small{color:#aaa}
+.fcmore{border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:10px;padding:8px;font:inherit;font-size:13px;cursor:pointer}.fcfoot{font-size:11px;color:#999;text-align:center}
 .payln{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:13px;margin-top:3px;padding:4px 8px;background:#F4F6FA;border-radius:8px}.payln b{font-weight:700}.payln .num{font-variant-numeric:tabular-nums}.payln .pi{color:var(--muted);font-size:12px}.payln.rf{background:#FDECEC;color:#8A1F24}
 .atcal button.aok{background:#2B9B66;color:#fff;border-color:#2B9B66}.atcal button.amiss{background:#FDECEC;color:#B4232A;border-color:#F3B9BC}
 .amx{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
@@ -3128,6 +3140,31 @@ function sparRecSend(a,b,isS){const who=recWho();const nk=m=>m.nick||maskName(m.
     await hset(`spar/${id}/talk/${k}`,clean({by:'staff',nick:who,date:f.date,time:f.time,kind:f.kind,rounds:f.rounds,msg:f.msg,at:Date.now()}));
     await hset(`spar/${id}/staff`,{ok:true,by:who,at:Date.now(),rec:true});
     toast(`${nk(a)} · ${nk(b)}님에게 추천을 보냈어요. 둘 다 OK하면 확정돼요`,3500);setTimeout(()=>openSparStaff(),300);return true})}
+
+/* ===== 게시판: 스파링 대진표 (FIGHT CARD) ===== */
+const FC={mem:{},at:0};
+async function fcLoad(){if(Date.now()-FC.at<60000)return;try{await sparLoad();const all=await DB.all();FC.mem={};all.forEach(m=>{if(m&&m.id)FC.mem[m.id]={eq:m.equip,lv:levelOf(m).lv,sk:skillOf(m)}});FC.at=Date.now()}catch(e){}}
+function fcList(){const T=TODAY();return sparList().filter(s=>{const p=s.post;if(p.status==='cancel'||p.date<T)return false;if(s.staff&&s.staff.ok===false)return false;if(s.chal)return !s.chal.declined;return !!s.match}).sort((a,b)=>(a.post.date+a.post.time).localeCompare(b.post.date+b.post.time))}
+function fcPast(){const T=TODAY();return sparList().filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date<T&&s.post.date>=dAdd(T,-14)&&(sparAuto()||(s.staff&&s.staff.ok))).sort((a,b)=>(b.post.date+b.post.time).localeCompare(a.post.date+a.post.time)).slice(0,5)}
+function fcSides(s){const p=s.post;const A={id:p.by,nick:p.nick};const B=s.match?{id:s.match.id,nick:s.match.nick}:p.to?{id:p.to.id,nick:p.to.nick}:{id:'',nick:'?'};return[A,B]}
+function fcState(s){if(s.chal&&!s.chal.agreed)return['wait',s.post.rec?'🧑‍🏫 코치 추천 · 답 기다리는 중':'🥊 도전장 · 답 기다리는 중'];if(sparAuto()||(s.staff&&s.staff.ok))return['ok','확정'];return['w','관장님 확인 중']}
+function fcBout(s,big){const p=s.post;const [A,B]=fcSides(s);const d=new Date(p.date+'T00:00:00');const dd=dDiff(p.date,TODAY());const [sc,st]=fcState(s);const k=SPK[p.kind]||SPK.mass;
+  const ch=s.cheer||{};const ca=Object.values(ch).filter(v=>v==='a').length,cb=Object.values(ch).filter(v=>v==='b').length,ct=Math.max(1,ca+cb);const mine=ME&&ch[ME.id];
+  const fi=(F,side)=>{const m=FC.mem[F.id]||{};return `<div class="fcf ${side}"><canvas width="120" height="132" data-fav="${esc(F.id)}"></canvas><b>${esc(F.nick||'')}</b><span>Lv.${m.lv||1} · 심사 ${m.sk||1}</span></div>`};
+  return `<div class="fcb ${sc}${big?' big':''}" data-fcs="${esc(s.id)}"><div class="fct"><span class="fcd">${dd===0?'<b class="fclive">TODAY</b> ':dd===1?'<b>내일</b> ':''}${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(p.time||'')}</span><span class="fck ${k[2]}">${k[0]} ${p.rounds}R</span></div>
+    <div class="fcm">${fi(A,'r')}<div class="fcvs">VS</div>${fi(B,'b')}</div>
+    <div class="fcst ${sc}">${st}${p.stu?' · 학생부':''}</div>
+    <div class="fcch"><button data-chr="${esc(s.id)}|a" class="${mine==='a'?'on':''}">🔥 ${ca}</button><div class="fcg"><i style="width:${Math.round(ca/ct*100)}%"></i></div><button data-chr="${esc(s.id)}|b" class="${mine==='b'?'on':''}">${cb} 🔥</button></div></div>`}
+function fcHTML(limit){const L=fcList();const P=fcPast();if(!L.length&&!P.length)return `<div class="fcwrap empty"><div class="fchd"><span><i class="fce">🥊</i> NNN FIGHT CARD</span></div><div class="small" style="color:#ccc;padding:6px 2px 4px">아직 잡힌 스파링이 없어요. 도전장을 보내 첫 대진의 주인공이 되어 보세요!</div></div>`;
+  const ok=L.filter(s=>fcState(s)[0]!=='wait').length;
+  return `<div class="fcwrap"><div class="fchd"><span><i class="fce">🥊</i> NNN FIGHT CARD</span><small>${ok?`확정 ${ok}경기`:''}${L.length-ok?` · 도전장 ${L.length-ok}`:''}</small></div>
+    ${L.slice(0,limit||99).map((s,i)=>fcBout(s,i===0)).join('')}${limit&&L.length>limit?`<button class="fcmore" data-bc2="spar">대진표 전체 보기 (${L.length}) ›</button>`:''}
+    ${!limit&&P.length?`<div class="fcpast"><b>지난 경기</b>${P.map(s=>{const [A,B]=fcSides(s);const d=new Date(s.post.date+'T00:00:00');return `<div><span class="num">${d.getMonth()+1}/${d.getDate()}</span> ${esc(A.nick)} <i>vs</i> ${esc(B.nick)} <small>${(SPK[s.post.kind]||SPK.mass)[0]}${s.fb?' · 후기 '+Object.keys(s.fb).length:''}</small></div>`}).join('')}</div>`:''}
+    <div class="fcfoot">경기 카드를 누르면 자세히 · 🔥를 눌러 응원해요</div></div>`}
+function fcBind(box){box.querySelectorAll('canvas[data-fav]').forEach(cv=>{const m=FC.mem[cv.dataset.fav];try{avatarTo(cv,(m&&m.eq)||{char:'boxer'},{h:46,noFx:true,pose:'guard'})}catch(e){}});
+  box.querySelectorAll('[data-chr]').forEach(b=>b.onclick=async e=>{e.stopPropagation();if(!ME||isStaff(ME)||(typeof isGuest==='function'&&isGuest())){toast('회원만 응원할 수 있어요');return}const [id,side]=b.dataset.chr.split('|');const cur=((SP.data[id]||{}).cheer||{})[ME.id];const v=cur===side?null:side;
+    if(await hset(`spar/${id}/cheer/${ME.id}`,v)){SP.data[id].cheer=Object.assign({},SP.data[id].cheer||{});if(v)SP.data[id].cheer[ME.id]=v;else delete SP.data[id].cheer[ME.id];if(v)try{sfx('coin')}catch(x){}bdPaint()}});
+  box.querySelectorAll('[data-fcs]').forEach(c=>c.onclick=()=>{if(ME&&!isStaff(ME))openSparPost(c.dataset.fcs);else openSparStaff()})}
 /* ================= 게시판 (자유·운동고민·영상·스파링·중고거래) ================= */
 const BCAT=[['all','전체','🏠'],['free','자유','💬'],['qna','운동고민','🤔'],['video','영상 공유','🎬'],['spar','스파링','🥊'],['market','중고거래','🥕']];
 const BCN=Object.fromEntries(BCAT.map(([k,n,e])=>[k,{n,e}]));
@@ -3163,13 +3200,14 @@ function bdPaint(){const box=$('#bdBody');if(!box)return;const cat=BD.cat;
   $('#bdLay').textContent=BD.lay==='list'?'▦ 카드로':'☰ 목록으로';$('#bdLay').hidden=cat!=='video';
   $('#bdNew').textContent=cat==='market'?'🥕 판매 글 쓰기':cat==='video'?'🎬 영상 올리기':cat==='qna'?'🤔 질문하기':cat==='spar'?'🥊 스파링 이야기':'✏️ 글쓰기';
   const L=bdList(cat);let h='';
-  if(cat==='spar')h+=`<div class="sparban" data-sparban style="margin-bottom:10px"></div>`;
+  if(cat==='spar')h+=fcHTML()+`<div class="sparban" data-sparban style="margin:10px 0"></div><div class="bsh" style="padding:4px 2px"><b>💬 스파링 이야기</b></div>`;
   if(cat==='market')h+=`<div class="bmhint">🥕 체육관 회원끼리 글러브·헤드기어·밴디지·옷을 사고팔아요. <b>연락처 대신 댓글</b>로 이야기하고, 거래는 체육관에서 만나서 해요.</div>`;
-  if(cat==='all'&&!BD.q){const sec=BCAT.filter(([k])=>k!=='all');h+=sec.map(([k,n,e])=>{const S=bdList(k).slice(0,k==='market'?4:3);if(!S.length&&k!=='spar')return '';
-      return `<div class="bsec"><div class="bsh"><b>${e} ${n}</b><button data-bc2="${k}">더보기 ›</button></div>${k==='market'?`<div class="bmgrid">${S.map(p=>{const th=p.th||'';const st=MKST[p.mst||'sale'];return `<button class="bmg${p.mst==='done'?' done':''}" data-bp="${esc(p.id)}"><div class="bth" style="${th?`background-image:url('${th}')`:''}">${th?'':'🥕'}${p.mst&&p.mst!=='sale'?`<span class="bst" style="background:${st[1]}">${st[0]}</span>`:''}</div><span>${esc(p.title)}</span><b class="num bpr">${bWon(p.price)}</b></button>`}).join('')}</div>`:k==='spar'?`<div class="sparban" data-sparban></div>${S.map(p=>bRow(p,1)).join('')}`:S.map(p=>bRow(p,1)).join('')}</div>`}).join('')||'<div class="bempty">아직 글이 없어요. 첫 글을 써 보세요! ✏️</div>'}
+  if(cat==='all'&&!BD.q){let sec=BCAT.filter(([k])=>k!=='all');try{if(fcList().length)sec=sec.filter(([k])=>k==='spar').concat(sec.filter(([k])=>k!=='spar'))}catch(e){}h+=sec.map(([k,n,e])=>{const S=bdList(k).slice(0,k==='market'?4:3);if(!S.length&&k!=='spar')return '';
+      return `<div class="bsec"><div class="bsh"><b>${e} ${n}</b><button data-bc2="${k}">더보기 ›</button></div>${k==='market'?`<div class="bmgrid">${S.map(p=>{const th=p.th||'';const st=MKST[p.mst||'sale'];return `<button class="bmg${p.mst==='done'?' done':''}" data-bp="${esc(p.id)}"><div class="bth" style="${th?`background-image:url('${th}')`:''}">${th?'':'🥕'}${p.mst&&p.mst!=='sale'?`<span class="bst" style="background:${st[1]}">${st[0]}</span>`:''}</div><span>${esc(p.title)}</span><b class="num bpr">${bWon(p.price)}</b></button>`}).join('')}</div>`:k==='spar'?`<div style="padding:0 10px 10px">${fcHTML(2)}</div>${S.map(p=>bRow(p,1)).join('')}`:S.map(p=>bRow(p,1)).join('')}</div>`}).join('')||'<div class="bempty">아직 글이 없어요. 첫 글을 써 보세요! ✏️</div>'}
   else{h+=L.length?(cat==='market'?L.map(bRow).join(''):(cat==='video'&&BD.lay==='card')?`<div class="bcards">${L.map(bCard).join('')}</div>`:L.map(bRow).join('')):`<div class="bempty">${BD.q?'검색 결과가 없어요':cat==='market'?'아직 올라온 물건이 없어요.<br>안 쓰는 글러브·헤드기어를 올려 보세요!':cat==='qna'?'운동하다 궁금한 점을 물어보세요.<br>관장님·코치·회원들이 답해 줘요!':cat==='video'?'좋은 복싱 영상·운동 영상을 공유해 주세요 🎬':'첫 글을 써 보세요! ✏️'}</div>`}
   box.innerHTML=h;box.querySelectorAll('[data-bp]').forEach(b=>b.onclick=()=>bdOpen(b.dataset.bp));box.querySelectorAll('[data-bc2]').forEach(b=>b.onclick=()=>{BD.cat=b.dataset.bc2;bdPaint();window.scrollTo({top:0})});
-  if(box.querySelector('[data-sparban]'))try{sparBanner()}catch(e){}}
+  if(box.querySelector('[data-sparban]'))try{sparBanner()}catch(e){}
+  if(box.querySelector('.fcwrap')){fcBind(box);if(Date.now()-FC.at>60000)fcLoad().then(()=>{if(box.querySelector('.fcwrap'))bdPaint()})}}
 function imgShrink(file,max=960,q=.72){return loadImg(file).then(im=>{const k=Math.min(1,max/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
   const d=cv.toDataURL('image/jpeg',q);const t=document.createElement('canvas');const s=Math.min(1,180/Math.max(im.width,im.height));t.width=Math.round(im.width*s);t.height=Math.round(im.height*s);t.getContext('2d').drawImage(im,0,0,t.width,t.height);return{d,th:t.toDataURL('image/jpeg',.6)}})}
 function bdWrite(p,cat){const U=bdWho();if(!U){toast('회원번호로 들어온 뒤 쓸 수 있어요');return}p=p||{};cat=p.cat||cat||'free';let img=null;let st=p.mst||'sale';
