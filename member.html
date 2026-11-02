@@ -420,6 +420,10 @@ button.gt{cursor:pointer;padding:6px 12px;font-size:14px}
 .padwifi .wq{flex:0 0 auto;background:#fff;padding:5px;border-radius:8px}.padwifi .wq img,.padwifi .wq canvas{display:block}
 .padwifi .wt{display:flex;flex-direction:column;gap:1px;min-width:0}.padwifi .wt small{color:#5B6B85;font-size:12px}.padwifi .wt b{font-size:17px;word-break:break-all}.padwifi .wt .pw{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.03em}
 .padwifi.wlock{justify-content:center;text-align:center}
+.padtk{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#FFF3C4,#FFE0A3);border:3px solid #E0A100;border-radius:16px;padding:10px 16px;margin-top:6px;text-align:left}
+.padtk .pt-e{font-size:40px;line-height:1}.padtk .pt-t{display:flex;flex-direction:column}.padtk .pt-t b{font-family:var(--display);font-weight:400;font-size:22px;color:#8A5A00}.padtk small{font-size:15px;color:#6B4A00}.padtk small b{font-family:inherit;font-size:inherit;color:var(--red)}
+.padtk.pop{animation:tkpop .45s cubic-bezier(.2,1.6,.4,1)}@keyframes tkpop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+#v-pad .kres #padTk{grid-column:2}
 .padnext{color:#9AA0AA!important;margin-top:4px}#v-pad .kres .padnext{grid-column:2}
 .padwifi.res{max-width:440px;margin-top:4px}
 body.padmode{background:#fff}
@@ -963,6 +967,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div class="wheel num" id="wheel"></div>
       <div id="padBonus" class="small" style="color:#FFD98A"></div>
       <div id="padMem" style="border-radius:8px;padding:8px 12px;font-size:15px"></div>
+      <div class="padtk" id="padTk" hidden></div>
       <div class="padwifi res" id="padWifi" hidden></div>
       <div class="small padnext">화면을 누르면 바로 다음 사람</div>
     </div>
@@ -3672,7 +3677,7 @@ function wifiPadDone(){return false;const w=wifiCfg();if(!w)return false;const b
 async function doAttend(){
   if(!padBuf)return;const id=padBuf;padBuf='';updPad();
   if(id.length===6){coachPad(id);return}
-  const m=await DB.get(id);try{$('#padWifi').hidden=true}catch(e){}
+  const m=await DB.get(id);try{$('#padWifi').hidden=true;$('#padTk').hidden=true}catch(e){}
   $('#padInput').hidden=true;$('#padRes').hidden=false;$('#wheel').textContent='';$('#padBonus').textContent='';$('#padMem').textContent='';$('#padMem').style.background='transparent';
   const cv=$('#padAv');const c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);
   clearTimeout(padTimer);
@@ -3704,7 +3709,8 @@ async function doAttend(){
   const spin=now=>{const t=(now-t0)/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);drawChar(c,150,330,6.6,m.equip,{t,pose:Math.floor(t*4)%2?'jab':'cross'});
     if(t<0.45){$('#wheel').textContent=vals[Math.floor(t*18)%vals.length];requestAnimationFrame(spin)}else{$('#wheel').textContent=item?'깜짝 장비!':'+'+bonus;$('#padBonus').textContent=txt+(bs.length?' · 배지 '+bs.map(b=>b.name).join(', '):'');if(t<1.3)requestAnimationFrame(spin)}};
   requestAnimationFrame(spin);
-  updPadCount();padTimer=setTimeout(resetPad,1200);
+  let tkOn=false;try{if(FT('lotto')&&funCfg().on!==false&&+m.tk>0){tkOn=true;const t=$('#padTk');t.innerHTML=`<span class="pt-e">🎟️</span><span class="pt-t"><b>출석 복권이 복권함에 들어왔어요!</b><small>지금 <b>${+m.tk}장</b> · 앱에서 긁어 보세요</small></span>`;t.hidden=false;t.classList.remove('pop');void t.offsetWidth;t.classList.add('pop');try{sfx('coin')}catch(e){}}}catch(e){}
+  updPadCount();padTimer=setTimeout(resetPad,tkOn?2000:1200);
 }
 /* ================= 홈 화면에 앱 추가 ================= */
 let INST_EVT=null;
@@ -4464,7 +4470,7 @@ $('#cuSave').onclick=async()=>{const L=$('#cuTxt').value.split('\n').map(l=>l.tr
   if(!L.length){toast('기술을 적어 주세요');return}local.meta.curri=L;if(FB_ON()){try{await gref('meta/curri').set(clean(L))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('포도판 기술 목록을 저장했어요');renderCurriAdm()};
 $('#cuReset').onclick=()=>{$('#cuTxt').value=CURRI_DEF.map(c=>c.lv+' | '+c.t.join(', ')).join('\n')};
 $('#padFloorTag').onclick=e=>{e.stopPropagation();choosePadFloor()};
-function resetPad(){clearTimeout(padTimer);$('#padInput').hidden=false;$('#padRes').hidden=true;try{$('#padWifi').hidden=true}catch(e){}}
+function resetPad(){clearTimeout(padTimer);$('#padInput').hidden=false;$('#padRes').hidden=true;try{$('#padTk').hidden=true}catch(e){}try{$('#padWifi').hidden=true}catch(e){}}
 
 /* ================= 관장 메뉴 ================= */
 
