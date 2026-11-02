@@ -632,6 +632,10 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .atcal button b{font-size:13px;font-weight:600}.atcal button small{font-size:10px;line-height:1}
 .atcal button.td{box-shadow:inset 0 0 0 2px var(--gold)}.atcal button.on{outline:3px solid var(--red);outline-offset:-1px}
 .atcal button:disabled{opacity:.35}
+.tkpop{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;background:linear-gradient(160deg,#FFF6D8,#FFE3A6);border:3px solid #E0A100;border-radius:20px;padding:18px 14px;animation:tkpop .45s cubic-bezier(.2,1.6,.4,1)}
+.tkpop .tke{font-size:64px;line-height:1;animation:tkwig 1.2s ease-in-out .4s 2}.tkpop h2{color:#6B4400}
+@keyframes tkwig{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg) scale(1.08)}75%{transform:rotate(12deg) scale(1.08)}}
+.tkn{display:inline-block;background:#fff;border:2px solid #E0A100;border-radius:999px;padding:6px 16px;color:#6B4400;font-size:15px}.tkn b.num{color:var(--red);font-size:18px}
 .sheet.syncing::before{content:'최신 정보 확인 중…';position:sticky;top:-4px;display:block;margin:-6px auto 6px;width:max-content;font-size:12px;background:#FFF4D6;color:#7A5A00;border-radius:999px;padding:3px 12px;z-index:5}
 .sheet.syncing button:not([data-close]),.sheet.syncing label.btn,.sheet.syncing a.btn{pointer-events:none;opacity:.55}
 .spin{width:34px;height:34px;margin:auto;border:4px solid var(--mat);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
@@ -2084,11 +2088,22 @@ async function attAlarmToggle(){if(!ME)return;const k='nnn_attalarm_'+ME.id;
     <button class="btn red" id="attTry">알림 시험해 보기</button><button class="btn ghost" data-close>확인</button>`,(el)=>{el.querySelector('#attTry').onclick=()=>attTest()})}
 function attChime(){try{audioUnlock()}catch(e){}const ac=getAC();if(!ac)return;const n=ac.currentTime;
   [[880,0],[1175,.18],[1568,.36],[880,.8],[1175,.98],[1568,1.16]].forEach(([f,t])=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(0.0001,n+t);g.gain.exponentialRampToValueAtTime(0.5,n+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,n+t+0.5);o.start(n+t);o.stop(n+t+0.55)})}
-async function attAlarmFire(m,tm,test){const who=(m.name||'')+(m.student?' 학생':' 님');const title=test?'[시험] NNN 출석 알림':'NNN 출석 알림';const body=`${who}이 ${tm?tm+'에 ':''}탕정 엔엔엔복싱에 출석했어요 🥊`;
+async function attAlarmFire(m,tm,test){const who=(m.name||'')+(m.student?' 학생':' 님');const title=test?'[시험] NNN 출석 알림':'NNN 출석 알림';const tl=test?'':tkLine(m);const body=`${who}이 ${tm?tm+'에 ':''}탕정 엔엔엔복싱에 출석했어요 🥊`+(tl?'\n'+tl:'');
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,800])}catch(e){}attChime();
   let shown=false;try{if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){const r=await navigator.serviceWorker.getRegistration('./member');if(r){await r.showNotification(title,{body,tag:'att-'+m.id,renotify:true,vibrate:[400,150,400,150,800],icon:'member-icons/v2/icon-192.png',badge:'member-icons/v2/icon-192.png',data:{url:location.href.split('#')[0]}});shown=true}else{new Notification(title,{body,tag:'att-'+m.id});shown=true}}}catch(e){}
-  if(document.visibilityState==='visible'||!shown){sheet(`<div style="text-align:center;font-size:54px">🥊</div><h2 style="text-align:center">${esc(who)} 출석!</h2><p style="text-align:center;margin:0">${tm?`<b class="num" style="font-size:26px">${esc(tm)}</b><br>`:''}탕정 엔엔엔복싱에 도착해서 출석했어요</p><button class="btn red" data-close>확인</button>`)}}
+  if(document.visibilityState==='visible'||!shown){sheet(`<div style="text-align:center;font-size:54px">🥊</div><h2 style="text-align:center">${esc(who)} 출석!</h2><p style="text-align:center;margin:0">${tm?`<b class="num" style="font-size:26px">${esc(tm)}</b><br>`:''}탕정 엔엔엔복싱에 도착해서 출석했어요</p>${tl?`<div class="tkn" style="margin:4px auto 0">🎟️ 출석 복권 발급! 복권함 <b class="num">${+m.tk}장</b></div><button class="btn red" id="tkGo2">지금 긁으러 가기</button>`:''}<button class="btn ${tl?'ghost':'red'}" data-close>확인</button>`,(el,close)=>{const b=el.querySelector('#tkGo2');if(b)b.onclick=()=>{close();openFun('lotto')}});if(tl&&ME&&m.id===ME.id)lsSet('nnn_tkn_'+ME.id,TODAY())}}
 function pushRefresh(){try{if(ME&&attAlarmOn(ME.id)&&pushCan()&&'Notification' in window&&Notification.permission==='granted'){const k='nnn_pushchk_'+ME.id;if(lsGet(k)!==TODAY()){lsSet(k,TODAY());pushSubscribe(ME.id)}}}catch(e){}}
+/* 출석 복권 발급 알림 (하루 한 번) */
+const tkOn=()=>{try{return FT('lotto')&&funCfg().on!==false}catch(e){return false}};
+function tkLine(m){return tkOn()&&+m.tk>0?`🎟️ 출석 복권 발급! 복권함 ${+m.tk}장`:''}
+let TKN_T=0;
+function tkNotice(v,tries=0){if(!ME||!tkOn()||isStaff(ME)||ME.demo||(typeof isGuest==='function'&&isGuest(ME)))return;const T=TODAY();
+  const att=Array.isArray(v.attend)?v.attend:Object.values(v.attend||{});if(!att.includes(T))return;const n=+v.tk||0;if(n<=0)return;
+  const k='nnn_tkn_'+ME.id;if(lsGet(k)===T)return;
+  if($('#sheetRoot').innerHTML||document.visibilityState!=='visible'){clearTimeout(TKN_T);if(tries<40)TKN_T=setTimeout(()=>tkNotice(Object.assign({},ME,v),tries+1),2500);return}
+  lsSet(k,T);try{navigator.vibrate&&navigator.vibrate([120,60,120])}catch(e){}try{sfx('coin')}catch(e){}
+  sheet(`<div class="tkpop"><div class="tke">🎟️</div><div class="label" style="color:#8A5A00">오늘 출석 보상</div><h2>출석 복권이 발급됐어요!</h2><p style="margin:0">오늘 출석해서 복권이 <b>복권함</b>에 들어왔어요.</p><div class="tkn">지금 복권함 <b class="num">${n}장</b></div></div>
+    <button class="btn red" id="tkGo">🎟️ 지금 긁으러 가기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#tkGo').onclick=()=>{close();openFun('lotto')}})}
 function attAlarmCheck(v){if(!ME||v.id&&v.id!==ME.id)return;const id=ME.id;if(!attAlarmOn(id))return;const T=TODAY();
   const has=Array.isArray(v.attend)?v.attend.includes(T):(v.attend&&Object.values(v.attend).includes(T));if(!has&&v.last!==T)return;
   if(lsGet('nnn_attseen_'+id)===T)return;lsSet('nnn_attseen_'+id,T);attAlarmFire(Object.assign({},ME,v),attTimeOf(v,T))}
@@ -2099,7 +2114,7 @@ let saveT=0;function saveMe(){clearTimeout(saveT);saveT=setTimeout(()=>ME&&DB.sa
 let meOff=null;
 function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id))return;const id=ME.id;
   const r1=gref('members/'+id),r2=gref('private/'+id);
-  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
+  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}try{tkNotice(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
 async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{featApply()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
@@ -4467,7 +4482,7 @@ async function qrAttend(tok){
     attSheet(false,'등록 기간이 끝났어요',`${md(m.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 후 출석할 수 있어요.</b>`,'<button class="btn red" id="qaPay" style="margin-top:6px">지금 재등록하기</button>',m);{const b=$('#qaPay');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openPay()}}return}
   if(m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='none'){attSheet(false,'오늘은 수강 요일이 아니에요',`등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)<br>${esc(WEEKLY_RULE(m.mem.weekly))}`,'',m);return}
   const r=await applyAttend(m,false,'qr');sfx('win');
-  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(funCfg().on!==false&&FT('lotto')&&+m.tk>0?`<button class="btn red" id="qaFun" style="margin-top:8px">🎟️ 출석 복권 긁기 (${+m.tk}장)</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}try{refreshTop()}catch(e){}}
+  attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(tkOn()&&+m.tk>0?`<div class="tkn" style="margin-top:8px">🎟️ <b>출석 복권이 발급됐어요!</b> 복권함 <b class="num">${+m.tk}장</b></div><button class="btn red" id="qaFun" style="margin-top:6px">🎟️ 지금 긁으러 가기</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b){lsSet('nnn_tkn_'+m.id,TODAY());b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}}try{refreshTop()}catch(e){}}
 function wifiAttHTML(){const w=wifiCfg();if(!w)return'';return`<div class="padwifi" style="margin-top:8px"><div class="wt" style="flex:1"><small>📶 체육관 와이파이</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<span class="pw">${esc(w.p||'')}</span>`}</div>${w.t!=='nopass'&&w.p?'<button class="btn sm ghost" id="wfCopy">비번 복사</button>':''}</div>`}
 function wifiAttBind(){const b=document.getElementById('wfCopy');if(b)b.onclick=()=>{const w=wifiCfg();if(w)copyText(w.p,'와이파이 비밀번호를')}}
 $('#padRes').addEventListener('click',e=>{if(e.target.closest('button'))return;if(!$('#padForceBtn'))resetPad()});
