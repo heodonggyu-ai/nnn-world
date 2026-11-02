@@ -632,6 +632,25 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .atcal button b{font-size:13px;font-weight:600}.atcal button small{font-size:10px;line-height:1}
 .atcal button.td{box-shadow:inset 0 0 0 2px var(--gold)}.atcal button.on{outline:3px solid var(--red);outline-offset:-1px}
 .atcal button:disabled{opacity:.35}
+.tkbuy{display:flex;align-items:center;gap:10px;background:#FFF8E1;border:1.5px dashed #E0A100;border-radius:12px;padding:8px 10px;margin-top:8px}.tkbuy b{display:block;font-size:14px}.tkbuy span{font-size:12px;color:#6B4A00}
+#t-map .bellbtn{display:none}
+#t-map .mstrip{gap:6px}#t-map .mstrip-b{padding:5px 4px;border-radius:10px;border-width:1.5px}#t-map .mstrip-b b{font-size:16px}#t-map .mstrip-b span{font-size:10.5px}
+#t-map .misrow{margin-bottom:6px}#t-map .misbtn{padding:5px 10px;border-width:1.5px;border-radius:11px;gap:8px}#t-map .misbtn .mt{font-size:13px}#t-map .misbtn .ms{font-size:11px}#t-map .misbtn .mbar{height:4px;margin-top:3px}#t-map .misbtn .mn{font-size:15px}
+#t-map .questbar{gap:6px}#t-map .qmini{padding:4px 8px;font-size:12px;border-radius:10px}
+#t-map [data-mem]{margin-bottom:8px!important}
+.sparban{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;background:linear-gradient(120deg,#2F2F2F,#4A1F22);border:2px solid #D9343A;border-radius:14px;padding:10px 12px;color:#fff;font:inherit;position:relative;overflow:hidden;box-sizing:border-box}
+.sparban .sbh{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.sparban .sbl{display:flex;flex-direction:column;gap:4px}.sparban .sbr{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:9px;padding:6px 9px;font-size:13px;cursor:pointer}.sparban .sbr .sd{color:#FFD24A;font-weight:700;white-space:nowrap}.sparban .sbr i{color:#FF6B73;font-style:normal;font-weight:700}.sparban .sbr small{color:#ccc;font-size:11.5px;white-space:nowrap}.sparban .sbr .grow{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sparban .sba{display:grid;grid-template-columns:1fr 1fr;gap:6px}.sparban .sba button{background:#fff;color:#2F2F2F;border:0;border-radius:10px;padding:9px 6px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}.sparban .sba button:last-child{background:#D9343A;color:#fff}.sparban .sba .cbadge{position:static}
+.sparban:not([hidden])+.sparbar{display:none}
+.sparban .fi{font-size:30px;line-height:1;animation:spjab 2.4s ease-in-out infinite}.sparban b{display:block;font-family:var(--display);font-weight:400;font-size:18px;line-height:1.25}.sparban span{font-size:13px;color:#F3D6D7}
+.sparban .stag{flex:0 0 auto;background:#D9343A;color:#fff;border-radius:999px;padding:4px 11px;font-weight:700;font-size:12.5px}
+.sparban.hot{animation:rfp 1.6s ease-in-out infinite;background:linear-gradient(120deg,#D9343A,#8A1F24)}.sparban.hot .stag{background:#fff;color:#D9343A}.sparban.hot span{color:#fff}
+.sparban.set{background:linear-gradient(120deg,#1F4E9C,#2F2F2F);border-color:#5B8BDB}.sparban.set .stag{background:#5B8BDB}
+@keyframes spjab{0%,70%,100%{transform:translateX(0) rotate(0)}78%{transform:translateX(6px) rotate(-12deg)}86%{transform:translateX(0)}}
+.padspar{width:100%;background:#2F2F2F;color:#fff;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:4px;text-align:left}.padspar .pst{font-family:var(--display);font-size:18px;color:#FFD3D5}
+.padspar .psr{display:flex;align-items:center;gap:8px;font-size:15px}.padspar .psr b{color:#FFD24A}.padspar .psr span{flex:1}.padspar .psr i{color:#D9343A;font-style:normal;font-weight:700;margin:0 2px}.padspar .psr small{color:#bbb;font-size:12px}.padspar .psh{font-size:12px;color:#bbb}
+#v-pad .padqr #padSpar{grid-column:2}
 .tkpop{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;background:linear-gradient(160deg,#FFF6D8,#FFE3A6);border:3px solid #E0A100;border-radius:20px;padding:18px 14px;animation:tkpop .45s cubic-bezier(.2,1.6,.4,1)}
 .tkpop .tke{font-size:64px;line-height:1;animation:tkwig 1.2s ease-in-out .4s 2}.tkpop h2{color:#6B4400}
 @keyframes tkwig{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg) scale(1.08)}75%{transform:rotate(12deg) scale(1.08)}}
@@ -882,6 +901,8 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <button class="rfban" data-raffle hidden style="margin-bottom:10px"></button>
     <div class="pinrow" data-pins hidden style="margin-bottom:10px"></div>
     <button class="funban" data-fun hidden style="margin-bottom:10px"></button>
+    <div class="sparban" data-sparban hidden style="margin-bottom:10px"></div>
+    <div class="sparbar" id="sparBar" style="margin:0 0 10px"><button class="btn red" id="sparBtn">🥊 스파링 매칭 · 상대 찾기<i class="cbadge" id="sparN" hidden></i></button></div>
     <div data-mem style="margin-bottom:10px"></div>
     <div data-attme style="margin-bottom:10px"></div>
     <div data-fam style="margin-bottom:10px"></div>
@@ -894,7 +915,6 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div class="hint" id="mapHint">바닥을 누르면 이동해요. 다른 회원 캐릭터를 누르면 인사할 수 있어요!</div>
     </div>
     <div id="mapLive" hidden style="margin-top:8px"></div>
-    <div class="sparbar"><button class="btn" id="sparBtn">스파링 매칭<i class="cbadge" id="sparN" hidden></i></button></div>
     <div class="wchat" id="wchat"><div class="wch"><b>체육관 대화</b><span class="small" id="wcOn"></span></div><div class="wclog" id="wcLog"></div><div class="wcin" id="wcInRow"><input id="wcIn" maxlength="60" placeholder="체육관에 한마디 (60자)" enterkeyhint="send"><button id="wcSend">보내기</button></div><div class="wcq" id="wcQ"></div></div>
     <div class="ownerbar" id="guestBar" hidden style="background:var(--gold);color:#2F2F2F"><span class="grow"><b>게스트 체험 중</b> <span class="small" style="color:#2F2F2F">가입하면 내 캐릭터·크레딧이 저장돼요</span></span><button class="btn sm red" id="gbJoin">가입하기</button><button class="btn sm ghost" id="gbBack" style="color:#2F2F2F;border-color:#2F2F2F">둘러보기</button></div>
     <div class="ownerbar" id="ownerBar" hidden><span class="grow"><b>관장 모드</b> <span class="small" id="ownerSt"></span></span><button class="btn sm red" id="ownerLive">체육관 출근</button><button class="btn sm ghost" id="ownerAdm">관장 메뉴</button></div>
@@ -974,7 +994,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div><div class="small padhint" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요<br><span style="font-size:12px">코치는 코치 코드 6자리 → 출근 · 퇴근</span></div>
       <div class="kdisp num" id="kdisp"></div>
       <div class="keys" style="margin-top:12px" id="keys"></div></div>
-      <div class="padqr"><b>휴대폰으로 QR 출석</b><div id="padQR"></div><span>카메라로 찍으면 바로 출석돼요<br>QR은 30초마다 바뀌어요</span><div id="padFeed"></div><div class="padwifi" id="padWifiIdle" hidden></div></div>
+      <div class="padqr"><b>휴대폰으로 QR 출석</b><div id="padQR"></div><span>카메라로 찍으면 바로 출석돼요<br>QR은 30초마다 바뀌어요</span><div id="padFeed"></div><div class="padspar" id="padSpar" hidden></div><div class="padwifi" id="padWifiIdle" hidden></div></div>
     </div>
     <div class="padcel" id="padCel" hidden></div>
     <div class="kres" id="padRes" hidden>
@@ -2125,7 +2145,7 @@ function refreshTop(){
   if(!ME)return;const L=levelOf(ME);fixDay(ME);if(ME.lvSeen&&L.lv>ME.lvSeen)levelUpSheet(L);if(ME.lvSeen!==L.lv){ME.lvSeen=L.lv;saveMe()}
   $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
-  avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});try{funBanner();renderGrapeCard()}catch(e){}
+  avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});try{funBanner();renderGrapeCard()}catch(e){}try{sparBanner()}catch(e){}
   const safe=(n,f)=>{try{const r=f();if(r&&r.catch)r.catch(e=>console.error(n,e))}catch(e){console.error(n,e);try{ERRLOG.push(n+': '+e.message)}catch(_){}}};
   safe('bring',renderBring);safe('mem',renderMemCard);safe('face',renderFaceCard);safe('fam',renderFamCard);safe('cap',()=>{$('#todayCap').textContent=`오늘 게임 크레딧 ${ME.day.game}/${GAME_CAP} · 출석 ${ME.last===TODAY()?'완료':'아직'}`});
   safe('qbar',renderQbar);safe('mis',renderMisCard);setTimeout(()=>safe('live',renderLiveCards),200);
@@ -2771,10 +2791,41 @@ const sparGet=id=>sparNorm(id,SP.data[id]);
 function sparState(s){const p=s.post;if(p.status==='cancel')return['취소됨','no'];if(s.chal&&s.chal.declined)return['도전 거절됨','no'];if(s.chal&&!s.chal.agreed){const me=ME&&ME.id,L=s.chal.L;return[L&&L.by!==me&&(p.by===me||(p.to&&p.to.id===me))?'내 답을 기다려요!':'일정 조율 중','w']}if(!s.match)return[Object.keys(s.req||{}).length?`신청 ${Object.keys(s.req).length}명`:'상대 모집 중','w'];
   if(s.staff&&s.staff.ok===false)return['관장님 반려'+(s.staff.why?' · '+s.staff.why:''),'no'];if(sparAuto()||(s.staff&&s.staff.ok))return['확정!','ok'];return['매칭됨 · 관장님 확인 대기','w']}
 const sparMine=(s,id)=>s.post.by===id||(s.match&&s.match.id===id)||(s.post.to&&s.post.to.id===id);
+/* 스파링 홈 배너 */
+const SPB={at:0,prof:{},busy:false};
+function sparPendingN(me,strict){let n=0;sparList().forEach(s=>{if(s.post.status==='cancel')return;if(s.chal&&!s.chal.agreed&&!s.chal.declined&&sparMine(s,me)&&s.chal.L&&s.chal.L.by!==me&&s.chal.ok[me]!==s.chal.L.k&&s.post.date>=TODAY()){n++;return}if(s.post.by===me&&!s.match&&!s.chal&&Object.keys(s.req||{}).length)n++;
+    if(sparMine(s,me)&&s.match&&(sparAuto()||(s.staff&&s.staff.ok))&&(strict?s.post.date<TODAY():s.post.date<=TODAY())&&!(s.fb&&s.fb[me]))n++});return n}
+async function sparBanner(force){const els=$$('[data-sparban]');if(!els.length)return;
+  const show=FT('spar')&&ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());if(!show){els.forEach(el=>{el.hidden=true;el.innerHTML=''});return}
+  if((force||Date.now()-SPB.at>60000)&&!SPB.busy){SPB.busy=true;try{await sparLoad();SPB.prof=(await hget('spprof'))||{};SPB.at=Date.now()}catch(e){}SPB.busy=false}
+  const me=ME.id,T=TODAY(),st=isStu(ME);const L=sparList();
+  const look=Object.entries(SPB.prof||{}).filter(([id,p])=>id!==me&&lfgActive(p)&&!!p.stu===st).length;
+  const wkEnd=dAdd(T,7);const wk=L.filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date>=T&&s.post.date<=wkEnd&&!(s.staff&&s.staff.ok===false)).length;
+  const done=L.filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date<T&&s.post.date>=dAdd(T,-30)).length;
+  const pend=sparPendingN(me,true);
+  const next=L.filter(s=>sparMine(s,me)&&s.match&&s.post.status!=='cancel'&&s.post.date>=T&&!(s.staff&&s.staff.ok===false)).sort((a,b)=>(a.post.date+a.post.time).localeCompare(b.post.date+b.post.time))[0];
+  const can=skillOf(ME)>=sparMinSkill()&&['active','soon'].includes(memStatus(ME).state);const myP=(SPB.prof||{})[me];
+  let cls='sparban',ic='🥊',t,sub,tag,go;
+  if(pend){cls+=' hot';t=`내 답을 기다리는 스파링 ${pend}건!`;sub='도전장·신청·후기가 기다려요. 눌러서 확인해 주세요';tag='확인';go='mine'}
+  else if(next){const d=new Date(next.post.date+'T00:00:00'),dd=dDiff(next.post.date,T),op=next.post.by===me?(next.match||{}).nick:next.post.nick;cls+=' set';t=`다음 스파링 ${dd===0?'오늘':'D-'+dd} · ${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(next.post.time||'')}`;sub=`vs ${esc(op||'')} · ${(SPK[next.post.kind]||SPK.mass)[0]} ${next.post.rounds||''}R · 마우스피스 챙기기!`;tag='보기';go='sched'}
+  else if(!can){t=`스파링 상대 찾는 중 ${look}명`;sub=skillOf(ME)<sparMinSkill()?`심사 ${sparMinSkill()}레벨부터 참여할 수 있어요 · 구경하기`:'등록 기간 중에 참여할 수 있어요 · 구경하기';tag='보기';go='open'}
+  else{t=look?`스파링 상대 찾는 중 ${look}명`:'첫 스파링 상대가 되어 보세요';sub=[wk?`이번 주 ${wk}판 잡혔어요`:'',done?`최근 한 달 ${done}판`:'',myP&&lfgActive(myP)?'내 프로필 올라가 있음':'프로필 올리면 도전장이 와요'].filter(Boolean).join(' · ');tag=look?'도전장':'상대 찾기';go='open'}
+  const up=L.filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date>=T&&s.post.date<=wkEnd&&!(s.staff&&s.staff.ok===false)).sort((a,b)=>(a.post.date+a.post.time).localeCompare(b.post.date+b.post.time)).slice(0,2);
+  const lf=Object.entries(SPB.prof||{}).filter(([id,p])=>id!==me&&lfgActive(p)&&!!p.stu===st).sort((a,b)=>(b[1].at||0)-(a[1].at||0)).slice(0,up.length?1:2);
+  const rows=up.map(x=>{const d=new Date(x.post.date+'T00:00:00');return `<div class="sbr" data-sgo="sched"><span class="sd num">${x.post.date===T?'오늘':(d.getMonth()+1)+'/'+d.getDate()} ${esc(x.post.time||'')}</span><span class="grow">${esc(x.post.nick)} <i>vs</i> ${esc((x.match||{}).nick||'')}</span><small>${(SPK[x.post.kind]||SPK.mass)[0]}</small></div>`}).concat(lf.map(([id,p])=>`<div class="sbr" data-sgo="open"><span class="sd">🔎 상대 찾는 중</span><span class="grow">${esc(p.nick||'')} · ${p.w?p.w+'kg':esc(wclsName(p.w))}</span><small>${(SPK[p.kind]||SPK.mass)[0]}</small></div>`)).join('');
+  els.forEach(el=>{el.hidden=false;el.className=cls;el.innerHTML=`<button class="sbh" data-sgo="${go}"><div class="fi">${ic}</div><div class="grow"><b>${t}</b><span>${sub}</span></div><span class="stag">${tag}</span></button>${rows?`<div class="sbl">${rows}</div>`:''}<div class="sba"><button data-sgo="${pend?'mine':'sched'}">📋 스파링 게시판${pend?` <i class="cbadge">${pend}</i>`:''}</button>${can?(myP&&lfgActive(myP)?'<button data-sgo="open">🥊 도전장 보내기</button>':'<button data-sprof>✍️ 내 프로필 올리기</button>'):'<button data-sgo="open">👀 구경하기</button>'}</div>`;
+    el.querySelectorAll('[data-sgo]').forEach(b=>b.onclick=()=>openSparBoard(b.dataset.sgo));const pf=el.querySelector('[data-sprof]');if(pf)pf.onclick=()=>sparProfileEdit(myP)})}
+/* 출석패드: 오늘의 스파링 */
+async function padSparRender(){const box=$('#padSpar');if(!box)return;if(!FT('spar')){box.hidden=true;return}
+  try{await sparLoad()}catch(e){}const T=TODAY();
+  const L=sparList().filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date===T&&!(s.staff&&s.staff.ok===false)).sort((a,b)=>(a.post.time||'').localeCompare(b.post.time||''));
+  const wk=sparList().filter(s=>s.match&&s.post.status!=='cancel'&&s.post.date>T&&s.post.date<=dAdd(T,7)).length;
+  if(!L.length&&!wk){box.hidden=true;return}box.hidden=false;
+  box.innerHTML=`<div class="pst">🥊 ${L.length?'오늘의 스파링':'이번 주 스파링 '+wk+'판 예정'}</div>${L.slice(0,4).map(s=>`<div class="psr"><b class="num">${esc(s.post.time||'')}</b><span>${esc(s.post.nick)} <i>vs</i> ${esc((s.match||{}).nick||'')}</span><small>${(SPK[s.post.kind]||SPK.mass)[0]}</small></div>`).join('')}<div class="psh">나도 하고 싶다면? 회원 앱 → 스파링 매칭</div>`}
 async function sparBadge(){if(!ME||isGuest()||isStaff(ME))return;await sparLoad();const me=ME.id;let n=0;
   sparList().forEach(s=>{if(s.post.status==='cancel')return;if(s.chal&&!s.chal.agreed&&!s.chal.declined&&sparMine(s,me)&&s.chal.L&&s.chal.L.by!==me&&s.chal.ok[me]!==s.chal.L.k&&s.post.date>=TODAY()){n++;return}if(s.post.by===me&&!s.match&&!s.chal&&Object.keys(s.req||{}).length)n++;
     if(sparMine(s,me)&&s.match&&(sparAuto()||(s.staff&&s.staff.ok))&&s.post.date<=TODAY()&&!(s.fb&&s.fb[me]))n++});
-  const b=$('#sparN');if(b){b.textContent=n;b.hidden=!n}}
+  const b=$('#sparN');if(b){b.textContent=n;b.hidden=!n}try{sparBanner()}catch(e){}}
 function sparCard(s,me){const p=s.post,k=SPK[p.kind]||SPK.mass;const [st,sc]=sparState(s);const d=new Date(p.date+'T00:00:00');
   return `<div class="spc"${s.chal?' style="border-color:#D9343A"':''}><div class="sph"><b>${s.chal?`🥊 ${esc(p.nick)} → ${esc((p.to||{}).nick||'')}`:esc(p.nick)} <span class="small">${s.chal?'도전장':`Lv.${p.lv||1}${p.sk?' · 심사 '+p.sk+'레벨':''}`}</span></b><span class="spk ${k[2]}">${k[0]}</span></div>
     <div class="small"><b class="num">${d.getMonth()+1}/${d.getDate()}(${DAYN[d.getDay()]}) ${esc(p.time)}</b> · ${p.rounds}라운드${p.stu?' · 학생':''}${p.body?' · '+esc(p.body):''}</div>
@@ -3612,6 +3663,11 @@ function readGameStats(){const g={};
   const ka=+lsRaw('nnnkart.best')||0;if(ka)g.kart=Math.round(ka*10)/10;
   const qz=lsRaw('nnnquiz.best');if(qz&&typeof qz==='object'){const v=Object.values(qz).map(Number).filter(x=>x>0);if(v.length)g.quiz=Math.max(...v)}
   const en=lsRaw('nnneng.v1');if(en&&+en.xp)g.eng=+en.xp;
+  try{const B=lsRaw('nnnbeat.best');if(B&&typeof B==='object'){const v=Object.values(B).map(x=>+(x&&x.score)||0).filter(x=>x>0);if(v.length)g.beat=Math.max(...v)}}catch(e){}
+  try{const P=lsRaw('nnnppopgi.save');if(P&&P.figs){const n=Object.values(P.figs).filter(x=>+x>0).length;if(n)g.ppopgi=n}}catch(e){}
+  for(const [k,ls] of [['omok','nnnomok.rec'],['baduk','nnnbaduk.rec'],['janggi','nnnjanggi.rec'],['alkka','nnnalkka.rec']]){try{const R=lsRaw(ls);if(R&&+R.w)g[k]=+R.w}catch(e){}}
+  try{const A=lsRaw('nnnalkka.prog');if(A&&A.stars){const n=Object.values(A.stars).reduce((t,x)=>t+(+x||0),0);if(n)g.alkkaStar=n}}catch(e){}
+  try{const c=+lsRaw('nnncharade.best')||0;if(c)g.charade=c}catch(e){}
   try{const me=lsRaw('cd-me'),b=lsRaw('cd-bests')||{};const mb=(me&&b[me])||Object.values(b).find(x=>x&&typeof x==='object'&&!('score' in x))||b;let st=0;Object.values(mb||{}).forEach(r=>{if(r&&+r.stars)st+=+r.stars});if(st)g.crash=st}catch(e){}
   try{let pets=0,stars=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('mingnyu-forest-v1')){const S=lsRaw(k);if(S&&Array.isArray(S.pets))pets=Math.max(pets,S.pets.length);if(S&&+S.stars)stars=Math.max(stars,+S.stars)}}if(pets)g.forest=pets;if(stars)g.forestStar=stars}catch(e){}
   return g}
@@ -3621,7 +3677,7 @@ function syncGameStats(){if(!ME||ME.demo||isStaff(ME)||(typeof isGuest==='functi
 const RK=[
   ['gym','체육관',[['att','이달 출석왕','회'],['inv','이달 추천왕','명'],['sns','이달 홍보왕','회'],['lv','레벨','XP'],['skill','승급 레벨','']]],
   ['fit','미니게임',[['bag','샌드백','점'],['rope','줄넘기','점'],['shadow','쉐도우','점']]],
-  ['arc','게임장',[['g_plays','많이 한 사람','판'],['g_quiz','퀴즈왕','점'],['g_kart','드리프트 카트','',1],['g_bori','보리보리쌀','연속'],['g_crash','크래시 드라이브','★'],['g_forest','밍뉴의숲 동물','마리'],['g_eng','잉글리시','XP']]]];
+  ['arc','게임장',[['g_plays','많이 한 사람','판'],['g_quiz','퀴즈왕','점'],['g_kart','드리프트 카트','',1],['g_bori','보리보리쌀','연속'],['g_crash','크래시 드라이브','★'],['g_forest','밍뉴의숲 동물','마리'],['g_eng','잉글리시','XP'],['g_beat','샌드백 비트','점'],['g_ppopgi','뽑기 도감','종'],['g_omok','오목','승'],['g_baduk','바둑','승'],['g_janggi','장기','승'],['g_alkkaStar','알까기','★'],['g_charade','몸으로 말해요','개']]]];
 const rkFmt=(k,v)=>k==='g_kart'?`${Math.floor(v/60)}:${(v%60).toFixed(1).padStart(4,'0')}`:Number(v).toLocaleString();
 async function renderRank(){try{syncGameStats()}catch(e){}
   const flat=RK.flatMap(([,,L])=>L);if(!flat.some(x=>x[0]===rkMode))rkMode='att';
@@ -3670,7 +3726,7 @@ function pinSheet(title,ok){
 $('#goPad').onclick=()=>padPinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>padPinSheet('출석패드 종료',()=>{show('v-home');try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}try{screen.orientation.unlock()}catch(e){}});
 async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{padOriUI();padOriApply(true)}catch(e){}try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
-async function updPadCount(){const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
+let PADSP_T=0;async function updPadCount(){try{if(Date.now()-PADSP_T>180000){PADSP_T=Date.now();padSparRender()}}catch(e){}const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
 function updPad(){$('#kdisp').textContent=padBuf||''}
@@ -4042,7 +4098,7 @@ const FEAT=[
   {id:'attalarm',q:'자녀 출석 때 학부모 폰이 울려요',d:'2026-10-20',e:'🔔',t:'출석 알림 (학부모님용)',s:'자녀가 출석하면 학부모님 휴대폰이 진동·소리로 알려요',go:'attal',sel:'[data-attme="full"]',tab:'more',who:'student'},
   {id:'bio',q:'번호 없이 얼굴로 입장',d:'2026-10-20',e:'🙂',t:'Face ID·지문으로 로그인',s:'다음부터 번호 입력 없이 얼굴만 보여 주면 들어와요',go:'bio',sel:'#bioBtn',tab:'more',need:()=>BIO_AV},
   {id:'strip',q:'맨 위 칸에 기간·출석',d:'2026-10-20',e:'📋',t:'남은 기간·출석을 맨 위에서',s:'체육관 화면 맨 위 칸을 누르면 자세히 볼 수 있어요',go:null,sel:'#t-map [data-mem]',tab:'map'},
-  {id:'spar',q:'상대 찾고 도전장 보내기',d:'2026-10-19',e:'🥊',t:'스파링 매칭',s:'체급·경력으로 상대를 찾고 도전장으로 날짜를 잡아요',go:'spar',sel:'#sparBtn',tab:'map'},
+  {id:'spar2',q:'상대 찾고 도전장 보내기',d:'2026-11-02',e:'🥊',t:'스파링 매칭',s:'홈 화면 빨간 스파링 배너에서 바로! 프로필을 올리면 비슷한 체급 회원이 도전장을 보내요',go:'spar',sel:'#t-map [data-sparban]',tab:'map'},
   {id:'chat',q:'맵 친구들과 인사',d:'2026-10-19',e:'💬',t:'체육관 대화',s:'맵에 들어온 회원끼리 인사를 주고받아요',go:'chat',sel:'#wchat',tab:'map'},
   {id:'voice',q:'관장님께 건의·칭찬',d:'2026-10-19',e:'📮',t:'의견함',s:'관장님·코치에게 건의·칭찬을 남겨요 (비공개 가능)',go:'voice',sel:'#voiceBtn',tab:'more'},
   {id:'hold',q:'앱에서 바로 신청',d:'2026-10-18',e:'⏸️',t:'정지(연기) 신청',s:'다치거나 바쁠 때 앱에서 바로 신청해요',go:'hold',sel:'[data-holdreq]',tab:'more',need:()=>ME&&typeof canReqHold==='function'&&canReqHold(ME)}];
@@ -6555,18 +6611,27 @@ function applyPadFloor(){const f=padFloor();const v=$('#v-pad');v.dataset.floor=
 function choosePadFloor(){sheet(`<h2>이 출석패드는 몇 층인가요?</h2><p class="small" style="margin:0">층마다 배경 색이 달라져요. 이 기기에만 저장돼요.</p><div class="row" style="gap:8px"><button class="btn red grow" data-fl="2" style="font-size:22px">2층</button><button class="btn grow" data-fl="5" style="font-size:22px;background:#1F4E9C;color:#fff">5층</button></div><button class="btn ghost" data-fl="">층 표시 안 함</button>`,(el,close)=>{el.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('nnn_padfloor',b.dataset.fl);localStorage.setItem('nnn_padfloor_set','1')}catch(e){}applyPadFloor();close()})})}
 /* ================= 기능 켜고 끄기 ================= */
 const FEATS=[['lotto','🎟️','출석 복권 · 쿠폰함','출석할 때마다 복권 1장, 앱에서 긁어 쿠폰 당첨'],['bingo','🔢','출석 빙고','출석마다 번호 하나, 줄 완성 보상'],['stamp','🥊','월 도장판','이달 출석 8·12·16개 보상'],['box','🎁','연속 출석 상자','주 2회 이상 연속 주 보상'],
-  ['celebrate','🎉','당첨 연출','당첨되면 출석패드에 축하 화면 · 공지에 당첨자'],['grape','🍇','커리큘럼 포도판','회원 내 정보에 포도판 · 관장 심사'],['combo','📹','콤비네이션 게시판','인증 탭 맨 위 · 연습 영상 GIF 공유'],['wifi','📶','와이파이 안내','회원 앱 공지 · 출석패드에 와이파이 표시'],['raffle','🎫','응모 이벤트 배너','진행 중인 응모 이벤트 배너·팝업'],['comp','🏅','생체 대회 출전 공지','맵 위 대회 출전 명단 버튼']];
+  ['celebrate','🎉','당첨 연출','당첨되면 출석패드에 축하 화면 · 공지에 당첨자'],['grape','🍇','커리큘럼 포도판','회원 내 정보에 포도판 · 관장 심사'],['combo','📹','콤비네이션 게시판','인증 탭 맨 위 · 연습 영상 GIF 공유'],['wifi','📶','와이파이 안내','회원 앱 공지 · 출석패드에 와이파이 표시'],['raffle','🎫','응모 이벤트 배너','진행 중인 응모 이벤트 배너·팝업'],['comp','🏅','생체 대회 출전 공지','맵 위 대회 출전 명단 버튼'],['spar','🥊','스파링 매칭 배너','회원 홈에 스파링 배너 · 출석패드에 오늘의 스파링 대진']];
 const FT=k=>!((local.meta&&local.meta.feat)||{})[k+'_off'];
 function featApply(){try{const cb=$('#cbOpen');if(cb)cb.hidden=!FT('combo')}catch(e){}try{renderPins()}catch(e){}try{funBanner()}catch(e){}try{renderGrapeCard()}catch(e){}try{renderRaffle()}catch(e){}try{if(!$('#v-pad').hidden)wifiPadIdle()}catch(e){}}
 function renderFeatAdm(){const box=$('#featBox');if(!box)return;box.innerHTML=FEATS.map(([k,e,t,d])=>`<label class="check" style="margin:0"><input type="checkbox" data-ft="${k}" ${FT(k)?'checked':''}><span><b>${e} ${t}</b><br><span class="small">${d}</span></span></label>`).join('');
   box.querySelectorAll('[data-ft]').forEach(c=>c.onchange=async()=>{const k=c.dataset.ft;local.meta.feat=Object.assign({},local.meta.feat||{});if(c.checked)delete local.meta.feat[k+'_off'];else local.meta.feat[k+'_off']=true;
     if(FB_ON()){try{await gref('meta/feat/'+k+'_off').set(c.checked?null:true)}catch(e){toast('저장하지 못했어요');c.checked=!c.checked;return}}else persist();toast((c.checked?'켰어요: ':'껐어요: ')+FEATS.find(f=>f[0]===k)[2]);featApply()})}
 /* ================= 출석 재미: 복권 · 빙고 · 도장판 · 연속 출석 상자 · 쿠폰 ================= */
-const FUN_DEF={on:true,pity:10,days:14,cr:[10,20,30,50],
+const FUN_DEF={on:true,pity:10,days:14,cr:[10,20,30,50],buyP:300,buyDay:2,
   prizes:[{id:'drink',name:'음료 쿠폰',emo:'🥤',p:8,day:3,week:10},{id:'bar',name:'단백질바',emo:'🍫',p:3,day:2,week:5},{id:'wrap',name:'핸드랩',emo:'🧤',p:0.6,day:1,week:1},{id:'pt',name:'PT 1회권',emo:'🥊',p:0.2,day:1,week:1}]};
 const STAMP_STEPS=[{n:8,tk:1},{n:12,tk:2},{n:16,cp:1}];
 const BOX_STEPS=[{w:2,tk:2},{w:4,tk:3},{w:8,tk:4,cp:1},{w:12,tk:5,cp:1}];
 const funArr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x).filter(v=>v!=null):[]);
+/* 크레딧 → 복권 바꾸기 */
+function tkBuyState(m){const F=funCfg();const P=+F.buyP||0,D=+F.buyDay||0;const b=m.tkBuy&&m.tkBuy.d===TODAY()?+m.tkBuy.n||0:0;return{on:P>0&&D>0,P,D,used:b,left:Math.max(0,D-b),cr:+m.credits||0}}
+function tkBuyHTML(m){const s=tkBuyState(m);if(!s.on)return'';const ok=s.left>0&&s.cr>=s.P;
+  return `<div class="tkbuy"><div class="grow"><b>🪙 크레딧 ${s.P.toLocaleString()} → 🎟️ 복권 1장</b><span>${s.left<=0?`오늘은 다 바꿨어요 (하루 ${s.D}장)`:s.cr<s.P?`크레딧 ${(s.P-s.cr).toLocaleString()} 더 모으면 바꿀 수 있어요`:`내 크레딧 ${s.cr.toLocaleString()} · 오늘 ${s.left}장 더 가능`}</span></div><button class="btn sm ${ok?'gold':'ghost'}" id="fnBuy" ${ok?'':'disabled'}>바꾸기</button></div>`}
+async function tkBuy(btn){if(!ME)return;if(btn.dataset.sure!=='1'){const s0=tkBuyState(ME);btn.dataset.sure='1';btn.textContent=`${s0.P} 크레딧 쓰기?`;setTimeout(()=>{if(btn.isConnected){btn.dataset.sure='';btn.textContent='바꾸기'}},4000);return}
+  btn.disabled=true;try{const f=await DB.get(ME.id);if(f)ME=f}catch(e){}const s=tkBuyState(ME);
+  if(!s.on||s.left<=0||s.cr<s.P){toast(s.left<=0?'오늘은 더 바꿀 수 없어요':'크레딧이 모자라요');return}
+  ME.credits=s.cr-s.P;ME.tk=(+ME.tk||0)+1;ME.tkBuy={d:TODAY(),n:s.used+1};await DB.save(ME);try{sfx('coin')}catch(e){}try{refreshTop()}catch(e){}
+  toast(`🎟️ 복권 1장으로 바꿨어요! (크레딧 -${s.P})`,2500);openFun('lotto')}
 function funCfg(){const f=(local.meta&&local.meta.fun)||{};const o=Object.assign({},FUN_DEF,f);const P=funArr(f.prizes);o.prizes=(P.length?P:FUN_DEF.prizes).map(z=>Object.assign({},z));o.cr=funArr(o.cr).map(Number).filter(n=>n>0);if(!o.cr.length)o.cr=FUN_DEF.cr;return o}
 const monOf=d=>{const x=new Date(d+'T00:00:00');const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return dstr(x)};
 function bingoLines(nums){const s=new Set(nums.map(Number));let c=0;const has=i=>s.has(i+1);
@@ -6635,7 +6700,7 @@ function scratchCard(host,resultHTML,onReveal){host.innerHTML=`<div class="scr">
 /* 회원: 출석 보상 화면 */
 function funBanner(){const F=funCfg();const anyF=FT('lotto')||FT('bingo')||FT('stamp')||FT('box');$$('[data-fun]').forEach(el=>{const show=anyF&&F.on!==false&&ME&&!ME.demo&&!isStaff(ME)&&!(typeof isGuest==='function'&&isGuest());el.hidden=!show;if(!show){el.innerHTML='';return}
   const tk=+ME.tk||0,cps=funArr(ME.cps).filter(c=>!c.used&&c.exp>=TODAY()).length,bn=funArr(ME.bingo&&ME.bingo.n).length;
-  const tk2=FT('lotto')?tk:0;el.className='funban'+(tk2>0?' pulse':'');el.innerHTML=`<div class="fi">🎟️</div><div class="grow"><b>${tk2>0?`복권 ${tk2}장 · 지금 긁어 보세요!`:'출석 보상'}</b><span>${[FT('bingo')?`빙고 ${bn}/25`:'',FT('stamp')?`이달 도장 ${funArr(ME.attend).filter(d=>String(d).startsWith(TODAY().slice(0,7))).length}개`:'',FT('lotto')&&cps?`쿠폰 ${cps}장`:''].filter(Boolean).join(' · ')}</span></div><span class="rftag">${tk2>0?'긁기':'보기'}</span>`;el.onclick=()=>openFun()})}
+  const tk2=FT('lotto')?tk:0;el.className='funban'+(tk2>0?' pulse':'');el.innerHTML=`<div class="fi">🎟️</div><div class="grow"><b>${tk2>0?`복권 ${tk2}장 · 지금 긁어 보세요!`:'출석 보상'}</b><span>${[FT('bingo')?`빙고 ${bn}/25`:'',FT('stamp')?`이달 도장 ${funArr(ME.attend).filter(d=>String(d).startsWith(TODAY().slice(0,7))).length}개`:'',FT('lotto')&&cps?`쿠폰 ${cps}장`:'',FT('lotto')&&!tk2&&(()=>{const s=tkBuyState(ME);return s.on&&s.left>0&&s.cr>=s.P})()?'🪙 크레딧으로 복권 바꾸기 가능':''].filter(Boolean).join(' · ')}</span></div><span class="rftag">${tk2>0?'긁기':'보기'}</span>`;el.onclick=()=>openFun()})}
 async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)ME=m}catch(e){}const F=funCfg();const m=ME;
   const tk=+m.tk||0;const B=m.bingo||{n:[]};const bn=funArr(B.n).map(Number);const lines=bingoLines(bn);
   const mon=TODAY().slice(0,7);const cnt=funArr(m.attend).filter(d=>String(d).startsWith(mon)).length;const ws=weekStreak(m);
@@ -6648,7 +6713,8 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
       <div class="small">출석할 때마다 1장. 당첨되면 ${F.prizes.map(z=>esc(z.emo+' '+z.name)).join(' · ')}! 꽝이어도 크레딧${+F.pity>0?`, 꽝 ${F.pity}번이면 ${esc(F.prizes[0].name)} 확정`:''}</div>
       <div id="fnScr"></div>
       <button class="btn red" id="fnGo" ${tk>0?'':'disabled'}>${tk>0?'복권 긁기':'출석하면 복권이 생겨요'}</button>
-      ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}</div>`:''}
+      ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}
+      ${tkBuyHTML(m)}</div>`:''}
     ${FT('bingo')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">출석 빙고 <span class="small">${bn.length}/25</span></b><span class="pill">${lines}줄</span></div>
       <div class="small">출석할 때마다 번호 하나가 찍혀요. 한 줄 완성마다 복권 +1, 판 전체 완성 복권 +3</div><div class="bingo">${grid}</div></div>`:''}
     ${FT('stamp')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">${Number(mon.slice(5))}월 도장판</b><span class="pill">${cnt}개</span></div>
@@ -6658,6 +6724,7 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
       <div class="boxes">${BOX_STEPS.map(b=>`<div class="bx${ws.n>=b.w?' on':''}"><span>${ws.n>=b.w?'🎁':'📦'}</span><small>${b.w}주</small></div>`).join('')}</div></div>`:''}
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     {const cpb=el.querySelector('#fnCp');if(cpb)cpb.onclick=()=>{close();openCoupons()}}
+    {const bb=el.querySelector('#fnBuy');if(bb)bb.onclick=()=>tkBuy(bb)}
     const go=el.querySelector('#fnGo');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='복권 꺼내는 중…';const res=await lottoDraw();if(!res){toast('복권이 없어요');go.textContent='출석하면 복권이 생겨요';return}
       const host=el.querySelector('#fnScr');const html=res.kind==='cp'?`<div class="scr-win"><div style="font-size:44px">${res.cp.emo}</div><b>${esc(res.cp.name)} 당첨!</b><span>쿠폰함에 넣어 뒀어요 · ${md(res.cp.exp)}까지</span></div>`:`<div class="scr-miss"><b>아쉽지만 꽝</b><span>대신 +${res.n} 크레딧${res.left?` · 확정까지 꽝 ${res.left}번`:''}</span></div>`;
       scratchCard(host,html,()=>{if(res.kind==='cp'){sfx('win');confetti(el.parentNode);try{navigator.vibrate&&navigator.vibrate([60,40,120])}catch(e){}}else sfx('coin');
@@ -6682,6 +6749,8 @@ async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=f
     <div class="field"><label for="fnPz">상품 · 한 줄에 하나 <span class="small">(이모지 이름 | 당첨 확률% | 하루 최대 | 주간 최대) 첫 줄 상품이 '꽝 보상·도장판·상자' 확정 상품</span></label><textarea id="fnPz" rows="5">${esc(funPrizeTxt(F))}</textarea></div>
     <div class="row"><div class="field grow"><label for="fnPity">꽝 몇 번이면 확정</label><input id="fnPity" type="number" min="0" max="50" value="${+F.pity||0}"></div><div class="field grow"><label for="fnDays">쿠폰 유효기간(일)</label><input id="fnDays" type="number" min="1" max="90" value="${+F.days||14}"></div></div>
     <div class="field"><label for="fnCr">꽝일 때 크레딧 <span class="small">(쉼표로)</span></label><input id="fnCr" value="${esc(F.cr.join(', '))}"></div>
+    <div class="row"><div class="field grow"><label for="fnBuyP">🪙 크레딧 → 복권 1장 가격</label><input id="fnBuyP" type="number" min="0" step="10" value="${+F.buyP||0}"></div><div class="field grow"><label for="fnBuyD">하루 최대 몇 장 <span class="small">(0이면 끄기)</span></label><input id="fnBuyD" type="number" min="0" max="20" value="${+F.buyDay||0}"></div></div>
+    <div class="small" style="margin-top:-4px">꽝이면 크레딧 ${Math.min(...F.cr)}~${Math.max(...F.cr)}을 돌려받으니, 가격은 그보다 넉넉히 높게 (기본 300)</div>
     <button class="btn red" id="fnSave">저장</button>
     <div class="memsum"><b>오늘 · 이번 주 나간 쿠폰</b><div class="small">${F.prizes.map(z=>`${esc(z.emo+' '+z.name)} 오늘 ${+day[z.id]||0}/${z.day} · 주간 ${+wk[z.id]||0}/${z.week}`).join('<br>')}</div></div>
     ${W.length?`<div class="memsum"><b>최근 당첨</b><div class="small">${W.map(w=>`${new Date(w.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})} ${esc(w.nick||'')} ${esc((w.emo||'')+' '+(w.name||''))}`).join('<br>')}</div></div>`:''}
@@ -6691,7 +6760,7 @@ async function renderFunAdm(){const box=$('#funAdmBox');if(!box)return;const F=f
       return{id:'p'+i+'_'+nm.replace(/[^\w가-힣]/g,'').slice(0,10),name:nm.replace(em,'').trim()||nm,emo:em,p:Math.max(0,Math.min(100,parseFloat(a[1])||0)),day:Math.max(0,parseInt(a[2])||0),week:Math.max(0,parseInt(a[3])||0)}});
     if(!prizes.length){toast('상품을 하나 이상 적어 주세요');return}
     const old=funCfg().prizes;prizes.forEach((z,i)=>{const o=old.find(x=>x.name===z.name);if(o)z.id=o.id});
-    const f={on:box.querySelector('#fnOn').checked,prizes,pity:Math.max(0,parseInt(box.querySelector('#fnPity').value)||0),days:Math.max(1,parseInt(box.querySelector('#fnDays').value)||14),cr:box.querySelector('#fnCr').value.split(/[,\s]+/).map(Number).filter(n=>n>0).slice(0,8)};
+    const f={on:box.querySelector('#fnOn').checked,prizes,pity:Math.max(0,parseInt(box.querySelector('#fnPity').value)||0),days:Math.max(1,parseInt(box.querySelector('#fnDays').value)||14),cr:box.querySelector('#fnCr').value.split(/[,\s]+/).map(Number).filter(n=>n>0).slice(0,8),buyP:Math.max(0,parseInt(box.querySelector('#fnBuyP').value)||0),buyDay:Math.max(0,parseInt(box.querySelector('#fnBuyD').value)||0)};
     local.meta.fun=f;if(FB_ON()){try{await gref('meta/fun').set(clean(f))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('저장했어요');renderFunAdm()};
   box.querySelector('#fnOn').onchange=()=>box.querySelector('#fnSave').click()}
 /* 당첨 연출: 출석패드 · 공지 */
