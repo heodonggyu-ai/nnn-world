@@ -632,6 +632,10 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .atcal button b{font-size:13px;font-weight:600}.atcal button small{font-size:10px;line-height:1}
 .atcal button.td{box-shadow:inset 0 0 0 2px var(--gold)}.atcal button.on{outline:3px solid var(--red);outline-offset:-1px}
 .atcal button:disabled{opacity:.35}
+.sheet.syncing::before{content:'최신 정보 확인 중…';position:sticky;top:-4px;display:block;margin:-6px auto 6px;width:max-content;font-size:12px;background:#FFF4D6;color:#7A5A00;border-radius:999px;padding:3px 12px;z-index:5}
+.sheet.syncing button:not([data-close]),.sheet.syncing label.btn,.sheet.syncing a.btn{pointer-events:none;opacity:.55}
+.spin{width:34px;height:34px;margin:auto;border:4px solid var(--mat);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+#admRows .mrow.tap{background:#FFF4D6}
 .payln{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:13px;margin-top:3px;padding:4px 8px;background:#F4F6FA;border-radius:8px}.payln b{font-weight:700}.payln .num{font-variant-numeric:tabular-nums}.payln .pi{color:var(--muted);font-size:12px}.payln.rf{background:#FDECEC;color:#8A1F24}
 .atcal button.aok{background:#2B9B66;color:#fff;border-color:#2B9B66}.atcal button.amiss{background:#FDECEC;color:#B4232A;border-color:#F3B9BC}
 .amx{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
@@ -1138,7 +1142,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div class="bring" id="admPend" hidden></div>
     <div class="stats" id="admStats"></div>
     <div class="chips" id="admFilt"></div>
-    <div class="field"><input id="admSearch" placeholder="이름·번호·전화·메모 검색 (예: 9996, 아산페이)"></div>
+    <div class="field"><input id="admSearch" placeholder="이름·초성·번호·전화·메모 (예: ㄱㅁㅈ, 9996)"></div>
     <div class="mlist" id="admRows" data-lay="c"></div>
   </div>
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:4px">
@@ -4558,30 +4562,56 @@ async function renderADash(){const box=$('#adash');if(!box)return;const all=(awa
   const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};const hrN=renderHoldReqs(all)||0;bd('#atb-today',payN+dueN+hrN);bd('#atb-mem',pend);try{const [lv,fx]=await Promise.all([hget('hr/leave'),hget('hr/fix')]);let n=0;[lv,fx].forEach(o=>Object.values(o||{}).forEach(c=>Object.values(c||{}).forEach(v=>{if(v&&v.status==='pending')n++})));bd('#atb-staff',n)}catch(e){}}
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
-async function renderAdmRows(){
-  const all=(await DB.all()).filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));const q=$('#admSearch').value.trim();
-  const MEMOS=(await hget('memos'))||{};
+/* 회원 목록: 한 번 받아 두고(캐시) 검색은 바로 거르기 */
+const ADM={all:null,memos:{},pays:null,payAt:0,at:0,p:null,lim:100};
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const choOf=s=>String(s||'').replace(/[가-힣]/g,c=>CHO[Math.floor((c.charCodeAt(0)-0xAC00)/588)]);
+async function admLoad(){const [all,memos]=await Promise.all([DB.all(),hget('memos').catch(()=>null)]);
+  ADM.all=all.filter(m=>!m.demo).sort((a,b)=>b.id.localeCompare(a.id));ADM.memos=memos||{};ADM.at=Date.now();ADM.payAt=0;
+  try{famLoad()}catch(e){}
+  const A=ADM.all;try{renderImpLast(A)}catch(e){}try{dupBackfill(A)}catch(e){}try{if(IS_ADMIN&&FB_ON()){const sg=A.length+':'+Math.floor(Date.now()/600000);if(window.__rsg!==sg){window.__rsg=sg;syncRoster(A.filter(m=>!isCoachRec(m)&&!isOwner(m)))}}}catch(e){}
+  clearTimeout(window._adT);window._adT=setTimeout(renderADash,300)}
+async function renderAdmRows(mode){
+  if(mode!=='cache'||!ADM.all){if(ADM.all)admPaint();if(!ADM.p)ADM.p=admLoad().catch(e=>console.error('admLoad',e)).finally(()=>{ADM.p=null});await ADM.p}
+  const q=$('#admSearch').value.trim();
+  if(q&&q.replace(/[ㄱ-ㅎ]/g,'').length>=2&&Date.now()-ADM.payAt>60000){ADM.payAt=Date.now();admPaint();try{ADM.pays=await DB.pays()}catch(e){}}
+  admPaint()}
+function admPaint(){if(!ADM.all)return;const all=ADM.all;const q=$('#admSearch').value.trim();const MEMOS=ADM.memos;
   const DUPC={};all.forEach(m=>{const k=String(m.phone||'').replace(/\D/g,'')+'|'+String(m.name||'').replace(/\s+/g,'');if(k.length>2)DUPC[k]=(DUPC[k]||0)+1});const isDup=m=>DUPC[String(m.phone||'').replace(/\D/g,'')+'|'+String(m.name||'').replace(/\s+/g,'')]>1;
-  let PAYS=[];if(q){try{PAYS=await DB.pays()}catch(e){}}
-  const nz=s=>String(s||'').toLowerCase().replace(/\s+/g,'');const qn=nz(q),qd=q.replace(/\D/g,'');const HIT={};
+  const PAYS=q?(ADM.pays||[]):[];
+  const nz=s=>String(s||'').toLowerCase().replace(/\s+/g,'');const qn=nz(q),qd=q.replace(/\D/g,'');const HIT={};const onlyCho=/^[ㄱ-ㅎ]+$/.test(qn);
   const srch=m=>{if(!q)return true;
+    if(onlyCho)return choOf(nz(m.name)).includes(qn);
     if(nz(m.name).includes(qn)||m.id.includes(q))return true;
     if(qd.length>=3&&String(m.phone||'').replace(/\D/g,'').includes(qd))return true;
     const src=[...Object.values(MEMOS[m.id]||{}).map(x=>['메모',x&&x.text]),...PAYS.filter(p=>p&&p.mid===m.id).flatMap(p=>[['결제 메모',p.memo],['결제',p.item]]),['참고사항',m.note],['보호자',(m.gName||'')+' '+(m.gPhone||'')],['상품',m.mem&&m.mem.item]];
     for(const [k,v] of src){if(!v)continue;const s=String(v);if(nz(s).includes(qn)||(qd.length>=3&&s.replace(/\D/g,'').includes(qd))){HIT[m.id]=k+': '+s.slice(0,60);return true}}
     return false};
-  renderAdmFilter(all);try{renderImpLast(all)}catch(e){}try{dupBackfill(all)}catch(e){}try{if(IS_ADMIN&&FB_ON()){const sg=all.length+':'+Math.floor(Date.now()/600000);if(window.__rsg!==sg){window.__rsg=sg;syncRoster(all.filter(m=>!isCoachRec(m)&&!isOwner(m)))}}}catch(e){}const list=all.filter(m=>admPass(m)&&srch(m));
-  $('#admCnt').textContent=all.length+'명';
-  $('#admRows').innerHTML=list.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${impB(m)?`<span class="imp-pill ${impA(m)}">${impA(m)==='create'?'가져옴·새로':'가져옴'} ${esc(impAt(m)?md(impAt(m)):'')}</span>`:''}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost mdet" data-dd="${esc(m.id)}">상세</button><span class="mchev" aria-hidden="true">›</span></div></div>`).join('')||'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>';
+  try{renderAdmFilter(all)}catch(e){}
+  let list=all.filter(m=>admPass(m)&&srch(m));
+  if(q){const sc=m=>{const n=nz(m.name);return n===qn||m.id===q?0:n.startsWith(qn)||m.id.startsWith(q)?1:HIT[m.id]?3:2};list.sort((a,b)=>sc(a)-sc(b))}
+  $('#admCnt').textContent=q?`${list.length}명 찾음 / ${all.length}명`:all.length+'명';
+  const shown=q?list:list.slice(0,ADM.lim);$('#admRows').innerHTML=shown.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${impB(m)?`<span class="imp-pill ${impA(m)}">${impA(m)==='create'?'가져옴·새로':'가져옴'} ${esc(impAt(m)?md(impAt(m)):'')}</span>`:''}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost mdet" data-dd="${esc(m.id)}">상세</button><span class="mchev" aria-hidden="true">›</span></div></div>`).join('')||(q?`<p class="small" style="margin:8px 0">'${esc(q)}' 검색 결과가 없어요.</p>`:'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>');
+  if(shown.length<list.length)$('#admRows').insertAdjacentHTML('beforeend',`<button class="btn ghost" id="admMore">${list.length-shown.length}명 더 보기</button>`);
+  {const mb=$('#admMore');if(mb)mb.onclick=()=>{ADM.lim+=200;admPaint()}}
   {const io=window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){io.unobserve(en.target);faceInto(en.target,en.target.dataset.mf)}}),{rootMargin:'200px'}):null;
     $$('#admRows [data-mf]').forEach(el=>{const m=list.find(x=>x.id===el.dataset.mf);if(!m||!m.hasFace)return;if(io)io.observe(el);else faceInto(el,el.dataset.mf)})}
-  $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]')||e.target.closest('.mface img'))return;admDetail(r.dataset.d)});
-  clearTimeout(window._adT);window._adT=setTimeout(renderADash,300);
+  $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]')||e.target.closest('.mface img'))return;r.classList.add('tap');setTimeout(()=>r.classList.remove('tap'),400);admDetail(r.dataset.d)});
   $$('#admRows [data-ap]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
 }
-$('#admSearch').oninput=renderAdmRows;
+{let t=0;$('#admSearch').oninput=()=>{clearTimeout(t);t=setTimeout(()=>renderAdmRows('cache'),120)};$('#admSearch').setAttribute('type','search');$('#admSearch').setAttribute('enterkeyhint','search')}
 
-async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad();
+let ADT=0;
+async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=false;
+  if(!m){const c=ADM.all&&ADM.all.find(x=>x.id===id);
+    if(c){m=JSON.parse(JSON.stringify(c));syncing=true;const snap=JSON.stringify(c);
+      DB.get(id).then(f=>{if(tk!==ADT)return;const root=$('#sheetRoot .sheet');if(!root||!root.querySelector('#admFace'))return;const done=()=>root.classList.remove('syncing');if(!f){done();return}
+        const k=ADM.all.findIndex(x=>x.id===id);if(k>=0)ADM.all[k]=f;
+        if(JSON.stringify(f)===snap){done();return}const sc=root.scrollTop;admDetail(id,f).then(()=>{const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc})}).catch(()=>{const r=$('#sheetRoot .sheet');if(r)r.classList.remove('syncing')})}
+    else{sheet('<div style="padding:40px 0;text-align:center"><div class="spin"></div><div class="small" style="margin-top:10px">회원 정보 불러오는 중…</div></div>');
+      const t0=setTimeout(()=>{if(tk===ADT){const b=$('#sheetRoot .sheet .small');if(b)b.textContent='인터넷이 느려요. 조금만 기다려 주세요…'}},4000);
+      m=await DB.get(id);clearTimeout(t0);if(tk!==ADT)return;if(!m){toast('회원 정보를 불러오지 못했어요. 다시 눌러 주세요');closeSheetFn&&closeSheetFn();return}}}
+  await famLoad();if(tk!==ADT)return;
   sheet(`<div class="row" style="align-items:center"><div id="admFace" style="width:84px;height:84px;border-radius:10px;background:var(--mat);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:var(--muted)">${m.hasFace?'불러오는 중':'사진 없음'}</div><div class="grow"><h2>${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>${m.approvedAt?`<span class="pill">승인 ${esc(md(m.approvedAt))}</span>`:'<span class="pill fire">승인 대기</span>'}</div></div>
     ${m.approvedAt?'':'<button class="btn red" id="admApprove">가입 승인하고 약관·이용수칙 보내기</button>'}
     <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><label class="btn ghost sm" for="admFaceG" style="text-align:center">사진첩</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden><input id="admFaceG" type="file" accept="image/*" hidden></div>
@@ -4605,6 +4635,7 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     <button class="btn ghost" id="admVcf">이 회원 연락처 저장(.vcf)</button>
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    if(syncing){el.classList.add('syncing');setTimeout(()=>el.classList.remove('syncing'),5000)}
     el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
     el.querySelector('#admAtt').onclick=async e=>{e.target.disabled=true;e.target.textContent='출석 처리 중…';const sc=el.scrollTop;padBuf=m.id;await doAttendAdmin(m.id);await admDetail(m.id);const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc};
     memoBox(el,m);{const fb=el.querySelector('#admFam');if(fb)fb.onclick=()=>{close();openFamAdmin(m,()=>admDetail(m.id))}}
@@ -5740,7 +5771,7 @@ function renderAdmFilter(all){
   pb.querySelectorAll('[data-pa]').forEach(b=>b.onclick=async()=>{const m=pl.find(x=>x.id===b.dataset.pa);if(!m)return;b.disabled=true;b.textContent='승인 중';await approveMember(m)});
   const IB=impBatches(all);const lastB=IB[0];const nImp=all.filter(m=>impB(m)).length;
   $('#admFilt').innerHTML=[['pending','승인 대기',pend],['all','전체',g.all],['valid','유효',valid],['soon','만료 임박',g.soon],['expired','만료',g.expired],['none','미등록',g.none],...(nImp?[['imp','가져온 회원',nImp]]:[]),...(lastB&&admFilter.startsWith('imp:')&&admFilter!=='imp:'+lastB.id?[[admFilter,'선택한 가져오기',all.filter(m=>'imp:'+impB(m)===admFilter).length]]:[]),...(lastB?[['imp:'+lastB.id,'방금(마지막) 가져온',lastB.n]]:[])].map(([k,n,c])=>`<button class="chip ${admFilter===k?'on':''}" data-f="${k}">${n} ${c}</button>`).join('');
-  $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=b.dataset.f;renderAdmRows()});
+  $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=b.dataset.f;ADM.lim=100;renderAdmRows('cache')});
 }
 function admPass(m){if(admFilter==='all')return true;if(admFilter==='imp')return !!impB(m);if(admFilter.startsWith('imp:'))return 'imp:'+impB(m)===admFilter;if(admFilter==='pending')return!m.approvedAt;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
 
