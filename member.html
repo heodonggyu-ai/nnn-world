@@ -703,6 +703,17 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .spin{width:34px;height:34px;margin:auto;border:4px solid var(--mat);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 #admRows .mrow.tap{background:#FFF4D6}
 .paydel{order:9;margin-left:auto;border:1px solid #F3B9BC;background:#fff;color:var(--red);border-radius:7px;padding:2px 8px;font:inherit;font-size:11.5px;cursor:pointer;flex:0 0 auto}.paydel.sure{background:var(--red);color:#fff}
+.crsum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.crsum div{background:#FFFBEA;border:1px solid #F0C75E;border-radius:10px;padding:8px 4px;text-align:center;display:flex;flex-direction:column}.crsum b{font-size:18px}.crsum span{font-size:11.5px;color:#6B4A00}
+.crtbl{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.crh,.crr{display:grid;grid-template-columns:28px 1fr 74px 30px 30px 24px;align-items:center;gap:4px;padding:7px 8px}.crh{background:#F4F6FA;font-size:11.5px;color:#666;font-weight:700}.crh span:nth-child(n+3),.crr>span:nth-child(n+4),.crr>b{text-align:right}
+.crr{width:100%;border:0;border-top:1px solid var(--mat);background:#fff;font:inherit;color:var(--ink);text-align:left;cursor:pointer}.crr:active{background:#FFF4D6}.crn{color:#8A8F99;font-size:12px}.crm{min-width:0;display:flex;flex-direction:column;gap:2px}.crm b{font-size:14px}.crm small{font-size:11px;color:#8A8F99}
+.crbar{display:block;height:4px;background:var(--mat);border-radius:9px;overflow:hidden}.crbar i{display:block;height:100%}.crc{font-size:15px}.crc.ok{color:#1E6B45}.crgo{color:#8A8F99;font-weight:700;text-align:center}
+.crnow{display:flex;align-items:baseline;justify-content:space-between;background:#FFFBEA;border:1.5px solid #F0C75E;border-radius:12px;padding:10px 14px}.crnow b{font-size:26px}
+.calog{display:flex;flex-direction:column;gap:4px}.calog>div{display:flex;gap:10px;font-size:13px;border-bottom:1px solid var(--mat);padding:4px 0}
+.crg{background:linear-gradient(160deg,#FFF8DC,#FFE6A8);border:3px solid #E0A100;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;animation:tkpop .45s cubic-bezier(.2,1.6,.4,1)}
+.crg-h{display:flex;align-items:center;gap:12px}.crg-coin{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE58A,#E0A100);color:#7A4E00;font-family:var(--display);font-size:30px;display:grid;place-items:center;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15),0 4px 10px rgba(224,161,0,.4);animation:tkwig 1.4s ease-in-out .4s 2;flex:0 0 auto}
+.crg h2{margin:0;font-size:26px}.crg h2 span{color:var(--red)}
+.crg-me{background:#fff;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}.crg-me b.num{font-size:24px}.crg-bar{height:10px;background:#F1EAD2;border-radius:9px;overflow:hidden}.crg-bar i{display:block;height:100%;background:linear-gradient(90deg,#E0A100,#2B9B66)}
+.crg-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crg-col{background:rgba(255,255,255,.7);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;font-size:13px}.crg-col>b{font-size:15px;margin-bottom:2px}.crg-col span b{color:#1E6B45}.crg-col.use span b{color:var(--red)}
 .payln{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:13px;margin-top:3px;padding:4px 8px;background:#F4F6FA;border-radius:8px}.payln b{font-weight:700}.payln .num{font-variant-numeric:tabular-nums}.payln .pi{color:var(--muted);font-size:12px}.payln.rf{background:#FDECEC;color:#8A1F24}
 .atcal button.aok{background:#2B9B66;color:#fff;border-color:#2B9B66}.atcal button.amiss{background:#FDECEC;color:#B4232A;border-color:#F3B9BC}
 .amx{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
@@ -1214,6 +1225,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="card" data-atab="mem" style="display:flex;flex-direction:column;gap:10px">
     <div class="row"><h3 style="font-size:20px" class="grow">회원 <span class="small num" id="admCnt"></span></h3>
       <button class="btn sm ghost" id="expVcf">연락처(.vcf)</button><button class="btn sm ghost" id="expCsv">엑셀(.csv)</button></div>
+      <button class="btn sm red" id="crBoardBtn">🪙 회원 크레딧 현황표 (차감·지급)</button>
       <button class="btn sm gold" id="impBtn">다른 프로그램에서 회원·기간 가져오기 (엑셀·복사 붙여넣기)</button><div id="impLast"></div>
     <div class="bring" id="admPend" hidden></div>
     <div class="stats" id="admStats"></div>
@@ -2189,7 +2201,7 @@ function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id)
   const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}try{tkNotice(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
-async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{featApply()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600)}
+async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{featApply()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600);setTimeout(()=>{try{crGuideTry()}catch(e){}},3500)}
 function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_nag_'+ME.id+'_'+TODAY();try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1')}catch(e){}
   if(st.state==='expired')sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:var(--red)">등록 만료</div><h2>등록 기간이 끝났어요</h2><p style="margin:0">${md(ME.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 전까지는 출석패드에서 출석이 되지 않아요.</b></p></div><button class="btn red" id="nagPay">지금 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}});
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
@@ -4888,7 +4900,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><label class="btn ghost sm" for="admFaceG" style="text-align:center">사진첩</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden><input id="admFaceG" type="file" accept="image/*" hidden></div>
     <div class="qrow"><div class="grow">연락처 <a class="num" href="tel:${esc((m.phone||'').replace(/[^0-9]/g,''))}" style="font-weight:600">${esc(m.phone||'-')}</a></div>${m.phone?`<a class="btn sm ghost" href="tel:${esc(m.phone.replace(/[^0-9]/g,''))}">전화</a><a class="btn sm ghost" href="sms:${esc(m.phone.replace(/[^0-9]/g,''))}">문자</a>`:''}</div>
     <div class="qrow"><div class="grow small">가입일 ${esc(m.joined||'-')} · 크레딧 <span class="num">${m.credits}</span> · 출석 <span class="num">${m.attend.length}</span>회<br>생년월일 ${esc(m.birth||'-')} · ${esc(m.gender||'-')}<br>목적 ${esc(m.goal.join(', ')||'-')} · 경력 ${esc(m.exp)}<br>유입 ${esc(m.path||'-')} · 마케팅 수신 ${m.agreeMkt?'동의':'미동의'}<br>참고사항 ${esc(m.note||'-')}</div></div>
-    <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
+    <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button><button class="btn sm ghost" id="admCrAdj">차감·기록</button></div>
     <button class="btn" id="admAtt" ${m.last===TODAY()?'disabled':''}>오늘 출석 처리</button>
     <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div>${m.mem&&(m.mem.end||m.mem.pt)?'<div id="admPayLine" class="small" style="color:var(--muted)">결제 정보 불러오는 중…</div>':''}</div>${m.mem&&(m.mem.end||m.mem.pt)?'<button class="btn sm red" id="admRenew">재등록·연장</button><button class="btn sm ghost" id="admMem">수정</button>':'<button class="btn sm red" id="admMem">입력</button>'}</div>
     <div class="row" style="gap:6px"><button class="btn ghost sm grow" id="admHist">📋 등록·결제 기록</button><button class="btn ghost sm grow" id="admAttLog">📅 출석 기록 (${m.attend.length}회)</button></div>
@@ -4907,7 +4919,8 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     if(syncing){el.classList.add('syncing');setTimeout(()=>el.classList.remove('syncing'),5000)}
-    el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
+    el.querySelector('#admCrAdj').onclick=()=>{close();crAdjust(m.id,()=>admDetail(m.id))};
+    el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;m.crLog=funArr(m.crLog).concat([{a,why:'관장 지급',at:Date.now()}]).slice(-30);await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
     el.querySelector('#admAtt').onclick=async e=>{e.target.disabled=true;e.target.textContent='출석 처리 중…';const sc=el.scrollTop;padBuf=m.id;await doAttendAdmin(m.id);await admDetail(m.id);const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc};
     memoBox(el,m);{const fb=el.querySelector('#admFam');if(fb)fb.onclick=()=>{close();openFamAdmin(m,()=>admDetail(m.id))}}
     el.querySelector('#admMem').onclick=()=>{close();openMemEditor(m,{mode:'edit'},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})};
@@ -6893,6 +6906,66 @@ const STAMP_STEPS=[{n:8,tk:1},{n:12,tk:2},{n:16,cp:1}];
 const BOX_STEPS=[{w:2,tk:2},{w:4,tk:3},{w:8,tk:4,cp:1},{w:12,tk:5,cp:1}];
 const funArr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x).filter(v=>v!=null):[]);
 
+
+/* ===== 관장: 회원 크레딧 현황표 · 차감 ===== */
+const CRB={sort:'cr',q:''};
+async function openCrBoard(){sheet('<div style="padding:40px 0;text-align:center"><div class="spin"></div><div class="small" style="margin-top:10px">불러오는 중…</div></div>');
+  const all=(await DB.all()).filter(m=>m&&!m.demo&&!isStaff(m)&&!isCoachRec(m)&&!isOwner(m)&&m.id!=='0000');const F=funCfg();const drink=(F.store||[]).find(z=>/음료/.test(z.name))||{p:1000,name:'음료',emo:'🥤'};
+  const mon=TODAY().slice(0,7);const tot=all.reduce((t,m)=>t+(+m.credits||0),0);const canD=all.filter(m=>(+m.credits||0)>=+drink.p).length;
+  sheet(`<h2>🪙 회원 크레딧 현황표</h2>
+    <div class="crsum"><div><b class="num">${tot.toLocaleString()}</b><span>전체 크레딧</span></div><div><b class="num">${canD}</b><span>${esc(drink.emo||'')}${esc(drink.name)} 교환 가능</span></div><div><b class="num">${all.filter(m=>+m.tk>0).length}</b><span>복권 보유</span></div></div>
+    <div class="chips" id="crS"><button class="chip" data-s="cr">크레딧 많은 순</button><button class="chip" data-s="earn">총 모은 순</button><button class="chip" data-s="att">이달 출석 순</button><button class="chip" data-s="name">이름순</button></div>
+    <div class="field" style="margin:0"><input id="crQ" placeholder="이름·회원번호·초성 찾기" value="${esc(CRB.q)}"></div>
+    <div class="crtbl"><div class="crh"><span>#</span><span>회원</span><span>크레딧</span><span>🎟️</span><span>🎫</span><span></span></div><div id="crRows"></div></div>
+    <div class="small" style="color:var(--muted)">행을 누르면 크레딧을 <b>차감·지급</b>하고 기록을 볼 수 있어요. 매점 쿠폰은 회원이 앱에서 교환하면 자동으로 빠져요. <b>카운터에서 직접 음료를 주고 크레딧으로 받은 경우</b>에 여기서 차감해 주세요.</div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const draw=()=>{el.querySelectorAll('#crS [data-s]').forEach(b=>b.classList.toggle('on',b.dataset.s===CRB.sort));
+      const nz=x=>String(x||'').replace(/\s+/g,'').toLowerCase();const q=nz(CRB.q);
+      let L=all.filter(m=>!q||nz(m.name).includes(q)||m.id.includes(q)||choOf(nz(m.name)).includes(q));
+      const att=m=>(m.attend||[]).filter(d=>d.startsWith(mon)).length;
+      L.sort((a,b)=>CRB.sort==='name'?String(a.name).localeCompare(String(b.name),'ko'):CRB.sort==='earn'?(+b.earned||0)-(+a.earned||0):CRB.sort==='att'?att(b)-att(a):(+b.credits||0)-(+a.credits||0));
+      const mx=Math.max(1,...L.map(m=>+m.credits||0));
+      el.querySelector('#crRows').innerHTML=L.map((m,i)=>{const c=+m.credits||0;const cp=funArr(m.cps).filter(x=>!x.used&&x.exp>=TODAY()).length;return `<button class="crr" data-cr="${esc(m.id)}"><span class="num crn">${i+1}</span><span class="crm"><b>${esc(m.name||'')}</b> <small class="num">${esc(m.id)}</small><i class="crbar"><i style="width:${Math.round(c/mx*100)}%;background:${c>=+drink.p?'#2B9B66':'#E0A100'}"></i></i><small>Lv.${levelOf(m).lv} · 총 ${(+m.earned||0).toLocaleString()} · 이달 ${att(m)}회</small></span><b class="num crc${c>=+drink.p?' ok':''}">${c.toLocaleString()}</b><span class="num">${+m.tk||0}</span><span class="num">${cp||''}</span><span class="crgo">±</span></button>`}).join('')||'<div class="small" style="padding:12px">찾는 회원이 없어요</div>';
+      el.querySelectorAll('[data-cr]').forEach(b=>b.onclick=()=>crAdjust(b.dataset.cr,()=>openCrBoard()))};
+    el.querySelectorAll('#crS [data-s]').forEach(b=>b.onclick=()=>{CRB.sort=b.dataset.s;draw()});el.querySelector('#crQ').oninput=e=>{CRB.q=e.target.value;draw()};draw()})}
+async function crAdjust(id,back){const m=await DB.get(id);if(!m){toast('회원을 찾지 못했어요');return}const F=funCfg();const tkP=+F.buyP||300;
+  const quick=[[-tkP,'🎟️ 복권'],...(F.store||[]).filter(z=>+z.p>0).slice(0,6).map(z=>[-(+z.p),(z.emo||'')+' '+z.name]),[100,'+100 보너스'],[500,'+500 보너스']];
+  const log=funArr(m.crLog).slice().reverse().slice(0,10);
+  sheet(`<h2>🪙 ${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>
+    <div class="crnow"><span>지금 크레딧</span><b class="num" id="caNow">${(+m.credits||0).toLocaleString()}</b></div>
+    <div class="label">빠르게 고르기 (카운터에서 크레딧으로 준 것)</div>
+    <div class="chips" id="caQ">${quick.map(([a,n])=>`<button type="button" class="chip" data-qa="${a}" data-qn="${esc(n)}">${esc(n)} <b class="num" style="color:${a<0?'var(--red)':'#1E6B45'}">${a>0?'+':''}${a.toLocaleString()}</b></button>`).join('')}</div>
+    <div class="row" style="gap:8px"><div class="field grow" style="margin:0"><label for="caA">크레딧</label><input id="caA" inputmode="numeric" placeholder="예: 1000"></div><div class="field grow" style="margin:0"><label for="caW">내용</label><input id="caW" maxlength="30" placeholder="예: 음료 교환"></div></div>
+    <div class="row" style="gap:8px"><button class="btn red grow" id="caMinus">− 차감하기</button><button class="btn ghost grow" id="caPlus">+ 지급하기</button></div>
+    <div class="label">최근 기록</div><div class="calog">${log.length?log.map(x=>`<div><span class="num">${new Date(x.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})}</span><span class="grow">${esc(x.why||'')}</span><b class="num" style="color:${x.a<0?'var(--red)':'#1E6B45'}">${x.a>0?'+':''}${(+x.a).toLocaleString()}</b></div>`).join(''):'<div class="small">아직 관장님이 차감·지급한 기록이 없어요</div>'}</div>
+    <button class="btn ghost" id="caBack">‹ 돌아가기</button>`,(el,close)=>{const $e=q=>el.querySelector(q);
+    el.querySelectorAll('[data-qa]').forEach(b=>b.onclick=()=>{$e('#caA').value=Math.abs(+b.dataset.qa).toLocaleString();$e('#caW').value=(+b.dataset.qa<0?b.dataset.qn.replace(/^\S+\s/,'')+' 교환':'보너스');el.querySelectorAll('[data-qa]').forEach(x=>x.classList.toggle('on',x===b))});
+    $e('#caA').oninput=()=>{const v=+$e('#caA').value.replace(/\D/g,'')||0;$e('#caA').value=v?v.toLocaleString():''};
+    const go=async sign=>{const v=+$e('#caA').value.replace(/\D/g,'')||0;if(!v){toast('크레딧을 적어 주세요');return}const f=await DB.get(id)||m;const cur=+f.credits||0;
+      if(sign<0&&v>cur){toast(`크레딧이 모자라요 (지금 ${cur.toLocaleString()})`);return}
+      const why=$e('#caW').value.trim()||(sign<0?'관장 차감':'관장 지급');f.credits=cur+sign*v;if(sign>0)f.earned=(+f.earned||0)+v;f.crLog=funArr(f.crLog).concat([{a:sign*v,why,at:Date.now()}]).slice(-30);
+      await DB.save(f);if(ME&&ME.id===f.id)ME=f;toast(`${f.name}님 ${sign<0?'−':'+'}${v.toLocaleString()} 크레딧 · 남은 ${f.credits.toLocaleString()}`,3000);close();crAdjust(id,back)};
+    $e('#caMinus').onclick=()=>go(-1);$e('#caPlus').onclick=()=>go(1);$e('#caBack').onclick=()=>{close();back&&back()}})}
+$('#crBoardBtn').onclick=()=>openCrBoard();
+/* ===== 회원: 크레딧 사용 안내 팝업 (로그인 때, 하루 한 번 · 5일) ===== */
+const CRG_V='1';
+function crGuideTry(tries=0){if(!ME||isStaff(ME)||ME.demo||(typeof isGuest==='function'&&isGuest()))return;if(!FT('store')&&!FT('lotto'))return;
+  const k='nnn_crg_'+ME.id;let st={};try{st=JSON.parse(localStorage.getItem(k)||'{}')}catch(e){}if(st.v!==CRG_V)st={v:CRG_V,n:0,d:''};
+  if(st.off||st.d===TODAY()||st.n>=5)return;
+  if($('#sheetRoot').innerHTML||popBusy||document.visibilityState!=='visible'){if(tries<30)setTimeout(()=>crGuideTry(tries+1),3000);return}
+  st.n++;st.d=TODAY();try{localStorage.setItem(k,JSON.stringify(st))}catch(e){}crGuide(st)}
+function crGuide(st){const m=ME;const F=funCfg();const cr=+m.credits||0;const L=(F.store||[]).filter(z=>+z.p>0).sort((a,b)=>a.p-b.p);const drink=L.find(z=>/음료/.test(z.name))||L[0];const tkP=+F.buyP||0;
+  const pct=drink?Math.min(100,Math.round(cr/drink.p*100)):0;
+  sheet(`<div class="crg"><div class="crg-h"><span class="crg-coin">N</span><div><div class="label" style="color:#8A5A00">NNN 크레딧 안내</div><h2>크레딧은 <span>현금처럼!</span></h2></div></div>
+    <p style="margin:0">운동하고 모은 크레딧으로 <b>복권을 긁고</b>, <b>음료·용품을 살 수 있어요.</b></p>
+    <div class="crg-me"><div class="row" style="align-items:baseline"><span class="grow">내 크레딧</span><b class="num">${cr.toLocaleString()}</b></div>${drink?`<div class="crg-bar"><i style="width:${pct}%"></i></div><div class="small">${cr>=drink.p?`🎉 지금 바로 <b>${esc(drink.emo||'')} ${esc(drink.name)}</b> 바꿀 수 있어요!`:`${esc(drink.emo||'')} ${esc(drink.name)}까지 <b class="num">${(drink.p-cr).toLocaleString()}</b> 남았어요`}</div>`:''}</div>
+    <div class="crg-g"><div class="crg-col"><b>💰 모으기</b><span>출석 <b>+50~100</b></span><span>오운완 사진 <b>+100</b></span><span>SNS 인증 <b>+500</b></span><span>게임·미션 <b>+α</b></span></div>
+      <div class="crg-col use"><b>🛍️ 쓰기</b>${tkP&&FT('lotto')?`<span>🎟️ 복권 <b class="num">${tkP.toLocaleString()}</b></span>`:''}${L.slice(0,5).map(z=>`<span>${esc(z.emo||'')} ${esc(z.name)} <b class="num">${(+z.p).toLocaleString()}</b></span>`).join('')}</div></div>
+    <div class="small" style="text-align:center;color:#6B4A00">교환하면 쿠폰함에 쿠폰이 생겨요 → 데스크에서 보여 주세요</div></div>
+    <div class="row" style="gap:6px"><button class="btn red grow" id="cgStore">🛒 매점 보기</button>${FT('lotto')?'<button class="btn gold grow" id="cgTk">🎟️ 복권 바꾸기</button>':''}</div>
+    <button class="btn ghost" data-close>알겠어요</button><button class="link small" id="cgOff" style="align-self:center;color:var(--muted)">다시 보지 않기</button>`,(el,close)=>{
+    el.querySelector('#cgStore').onclick=()=>{close();openStore()};{const b=el.querySelector('#cgTk');if(b)b.onclick=()=>{close();openFun('lotto')}}
+    el.querySelector('#cgOff').onclick=()=>{try{const k='nnn_crg_'+ME.id;localStorage.setItem(k,JSON.stringify(Object.assign({},st,{off:1})))}catch(e){}close();toast('내 이름 칸을 누르면 언제든 크레딧을 쓸 수 있어요',3000)}})}
 /* 상단 내 카드: 회원번호·등록기간·크레딧 사용 */
 async function openMyCard(){if(!ME)return;try{const m=await DB.get(ME.id);if(m)ME=m}catch(e){}const m=ME;const staff=isStaff(m)||m.demo||(typeof isGuest==='function'&&isGuest());
   const st=memStatus(m),mem=m.mem||{};const T=TODAY();const mon=T.slice(0,7);const monN=(m.attend||[]).filter(d=>d.startsWith(mon)).length;const last=(m.attend||[]).slice().sort().pop();
