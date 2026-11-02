@@ -424,6 +424,8 @@ button.gt{cursor:pointer;padding:6px 12px;font-size:14px}
 .padtk .pt-e{font-size:40px;line-height:1}.padtk .pt-t{display:flex;flex-direction:column}.padtk .pt-t b{font-family:var(--display);font-weight:400;font-size:22px;color:#8A5A00}.padtk small{font-size:15px;color:#6B4A00}.padtk small b{font-family:inherit;font-size:inherit;color:var(--red)}
 .padtk.pop{animation:tkpop .45s cubic-bezier(.2,1.6,.4,1)}@keyframes tkpop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
 #v-pad .kres #padTk{grid-column:2}
+.padori{display:inline-flex;align-items:center;gap:2px;background:#fff;border:1px solid #E4E6EB;border-radius:999px;padding:3px;font-size:13px;color:#6B7280}.padori>span{padding:0 6px 0 8px}
+.padori button{border:0;background:none;border-radius:999px;padding:5px 12px;font:inherit;font-weight:700;color:#4B5563;cursor:pointer}.padori button.on{background:var(--red);color:#fff}
 .padnext{color:#9AA0AA!important;margin-top:4px}#v-pad .kres .padnext{grid-column:2}
 .padwifi.res{max-width:440px;margin-top:4px}
 body.padmode{background:#fff}
@@ -972,7 +974,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <div class="small padnext">화면을 누르면 바로 다음 사람</div>
     </div>
   </div>
-  <div class="row" style="justify-content:flex-end;gap:14px"><button class="link" id="padFull">전체화면 · 세로 고정</button><button class="link" id="padExit">출석패드 종료</button></div>
+  <div class="row" style="justify-content:flex-end;gap:14px"><span class="padori" id="padOri"><span>화면</span><button data-o="portrait">세로</button><button data-o="landscape">가로</button><button data-o="auto">자동</button></span><button class="link" id="padFull">전체화면</button><button class="link" id="padExit">출석패드 종료</button></div>
 </section>
 
 <section class="view" id="v-guest" hidden>
@@ -3641,7 +3643,7 @@ function pinSheet(title,ok){
 }
 $('#goPad').onclick=()=>padPinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>padPinSheet('출석패드 종료',()=>{show('v-home');try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}try{screen.orientation.unlock()}catch(e){}});
-async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
+async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{padOriUI();padOriApply(true)}catch(e){}try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
 async function updPadCount(){const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
@@ -4463,7 +4465,14 @@ async function savePadMeta(k,v){local.meta[k]=v;if(FB_ON()){try{await gref('meta
 $('#sPadPinSave').onclick=async()=>{const v=$('#sPadPin').value.trim();if(!/^\d{4,6}$/.test(v)){toast('숫자 4~6자리로 정해 주세요');return}if(await savePadMeta('padPinH',await padHash(v))){toast('출석패드 비밀번호를 저장했어요',3000);renderPadPinSet()}};
 $('#sPadPinDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 지워요';return}b.dataset.sure='';b.textContent='출석패드 비밀번호 지우기 (관장 PIN으로 되돌리기)';if(await savePadMeta('padPinH',null)){toast('지웠어요. 이제 관장 PIN으로 켜고 꺼요');renderPadPinSet()}};
 $('#sPadApprove').onchange=async e=>{await savePadMeta('padApprove',e.target.checked||null);toast(e.target.checked?'출석패드 비밀번호로 승인할 수 있어요':'승인은 관장 PIN으로 해요')};
-$('#padFull').onclick=async()=>{try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'})}catch(e){}try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('portrait')}catch(e){}setTimeout(()=>{try{startPadQR();wifiPadIdle()}catch(e){}},400);$('#padFull').hidden=!!document.fullscreenElement};
+function padOriGet(){try{return localStorage.getItem('nnn_padori')||'portrait'}catch(e){return 'portrait'}}
+function padOriUI(){const o=padOriGet();$$('#padOri button').forEach(b=>b.classList.toggle('on',b.dataset.o===o))}
+async function padOriApply(full){const o=padOriGet();if(full){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)await d.requestFullscreen({navigationUI:'hide'})}catch(e){}}
+  let ok=true;try{if(o==='auto'){screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}else if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock(o);else ok=false}catch(e){ok=false}
+  setTimeout(()=>{try{startPadQR();wifiPadIdle()}catch(e){}},400);try{$('#padFull').hidden=!!document.fullscreenElement}catch(e){}return ok}
+$$('#padOri button').forEach(b=>b.onclick=async()=>{try{localStorage.setItem('nnn_padori',b.dataset.o)}catch(e){}padOriUI();const ok=await padOriApply(true);if(!ok&&b.dataset.o!=='auto')toast(`화면 고정이 안 되는 기기예요. 태블릿을 ${b.dataset.o==='portrait'?'세로로':'가로로'} 돌리고 자동 회전을 꺼 주세요`)});
+padOriUI();
+$('#padFull').onclick=()=>padOriApply(true);
 document.addEventListener('fullscreenchange',()=>{try{$('#padFull').hidden=!!document.fullscreenElement}catch(e){}});
 $('#cbOpen').onclick=()=>openCombos();$('#cbAdmBtn').onclick=()=>cbAdmin();$('#cbSeeBtn').onclick=()=>openCombos();
 $('#cuSave').onclick=async()=>{const L=$('#cuTxt').value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const a=l.split('|');const lv=parseInt(a[0])||2;return{lv,t:(a[1]||'').split(/[,，]/).map(x=>x.trim()).filter(Boolean).slice(0,12)}}).filter(x=>x.t.length);
