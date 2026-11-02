@@ -270,6 +270,13 @@ button.gt{cursor:pointer;padding:6px 12px;font-size:14px}
 /* top bar in world */
 .top{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:8px 10px}
 .top canvas{width:48px;height:48px;border-radius:12px;background:var(--mat)}
+.tno{font-family:inherit;font-size:12px;background:#2F2F2F;color:#fff;border-radius:6px;padding:1px 6px;vertical-align:middle;letter-spacing:.02em}.tno:empty{display:none}
+.tmem{font-size:12.5px;color:#1E6B45;font-weight:600;line-height:1.3;margin:1px 0}.tmem b{background:#2B9B66;color:#fff;border-radius:5px;padding:0 5px;font-size:11.5px}.tmem.s{color:#8A5A00}.tmem.s b{background:#E0A100}.tmem.x{color:var(--red)}.tmem.n{color:#8A8F99;font-weight:500}.tmem:empty{display:none}
+.mycard{display:flex;gap:12px;align-items:center}.mycard canvas{width:80px;height:88px;border-radius:14px;background:var(--mat)}.myn{font-family:var(--display);font-weight:400;font-size:24px;display:block}
+.myno{margin-top:6px;border:2px solid #2F2F2F;background:#fff;border-radius:10px;padding:5px 10px;font:inherit;font-size:14px;cursor:pointer}.myno b{font-size:20px;letter-spacing:.06em}.myno span{font-size:11px;color:#8A8F99;margin-left:4px}
+.mymem{background:#F4FAF6;border:1.5px solid #BFE3CD;border-radius:14px;padding:10px 12px}.mybig{font-family:var(--display);font-size:30px;line-height:1.1;margin-top:4px}.mymem .mbar{height:6px;background:#DDEFE4;border-radius:9px;overflow:hidden}.mymem .mbar i{display:block;height:100%;background:#2B9B66}
+.mystats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.mystats div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 2px;text-align:center;display:flex;flex-direction:column}.mystats b{font-size:17px}.mystats span{font-size:11px;color:#8A8F99}
+.mycr{background:#FFFBEA;border:1.5px solid #F0C75E;border-radius:14px;padding:10px 12px}
 .top .nm{font-family:var(--display);font-size:18px;line-height:1.1}
 .lv{font-size:12px;color:var(--muted)}
 .xp{height:6px;background:var(--mat);border-radius:9px;overflow:hidden;margin-top:3px}
@@ -921,7 +928,8 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div class="top">
     <canvas id="topAv" width="96" height="96"></canvas>
     <div class="grow">
-      <div class="nm" id="tName"></div>
+      <div class="nm"><span id="tName"></span> <span class="tno num" id="tNo"></span></div>
+      <div class="tmem" id="tMem"></div>
       <div class="lv"><span id="tLv"></span> · <span id="tTitle"></span></div>
       <div class="xp"><i id="tXp" style="width:0"></i></div>
     </div>
@@ -2186,7 +2194,10 @@ function nagMem(){if(!ME||!ME.mem)return;const st=memStatus(ME);const key='nnn_n
   else if(st.state==='soon'&&st.left<=3)sheet(`<div style="text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center"><div class="label" style="color:#B07A08">${st.left?'D-'+st.left:'오늘 종료'}</div><h2>등록 기간이 곧 끝나요</h2><p style="margin:0">${md(ME.mem.end)} 종료 · 종료일이 지나면 출석이 되지 않아요.<br>미리 재등록하면 남은 기간 다음 날부터 이어져요.</p></div><button class="btn red" id="nagPay">미리 재등록하기</button><button class="btn ghost" data-close>나중에</button>`,(el,close)=>{el.querySelector('#nagPay').onclick=()=>{close();openPay()}})}
 function refreshTop(){
   if(!ME)return;const L=levelOf(ME);fixDay(ME);if(ME.lvSeen&&L.lv>ME.lvSeen)levelUpSheet(L);if(ME.lvSeen!==L.lv){ME.lvSeen=L.lv;saveMe()}
-  $('#tName').textContent=ME.name;$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
+  $('#tName').textContent=ME.name;try{const staff=isStaff(ME)||ME.demo||(typeof isGuest==='function'&&isGuest());$('#tNo').textContent=staff?'':'No.'+ME.id;const st=memStatus(ME),mem=ME.mem||{};const tm=$('#tMem');
+    if(staff){tm.textContent='';tm.className='tmem'}else{const cls=st.state==='expired'?'x':st.state==='soon'?'s':st.state==='none'?'n':'';tm.className='tmem '+cls;
+      tm.innerHTML=st.state==='none'?(mem.pt&&mem.pt.total?`PT ${mem.pt.left}/${mem.pt.total}회 남음`:'등록 전 · 눌러서 내 정보'):st.state==='pt'?`PT ${mem.pt.left}/${mem.pt.total}회 남음`:st.state==='expired'?`등록 만료 (${md(mem.end)}) · 재등록 필요`:st.state==='upcoming'?`${md(mem.start)} 시작 · ~${md(mem.end)}`:st.state==='hold'?`정지 중 · ~${md(mem.end)}`:`등록 ~${md(mem.end)} <b>D-${st.left}</b>`}
+    const tp=document.querySelector('#v-world .top');if(tp&&!tp.dataset.my){tp.dataset.my=1;tp.style.cursor='pointer';tp.addEventListener('click',e=>{if(e.target.closest('#helpBtn'))return;openMyCard()})}}catch(e){}$('#tLv').textContent='Lv.'+L.lv;$('#tTitle').textContent=TITLES[L.lv-1];$('#tXp').style.width=L.pct+'%';
   $('#tCoin').textContent=ME.credits.toLocaleString();$('#tStreak').textContent='연속 '+(ME.last===TODAY()||ME.last===YESTERDAY()?ME.streak:0)+'일';
   avatarTo($('#topAv'),ME.equip,{noFx:true,h:40,pad:2});try{funBanner();renderGrapeCard()}catch(e){}try{sparBanner()}catch(e){}try{if(Date.now()-BD.at>120000)bdLoad().then(bdBadge).catch(()=>{});else bdBadge()}catch(e){}
   const safe=(n,f)=>{try{const r=f();if(r&&r.catch)r.catch(e=>console.error(n,e))}catch(e){console.error(n,e);try{ERRLOG.push(n+': '+e.message)}catch(_){}}};
@@ -6876,6 +6887,31 @@ const FUN_DEF={on:true,ovCr:500,ovWk:2,pity:10,days:14,cr:[10,20,30,50],buyP:300
 const STAMP_STEPS=[{n:8,tk:1},{n:12,tk:2},{n:16,cp:1}];
 const BOX_STEPS=[{w:2,tk:2},{w:4,tk:3},{w:8,tk:4,cp:1},{w:12,tk:5,cp:1}];
 const funArr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x).filter(v=>v!=null):[]);
+
+/* 상단 내 카드: 회원번호·등록기간·크레딧 사용 */
+async function openMyCard(){if(!ME)return;try{const m=await DB.get(ME.id);if(m)ME=m}catch(e){}const m=ME;const staff=isStaff(m)||m.demo||(typeof isGuest==='function'&&isGuest());
+  const st=memStatus(m),mem=m.mem||{};const T=TODAY();const mon=T.slice(0,7);const monN=(m.attend||[]).filter(d=>d.startsWith(mon)).length;const last=(m.attend||[]).slice().sort().pop();
+  const cps=funArr(m.cps).filter(c=>!c.used&&c.exp>=T).length;const tk=+m.tk||0;
+  const stTxt={active:['이용 중','#2B9B66'],soon:['곧 만료','#E0A100'],expired:['만료','#D9343A'],upcoming:['시작 전','#2E5AAC'],hold:['정지 중','#66676D'],pt:['PT','#2E5AAC'],none:['등록 전','#8A8F99']}[st.state]||['','#999'];
+  sheet(`<div class="mycard"><canvas id="myAv" width="160" height="176"></canvas><div class="grow"><b class="myn">${esc(m.name||'')}</b><div class="small">Lv.${levelOf(m).lv} ${esc(TITLES[levelOf(m).lv-1]||'')}</div>${staff?'':`<button class="myno" id="myNo">회원번호 <b class="num">${esc(m.id)}</b> <span>복사</span></button>`}</div></div>
+    ${staff?'':`<div class="mymem"><div class="row" style="align-items:center"><b class="grow">내 등록</b><span class="pill" style="background:${stTxt[1]};color:#fff">${stTxt[0]}</span></div>
+      ${mem.end?`<div class="mybig num">${st.state==='expired'?'만료':st.state==='upcoming'?md(mem.start)+' 시작':'D-'+Math.max(0,st.left)}</div><div class="small num">${ymd(mem.start)} ~ ${ymd(mem.end)}${mem.weekly?` · 주${mem.weekly}회 ${daysTxt(mem.days||[])}`:' · 자유이용'}</div><div class="mbar" style="margin-top:6px"><i style="width:${st.state==='expired'?100:Math.round(st.pct||0)}%"></i></div>`:`<div class="small">${mem.pt&&mem.pt.total?'':'아직 등록 정보가 없어요. 카운터에서 결제하면 여기에 나와요.'}</div>`}
+      ${mem.pt&&mem.pt.total?`<div class="small" style="margin-top:4px">🥊 PT <b>${mem.pt.left}</b>/${mem.pt.total}회 남음</div>`:''}
+      ${st.state==='soon'||st.state==='expired'?'<button class="btn red sm" id="myPay" style="width:100%;margin-top:8px">재등록하기</button>':''}</div>
+    <div class="mystats"><div><b class="num">${monN}</b><span>이달 출석</span></div><div><b class="num">${(m.attend||[]).length}</b><span>총 출석</span></div><div><b class="num">${m.last===T||m.last===YESTERDAY()?m.streak:0}</b><span>연속</span></div><div><b class="num">${last?(last===T?'오늘':md(last)):'-'}</b><span>마지막</span></div></div>`}
+    <div class="mycr"><div class="row" style="align-items:center"><b class="grow">내 크레딧</b><span class="coin num" style="font-size:20px">${(+m.credits||0).toLocaleString()}</span></div>
+      <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm ghost grow" id="myTk">🎟️ 복권 ${tk}장${tk?' · 긁기':''}</button><button class="btn sm ghost grow" id="myCp">🎫 쿠폰함 ${cps}장</button></div>
+      ${FT('lotto')?tkBuyHTML(m):''}</div>
+    ${storeHTML(m)}
+    <div class="row" style="gap:6px"><button class="btn ghost grow" id="myMore">👤 내 정보 전체</button>${staff?'':'<button class="btn ghost grow" id="myAtt">📅 출석 기록</button>'}</div>
+    <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    try{avatarTo(el.querySelector('#myAv'),m.equip,{h:46,noFx:true})}catch(e){}
+    {const b=el.querySelector('#myNo');if(b)b.onclick=()=>copyText(m.id,'회원번호를')}
+    {const b=el.querySelector('#myPay');if(b)b.onclick=()=>{close();try{openPay()}catch(e){$('#mPay')&&$('#mPay').click()}}}
+    el.querySelector('#myTk').onclick=()=>{close();openFun('lotto')};el.querySelector('#myCp').onclick=()=>{close();openCoupons()};
+    {const bb=el.querySelector('#fnBuy');if(bb)bb.onclick=()=>tkBuy(bb)}storeBind(el);
+    el.querySelector('#myMore').onclick=()=>{close();setTab('more');window.scrollTo(0,0)};
+    {const b=el.querySelector('#myAtt');if(b)b.onclick=()=>{close();setTab('more');setTimeout(()=>{const c=document.querySelector('[data-attme="full"]');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},150)}}})}
 /* 크레딧 매점: 크레딧 → 음료·용품 쿠폰 */
 function storeHTML(m){if(!FT('store'))return'';const L=funCfg().store.filter(z=>z&&+z.p>0);if(!L.length)return'';const cr=+m.credits||0;
   return `<div class="funsec"><div class="row" style="align-items:center"><b class="grow" style="font-size:18px">🛒 크레딧 매점</b><span class="coin num">${cr.toLocaleString()}</span></div>
