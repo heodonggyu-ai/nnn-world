@@ -632,6 +632,12 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .atcal button b{font-size:13px;font-weight:600}.atcal button small{font-size:10px;line-height:1}
 .atcal button.td{box-shadow:inset 0 0 0 2px var(--gold)}.atcal button.on{outline:3px solid var(--red);outline-offset:-1px}
 .atcal button:disabled{opacity:.35}
+.atcal button.aok{background:#2B9B66;color:#fff;border-color:#2B9B66}.atcal button.amiss{background:#FDECEC;color:#B4232A;border-color:#F3B9BC}
+.amx{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
+.amx table{border-collapse:collapse;font-size:12px;white-space:nowrap}.amx th,.amx td{border-bottom:1px solid var(--mat);padding:4px 3px;text-align:center;min-width:22px}
+.amx thead th{position:sticky;top:0;background:#fff;z-index:1;font-weight:600}.amx thead th small{font-size:9px;color:var(--muted)}.amx th.su{color:var(--red)}.amx th.sa{color:#2E5AAC}
+.amx .nm{position:sticky;left:0;background:#fff;text-align:left;padding:4px 8px;z-index:2;font-weight:600;cursor:pointer;max-width:76px;overflow:hidden;text-overflow:ellipsis}.amx thead .nm{z-index:3}
+.amx td.o{color:#2B9B66;font-size:14px}.amx td.x{color:#D9343A;background:#FFF5F5}.amx td.sum{font-weight:700}
 .livec{background:#fff;border:2px solid var(--ink);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
 .livec .lvh{display:flex;align-items:center;gap:8px}.livec .lvh b{flex:1;font-family:var(--display);font-weight:400;font-size:18px}
 .livec .dot{width:10px;height:10px;border-radius:50%;background:#B9BAC0;flex:0 0 auto}.livec .dot.on{background:var(--green);animation:lvp 1.6s infinite}
@@ -4582,7 +4588,8 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     <div class="qrow"><div class="grow small">가입일 ${esc(m.joined||'-')} · 크레딧 <span class="num">${m.credits}</span> · 출석 <span class="num">${m.attend.length}</span>회<br>생년월일 ${esc(m.birth||'-')} · ${esc(m.gender||'-')}<br>목적 ${esc(m.goal.join(', ')||'-')} · 경력 ${esc(m.exp)}<br>유입 ${esc(m.path||'-')} · 마케팅 수신 ${m.agreeMkt?'동의':'미동의'}<br>참고사항 ${esc(m.note||'-')}</div></div>
     <div class="qrow"><span class="grow">크레딧 지급</span><input id="admAmt" type="number" value="50" style="width:80px;border:2px solid var(--line);border-radius:10px;padding:6px"><button class="btn sm red" id="admGive">지급</button></div>
     <button class="btn" id="admAtt" ${m.last===TODAY()?'disabled':''}>오늘 출석 처리</button>
-    <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div></div><button class="btn sm red" id="admMem">${m.mem?'수정':'입력'}</button></div>
+    <div class="qrow"><div class="grow"><b>등록</b> ${memShort(m)}<div class="small">${m.mem?esc(planLabel(m.mem)):'등록 정보 없음'}${m.mem&&m.mem.end?' · '+md(m.mem.start)+' ~ '+md(m.mem.end):''}</div></div>${m.mem&&(m.mem.end||m.mem.pt)?'<button class="btn sm red" id="admRenew">재등록·연장</button><button class="btn sm ghost" id="admMem">수정</button>':'<button class="btn sm red" id="admMem">입력</button>'}</div>
+    <div class="row" style="gap:6px"><button class="btn ghost sm grow" id="admHist">📋 등록·결제 기록</button><button class="btn ghost sm grow" id="admAttLog">📅 출석 기록 (${m.attend.length}회)</button></div>
     ${lockLineHTML(m)}
     ${famLineHTML(m)}
     <div class="memobox" id="admMemo"><div class="small">메모 불러오는 중…</div></div>
@@ -4600,7 +4607,9 @@ async function admDetail(id){const m=await DB.get(id);if(!m)return;await famLoad
     el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
     el.querySelector('#admAtt').onclick=async e=>{e.target.disabled=true;e.target.textContent='출석 처리 중…';const sc=el.scrollTop;padBuf=m.id;await doAttendAdmin(m.id);await admDetail(m.id);const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc};
     memoBox(el,m);{const fb=el.querySelector('#admFam');if(fb)fb.onclick=()=>{close();openFamAdmin(m,()=>admDetail(m.id))}}
-    el.querySelector('#admMem').onclick=()=>{close();openMemEditor(m,{},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})};
+    el.querySelector('#admMem').onclick=()=>{close();openMemEditor(m,{mode:'edit'},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})};
+    {const rb=el.querySelector('#admRenew');if(rb)rb.onclick=()=>{close();openMemEditor(m,{mode:'ext'},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})}}
+    el.querySelector('#admHist').onclick=()=>memHistSheet(m);el.querySelector('#admAttLog').onclick=()=>attMemSheet(m);
     {const pb=el.querySelector('#admPt');if(pb)pb.onclick=async()=>{m.mem.pt.left--;await DB.savePriv(m);toast(`PT 차감 · 남은 ${m.mem.pt.left}회`);close();renderAdmRows()}}
     if(m.hasFace)FDB.get(m.id).then(src=>{const b=el.querySelector('#admFace');if(b)b.innerHTML=src?`<img src="${src}" alt="${esc(m.name)} 얼굴" style="width:100%;height:100%;object-fit:cover">`:'사진 없음'});
     {const a=el.querySelector('#admApprove');if(a)a.onclick=()=>{close();approveMember(m)}}
@@ -5354,12 +5363,17 @@ function renderMemCard(){if(ME&&isStaff(ME)){$$('[data-mem]').forEach(el=>el.inn
 /* 관장: 등록 정보 입력 */
 function openMemEditor(m,pre={},onDone){
   const cur=m.mem||{};const base=parsePlan(pre.item||cur.item);
-  const startDef=cur.end&&cur.end>=TODAY()&&pre.renew!==false?dAdd(cur.end,1):TODAY();
-  let st={item:pre.item||cur.item||'',months:pre.item?base.months:(cur.months||base.months||1),weekly:pre.item?base.weekly:(cur.weekly||0),pt:pre.item?base.pt:((cur.pt&&cur.pt.total)||0),ptLeft:pre.item?base.pt:((cur.pt&&cur.pt.left)||0),start:pre.item?startDef:(cur.start||TODAY()),end:pre.item?'':(cur.end||''),days:(pre.days&&pre.days.length?pre.days.slice():(cur.days||[]))};
+  const hasCur=!!cur.end;
+  let mode=hasCur?(pre.mode||(pre.renew===false?'new':(pre.item||pre.pay||pre.newPay)?'ext':'edit')):'new';
+  const extStart=()=>cur.end&&cur.end>=TODAY()?dAdd(cur.end,1):TODAY();
+  const lastMo=(cur.segs&&cur.segs.length?cur.segs[cur.segs.length-1].months:cur.months)||base.months||1;
+  const E=mode==='edit';
+  let st={item:pre.item||cur.item||'',months:pre.item?base.months:E?(cur.months||base.months||1):lastMo,weekly:pre.item?base.weekly:(cur.weekly||0),pt:pre.item?base.pt:((cur.pt&&cur.pt.total)||0),ptLeft:pre.item?base.pt:((cur.pt&&cur.pt.left)||0),start:E?(cur.start||TODAY()):mode==='ext'?extStart():TODAY(),end:E?(cur.end||''):'',days:(pre.days&&pre.days.length?pre.days.slice():(cur.days||[]))};
   sheet(`<h2>등록 정보 · ${esc(m.name)}</h2>
+    ${hasCur?`<div class="field"><span>이번에 할 일 <span class="small">· 지금 ${md(cur.start)} ~ ${md(cur.end)}${cur.end<TODAY()?' (만료)':''}</span></span><div class="chips" id="meMode"><button type="button" class="chip" data-md="ext">재등록 · 기존 기간 뒤에 이어서</button><button type="button" class="chip" data-md="new">재등록 · 시작일 직접 정하기</button><button type="button" class="chip" data-md="edit">지금 등록 고치기 (결제 없음)</button></div><div class="small" id="meModeH" style="margin-top:4px"></div></div>`:''}
     <div class="field"><label for="meItem">상품</label><input id="meItem" value="${esc(st.item)}"></div>
     <div class="field"><span>등록 개월수</span><div class="chips" id="meMo">${[1,2,3,6,12].map(n=>`<button type="button" class="chip" data-mo="${n}">${n}개월</button>`).join('')}<button type="button" class="chip" data-mo="0">없음(PT만)</button><label class="chip" style="display:inline-flex;align-items:center;gap:4px">직접 <input id="meMoN" type="number" min="1" max="36" placeholder="?" style="width:40px;border:0;border-bottom:2px solid var(--ink);border-radius:0;padding:0 2px;background:transparent;text-align:center" value="${[0,1,2,3,6,12].includes(st.months)?'':st.months}">개월</label></div></div>
-    <div class="row"><div class="field grow"><label for="meStart">시작일</label><input id="meStart" class="dpick" readonly value="${st.start}"></div><div class="field grow"><label for="meEnd">종료일 <span class="small">(직접 고쳐도 돼요)</span></label><input id="meEnd" class="dpick" readonly></div></div>
+    <div class="row"><div class="field grow"><label for="meStart" id="meStartL">시작일</label><input id="meStart" class="dpick" readonly value="${st.start}"></div><div class="field grow"><label for="meEnd">종료일 <span class="small">(직접 고쳐도 돼요)</span></label><input id="meEnd" class="dpick" readonly></div></div>
     <div class="row" id="meAdj" style="gap:6px"><span class="small">종료일 조정</span><button type="button" class="chip" data-adj="-7">-7일</button><button type="button" class="chip" data-adj="-1">-1일</button><button type="button" class="chip" data-adj="1">+1일</button><button type="button" class="chip" data-adj="7">+7일</button><button type="button" class="chip" data-adj="m1">+1개월</button></div>
     <div id="meSum" class="memsum"></div>
     <div class="field"><span>이용 방식</span><div class="chips" id="meWk">${[0,2,3,4,5].map(n=>`<button type="button" class="chip" data-wk="${n}">${n?'주'+n+'회':'자유이용'}</button>`).join('')}</div></div>
@@ -5367,10 +5381,10 @@ function openMemEditor(m,pre={},onDone){
     <div class="row"><div class="field grow"><label for="mePt">PT 총 횟수</label><input id="mePt" type="number" min="0" value="${st.pt}"></div><div class="field grow"><label for="mePtL">PT 남은 횟수</label><input id="mePtL" type="number" min="0" value="${st.ptLeft}"></div></div>
     <div class="field" id="meHoldF"><span>정지(연기) 규정 <span class="small" id="meHoldD"></span></span><div class="chips" id="meHold"><button type="button" class="chip" data-ha="def">기본 규정</button><button type="button" class="chip" data-ha="none">정지 없음</button><button type="button" class="chip" data-ha="custom">직접 지정</button></div>
       <div class="row" id="meHoldC" hidden><div class="field grow"><label for="meHN">횟수</label><input id="meHN" type="number" min="1" max="12" value="${cur.holdAllow&&cur.holdAllow.n?cur.holdAllow.n:1}"></div><div class="field grow"><label for="meHM">최대 일수 (합계)</label><input id="meHM" type="number" min="1" max="365" value="${cur.holdAllow&&cur.holdAllow.max?cur.holdAllow.max:14}"></div></div>
-      ${cur.end?'<button type="button" class="btn ghost sm" id="meAdj">정지·연기 / 기간 조정 (기록 보기)</button>':''}</div>
+      ${cur.end?'<button type="button" class="btn ghost sm" id="meAdjBtn">정지·연기 / 기간 조정 (기록 보기)</button>':''}</div>
     <div class="paybox">
       <label class="check" style="margin:0 0 6px"><input type="checkbox" id="meLegacy" ${m.legacy!=null?(m.legacy?'checked':''):(!(m.memHist||[]).length&&!cur.end&&!pre.pay?'checked':'')}><span><b>기존 회원 (새 프로그램으로 옮겨 등록)</b> <span class="small">· 안내 문자에 "새 앱으로 바꾸면서 다시 안내드려요" 설명이 붙어요</span></span></label>
-      <label class="check" style="margin:0"><input type="checkbox" id="mePayOn" ${pre.pay||pre.newPay?'checked':''}><b>결제 기록하기</b> <span class="small">${pre.pay?'(회원이 앱으로 신청한 결제)':'(매출 통계에 들어가요)'}</span></label>
+      <label class="check" style="margin:0"><input type="checkbox" id="mePayOn" ${pre.pay||pre.newPay||(hasCur&&mode!=='edit')?'checked':''}><b>결제 기록하기</b> <span class="small">${pre.pay?'(회원이 앱으로 신청한 결제)':'(매출 통계에 들어가요)'}</span></label>
       <div id="mePayBox">
         <div id="meFam"></div>
         <div class="chips" id="mePm">${Object.entries(SALEM).map(([k,n])=>`<button type="button" class="chip" data-pm="${k}">${n}</button>`).join('')}</div>
@@ -5382,9 +5396,12 @@ function openMemEditor(m,pre={},onDone){
     <button class="btn red" id="meSave">등록 정보 저장</button>${cur.end||cur.pt?'<button class="btn ghost" id="meClear">등록 정보 지우기</button>':''}<button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const endIn=el.querySelector('#meEnd'),startIn=el.querySelector('#meStart');
     const moN=el.querySelector('#meMoN');
-    const sum=()=>{const b=el.querySelector('#meSum');if(!st.months||!startIn.value||!endIn.value){b.innerHTML=st.months?'':'<b>PT 전용</b> · 기간 없음';el.querySelector('#meAdj').hidden=!st.months;return}el.querySelector('#meAdj').hidden=false;
+    const cont=()=>mode==='ext'&&!!cur.start&&!!cur.end&&startIn.value===dAdd(cur.end,1);
+    const sum=()=>{const b=el.querySelector('#meSum');const nb=el.querySelector('#meModeH');if(nb){nb.innerHTML=mode==='ext'?(cur.end>=TODAY()?`<b style="color:#1E6B45">${md(cur.end)} 다음 날부터 이어서 붙어요.</b> 지금 기간은 그대로 쓰고 기록도 남아요.`:`기존 기간이 ${md(cur.end)}에 끝나서 <b>오늘부터</b> 시작해요. (빈 날 없이 붙이려면 '시작일 직접 정하기')`):mode==='new'?'시작일을 직접 골라요. 지금 기간은 <b>기록으로 남고</b> 새 기간으로 바뀌어요.':'결제 없이 지금 등록 내용(날짜·요일·PT)만 고쳐요. 고치기 전 내용도 기록으로 남아요.'}
+      {const sl=el.querySelector('#meStartL');if(sl)sl.textContent=mode==='ext'&&cur.end>=TODAY()?'추가 기간 시작일':'시작일'}
+      if(!st.months||!startIn.value||!endIn.value){b.innerHTML=st.months?'':'<b>PT 전용</b> · 기간 없음';el.querySelector('#meAdj').hidden=!st.months;return}el.querySelector('#meAdj').hidden=false;
       const n=dDiff(endIn.value,startIn.value)+1;const s=new Date(startIn.value+'T00:00:00'),e=new Date(endIn.value+'T00:00:00');const auto=mAdd(startIn.value,st.months);
-      b.innerHTML=`<div class="small">등록 기간</div><b class="num">${s.getFullYear()}.${s.getMonth()+1}.${s.getDate()} (${DAYN[s.getDay()]}) ~ ${e.getFullYear()}.${e.getMonth()+1}.${e.getDate()} (${DAYN[e.getDay()]})</b><div class="small num">${st.months}개월 · 총 ${n}일${endIn.value!==auto?` · <span style="color:var(--red)">기본(${md(auto)})보다 ${dDiff(endIn.value,auto)>0?'+':''}${dDiff(endIn.value,auto)}일</span>`:''}${st.weekly?` · 주${st.weekly}회 ${st.days.length?daysTxt(st.days):''}`:' · 자유이용'}</div>`};
+      const ct=cont();b.innerHTML=`${ct?`<div class="small" style="color:#1E6B45;margin-bottom:4px">기존 ${md(cur.start)}~${md(cur.end)} <b>+ 추가 ${md(startIn.value)}~${md(endIn.value)}</b><br>→ 전체 <b>${md(cur.start)} ~ ${md(endIn.value)}</b> (빈 날 없이 이어짐)</div>`:mode==='new'&&cur.end>=startIn.value?`<div class="small" style="color:#B07A08;margin-bottom:4px">⚠ 기존 기간(~${md(cur.end)})과 겹쳐요. 기존 기간은 기록으로만 남아요.</div>`:''}<div class="small">${ct?'추가되는 기간':'등록 기간'}</div><b class="num">${s.getFullYear()}.${s.getMonth()+1}.${s.getDate()} (${DAYN[s.getDay()]}) ~ ${e.getFullYear()}.${e.getMonth()+1}.${e.getDate()} (${DAYN[e.getDay()]})</b><div class="small num">${st.months}개월 · 총 ${n}일${endIn.value!==auto?` · <span style="color:var(--red)">기본(${md(auto)})보다 ${dDiff(endIn.value,auto)>0?'+':''}${dDiff(endIn.value,auto)}일</span>`:''}${st.weekly?` · 주${st.weekly}회 ${st.days.length?daysTxt(st.days):''}`:' · 자유이용'}</div>`};
     const recalc=()=>{if(st.months)endIn.value=mAdd(startIn.value||TODAY(),st.months);else endIn.value='';sum()};
     if(st.end)endIn.value=st.end;else recalc();
     endIn.onchange=sum;
@@ -5394,7 +5411,7 @@ function openMemEditor(m,pre={},onDone){
       el.querySelectorAll('[data-wk]').forEach(b=>b.classList.toggle('on',+b.dataset.wk===st.weekly));
       el.querySelectorAll('[data-d]').forEach(b=>b.classList.toggle('on',st.days.includes(+b.dataset.d)));
       el.querySelector('#meDaysF').hidden=!st.weekly;el.querySelector('#meDaysN').textContent=st.weekly?`(${st.days.length}/${st.weekly}개 선택)`:'';if(moN&&[0,1,2,3,6,12].includes(st.months)&&document.activeElement!==moN)moN.value='';sum()};
-    el.querySelectorAll('[data-mo]').forEach(b=>b.onclick=()=>{st.months=+b.dataset.mo;recalc();draw()});
+    el.querySelectorAll('[data-mo]').forEach(b=>b.onclick=()=>{st.months=+b.dataset.mo;{const it=el.querySelector('#meItem');if(st.months&&(!it.value.trim()||/^\d+\s*개월/.test(it.value.trim())))it.value=it.value.trim().replace(/^\d+\s*개월/,st.months+'개월')||st.months+'개월'}recalc();draw()});
     el.querySelectorAll('[data-wk]').forEach(b=>b.onclick=()=>{st.weekly=+b.dataset.wk;st.days=st.days.slice(0,st.weekly);draw()});
     el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(st.days.includes(d))st.days=st.days.filter(x=>x!==d);else{if(st.days.length>=st.weekly)st.days.shift();st.days.push(d)}st.days.sort();draw()});
     startIn.onchange=recalc;
@@ -5414,10 +5431,16 @@ function openMemEditor(m,pre={},onDone){
     drawFam();el.querySelectorAll('[data-mo]').forEach(b=>b.addEventListener('click',()=>{if(famOn){const v=+String(pAmt.value).replace(/\D/g,'')||0;pAmt.value=fmt(v+(+famBox.dataset.disc||0));famOn=false}drawFam()}));el.querySelector('#meItem').addEventListener('change',()=>{if(!pAmt.value)pAmt.value=prodPrice()});
     const pdraw=()=>{pBox.hidden=!pOn.checked;el.querySelectorAll('[data-pm]').forEach(b=>b.classList.toggle('on',b.dataset.pm===pm))};
     el.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{pm=b.dataset.pm;pdraw()});pOn.onchange=pdraw;pdraw();
+    const drawMode=()=>{el.querySelectorAll('#meMode [data-md]').forEach(b=>b.classList.toggle('on',b.dataset.md===mode));el.querySelector('#meSave').textContent=mode==='edit'?'고친 내용 저장':hasCur?'재등록 저장':'등록 정보 저장';sum()};
+    el.querySelectorAll('#meMode [data-md]').forEach(b=>b.onclick=()=>{if(mode===b.dataset.md)return;mode=b.dataset.md;
+      if(mode==='edit'){st.months=cur.months||base.months||1;startIn.value=cur.start||TODAY();endIn.value=cur.end||'';if(!pre.pay&&!pre.newPay)pOn.checked=false}
+      else{st.months=pre.item?base.months:lastMo;startIn.value=mode==='ext'?extStart():TODAY();recalc();pOn.checked=true}
+      draw();pdraw();drawMode();try{drawFam()}catch(e){}});
+    drawMode();
     let ha=cur.holdAllow&&cur.holdAllow.n!=null?(cur.holdAllow.n>0?'custom':'none'):'def';
     const drawHA=()=>{el.querySelectorAll('#meHold [data-ha]').forEach(b=>b.classList.toggle('on',b.dataset.ha===ha));el.querySelector('#meHoldC').hidden=ha!=='custom';const p=holdPolicy({end:'x',months:st.months});el.querySelector('#meHoldD').textContent=ha==='def'?(p?'('+p.label+')':'(3개월 미만은 정지 없음)'):''};
     el.querySelectorAll('#meHold [data-ha]').forEach(b=>b.onclick=()=>{ha=b.dataset.ha;drawHA()});drawHA();el.querySelectorAll('[data-mo]').forEach(b=>b.addEventListener('click',drawHA));
-    {const aj=el.querySelector('#meAdj');if(aj)aj.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
+    {const aj=el.querySelector('#meAdjBtn');if(aj)aj.onclick=()=>{close();openAdjSheet(m,{},()=>admDetail(m.id))}}
     // ── 락커·캐비넷 같이 등록 ──
     const lk={ty:'',no:0,months:0,amt:''};
     const lkCurOf=ty=>Object.values(LKS.data||{}).find(r=>r&&r.mid===m.id&&r.type===ty&&r.no)||null;
@@ -5455,20 +5478,23 @@ function openMemEditor(m,pre={},onDone){
       const ptT=+pt.value||0,ptL=Math.min(+ptl.value||0,ptT);
       if(!st.months&&!ptT){toast('기간이나 PT 횟수 중 하나는 있어야 해요');return}
       if(st.months&&(!startIn.value||!endIn.value||endIn.value<startIn.value)){toast('시작일과 종료일을 확인해 주세요');return}
-      const hist=(m.memHist||[]).slice(-9);if(cur.end||cur.pt)hist.push(cur);
-      m.mem=clean({item:el.querySelector('#meItem').value.trim(),months:st.months,start:st.months?startIn.value:'',end:st.months?endIn.value:'',weekly:st.months?st.weekly:0,days:st.months&&st.weekly?st.days:[],pt:ptT?{total:ptT,left:ptL}:null,paidAt:pre.paidAt||cur.paidAt||'',setAt:TODAY()});
+      const hist=(m.memHist||[]).slice(-29);if(cur.end||cur.pt)hist.push(Object.assign({},cur,{until:TODAY()}));
+      const ct=st.months&&cont();const itNow=el.querySelector('#meItem').value.trim();
+      const segs=!st.months?null:mode==='edit'?(cur.segs||null):(ct?(cur.segs&&cur.segs.length?cur.segs:[{start:cur.start,end:cur.end,months:cur.months||0,item:cur.item||''}]):[]).concat([{start:startIn.value,end:endIn.value,months:st.months,item:itNow,at:TODAY()}]);
+      m.mem=clean({item:itNow,months:ct?(cur.months||0)+st.months:st.months,start:st.months?(ct?cur.start:startIn.value):'',end:st.months?endIn.value:'',how:mode,segs:segs||undefined,weekly:st.months?st.weekly:0,days:st.months&&st.weekly?st.days:[],pt:ptT?{total:ptT,left:ptL}:null,paidAt:pre.paidAt||cur.paidAt||'',setAt:TODAY()});
       if(ha==='none')m.mem.holdAllow={n:0,max:0};else if(ha==='custom')m.mem.holdAllow={n:clamp(+el.querySelector('#meHN').value||1,1,12),max:clamp(+el.querySelector('#meHM').value||14,1,365)};
+      if(mode==='edit'&&cur.segs&&m.mem.segs&&m.mem.segs.length){const L=m.mem.segs[m.mem.segs.length-1];m.mem.segs=m.mem.segs.slice(0,-1).concat([Object.assign({},L,{end:m.mem.end})])}
       if((cur.end||cur.pt)&&cur.start&&m.mem.start===cur.start){if(cur.holds)m.mem.holds=cur.holds;if(cur.hold)m.mem.hold=cur.hold}
       {const lg=el.querySelector('#meLegacy');if(lg)m.legacy=lg.checked}
       m.memHist=hist;await DB.savePriv(m);
       let pr=null;
       if(pOn.checked){const amt=+pAmt.value.replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
-        if(pre.pay){pr=pre.pay;Object.assign(pr,{method:pm,amount:amt,saleDate:pd,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||pr.item)+(famOn?' (가족할인)':''),months:m.mem.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0});await DB.addPay(clean(pr));if(local.pays)local.pays[pr.id]=pr}
-        else{pr={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:m.id,name:m.name,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||planLabel(m.mem))+(famOn?' (가족할인)':''),amount:amt,method:pm,status:'done',source:'admin',saleDate:pd,at:new Date().toISOString(),doneAt:new Date().toISOString(),months:m.mem.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0,kind:(cur.end||cur.pt||(m.memHist||[]).length>1)?'renew':'new'};await DB.addPay(clean(pr))}}
+        if(pre.pay){pr=pre.pay;Object.assign(pr,{method:pm,amount:amt,saleDate:pd,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||pr.item)+(famOn?' (가족할인)':''),months:st.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0});await DB.addPay(clean(pr));if(local.pays)local.pays[pr.id]=pr}
+        else{pr={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),mid:m.id,name:m.name,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||planLabel(m.mem))+(famOn?' (가족할인)':''),amount:amt,method:pm,status:'done',source:'admin',saleDate:pd,at:new Date().toISOString(),doneAt:new Date().toISOString(),months:st.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0,kind:(cur.end||cur.pt||(m.memHist||[]).length>1)?'renew':'new'};await DB.addPay(clean(pr))}}
       {const mt=el.querySelector('#meMemo').value.trim();if(mt)await memoAdd(m.id,mt,pOn.checked?'pay':'mem')}
       let lkr=null;if(lk.ty){try{lkr=await lkSave()}catch(e){console.error('locker',e)}}
       if(pr&&lkr)Object.defineProperty(pr,'_lk',{value:lkr,enumerable:false,configurable:true});
-      toast(m.name+' 님 등록 정보'+(pr?'와 결제('+payName(pm)+')':'')+(lkr?' · '+lkName(lkr.ty,lkr.no)+(lkr.ext?' 연장':' 배정'):'')+'를 저장했어요',3500);close();onDone&&onDone(m,pr)};
+      if(ct)toast(`${m.name} 님 ${md(cur.end)} 뒤에 ${st.months}개월 이어 붙였어요 → ${md(m.mem.end)}까지`,3500);else toast(m.name+' 님 등록 정보'+(pr?'와 결제('+payName(pm)+')':'')+(lkr?' · '+lkName(lkr.ty,lkr.no)+(lkr.ext?' 연장':' 배정'):'')+'를 저장했어요',3500);close();onDone&&onDone(m,pr)};
     const cl=el.querySelector('#meClear');if(cl)cl.onclick=async()=>{m.memHist=(m.memHist||[]).concat([cur]).slice(-10);m.mem=null;await DB.savePriv(m);toast('등록 정보를 지웠어요');close();onDone&&onDone(m)};
   });
 }
@@ -5998,7 +6024,7 @@ async function renderSendLog(){
 }
 
 /* ================= 날짜별 출석 현황 (관장) ================= */
-function stampAtt(m){try{const d=new Date();const k=TODAY();m.attT=Object.assign({},m.attT||{});if(!m.attT[k])m.attT[k]=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');const ks=Object.keys(m.attT).sort();if(ks.length>90)ks.slice(0,ks.length-90).forEach(x=>delete m.attT[x])}catch(e){}}
+function stampAtt(m){try{const d=new Date();const k=TODAY();m.attT=Object.assign({},m.attT||{});if(!m.attT[k])m.attT[k]=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');const ks=Object.keys(m.attT).sort();if(ks.length>400)ks.slice(0,ks.length-400).forEach(x=>delete m.attT[x])}catch(e){}}
 const ATV={day:null,mon:null};
 async function renderAttAdmin(){const box=$('#attAdm');if(!box)return;ATV.day=ATV.day||TODAY();ATV.mon=ATV.mon||ATV.day.slice(0,7);
   const all=(await DB.all()).filter(m=>!m.demo&&!isStaff(m)&&m.id!=='0000');const day=ATV.day,mon=ATV.mon;
@@ -6009,18 +6035,73 @@ async function renderAttAdmin(){const box=$('#attAdm');if(!box)return;ATV.day=AT
   for(let d=1;d<=nd;d++){const ds=`${mon}-${String(d).padStart(2,'0')}`;const n=cnt[ds]||0;const a=n?.15+.85*n/mx:0;cal+=`<button data-ad="${ds}" class="${ds===day?'on':''}${ds===TODAY()?' td':''}" ${ds>TODAY()?'disabled':''} style="${n?`background:rgba(43,155,102,${a.toFixed(2)});color:${a>.55?'#fff':'var(--ink)'}`:''}"><b>${d}</b><small>${n||''}</small></button>`}cal+='</div>';
   const L=all.filter(m=>(m.attend||[]).includes(day)).sort((a,b)=>((a.attT||{})[day]||'99').localeCompare((b.attT||{})[day]||'99'));
   const dd=new Date(day+'T00:00:00');const ym=`${first.getFullYear()}년 ${first.getMonth()+1}월`;
+  const AB=all.filter(m=>memOnDay(m,day)&&!(m.attend||[]).includes(day)&&!onHold(m.mem,day)).map(m=>{const wk=m.mem.weekly&&(m.mem.days||[]).length?m.mem.days:null;return{m,sch:!!(wk&&wk.includes(dd.getDay())),last:lastAttBefore(m,day)}}).sort((a,b)=>(b.sch-a.sch)||(a.last||'').localeCompare(b.last||''));
   box.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><button class="btn sm ghost" data-am="-1">‹</button><b style="font-family:var(--display);font-weight:400;font-size:18px">${ym}</b><button class="btn sm ghost" data-am="1" ${mon>=TODAY().slice(0,7)?'disabled':''}>›</button></div>
     <div class="small" style="text-align:center">이달 출석 <b class="num">${monTot}</b>회 · 나온 회원 <b class="num">${uniq}</b>명 · 하루 평균 <b class="num">${(monTot/Math.max(1,mon===TODAY().slice(0,7)?+TODAY().slice(8):nd)).toFixed(1)}</b>명</div>
     ${cal}
     <div class="row" style="align-items:center;gap:6px;margin-top:6px"><button class="btn sm ghost" data-dd="-1">‹ 전날</button><b class="grow" style="text-align:center;font-family:var(--display);font-weight:400;font-size:17px">${dd.getMonth()+1}월 ${dd.getDate()}일 (${DAYN[dd.getDay()]})${day===TODAY()?' · 오늘':''}</b><button class="btn sm ghost" data-dd="1" ${day>=TODAY()?'disabled':''}>다음날 ›</button></div>
-    <div class="row" style="align-items:center"><span class="grow"><b class="num" style="font-size:20px">${L.length}</b>명 출석</span><button class="btn sm ghost" id="atCsv">이날 명단 저장(.csv)</button></div>
-    <div style="display:flex;flex-direction:column;gap:4px">${L.map(m=>`<div class="mrow" data-ao="${esc(m.id)}"><div class="cimg mface" data-af="${esc(m.id)}" style="width:40px;height:40px">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span></div><div class="ms">${(m.attT||{})[day]?`<b class="num">${m.attT[day]}</b> 출석 · `:''}${memShort(m)} · 총 ${(m.attend||[]).length}회</div></div></div>`).join('')||'<div class="small">이날 출석한 회원이 없어요.</div>'}</div>`;
-  box.querySelectorAll('[data-af]').forEach(el=>{const m=L.find(x=>x.id===el.dataset.af);if(m&&m.hasFace)faceInto(el,el.dataset.af)});
+    <button class="btn ghost" id="atMx">📋 회원별 출석표 (${first.getMonth()+1}월 · 누가 언제 왔는지 한눈에)</button>
+    <div class="chips" id="atTab" style="align-items:center"><button type="button" class="chip ${ATV.tab!=='ab'?'on':''}" data-at="in">출석 ${L.length}명</button><button type="button" class="chip ${ATV.tab==='ab'?'on':''}" data-at="ab">안 온 회원 ${AB.length}명</button><span class="grow"></span><button class="btn sm ghost" id="atCsv">명단 저장(.csv)</button></div>
+    ${ATV.tab==='ab'?`<div class="small">이날 등록 기간 중인데 출석하지 않은 회원이에요. <b style="color:var(--red)">운동 요일</b>은 주N회 회원의 정해진 요일이에요. 오래 안 온 순서.</div><div style="display:flex;flex-direction:column;gap:4px">${AB.map(x=>{const m=x.m;return `<div class="mrow" data-ao="${esc(m.id)}"><div class="cimg mface" data-af="${esc(m.id)}" style="width:40px;height:40px">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${x.sch?' <span class="pill" style="background:var(--red);color:#fff">운동 요일</span>':''}</div><div class="ms">마지막 출석 ${x.last?`<b class="num">${ymd(x.last)}</b> (${dDiff(day,x.last)}일 전)`:'<b>없음</b>'} · ${memShort(m)}</div></div></div>`}).join('')||'<div class="small">이날 빠진 회원이 없어요 👏</div>'}</div>`:`<div style="display:flex;flex-direction:column;gap:4px">${L.map(m=>`<div class="mrow" data-ao="${esc(m.id)}"><div class="cimg mface" data-af="${esc(m.id)}" style="width:40px;height:40px">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span></div><div class="ms">${(m.attT||{})[day]?`<b class="num">${m.attT[day]}</b> 출석 · `:''}${memShort(m)} · 총 ${(m.attend||[]).length}회</div></div></div>`).join('')||'<div class="small">이날 출석한 회원이 없어요.</div>'}</div>`}`;
+  box.querySelectorAll('[data-at]').forEach(b=>b.onclick=()=>{ATV.tab=b.dataset.at;renderAttAdmin()});box.querySelector('#atMx').onclick=()=>attMatrixSheet(mon,all);
+  box.querySelectorAll('[data-af]').forEach(el=>{const m=L.find(x=>x.id===el.dataset.af)||(AB.find(x=>x.m.id===el.dataset.af)||{}).m;if(m&&m.hasFace)faceInto(el,el.dataset.af)});
   box.querySelectorAll('[data-ao]').forEach(r=>r.onclick=e=>{if(e.target.closest('.mface img'))return;admDetail(r.dataset.ao)});
   box.querySelectorAll('[data-ad]').forEach(b=>b.onclick=()=>{ATV.day=b.dataset.ad;renderAttAdmin()});
   box.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>{ATV.day=dAdd(ATV.day,+b.dataset.dd);if(ATV.day>TODAY())ATV.day=TODAY();ATV.mon=ATV.day.slice(0,7);renderAttAdmin()});
   box.querySelectorAll('[data-am]').forEach(b=>b.onclick=()=>{const x=new Date(ATV.mon+'-01T00:00:00');x.setMonth(x.getMonth()+(+b.dataset.am));ATV.mon=dstr(x).slice(0,7);const last=dstr(new Date(x.getFullYear(),x.getMonth()+1,0));ATV.day=last>TODAY()?TODAY():last;renderAttAdmin()});
-  box.querySelector('#atCsv').onclick=()=>{const rows=[['날짜','회원번호','이름','출석시간','등록상태','총출석']].concat(L.map(m=>[day,m.id,m.name,(m.attT||{})[day]||'',memStatus(m).state,(m.attend||[]).length]));download(`NNN_출석_${day}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')}}
+  box.querySelector('#atCsv').onclick=()=>{const rows=[['날짜','구분','회원번호','이름','출석시간','마지막 출석','등록상태','총출석']].concat(L.map(m=>[day,'출석',m.id,m.name,(m.attT||{})[day]||'','',memStatus(m).state,(m.attend||[]).length])).concat(AB.map(x=>[day,x.sch?'결석(운동 요일)':'안 옴',x.m.id,x.m.name,'',x.last,memStatus(x.m).state,(x.m.attend||[]).length]));download(`NNN_출석_${day}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')}}
+
+/* ===== 등록·결제 기록 / 회원별 출석 기록 ===== */
+const ymd=d=>d?String(d).slice(2).replace(/-/g,'.'):'';
+const HOWN={ext:'이어서 재등록',new:'새로 등록',edit:'수정'};
+async function memHistSheet(m){const cur=m.mem;const rows=[];if(cur&&(cur.end||cur.pt))rows.push(Object.assign({_now:1},cur));
+  (m.memHist||[]).slice().reverse().forEach(h=>{if(h&&(h.end||h.pt))rows.push(h)});
+  const seen=new Set();const R=rows.filter(r=>{const k=[r.item,r.start,r.end,r.setAt,r._now].join('|');if(seen.has(k))return false;seen.add(k);return true});
+  let pays=[];try{pays=(await DB.pays()).filter(p=>p&&p.mid===m.id&&p.status==='done').sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||''))}catch(e){}
+  sheet(`<h2>등록·결제 기록 · ${esc(m.name)}</h2>
+    <div class="label">등록 기간 (최근 순)</div>
+    ${R.length?R.map(r=>`<div class="qrow" style="${r._now?'background:#EEF7F1;border-radius:10px;padding:8px':''}"><div class="grow"><b>${esc(r.item||planLabel(r)||'등록')}</b>${r._now?' <span class="pill" style="background:#2B9B66;color:#fff">지금</span>':''}
+      <div class="small num">${r.end?`${ymd(r.start)} ~ ${ymd(r.end)}`:''}${r.pt&&r.pt.total?` · PT ${r.pt.left}/${r.pt.total}회`:''}${r.weekly?` · 주${r.weekly}회`:''}</div>
+      ${r.segs&&r.segs.length>1?`<div class="small num" style="color:#1E6B45">${r.segs.map(g=>`${ymd(g.start)}~${ymd(g.end)} (${g.months}개월)`).join(' + ')}</div>`:''}
+      <div class="small" style="color:var(--muted)">${r.setAt?ymd(r.setAt)+' 입력':''}${r.how?' · '+HOWN[r.how]:''}${r.until&&!r._now?' · '+ymd(r.until)+'에 바뀜':''}${r.imported?' · 가져오기':''}</div></div></div>`).join(''):'<div class="small">등록 기록이 없어요.</div>'}
+    <div class="label" style="margin-top:8px">결제 (${pays.length}건 · ${pays.reduce((t,p)=>t+(+p.amount||0),0).toLocaleString()}원)</div>
+    ${pays.length?pays.map(p=>`<div class="qrow"><div class="grow"><b>${esc(p.item||'')}</b><div class="small num">${ymd(p.saleDate)} · ${esc(payName(p.method)||'')} · ${KIND_NAME[p.kind]||''}</div></div><b class="num">${(+p.amount||0).toLocaleString()}원</b></div>`).join(''):'<div class="small">결제 기록이 없어요.</div>'}
+    <button class="btn ghost" data-close>닫기</button>`)}
+function attMemSheet(m){let mon=TODAY().slice(0,7);
+  sheet(`<h2>출석 기록 · ${esc(m.name)}</h2><div id="amBox" style="display:flex;flex-direction:column;gap:8px"></div><button class="btn ghost" data-close>닫기</button>`,el=>{
+    const box=el.querySelector('#amBox');
+    const draw=()=>{const T=TODAY();const A=m.attend||[];const S=new Set(A);const tt=m.attT||{};const mem=m.mem||{};
+      const wk=mem.weekly&&(mem.days||[]).length?mem.days:null;const inMem=d=>!!mem.start&&d>=mem.start&&d<=(mem.end||'9999');
+      const first=new Date(mon+'-01T00:00:00');const nd=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+      let n=0,miss=0;let cal='<div class="atcal">'+'일월화수목금토'.split('').map(w=>`<span class="wd">${w}</span>`).join('');for(let i=0;i<first.getDay();i++)cal+='<span></span>';
+      for(let d=1;d<=nd;d++){const ds=`${mon}-${String(d).padStart(2,'0')}`;const wd=new Date(ds+'T00:00:00').getDay();const ok=S.has(ds);if(ok)n++;
+        const sch=wk?wk.includes(wd):false;const ms=!ok&&sch&&inMem(ds)&&ds<T&&!onHold(mem,ds);if(ms)miss++;
+        cal+=`<button class="${ok?'aok':ms?'amiss':''}${ds===T?' td':''}" ${ds>T?'disabled':''} tabindex="-1"><b>${d}</b><small>${ok?(tt[ds]||'출석'):ms?'결석':sch&&inMem(ds)?'·':''}</small></button>`}
+      cal+='</div>';
+      const last=A.filter(d=>d<=T).sort().pop();const gap=last?dDiff(T,last):null;
+      const recent=A.slice().sort().reverse().slice(0,20);
+      box.innerHTML=`<div class="row" style="gap:8px;flex-wrap:wrap"><div class="kpi grow"><span>마지막 출석</span><b class="num">${last?(gap===0?'오늘':gap+'일 전'):'-'}</b></div><div class="kpi grow"><span>총 출석</span><b class="num">${A.length}회</b></div></div>
+        <div class="row" style="align-items:center;justify-content:space-between"><button class="btn sm ghost" data-m="-1">‹</button><b style="font-family:var(--display);font-weight:400;font-size:18px">${first.getFullYear()}년 ${first.getMonth()+1}월 · ${n}회${wk?` · <span style="color:var(--red)">결석 ${miss}</span>`:''}</b><button class="btn sm ghost" data-m="1" ${mon>=T.slice(0,7)?'disabled':''}>›</button></div>
+        ${cal}<div class="small">${wk?`주${mem.weekly}회 (${daysTxt(wk)}) 회원이라 운동 요일에 안 온 날은 <b style="color:var(--red)">결석</b>으로 보여요.`:'초록 칸이 출석한 날이에요. 칸 안의 숫자는 출석 시간.'}</div>
+        <div class="label">최근 출석</div>${recent.length?recent.map(d=>{const x=new Date(d+'T00:00:00');return `<div class="row" style="padding:5px 0;border-bottom:1px solid var(--mat)"><span class="grow num">${ymd(d)} (${DAYN[x.getDay()]})</span><b class="num">${tt[d]||''}</b></div>`}).join(''):'<div class="small">아직 출석 기록이 없어요.</div>'}`;
+      box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const x=new Date(mon+'-01T00:00:00');x.setMonth(x.getMonth()+(+b.dataset.m));mon=dstr(x).slice(0,7);draw()})};
+    draw()})}
+function onHold(mem,day){try{return holdsDone(mem).some(h=>day>=h.start&&day<=h.end)}catch(e){return false}}
+function memOnDay(m,day){const mem=m.mem;return !!(mem&&mem.start&&mem.end&&day>=mem.start&&day<=mem.end)}
+function lastAttBefore(m,day){let l='';(m.attend||[]).forEach(d=>{if(d<day&&d>l)l=d});return l}
+function attMatrixSheet(mon,all){const T=TODAY();const first=new Date(mon+'-01T00:00:00');const nd=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+  const mS=mon+'-01',mE=`${mon}-${String(nd).padStart(2,'0')}`;
+  const L=all.filter(m=>(m.attend||[]).some(a=>a.startsWith(mon))||(m.mem&&m.mem.start&&m.mem.end&&m.mem.start<=mE&&m.mem.end>=mS)).sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+  const D=[...Array(nd)].map((_,i)=>`${mon}-${String(i+1).padStart(2,'0')}`);
+  const cell=(m,ds)=>{const ok=(m.attend||[]).includes(ds);if(ok)return['o','●'];if(ds>=T)return['',''];const mem=m.mem||{};const wk=mem.weekly&&(mem.days||[]).length?mem.days:null;if(wk&&memOnDay(m,ds)&&wk.includes(new Date(ds+'T00:00:00').getDay())&&!onHold(mem,ds))return['x','×'];return['','']};
+  sheet(`<h2>회원별 출석표 · ${first.getFullYear()}년 ${first.getMonth()+1}월</h2>
+    <div class="small">● 출석 · <span style="color:var(--red)">×</span> 운동 요일(주N회)인데 안 온 날 · 이름을 누르면 그 회원 출석 기록</div>
+    <div class="amx"><table><thead><tr><th class="nm">이름</th>${D.map(ds=>{const w=new Date(ds+'T00:00:00').getDay();return `<th class="${w===0?'su':w===6?'sa':''}">${+ds.slice(8)}<br><small>${DAYN[w]}</small></th>`}).join('')}<th>계</th></tr></thead>
+    <tbody>${L.map(m=>{let c=0;const tds=D.map(ds=>{const [k,t]=cell(m,ds);if(k==='o')c++;return `<td class="${k}">${t}</td>`}).join('');return `<tr><th class="nm" data-mx="${esc(m.id)}">${esc(m.name)}</th>${tds}<td class="sum">${c}</td></tr>`}).join('')}</tbody></table></div>
+    ${L.length?'':'<div class="small">이달 기록이 없어요.</div>'}
+    <button class="btn ghost" id="mxCsv">이 표 저장(.csv · 엑셀)</button><button class="btn ghost" data-close>닫기</button>`,el=>{
+    el.querySelectorAll('[data-mx]').forEach(t=>t.onclick=()=>{const m=L.find(x=>x.id===t.dataset.mx);if(m)attMemSheet(m)});
+    el.querySelector('#mxCsv').onclick=()=>{const rows=[['회원번호','이름'].concat(D.map(d=>+d.slice(8)+'일')).concat(['합계'])].concat(L.map(m=>{let c=0;const r=D.map(ds=>{const [k]=cell(m,ds);if(k==='o'){c++;return (m.attT||{})[ds]||'O'}return k==='x'?'X':''});return [m.id,m.name].concat(r).concat([c])}));download(`NNN_출석표_${mon}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')}})}
 
 /* ================= 한 번에 보내기 (연속 문자) ================= */
 const DUE={list:[],off:new Set()};
