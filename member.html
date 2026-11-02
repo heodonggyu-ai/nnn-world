@@ -702,6 +702,7 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .sheet.syncing button:not([data-close]),.sheet.syncing label.btn,.sheet.syncing a.btn{pointer-events:none;opacity:.55}
 .spin{width:34px;height:34px;margin:auto;border:4px solid var(--mat);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 #admRows .mrow.tap{background:#FFF4D6}
+.paydel{order:9;margin-left:auto;border:1px solid #F3B9BC;background:#fff;color:var(--red);border-radius:7px;padding:2px 8px;font:inherit;font-size:11.5px;cursor:pointer;flex:0 0 auto}.paydel.sure{background:var(--red);color:#fff}
 .payln{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:13px;margin-top:3px;padding:4px 8px;background:#F4F6FA;border-radius:8px}.payln b{font-weight:700}.payln .num{font-variant-numeric:tabular-nums}.payln .pi{color:var(--muted);font-size:12px}.payln.rf{background:#FDECEC;color:#8A1F24}
 .atcal button.aok{background:#2B9B66;color:#fff;border-color:#2B9B66}.atcal button.amiss{background:#FDECEC;color:#B4232A;border-color:#F3B9BC}
 .amx{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
@@ -4912,7 +4913,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     el.querySelector('#admMem').onclick=()=>{close();openMemEditor(m,{mode:'edit'},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})};
     {const rb=el.querySelector('#admRenew');if(rb)rb.onclick=()=>{close();openMemEditor(m,{mode:'ext'},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr)})}}
     el.querySelector('#admHist').onclick=()=>memHistSheet(m);
-    {const pl=el.querySelector('#admPayLine');if(pl)DB.pays().then(ps=>{const L=memPaysOf(ps,m,m.mem);pl.style.color='';pl.innerHTML=L.length?L.slice(0,4).map(payLineHTML).join(''):'<span style="color:var(--muted)">결제 기록 없음 · 재등록할 때 \'결제 기록하기\'를 켜면 여기 나와요</span>'}).catch(()=>{pl.textContent=''})}el.querySelector('#admAttLog').onclick=()=>attMemSheet(m);
+    {const pl=el.querySelector('#admPayLine');if(pl)DB.pays().then(ps=>{const L=memPaysOf(ps,m,m.mem);pl.style.color='';pl.innerHTML=L.length?L.slice(0,4).map(x=>payLineHTML(x,true)).join(''):'<span style="color:var(--muted)">결제 기록 없음 · 재등록할 때 \'결제 기록하기\'를 켜면 여기 나와요</span>'}).then(()=>bindPayDel(pl,()=>{const sc=($('#sheetRoot .sheet')||{}).scrollTop||0;admDetail(m.id).then(()=>{const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc})})).catch(()=>{pl.textContent=''})}el.querySelector('#admAttLog').onclick=()=>attMemSheet(m);
     {const pb=el.querySelector('#admPt');if(pb)pb.onclick=async()=>{m.mem.pt.left--;await DB.savePriv(m);toast(`PT 차감 · 남은 ${m.mem.pt.left}회`);close();renderAdmRows()}}
     if(m.hasFace)FDB.get(m.id).then(src=>{const b=el.querySelector('#admFace');if(b)b.innerHTML=src?`<img src="${src}" alt="${esc(m.name)} 얼굴" style="width:100%;height:100%;object-fit:cover">`:'사진 없음'});
     {const a=el.querySelector('#admApprove');if(a)a.onclick=()=>{close();approveMember(m)}}
@@ -6422,10 +6423,13 @@ async function renderAttAdmin(){const box=$('#attAdm');if(!box)return;ATV.day=AT
 /* ===== 등록·결제 기록 / 회원별 출석 기록 ===== */
 const ymd=d=>d?String(d).slice(2).replace(/-/g,'.'):'';
 const HOWN={ext:'이어서 재등록',new:'새로 등록',edit:'수정'};
+function bindPayDel(el,after){el.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=async e=>{e.stopPropagation();if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제';b.classList.add('sure');setTimeout(()=>{if(b.isConnected){b.dataset.sure='';b.textContent='삭제';b.classList.remove('sure')}},4000);return}
+  b.disabled=true;const id=b.dataset.pdel;if(FB_ON()){try{await gref('pays/'+id).set(null)}catch(x){toast('삭제하지 못했어요');b.disabled=false;return}}else{delete local.pays[id];persist()}
+  try{if(local.pays)delete local.pays[id]}catch(x){}toast('결제 기록을 삭제했어요 (매출에서도 빠져요)',3000);after&&after()})}
 function memPaysOf(ps,m,mem){if(!mem)return[];const since=dAdd(mem.start||mem.setAt||TODAY(),-31);const until=mem.until||'9999';
   return (ps||[]).filter(p=>p&&p.mid===m.id&&p.status==='done'&&p.kind!=='locker'&&(p.saleDate||'')>=since&&(mem.until?(p.saleDate||'')<until:true)).sort((a,b)=>(b.saleDate||'').localeCompare(a.saleDate||'')||String(b.at||'').localeCompare(String(a.at||'')))}
 const PAYIC={card:'💳',cash:'💵',bank:'🏦',asan:'📱',onnuri:'🎫',etc:'🧾'};
-function payLineHTML(p){const rf=p.kind==='refund';return `<div class="payln${rf?' rf':''}"><span>${PAYIC[p.method]||'🧾'}</span><b>${esc(payName(p.method)||'결제')}</b><b class="num">${rf?'-':''}${(+p.amount||0).toLocaleString()}원</b><span class="num">${ymd(p.saleDate)} 결제</span>${p.item?`<span class="pi">${esc(p.item)}</span>`:''}</div>`}
+function payLineHTML(p,del){const rf=p.kind==='refund';return `<div class="payln${rf?' rf':''}">${del?`<button class="paydel" data-pdel="${esc(p.id)}" aria-label="이 결제 기록 삭제">삭제</button>`:''}<span>${PAYIC[p.method]||'🧾'}</span><b>${esc(payName(p.method)||'결제')}</b><b class="num">${rf?'-':''}${(+p.amount||0).toLocaleString()}원</b><span class="num">${ymd(p.saleDate)} 결제</span>${p.item?`<span class="pi">${esc(p.item)}</span>`:''}</div>`}
 async function memHistSheet(m){const cur=m.mem;const rows=[];if(cur&&(cur.end||cur.pt))rows.push(Object.assign({_now:1},cur));
   (m.memHist||[]).slice().reverse().forEach(h=>{if(h&&(h.end||h.pt))rows.push(h)});
   const seen=new Set();const R=rows.filter(r=>{const k=[r.item,r.start,r.end,r.setAt,r._now].join('|');if(seen.has(k))return false;seen.add(k);return true});
@@ -6435,11 +6439,12 @@ async function memHistSheet(m){const cur=m.mem;const rows=[];if(cur&&(cur.end||c
     ${R.length?R.map(r=>`<div class="qrow" style="${r._now?'background:#EEF7F1;border-radius:10px;padding:8px':''}"><div class="grow"><b>${esc(r.item||planLabel(r)||'등록')}</b>${r._now?' <span class="pill" style="background:#2B9B66;color:#fff">지금</span>':''}
       <div class="small num">${r.end?`${ymd(r.start)} ~ ${ymd(r.end)}`:''}${r.pt&&r.pt.total?` · PT ${r.pt.left}/${r.pt.total}회`:''}${r.weekly?` · 주${r.weekly}회`:''}</div>
       ${r.segs&&r.segs.length>1?`<div class="small num" style="color:#1E6B45">${r.segs.map(g=>`${ymd(g.start)}~${ymd(g.end)} (${g.months}개월)`).join(' + ')}</div>`:''}
-      ${(()=>{const L=memPaysOf(pays,m,r);return L.length?`<div style="margin-top:4px">${L.map(payLineHTML).join('')}</div>`:''})()}
+      ${(()=>{const L=memPaysOf(pays,m,r);return L.length?`<div style="margin-top:4px">${L.map(x=>payLineHTML(x,true)).join('')}</div>`:''})()}
       <div class="small" style="color:var(--muted)">${r.setAt?ymd(r.setAt)+' 입력':''}${r.how?' · '+HOWN[r.how]:''}${r.until&&!r._now?' · '+ymd(r.until)+'에 바뀜':''}${r.imported?' · 가져오기':''}</div></div></div>`).join(''):'<div class="small">등록 기록이 없어요.</div>'}
     <div class="label" style="margin-top:8px">결제 (${pays.length}건 · ${pays.reduce((t,p)=>t+(+p.amount||0),0).toLocaleString()}원)</div>
-    ${pays.length?pays.map(p=>`<div class="qrow"><div class="grow"><b>${esc(p.item||'')}</b><div class="small num">${ymd(p.saleDate)} · ${esc(payName(p.method)||'')} · ${KIND_NAME[p.kind]||''}</div></div><b class="num">${(+p.amount||0).toLocaleString()}원</b></div>`).join(''):'<div class="small">결제 기록이 없어요.</div>'}
-    <button class="btn ghost" data-close>닫기</button>`)}
+    ${pays.length?pays.map(p=>`<div class="qrow"><div class="grow"><b>${esc(p.item||'')}</b><div class="small num">${ymd(p.saleDate)} · ${esc(payName(p.method)||'')} · ${KIND_NAME[p.kind]||''}</div></div><b class="num">${(+p.amount||0).toLocaleString()}원</b><button class="paydel" data-pdel="${esc(p.id)}">삭제</button></div>`).join(''):'<div class="small">결제 기록이 없어요.</div>'}
+    <div class="small" style="color:var(--muted)">잘못 들어간 결제는 <b>삭제</b>를 두 번 누르면 지워지고, 매출 통계에서도 빠져요. 등록 기간은 그대로예요 (기간은 '수정'에서 고쳐요).</div>
+    <button class="btn ghost" data-close>닫기</button>`,el=>bindPayDel(el,()=>{DB.get(m.id).then(f=>memHistSheet(f||m))}))}
 function attMemSheet(m){let mon=TODAY().slice(0,7);
   sheet(`<h2>출석 기록 · ${esc(m.name)}</h2><div id="amBox" style="display:flex;flex-direction:column;gap:8px"></div><button class="btn ghost" data-close>닫기</button>`,el=>{
     const box=el.querySelector('#amBox');
