@@ -1504,7 +1504,23 @@ const gref=x=>fdb.ref('gym/'+x);
 const clean=o=>JSON.parse(JSON.stringify(o));
 const PRIV=['impBatch','impAct','importedAt','legacy','lockers','holdReq','name','phone','birth','gender','goal','exp','path','note','agreeMkt','mem','memHist','approvedAt','sent','hasFace','sentLog','gName','gPhone','student','unpaid','skillHist'];
 function splitM(m){const pub={},prv={};Object.keys(m).forEach(k=>{(PRIV.includes(k)?prv:pub)[k]=m[k]});pub.nick=maskName(m.name);return{pub,prv}}
-function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(m.mem){if(!Array.isArray(m.mem.days))m.mem.days=m.mem.days?Object.values(m.mem.days):[];if(m.mem.holds&&!Array.isArray(m.mem.holds))m.mem.holds=Object.values(m.mem.holds)}if(m.memHist&&!Array.isArray(m.memHist))m.memHist=Object.values(m.memHist);if(m.unpaid&&!Array.isArray(m.unpaid))m.unpaid=Object.values(m.unpaid);if(m.sentLog&&!Array.isArray(m.sentLog))m.sentLog=Object.values(m.sentLog);if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=Array.isArray(m.attend)?m.attend.filter(x=>typeof x==='string'):(m.attend&&typeof m.attend==='object'?Object.values(m.attend).filter(x=>typeof x==='string'):[]);m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return m}
+/* 동시 저장 충돌 막기: 마지막으로 서버에서 받은 값(base)과 비교해 바뀐 쪽만 합치기 (3-way merge) */
+const _J=x=>JSON.stringify(x===undefined?null:x);
+function m3(b,l,s,k){if(_J(l)===_J(b))return s;if(_J(s)===_J(b))return l;if(_J(l)===_J(s))return l;
+  if(typeof l==='number'&&typeof s==='number'&&typeof b==='number')return s+(l-b);
+  if(typeof l==='number'&&typeof s==='number')return k==='rev'?Math.max(l,s):l;
+  const arr=x=>Array.isArray(x)?x:(x&&typeof x==='object'&&Object.keys(x).every(q=>/^\d+$/.test(q))?Object.values(x):null);
+  const la=arr(l),sa=arr(s);if(la&&sa){const isId=[...la,...sa].some(x=>x&&typeof x==='object'&&x.id);
+    if(isId){const map=new Map();sa.forEach(x=>{if(x)map.set(x.id||_J(x),x)});la.forEach(x=>{if(!x)return;const key=x.id||_J(x);const o=map.get(key);map.set(key,o&&o.used&&!x.used?o:x)});const ba=arr(b)||[];const bIds=new Set(ba.map(x=>x&&(x.id||_J(x))));const lIds=new Set(la.map(x=>x&&(x.id||_J(x))));
+      return [...map.values()].filter(x=>{const key=x.id||_J(x);return !(bIds.has(key)&&!lIds.has(key)&&sa.some(y=>y&&(y.id||_J(y))===key&&_J(y)===_J(ba.find(z=>z&&(z.id||_J(z))===key))))})}
+    const out=la.slice();sa.forEach(x=>{if(!out.some(y=>_J(y)===_J(x)))out.push(x)});if(out.every(x=>typeof x==='string'))out.sort();return out}
+  if(l&&s&&typeof l==='object'&&typeof s==='object'&&!Array.isArray(l)&&!Array.isArray(s)){const bb=(b&&typeof b==='object')?b:{};const o={};new Set([...Object.keys(l),...Object.keys(s),...Object.keys(bb)]).forEach(q=>{const v=m3(bb[q],l[q],s[q],q);if(v!==undefined&&v!==null)o[q]=v});return o}
+  if(typeof l==='string'&&typeof s==='string'&&/^\d{4}-\d\d-\d\d$/.test(l)&&/^\d{4}-\d\d-\d\d$/.test(s))return l>s?l:s;
+  return l}
+function mergePub(base,loc,srv){const o={};new Set([...Object.keys(loc),...Object.keys(srv),...Object.keys(base)]).forEach(k=>{const v=m3(base[k],loc[k],srv[k],k);if(v!==undefined&&v!==null)o[k]=v});
+  if(srv.last&&loc.last&&srv.last>loc.last&&_J(loc.last)===_J(base.last)){['streak','maxStreak'].forEach(k=>{if(srv[k]!=null)o[k]=srv[k]})}return o}
+function setBase(m){try{Object.defineProperty(m,'_b',{value:clean(splitM(m).pub),enumerable:false,writable:true,configurable:true})}catch(e){}return m}
+function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});if(m.mem){if(!Array.isArray(m.mem.days))m.mem.days=m.mem.days?Object.values(m.mem.days):[];if(m.mem.holds&&!Array.isArray(m.mem.holds))m.mem.holds=Object.values(m.mem.holds)}if(m.memHist&&!Array.isArray(m.memHist))m.memHist=Object.values(m.memHist);if(m.unpaid&&!Array.isArray(m.unpaid))m.unpaid=Object.values(m.unpaid);if(m.sentLog&&!Array.isArray(m.sentLog))m.sentLog=Object.values(m.sentLog);if(!m.name)m.name=pub.nick||'회원';m.goal=m.goal||[];m.phone=m.phone||'';m.attend=Array.isArray(m.attend)?m.attend.filter(x=>typeof x==='string'):(m.attend&&typeof m.attend==='object'?Object.values(m.attend).filter(x=>typeof x==='string'):[]);m.friends=m.friends||[];m.badges=m.badges||[];m.owned=m.owned||[];m.best=Object.assign({bag:0,rope:0,shadow:0},m.best||{});m.equip=Object.assign({char:'boxer',glove:'g_red',head:'',shoes:'s_basic',trunks:'t_black',belt:''},m.equip||{});return setBase(m)}
 const isLocal=id=>!FB_ON()||id==='0000';
 let IS_ADMIN=false;
 const DB={
@@ -1513,7 +1529,10 @@ const DB={
   async get(id){if(isLocal(id))return mig(local.members[id])||null;
     try{const pub=(await gref('members/'+id).get()).val();if(!pub)return null;let prv=null;try{prv=(await gref('private/'+id).get()).val()}catch(e){}return joinM(pub,prv)}catch(e){return null}},
   async save(m){m.rev=(m.rev||0)+1;if(isLocal(m.id)){local.members[m.id]=m;persist();return}
-    try{await gref('members/'+m.id).set(clean(splitM(m).pub))}catch(e){toast('저장이 안 됐어요. 잠시 후 다시 해 주세요')}},
+    try{let pub=clean(splitM(m).pub);
+      if(m._b){try{const srv=(await Promise.race([gref('members/'+m.id).get(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('t')),4000))])).val();
+        if(srv&&_J(srv)!==_J(m._b)){const mg=mergePub(m._b,pub,srv);mg.rev=Math.max(+srv.rev||0,+pub.rev||0)+1;delete mg.nick;mg.nick=pub.nick;Object.keys(mg).forEach(k=>{if(k!=='nick')m[k]=mg[k]});pub=mg;try{if(Array.isArray(m.attend))m.attend=m.attend.filter(x=>typeof x==='string')}catch(e){}}}catch(e){}}
+      await gref('members/'+m.id).set(pub);try{m._b=clean(pub)}catch(e){}}catch(e){toast('저장이 안 됐어요. 잠시 후 다시 해 주세요')}},
   async savePriv(m){if(isLocal(m.id)){local.members[m.id]=m;persist();return}try{await gref('private/'+m.id).set(clean(splitM(m).prv))}catch(e){toast('회원 정보 저장 실패')}},
   async all(){if(!FB_ON())return Object.values(local.members).map(mig);
     try{const pub=(await gref('members').get()).val()||{};let prv={};if(IS_ADMIN){try{prv=(await gref('private').get()).val()||{}}catch(e){}}
@@ -2210,7 +2229,8 @@ let saveT=0;function saveMe(){clearTimeout(saveT);saveT=setTimeout(()=>ME&&DB.sa
 let meOff=null;
 function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id))return;const id=ME.id;
   const r1=gref('members/'+id),r2=gref('private/'+id);
-  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}try{tkNotice(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}};
+  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}try{tkNotice(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}
+    else if(ME._b&&_J(clean(v))!==_J(ME._b)){try{const loc=clean(splitM(ME).pub);const mg=mergePub(ME._b,loc,v);Object.keys(mg).forEach(k=>{if(k!=='nick')ME[k]=mg[k]});ME._b=clean(v);if(_J(mg)!==_J(v))saveMe();refreshTop()}catch(e){}}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
 async function enterWorld(){try{fixDay(ME)}catch(e){}try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}try{startLive()}catch(e){}try{startSocial()}catch(e){}show('v-world');setTab('map');try{featApply()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},1400);try{refreshTop()}catch(e){console.error('refreshTop',e)};setTimeout(()=>{try{beatOnline()}catch(e){}},400);watchMe();syncOwnerBar();syncGuestBar();setTimeout(syncOwnerBar,1500);if(isStaff(ME)){setTimeout(()=>{try{onbStart()}catch(e){}},900);return}if(isGuest())return;let pa=null;try{pa=sessionStorage.getItem('nnn_att')}catch(e){}if(pa)setTimeout(()=>qrAttend(pa),300);else setTimeout(showPopups,600);try{renderRaffle()}catch(e){}try{renderPins()}catch(e){}setTimeout(()=>{try{rfAuto()}catch(e){}},2600);setTimeout(()=>{try{crGuideTry()}catch(e){}},3500)}
