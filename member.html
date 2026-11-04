@@ -5070,7 +5070,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
       const t0=setTimeout(()=>{if(tk===ADT){const b=$('#sheetRoot .sheet .small');if(b)b.textContent='인터넷이 느려요. 조금만 기다려 주세요…'}},4000);
       m=await DB.get(id);clearTimeout(t0);if(tk!==ADT)return;if(!m){toast('회원 정보를 불러오지 못했어요. 다시 눌러 주세요');closeSheetFn&&closeSheetFn();return}}}
   await famLoad();if(tk!==ADT)return;
-  sheet(`<div class="row" style="align-items:center"><div id="admFace" style="width:84px;height:84px;border-radius:10px;background:var(--mat);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:var(--muted)">${m.hasFace?'불러오는 중':'사진 없음'}</div><div class="grow"><h2>${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>${m.approvedAt?`<span class="pill">승인 ${esc(md(m.approvedAt))}</span>`:'<span class="pill fire">승인 대기</span>'}</div></div>
+  sheet(`<div class="row" style="align-items:center"><div id="admFace" style="width:84px;height:84px;border-radius:10px;background:var(--mat);overflow:hidden;flex:0 0 auto;display:grid;place-items:center;font-size:11px;color:var(--muted)">${m.hasFace?'불러오는 중':'사진 없음'}</div><div class="grow"><h2>${esc(m.name)} <span class="small num">${esc(m.id)}</span></h2>${m.approvedAt?`<span class="pill">승인 ${esc(md(m.approvedAt))}</span>`:'<span class="pill fire">승인 대기</span>'} <button class="btn sm ghost" id="admEdit" style="margin-top:4px">✏️ 이름·정보 고치기</button></div></div>
     ${m.approvedAt?'':'<button class="btn red" id="admApprove">가입 승인하고 약관·이용수칙 보내기</button>'}
     <div class="row"><label class="btn ghost sm grow" for="admFaceIn" style="text-align:center">${m.hasFace?'얼굴 사진 다시 찍기':'얼굴 사진 찍어 등록'}</label><label class="btn ghost sm" for="admFaceG" style="text-align:center">사진첩</label><input id="admFaceIn" type="file" accept="image/*" capture="user" hidden><input id="admFaceG" type="file" accept="image/*" hidden></div>
     <div class="qrow"><div class="grow">연락처 <a class="num" href="tel:${esc((m.phone||'').replace(/[^0-9]/g,''))}" style="font-weight:600">${esc(m.phone||'-')}</a></div>${m.phone?`<a class="btn sm ghost" href="tel:${esc(m.phone.replace(/[^0-9]/g,''))}">전화</a><a class="btn sm ghost" href="sms:${esc(m.phone.replace(/[^0-9]/g,''))}">문자</a>`:''}</div>
@@ -5094,6 +5094,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     if(syncing){el.classList.add('syncing');setTimeout(()=>el.classList.remove('syncing'),5000)}
+    el.querySelector('#admEdit').onclick=()=>{close();admEditInfo(m.id)};
     el.querySelector('#admCrAdj').onclick=()=>{close();crAdjust(m.id,()=>admDetail(m.id))};
     el.querySelector('#admGive').onclick=async()=>{const a=parseInt(el.querySelector('#admAmt').value)||0;m.credits+=a;if(a>0)m.earned+=a;m.crLog=funArr(m.crLog).concat([{a,why:'관장 지급',at:Date.now()}]).slice(-30);await DB.save(m);toast(m.name+' 님에게 '+a+' 크레딧');renderAdmRows();close()};
     el.querySelector('#admAtt').onclick=async e=>{e.target.disabled=true;e.target.textContent='출석 처리 중…';const sc=el.scrollTop;padBuf=m.id;await doAttendAdmin(m.id);await admDetail(m.id);const s2=$('#sheetRoot .sheet');if(s2)s2.scrollTop=sc};
@@ -7082,6 +7083,27 @@ const BOX_STEPS=[{w:2,tk:2},{w:4,tk:3},{w:8,tk:4,cp:1},{w:12,tk:5,cp:1}];
 const funArr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==='object'?Object.values(x).filter(v=>v!=null):[]);
 
 
+
+/* 관장: 회원 이름·연락처 등 고치기 (오타 수정) */
+async function admEditInfo(id){const m=await DB.get(id);if(!m){toast('회원을 찾지 못했어요');return}
+  sheet(`<h2>✏️ 회원 정보 고치기 <span class="small num">${esc(m.id)}</span></h2>
+    <div class="field" style="margin:0"><label for="eiN">이름</label><input id="eiN" maxlength="20" value="${esc(m.name||'')}"></div>
+    <div class="field" style="margin:0"><label for="eiP">연락처</label><input id="eiP" inputmode="tel" value="${esc(m.phone||'')}"></div>
+    <div class="small" id="eiPH" style="color:#B07A08" hidden>⚠ 연락처를 바꾸면 회원의 <b>앱 비밀번호(연락처 뒤 4자리)</b>도 새 번호 뒤 4자리로 바뀌어요. 이미 로그인된 휴대폰은 그대로 쓸 수 있어요.</div>
+    <div class="row" style="gap:8px"><div class="field grow" style="margin:0"><label for="eiB">생년월일</label><input id="eiB" placeholder="예: 2010-03-15" value="${esc(m.birth||'')}"></div><div class="field" style="margin:0;width:110px"><label for="eiG">성별</label><select id="eiG">${['','남','여'].map(g=>`<option ${g===(m.gender||'')?'selected':''} value="${g}">${g||'-'}</option>`).join('')}</select></div></div>
+    <div class="field" style="margin:0"><label for="eiNote">참고사항 <span class="small">(부상·건강 등)</span></label><textarea id="eiNote" rows="2" maxlength="300">${esc(m.note||'')}</textarea></div>
+    <button class="btn red" id="eiGo">저장</button><button class="btn ghost" id="eiBack">취소</button>`,(el,close)=>{const $e=q=>el.querySelector(q);const ph0=String(m.phone||'').replace(/\D/g,'');
+    $e('#eiP').oninput=()=>{$e('#eiPH').hidden=$e('#eiP').value.replace(/\D/g,'')===ph0};
+    $e('#eiBack').onclick=()=>{close();admDetail(id)};
+    $e('#eiGo').onclick=async()=>{const name=$e('#eiN').value.replace(/\s+/g,' ').trim();const phone=normPhone($e('#eiP').value);const birth=$e('#eiB').value.trim();
+      if(name.length<2){toast('이름을 2글자 이상 적어 주세요');return}const pd=phone.replace(/\D/g,'');if(pd&&pd.length<10){toast('연락처를 확인해 주세요');return}
+      const b=$e('#eiGo');b.disabled=true;b.textContent='저장 중…';const f=await DB.get(id)||m;const oldName=f.name,oldPd=String(f.phone||'').replace(/\D/g,'');
+      f.name=name;f.phone=phone;f.birth=birth;f.gender=$e('#eiG').value;f.note=$e('#eiNote').value.trim();
+      await DB.savePriv(f);await DB.save(f);
+      if(FB_ON()){try{await gref('roster/'+id).set({name})}catch(e){}if(pd.length>=10&&pd!==oldPd){try{await gref('mpin/'+id).set(pd.slice(-4))}catch(e){}}try{dupSave(f)}catch(e){}}
+      try{const i=ADM.all&&ADM.all.findIndex(x=>x.id===id);if(i>=0)ADM.all[i]=f}catch(e){}
+      memoAdd&&oldName!==name&&memoAdd(id,`이름 수정: ${oldName} → ${name}`,'etc').catch(()=>{});
+      toast(oldName!==name?`이름을 "${name}"(으)로 고쳤어요`:'저장했어요',3000);close();try{renderAdmRows('cache')}catch(e){}admDetail(id)}})}
 /* ===== 관장: 회원 크레딧 현황표 · 차감 ===== */
 const CRB={sort:'cr',q:''};
 async function openCrBoard(){sheet('<div style="padding:40px 0;text-align:center"><div class="spin"></div><div class="small" style="margin-top:10px">불러오는 중…</div></div>');
