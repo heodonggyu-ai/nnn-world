@@ -242,6 +242,26 @@
        ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && (!data.exists() || data.child('status').val() === 'pending') && (!newData.exists() || newData.child('status').val() === 'pending')))"
       }
      }
+    },
+    "meal": {
+     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     "$code": {
+      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+      "$id": {
+       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && root.child('gym/staff').child($code).child('meal').val() === true && (!data.exists() || data.child('st').val() === 'rec' || data.child('st').val() === 'sub' || data.child('st').val() === 'no') && (!newData.exists() || newData.child('st').val() === 'rec' || newData.child('st').val() === 'sub')))",
+       ".validate": "!newData.exists() || (newData.child('date').isString() && newData.child('st').isString() && (!newData.child('memo').exists() || newData.child('memo').val().length <= 60))"
+      }
+     }
+    },
+    "mealimg": {
+     ".read": "auth != null && root.child('gym/admins').child(auth.uid).exists()",
+     "$code": {
+      ".read": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || (root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()))",
+      "$id": {
+       ".write": "auth != null && (root.child('gym/admins').child(auth.uid).exists() || ((root.child('gym/coaches').child(auth.uid).child('code').val() === $code && root.child('gym/coachcodes').child($code).exists()) && root.child('gym/staff').child($code).child('meal').val() === true && (!root.child('gym/hr/meal').child($code).child($id).exists() || root.child('gym/hr/meal').child($code).child($id).child('st').val() !== 'ok')))",
+       ".validate": "!newData.exists() || (newData.child('d').isString() && newData.child('d').val().length <= 700000)"
+      }
+     }
     }
    },
    "trials": {

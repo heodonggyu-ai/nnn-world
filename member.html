@@ -708,6 +708,8 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .crr{width:100%;border:0;border-top:1px solid var(--mat);background:#fff;font:inherit;color:var(--ink);text-align:left;cursor:pointer}.crr:active{background:#FFF4D6}.crn{color:#8A8F99;font-size:12px}.crm{min-width:0;display:flex;align-items:baseline;gap:5px;white-space:nowrap;overflow:hidden}.crm b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis}.crm small{font-size:10.5px;color:#8A8F99}.crr>span.num,.crr>b{font-size:13px}
 .crbar{display:block;height:4px;background:var(--mat);border-radius:9px;overflow:hidden}.crbar i{display:block;height:100%}.crc{font-size:14px!important}.crc.ok{color:#1E6B45}.crgo{color:#8A8F99;font-weight:700;text-align:center}
 .catk{display:flex;align-items:center;gap:6px;background:#FFF8E1;border:1.5px dashed #E0A100;border-radius:12px;padding:8px 10px}.stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;background:#fff}.stepper button{border:0;background:none;font:inherit;font-size:18px;width:30px;height:30px;cursor:pointer}.stepper b{min-width:22px;text-align:center}
+.mlrow{display:flex;align-items:center;gap:8px;border-top:1px solid var(--mat);padding:7px 0}.mlth{flex:0 0 auto;width:48px;height:48px;border-radius:8px;background:#F1EDE4 center/cover;cursor:zoom-in}.mlrow.adm{flex-wrap:wrap}.mlrow.adm>.grow{min-width:0;flex:1}.mlact{display:flex;gap:6px;align-items:center;justify-content:flex-end;width:100%}.mlco{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}
+.mealc .stats div{background:#FFFBEA;border-radius:10px;padding:6px;text-align:center;display:flex;flex-direction:column}.mealc .stats b{font-size:16px}.mealc .stats span{font-size:11px;color:#6B4A00}
 .crnow{display:flex;align-items:baseline;justify-content:space-between;background:#FFFBEA;border:1.5px solid #F0C75E;border-radius:12px;padding:10px 14px}.crnow b{font-size:26px}
 .calog{display:flex;flex-direction:column;gap:4px}.calog>div{display:flex;gap:10px;font-size:13px;border-bottom:1px solid var(--mat);padding:4px 0}
 .crg{background:linear-gradient(160deg,#FFF8DC,#FFE6A8);border:3px solid #E0A100;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;animation:tkpop .45s cubic-bezier(.2,1.6,.4,1)}
@@ -1109,7 +1111,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <button class="btn ghost" id="cSpar">회원 스파링 확인 · 코치 피드백</button>
   <button class="btn ghost" id="cWho">지금 체육관 · 맵 접속자 보기</button>
   <button class="btn ghost" id="cVoice">회원 의견함<i class="cbadge" id="cVoiceN" hidden></i></button>
-  <div class="atabs" id="ctabs"><button data-ct="work" class="on">내 근태</button><button data-ct="leave">휴가</button><button data-ct="mem">회원 목록</button></div>
+  <div class="atabs" id="ctabs"><button data-ct="work" class="on">내 근태</button><button data-ct="leave">휴가</button><button data-ct="mem">회원 목록</button><button data-ct="meal" id="ctMeal" hidden>🍱 식대</button></div>
   <div id="cvWork" style="display:flex;flex-direction:column;gap:12px">
     <div class="card clock"><div class="small" id="ckDate"></div><div id="ckSched" class="small"></div><div class="ckbig num" id="ckNow"></div><div id="ckState"></div><button class="btn red" id="ckBtn">출근하기</button><div class="small" id="ckLoc"></div></div>
     <div class="card"><div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="cwPrev">‹</button><b id="cwMon" style="font-family:var(--display);font-weight:400;font-size:18px"></b><button class="btn sm ghost" id="cwNext">›</button></div>
@@ -1121,6 +1123,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <button class="btn red" id="lvNew">+ 휴가 신청</button>
     <div class="card"><h3 style="font-size:18px">신청 내역</h3><div id="lvList"></div></div>
   </div>
+  <div id="cvMeal" hidden style="display:flex;flex-direction:column;gap:12px"></div>
   <div id="cvMem" hidden style="display:flex;flex-direction:column;gap:12px">
   <h2 style="font-size:28px">출석 현황</h2>
   <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" id="cPrev" aria-label="전날">‹</button><b id="cDay" style="font-family:var(--display);font-weight:400;font-size:20px"></b><button class="btn sm ghost" id="cNext" aria-label="다음날">›</button></div>
@@ -1344,6 +1347,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <p class="small" style="margin:0">출력해서 데스크에 붙여 두세요. 휴대폰으로 찍으면 <b>가입 신청서가 바로</b> 열려요. 기존 회원은 신청서 위 '← 처음으로'에서 입장하면 돼요.</p>
   </div>
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="align-items:center"><div class="grow"><h3 style="font-size:20px">코치 대화방</h3><div class="small" id="ocChatSub">코치들과 대화하고 직원 공지를 올려요</div></div><button class="btn sm red" id="ocChat">열기<i class="cbadge" id="ocChatN" hidden></i></button></div></div>
+  <div class="card" data-atab="staff" id="mealAdm" style="display:flex;flex-direction:column;gap:8px;border:2px solid #E0A100"><div class="small">불러오는 중…</div></div>
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">오늘 근무</h3><div id="sfToday"></div></div>
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:20px">승인할 요청 <span class="small num" id="sfReqN"></span></h3><div id="sfReq"></div></div>
   <div class="card" data-atab="staff" style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="font-size:20px" class="grow">코치 · 직원</h3><button class="btn sm ghost" id="sfCsv">월간 근태(.csv)</button></div>
@@ -3297,6 +3301,68 @@ async function bdOpen(id){await bdLoad();const p=BD.posts[id];if(!p){toast('지�
     {const b=$e('#bvRep');if(b)b.onclick=async()=>{if(await hset(`brep/${id}/${me}`,Date.now())){toast('신고했어요. 관장님이 확인할게요');b.disabled=true}}}
     {const b=$e('#bvPin');if(b)b.onclick=async()=>{if(await hset(`board/${id}/pin`,p.pin?null:1)){p.pin=p.pin?undefined:1;toast(p.pin?'맨 위에 고정했어요':'고정을 풀었어요');close();bdPaint()}}}})}
 
+/* ===== 코치 식대: 영수증 올리고 제출 → 관장 승인 ===== */
+const MEAL={mon:TODAY().slice(0,7),amon:TODAY().slice(0,7)};
+const mealAmt=()=>+(local.meta.mealAmt||8000);
+const MST={rec:['기록됨','#8A8F99'],sub:['제출함','#E0A100'],ok:['승인','#2B9B66'],no:['반려','#D9343A']};
+function monShift(m,d){const x=new Date(m+'-01T00:00:00');x.setMonth(x.getMonth()+d);return dstr(x).slice(0,7)}
+async function renderCoachMeal(){const box=$('#cvMeal');if(!box)return;if(!CW.code&&!(await loadCW()))return;if(!(CW.st&&CW.st.meal===true)){box.innerHTML='<div class="card small">식대 지원 대상이 아니에요. 관장님께 문의해 주세요.</div>';return}
+  box.innerHTML='<div class="small">불러오는 중…</div>';const all=(await hget('hr/meal/'+CW.code))||{};const mon=MEAL.mon;const A=mealAmt();
+  const L=Object.entries(all).map(([id,v])=>Object.assign({id},v)).filter(x=>x.date&&x.date.startsWith(mon)).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
+  const cnt=k=>L.filter(x=>x.st===k).length;const live=L.filter(x=>x.st!=='no');const recN=cnt('rec');
+  box.innerHTML=`<div class="card mealc"><div class="row" style="align-items:center"><div class="grow"><div class="label">🍱 식대 지원</div><b style="font-family:var(--display);font-weight:400;font-size:20px">영수증 1장당 ${won(A)}</b></div></div>
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:6px"><button class="btn sm ghost" data-mm="-1">‹</button><b>${+mon.slice(5)}월</b><button class="btn sm ghost" data-mm="1" ${mon>=TODAY().slice(0,7)?'disabled':''}>›</button></div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-top:6px"><div><b class="num">${live.length}장</b><span>이달 영수증</span></div><div><b class="num">${won(live.length*A)}</b><span>지원 금액</span></div><div><b class="num">${won(cnt('ok')*A)}</b><span>승인됨</span></div></div>
+      <div class="row" style="gap:6px;margin-top:8px"><label class="btn red grow" for="mlCam" style="text-align:center">📷 영수증 찍기</label><label class="btn ghost" for="mlPic" style="text-align:center">사진첩</label><input id="mlCam" type="file" accept="image/*" capture="environment" hidden><input id="mlPic" type="file" accept="image/*" hidden></div>
+      ${recN?`<button class="btn gold" id="mlSub" style="margin-top:6px">📤 관장님께 제출하기 (${recN}장 · ${won(recN*A)})</button>`:''}
+      <div class="small" style="color:var(--muted);margin-top:4px">찍어서 기록해 두고, 모아서 제출해요. 제출 전까지는 지우고 다시 올릴 수 있어요.</div></div>
+    <div class="card"><h3 style="font-size:18px">${+mon.slice(5)}월 영수증 <span class="small num">${L.length}장</span></h3>
+      ${L.length?L.map(x=>`<div class="mlrow"><div class="mlth" data-mv="${esc(x.id)}" style="${x.th?`background-image:url('${x.th}')`:''}"></div><div class="grow"><b class="num">${md(x.date)} (${DAYN[new Date(x.date+'T00:00:00').getDay()]})</b>${x.memo?` · ${esc(x.memo)}`:''}<div class="small">${x.paid?'결제 '+won(x.paid)+' · ':''}지원 ${won(x.sup||A)}${x.why?` · <span style="color:var(--red)">${esc(x.why)}</span>`:''}</div></div><span class="pill" style="background:${MST[x.st][1]};color:#fff">${MST[x.st][0]}</span>${x.st==='rec'||x.st==='no'?`<button class="btn sm ghost" data-md="${esc(x.id)}" style="color:var(--red)">지우기</button>`:''}</div>`).join(''):'<div class="small">아직 올린 영수증이 없어요.</div>'}</div>`;
+  box.querySelectorAll('[data-mm]').forEach(b=>b.onclick=()=>{MEAL.mon=monShift(MEAL.mon,+b.dataset.mm);renderCoachMeal()});
+  const pick=e=>{const f=e.target.files&&e.target.files[0];if(f)mealNew(f)};box.querySelector('#mlCam').onchange=pick;box.querySelector('#mlPic').onchange=pick;
+  {const b=box.querySelector('#mlSub');if(b)b.onclick=async()=>{b.disabled=true;let n=0;for(const x of L.filter(x=>x.st==='rec')){const v=Object.assign({},all[x.id],{st:'sub',subAt:Date.now()});if(await hset(`hr/meal/${CW.code}/${x.id}`,v))n++}toast(`${n}장을 제출했어요. 관장님 승인을 기다려 주세요`,3000);renderCoachMeal()}}
+  box.querySelectorAll('[data-md]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}await hset(`hr/mealimg/${CW.code}/${b.dataset.md}`,null);if(await hset(`hr/meal/${CW.code}/${b.dataset.md}`,null)){toast('지웠어요');renderCoachMeal()}});
+  box.querySelectorAll('[data-mv]').forEach(t=>t.onclick=()=>mealView(CW.code,t.dataset.mv))}
+async function mealNew(file){let img;try{img=await imgShrink(file,1100,.7)}catch(e){toast('사진을 열지 못했어요');return}
+  sheet(`<h2>🍱 영수증 기록</h2><img src="${img.d}" alt="영수증" style="width:100%;max-height:44vh;object-fit:contain;border-radius:10px;background:#F1EDE4">
+    <div class="row" style="gap:8px"><div class="field grow" style="margin:0"><label for="mlD">날짜</label><input id="mlD" class="dpick" readonly max="${TODAY()}" value="${TODAY()}"></div><div class="field grow" style="margin:0"><label for="mlP">결제 금액 <span class="small">(선택)</span></label><input id="mlP" inputmode="numeric" placeholder="예: 9,000"></div></div>
+    <div class="field" style="margin:0"><label for="mlM">메모 <span class="small">(식당 이름 등)</span></label><input id="mlM" maxlength="40" placeholder="예: 김밥천국 점심"></div>
+    <div class="small">지원 금액은 영수증 1장당 <b>${won(mealAmt())}</b>이에요.</div>
+    <button class="btn red" id="mlGo">기록하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{const $e=q=>el.querySelector(q);
+    $e('#mlP').oninput=()=>{const v=+$e('#mlP').value.replace(/\D/g,'')||0;$e('#mlP').value=v?v.toLocaleString():''};
+    $e('#mlGo').onclick=async()=>{const b=$e('#mlGo');b.disabled=true;b.textContent='올리는 중…';const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);const date=$e('#mlD').value||TODAY();
+      const all=(await hget('hr/meal/'+CW.code))||{};const same=Object.values(all).filter(x=>x&&x.date===date&&x.st!=='no').length;
+      if(!(await hset(`hr/mealimg/${CW.code}/${id}`,{d:img.d}))){b.disabled=false;b.textContent='기록하기';return}
+      const rec=clean({date,at:Date.now(),st:'rec',sup:mealAmt(),paid:+$e('#mlP').value.replace(/\D/g,'')||undefined,memo:$e('#mlM').value.trim()||undefined,th:img.th,name:CW.st.name||''});
+      if(!(await hset(`hr/meal/${CW.code}/${id}`,rec))){await hset(`hr/mealimg/${CW.code}/${id}`,null);b.disabled=false;b.textContent='기록하기';return}
+      toast(same?'기록했어요 (같은 날 영수증이 또 있어요)':'영수증을 기록했어요. 모아서 제출해 주세요',3000);close();MEAL.mon=date.slice(0,7);renderCoachMeal()}})}
+async function mealView(code,id){const v=await hget(`hr/mealimg/${code}/${id}`);if(!v||!v.d){toast('사진을 불러오지 못했어요');return}sheet(`<h2>영수증</h2><img src="${v.d}" alt="영수증" style="width:100%;border-radius:10px"><button class="btn ghost" data-close>닫기</button>`)}
+async function renderMealAdm(L){const box=$('#mealAdm');if(!box)return;L=L||SF.L||[];const mon=MEAL.amon;const A=mealAmt();
+  const all=(await hget('hr/meal'))||{};const on=L.filter(x=>x.st&&x.st.meal===true);
+  const rows=on.map(x=>{const R=Object.entries(all[x.code]||{}).map(([id,v])=>Object.assign({id},v)).filter(r=>r.date&&r.date.startsWith(mon)).sort((a,b)=>a.date.localeCompare(b.date));return{x,R}});
+  const subN=rows.reduce((t,r)=>t+r.R.filter(q=>q.st==='sub').length,0);
+  box.innerHTML=`<div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">🍱 코치 식대 ${subN?`<span class="pill fire">제출 ${subN}</span>`:''}</h3><button class="btn sm ghost" id="mlSet">대상·금액 설정</button></div>
+    <div class="row" style="justify-content:space-between;align-items:center"><button class="btn sm ghost" data-am="-1">‹</button><b>${mon.slice(0,4)}년 ${+mon.slice(5)}월 · 1장당 ${won(A)}</b><button class="btn sm ghost" data-am="1" ${mon>=TODAY().slice(0,7)?'disabled':''}>›</button></div>
+    ${on.length?rows.map(({x,R})=>{const ok=R.filter(q=>q.st==='ok'),sub=R.filter(q=>q.st==='sub');const dup={};R.forEach(q=>{if(q.st!=='no')dup[q.date]=(dup[q.date]||0)+1});
+      return `<div class="mlco"><div class="row" style="align-items:center"><b class="grow">${esc(x.st.name||x.name||'코치')}</b><span class="small">승인 <b>${ok.length}장 · ${won(ok.reduce((t,q)=>t+(+q.sup||A),0))}</b>${sub.length?` · 제출 ${sub.length}`:''}</span></div>
+        ${R.length?R.map(q=>`<div class="mlrow adm"><div class="mlth" data-av="${esc(x.code)}|${esc(q.id)}" style="${q.th?`background-image:url('${q.th}')`:''}"></div><div class="grow"><b class="num">${md(q.date)}</b>${dup[q.date]>1?' <span class="pill" style="background:#FDECEC;color:#B4232A">같은 날 '+dup[q.date]+'장</span>':''}${q.memo?` · ${esc(q.memo)}`:''}<div class="small">${q.paid?'결제 '+won(q.paid)+' · ':''}지원 ${won(q.sup||A)}${q.why?' · '+esc(q.why):''}</div></div><div class="mlact"><span class="pill" style="background:${MST[q.st][1]};color:#fff">${MST[q.st][0]}</span>${q.st==='sub'||q.st==='rec'?`<button class="btn sm red" data-mok="${esc(x.code)}|${esc(q.id)}">승인</button><button class="btn sm ghost" data-mno="${esc(x.code)}|${esc(q.id)}">반려</button>`:q.st==='ok'?`<button class="btn sm ghost" data-mun="${esc(x.code)}|${esc(q.id)}">취소</button>`:''}</div></div>`).join(''):'<div class="small">이달 영수증이 없어요</div>'}
+        ${sub.length>1?`<button class="btn sm gold" data-mall="${esc(x.code)}" style="width:100%;margin-top:6px">제출한 ${sub.length}장 모두 승인 (${won(sub.length*A)})</button>`:''}</div>`}).join(''):'<div class="small">식대를 쓰는 코치가 없어요. <b>대상·금액 설정</b>에서 정직원을 골라 주세요.</div>'}
+    ${on.length?`<button class="btn sm ghost" id="mlCsv">이달 식대 내역 저장(.csv)</button>`:''}`;
+  box.querySelectorAll('[data-am]').forEach(b=>b.onclick=()=>{MEAL.amon=monShift(MEAL.amon,+b.dataset.am);renderMealAdm(L)});
+  const setSt=async(key,st,why)=>{const [code,id]=key.split('|');const cur=(all[code]||{})[id];if(!cur)return;const v=Object.assign({},cur,{st,decAt:Date.now()});if(why)v.why=why;else delete v.why;return hset(`hr/meal/${code}/${id}`,v)};
+  box.querySelectorAll('[data-mok]').forEach(b=>b.onclick=async()=>{if(await setSt(b.dataset.mok,'ok')){toast('승인했어요');renderMealAdm(L)}});
+  box.querySelectorAll('[data-mun]').forEach(b=>b.onclick=async()=>{if(await setSt(b.dataset.mun,'sub')){toast('승인을 취소했어요');renderMealAdm(L)}});
+  box.querySelectorAll('[data-mno]').forEach(b=>b.onclick=async()=>{const why=(prompt('반려 사유 (코치에게 보여요)','영수증이 잘 안 보여요')||'').slice(0,40);if(await setSt(b.dataset.mno,'no',why)){toast('반려했어요');renderMealAdm(L)}});
+  box.querySelectorAll('[data-mall]').forEach(b=>b.onclick=async()=>{b.disabled=true;const code=b.dataset.mall;for(const [id,v] of Object.entries(all[code]||{}))if(v&&v.st==='sub'&&v.date.startsWith(mon))await setSt(code+'|'+id,'ok');toast('모두 승인했어요');renderMealAdm(L)});
+  box.querySelectorAll('[data-av]').forEach(t=>t.onclick=()=>{const [c,i]=t.dataset.av.split('|');mealView(c,i)});
+  {const b=box.querySelector('#mlCsv');if(b)b.onclick=()=>{const out=[['코치','날짜','메모','결제금액','지원금액','상태']];rows.forEach(({x,R})=>R.forEach(q=>out.push([x.st.name||'',q.date,q.memo||'',q.paid||'',q.sup||A,MST[q.st][0]])));download(`NNN_코치식대_${mon}.csv`,'﻿'+out.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')}}
+  box.querySelector('#mlSet').onclick=()=>sheet(`<h2>🍱 식대 대상 · 금액</h2><div class="small">식대 지원을 받을 <b>정직원</b>을 골라 주세요. 고른 코치의 코치 화면에만 '🍱 식대' 탭이 생겨요.</div>
+    <div style="display:flex;flex-direction:column;gap:4px">${L.filter(x=>x.active).map(x=>`<label class="check" style="margin:0"><input type="checkbox" data-mc="${esc(x.code)}" ${x.st&&x.st.meal===true?'checked':''}><span>${esc((x.st&&x.st.name)||x.name||'코치')} <span class="small num">${esc(x.code)}</span></span></label>`).join('')||'<div class="small">코치가 없어요</div>'}</div>
+    <div class="field" style="margin:0"><label for="mlA">영수증 1장당 지원 금액 (원)</label><input id="mlA" inputmode="numeric" value="${A.toLocaleString()}"></div>
+    <button class="btn red" id="mlSave">저장</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    el.querySelector('#mlSave').onclick=async()=>{for(const c of el.querySelectorAll('[data-mc]')){const code=c.dataset.mc;const x=L.find(y=>y.code===code);const was=!!(x&&x.st&&x.st.meal===true);if(c.checked!==was){await hset(`staff/${code}/meal`,c.checked?true:null);if(x){x.st=Object.assign({},x.st||{});if(c.checked)x.st.meal=true;else delete x.st.meal}}}
+      const a=+el.querySelector('#mlA').value.replace(/\D/g,'')||8000;if(a!==mealAmt()){local.meta.mealAmt=a;await DB.saveMeta()}toast('저장했어요');close();renderMealAdm(L)}})}
+
 /* ================= 가족 ================= */
 const FAM={list:{},at:0};
 const famDiscAmt=()=>+(local.meta.famDisc||10000);
@@ -4649,11 +4715,11 @@ function getPos(){return new Promise(res=>{if(!navigator.geolocation)return res(
 function distM(a,b){const R=6371000,toR=x=>x*Math.PI/180;const dLa=toR(b.lat-a.lat),dLo=toR(b.lng-a.lng);const h=Math.sin(dLa/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLo/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(h)))}
 /* ---- 코치 화면 ---- */
 const CW={mon:TODAY().slice(0,7),st:null,att:{},lvs:{},fix:{},code:null};
-function setCTab(k){$$('#ctabs [data-ct]').forEach(b=>b.classList.toggle('on',b.dataset.ct===k));$('#cvWork').hidden=k!=='work';$('#cvLeave').hidden=k!=='leave';$('#cvMem').hidden=k!=='mem';if(k==='mem')renderCoach();else renderCoachHR()}
+function setCTab(k){$$('#ctabs [data-ct]').forEach(b=>b.classList.toggle('on',b.dataset.ct===k));$('#cvWork').hidden=k!=='work';$('#cvLeave').hidden=k!=='leave';$('#cvMem').hidden=k!=='mem';$('#cvMeal').hidden=k!=='meal';if(k==='mem')renderCoach();else if(k==='meal')renderCoachMeal();else renderCoachHR()}
 $$('#ctabs [data-ct]').forEach(b=>b.onclick=()=>setCTab(b.dataset.ct));
 async function loadCW(){const code=await myCoachCode();CW.code=code;if(!code)return false;
   const [st,att,lvs,fix,cc]=await Promise.all([hget('staff/'+code),hget('hr/att/'+code),hget('hr/leave/'+code),hget('hr/fix/'+code),FB_ON()?Promise.resolve(null):Promise.resolve((local.coachcodes||{})[code])]);
-  CW.st=st||{name:(cc&&cc.name)||'코치'};CW.att=att||{};CW.lvs=lvs||{};CW.fix=fix||{};return true}
+  CW.st=st||{name:(cc&&cc.name)||'코치'};CW.att=att||{};CW.lvs=lvs||{};CW.fix=fix||{};try{$('#ctMeal').hidden=!(CW.st&&CW.st.meal===true)}catch(e){}return true}
 let ckTimer=0;
 async function renderCoachHR(){if(!(await loadCW())){$('#ckState').innerHTML='<span class="small" style="color:var(--red)">코치 정보를 읽지 못했어요. 다시 로그인해 주세요.</span>';return}
   const T=TODAY(),rec=CW.att[T],sc=schedOf(CW.st,T),st=dayStatus(CW.st,rec,CW.lvs,T);
@@ -4711,7 +4777,7 @@ async function loadStaffAll(){let [codes,staff,att,lv,fx]=await Promise.all([COA
   const ids=[...new Set([...Object.keys(codes||{}),...Object.keys(staff||{})])];
   for(const k of Object.keys(codes||{})){if(!(staff||{})[k]){const v={name:codes[k].name,role:'coach',leaveTotal:15,since:TODAY(),sched:{}};staff=staff||{};staff[k]=v;hset('staff/'+k,v)}}
   return ids.map(code=>({code,active:!!(codes||{})[code],st:Object.assign({name:((codes||{})[code]||{}).name||'(삭제된 계정)'},(staff||{})[code]||{}),att:(att||{})[code]||{},lvs:(lv||{})[code]||{},fix:(fx||{})[code]||{}}))}
-async function renderStaffAdmin(){if(!$('#sfList'))return;const L=await loadStaffAll();SF.L=L;const T=TODAY();
+async function renderStaffAdmin(){if(!$('#sfList'))return;const L=await loadStaffAll();SF.L=L;try{renderMealAdm(L)}catch(e){console.error('meal',e)}const T=TODAY();
   $('#sfToday').innerHTML=L.filter(x=>x.active).map(x=>{const r=x.att[T],s=dayStatus(x.st,r,x.lvs,T),sc=schedOf(x.st,T);return`<div class="hrrow"><b class="grow">${esc(x.st.name)} <span class="small">${sc?sc.s+'~'+sc.e:'일정 없음'}</span></b><span class="small num">${r&&r.in?hm(r.in)+' ~ '+(r.out?hm(r.out):''):''}</span>${hrPill(s)}</div>`}).join('')||'<div class="small">코치 계정을 먼저 만들어 주세요 (아래 코치 계정).</div>';
   const reqs=[];L.forEach(x=>{Object.entries(x.lvs).forEach(([k,l])=>{if(l.status==='pending')reqs.push({kind:'leave',x,k,v:l})});Object.entries(x.fix).forEach(([k,f])=>{if(f.status==='pending')reqs.push({kind:'fix',x,k,v:f})})});
   $('#sfReqN').textContent=reqs.length?reqs.length+'건':'';const bd=$('#atb-staff');if(bd){bd.textContent=reqs.length||'';bd.hidden=!reqs.length}
