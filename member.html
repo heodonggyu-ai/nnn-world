@@ -7067,7 +7067,7 @@ async function openComp(){const c=compCfg();if(!c){toast('지금 올라간 대�
     <div class="small">${c.date?md(c.date):''}${c.place?' · '+esc(c.place):''}</div>${c.note?`<p style="margin:0;white-space:pre-line">${esc(c.note)}</p>`:''}
     <div class="label">출전 확정 <b class="num">${ids.length}</b>명</div>
     <div class="cgrid" id="cmpGrid">${ids.map(id=>`<div class="cface" style="cursor:default${member&&id===ME.id?';outline:2px solid var(--red)':''}"><canvas width="160" height="180" data-cav="${esc(id)}" style="width:64px;height:72px"></canvas><b style="font-size:13px">${esc(nm(id))}</b></div>`).join('')||'<div class="small">명단을 준비 중이에요</div>'}</div>
-    ${inList?'<div class="memsum" style="border-color:var(--red)"><b style="color:var(--red)">💪 출전 확정! 함께 응원할게요</b></div>':member?(want?'<div class="memsum"><b>✅ 다음 대회 출전 희망 접수됨</b><div class="small">관장님이 확인하고 연락드려요.</div></div>':'<button class="btn red" id="cmpWant">나도 다음 대회 나가 보고 싶어요</button><div class="small">초보도 체급·나이별로 나갈 수 있어요. 누르면 관장님께 전달돼요.</div>'):''}
+    ${inList?'<div class="memsum" style="border-color:var(--red)"><b style="color:var(--red)">💪 출전 확정! 함께 응원할게요</b>'+(c.chat?`<a class="btn red" style="text-align:center;text-decoration:none;background:#FEE500;color:#191919;border-color:#FEE500" href="${esc(c.chat)}" target="_blank" rel="noopener">💬 출전 선수 단톡방 들어가기</a><div class="small">대회 일정·계체·집합 시간 안내가 올라와요. 꼭 들어와 주세요!</div>`:'')+'</div>':member?(want?'<div class="memsum"><b>✅ 다음 대회 출전 희망 접수됨</b><div class="small">관장님이 확인하고 연락드려요.</div></div>':'<button class="btn red" id="cmpWant">나도 다음 대회 나가 보고 싶어요</button><div class="small">초보도 체급·나이별로 나갈 수 있어요. 누르면 관장님께 전달돼요.</div>'):''}
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     el.querySelectorAll('[data-cav]').forEach(cv=>{const m=by[cv.dataset.cav];try{avatarTo(cv,(m&&m.equip)||{char:'boxer'},{h:46,noFx:true})}catch(e){}});
     const w=el.querySelector('#cmpWant');if(w)w.onclick=async()=>{w.disabled=true;if(await hset('compwant/'+ME.id,{at:Date.now()})){toast('관장님께 전달했어요! 화이팅 🥊',3000);close();setTimeout(openComp,250)}else w.disabled=false}})}
@@ -7079,17 +7079,43 @@ function renderPins(){const h=pinsHTML();$$('[data-pins]').forEach(el=>{el.hidde
 async function renderCompAdm(){const box=$('#cmpAdmBox');if(!box)return;const c=local.meta.comp;let wants={};try{wants=(await hget('compwant'))||{}}catch(e){}
   const wn=Object.keys(wants).length;
   box.innerHTML=(c&&c.title?`<div class="memsum"><div class="row" style="align-items:center"><b class="grow">🥊 ${esc(c.title)}</b><span class="pill">${c.hidden?'숨김':'회원 공지 중'}</span></div><div class="small">${c.date?md(c.date):''}${c.place?' · '+esc(c.place):''} · 출전 확정 <b>${compIds(c).length}명</b></div></div>`:'<p class="small" style="margin:0">대회 이름·날짜·출전 확정 회원을 고르면 회원 앱 공지와 체육관 맵 맨 위에 떠요. 다른 회원은 <b>나도 나가 보고 싶어요</b>를 눌러 신청할 수 있어요.</p>')+
-    `<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm red grow" id="cmpEd">${c&&c.title?'명단·대회 수정':'대회 출전 명단 만들기'}</button><button class="btn sm ghost grow" id="cmpW">출전 희망 ${wn}명</button>${c&&c.title?'<button class="btn sm ghost grow" id="cmpSee">회원 화면 보기</button>':''}</div>`;
-  box.querySelector('#cmpEd').onclick=()=>compEdit();const s=box.querySelector('#cmpSee');if(s)s.onclick=()=>openComp();
+    `<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm red grow" id="cmpEd">${c&&c.title?'명단·대회 수정':'대회 출전 명단 만들기'}</button><button class="btn sm ghost grow" id="cmpW">출전 희망 ${wn}명</button>${c&&c.title?'<button class="btn sm ghost grow" id="cmpSee">회원 화면 보기</button>':''}</div>${c&&c.title&&c.chat?'<button class="btn sm grow" id="cmpInv" style="background:#FEE500;color:#191919;border-color:#FEE500">💬 선수 단톡방 초대 보내기</button>':''}`;
+  box.querySelector('#cmpEd').onclick=()=>compEdit();const s=box.querySelector('#cmpSee');if(s)s.onclick=()=>openComp();const iv=box.querySelector('#cmpInv');if(iv)iv.onclick=()=>compInvite();
   box.querySelector('#cmpW').onclick=async()=>{const all=await DB.all();const by={};all.forEach(m=>by[m.id]=m);const L=Object.entries(wants).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
     sheet(`<h2>다음 대회 출전 희망 ${L.length}명</h2><div style="display:flex;flex-direction:column;gap:4px">${L.map(([id,v])=>{const m=by[id];return`<div class="rfp"><b class="grow">${esc(m?m.name:id)} <span class="small num">${esc(id)}</span><br><span class="small">${new Date(v.at).toLocaleDateString('ko-KR')} 신청${m&&m.phone?' · '+esc(m.phone):''}</span></b><button class="btn sm ghost" data-wx="${esc(id)}">확인 완료</button></div>`}).join('')||'<div class="small">아직 없어요</div>'}</div><button class="btn ghost" data-close>닫기</button>`,(el)=>{
       el.querySelectorAll('[data-wx]').forEach(b=>b.onclick=async()=>{if(await hset('compwant/'+b.dataset.wx,null)){b.closest('.rfp').remove();renderCompAdm()}})})}}
-const COMP_PRESET={title:'제1회 세종특별자치시시장배 전국생활체육복싱대회',place:'세종특별자치시',names:'권순상 김도영 이은주 박후영 박목화 이자원 이재왕 원유현 윤중민 유재홍 유정우 김태준 배선율 이승훈 김대린 박형기 김아산 선성우 홍석환 최동환 박성수 최인규 임채영 김수원 백기윤 진서연 김동영 이희수 박혜인'};
+/* 대회 선수 단톡방 초대: 앱 회원 → 카톡 · 이름만 → 문자 */
+const cmpInvGet=()=>{try{return JSON.parse(localStorage.getItem('nnn_cmpinv')||'{}')}catch(e){return{}}};
+const cmpInvSet=o=>{try{localStorage.setItem('nnn_cmpinv',JSON.stringify(o))}catch(e){}};
+async function compInvite(){const c=local.meta.comp;if(!c||!c.chat){toast('단톡방 링크를 먼저 넣어 주세요');return}
+  const all=await DB.all();const by={};all.forEach(m=>by[String(m.id)]=m);const ids=compIds(c);const S=cmpInvGet();const key=c.at||c.title;if(S._k!==key){for(const k in S)delete S[k];S._k=key}
+  const nmOf=id=>id.startsWith('n:')?id.slice(2):((c.names&&c.names[id])||(by[id]&&by[id].name)||id);
+  const txt=n=>`[탕정 엔엔엔복싱] ${n}님, ${c.title} 출전 선수 단톡방이에요 🥊\n대회 일정·계체·집합 안내가 여기로 올라가요. 아래 링크로 꼭 들어와 주세요!\n👉 ${c.chat}`;
+  const mem=ids.filter(id=>by[id]),non=ids.filter(id=>!by[id]);
+  const row=id=>{const m=by[id],n=nmOf(id),st=S[id];const ph=m?String(m.phone||'').replace(/[^\d]/g,''):(S['p:'+id]||'');
+    return`<div class="rfp" data-ir="${esc(id)}" style="flex-wrap:wrap;gap:6px${st?';opacity:.55':''}"><b class="grow">${esc(n)} ${m?`<span class="small num">${esc(id)}</span>`:'<span class="small">앱 미가입</span>'}${st?` <span class="pill">${st==='k'?'카톡 보냄':'문자 보냄'}</span>`:''}</b>
+      ${m?`<button class="btn sm" data-ik="${esc(id)}" style="background:#FEE500;color:#191919;border-color:#FEE500">카톡</button>${ph?`<a class="btn sm ghost" data-is="${esc(id)}" href="${isIOS()?`sms:${ph}&body=`:`sms:${ph}?body=`}${encodeURIComponent(txt(n))}" style="text-decoration:none">문자</a>`:''}`
+        :`<input data-ip="${esc(id)}" inputmode="tel" placeholder="010-0000-0000" value="${esc(ph)}" style="width:130px;padding:6px 8px"><a class="btn sm red" data-is="${esc(id)}" href="#" style="text-decoration:none">문자</a>`}</div>`};
+  sheet(`<h2>💬 선수 단톡방 초대</h2><div class="small">${esc(c.title)} · ${ids.length}명</div>
+    <div class="memsum"><b>앱 회원 ${mem.length}명 → 카톡</b><div class="small">① <b>카톡</b> 누르기 → 공유 창에서 <b>카카오톡</b> → 그 회원 선택 → 보내기. 회원 앱의 대회 공지에도 <b>단톡방 들어가기</b> 버튼이 떠요.<br>카톡 친구가 아니면 옆의 <b>문자</b>로 보내요.</div></div>
+    <button class="btn sm" id="ivAll" style="background:#FEE500;color:#191919;border-color:#FEE500">카톡으로 한 번에 (여러 명 골라 보내기)</button>
+    <div style="display:flex;flex-direction:column;gap:4px">${mem.map(row).join('')||'<div class="small">앱 회원이 없어요</div>'}</div>
+    <div class="memsum"><b>앱 미가입 ${non.length}명 → 문자</b><div class="small">번호를 넣고 <b>문자</b>를 누르면 문자 앱에 초대 글이 채워져서 열려요. 번호는 이 휴대폰에만 저장돼요.</div></div>
+    <div style="display:flex;flex-direction:column;gap:4px">${non.map(row).join('')||'<div class="small">모두 앱 회원이에요</div>'}</div>
+    <button class="btn ghost sm" id="ivCopy">초대 글 복사</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
+    const mark=(id,k)=>{S[id]=k;cmpInvSet(S);const r=el.querySelector(`[data-ir="${CSS.escape(id)}"]`);if(r){r.style.opacity='.55';const b=r.querySelector('b');if(!b.querySelector('.pill'))b.insertAdjacentHTML('beforeend',` <span class="pill">${k==='k'?'카톡 보냄':'문자 보냄'}</span>`)}};
+    el.querySelectorAll('[data-ik]').forEach(b=>b.onclick=async()=>{const id=b.dataset.ik;if(await kakaoShare(txt(nmOf(id))))mark(id,'k')});
+    el.querySelectorAll('[data-ip]').forEach(i=>i.oninput=()=>{S['p:'+i.dataset.ip]=i.value.trim();cmpInvSet(S)});
+    el.querySelectorAll('[data-is]').forEach(a=>a.onclick=e=>{const id=a.dataset.is;if(!by[id]){const ph=(S['p:'+id]||'').replace(/[^\d]/g,'');if(ph.length<10){e.preventDefault();toast('휴대폰 번호를 넣어 주세요');return}a.href=`sms:${ph}${isIOS()?'&':'?'}body=${encodeURIComponent(txt(nmOf(id)))}`}mark(id,'s')});
+    el.querySelector('#ivAll').onclick=async()=>{if(await kakaoShare(`[탕정 엔엔엔복싱] ${c.title} 출전 선수 단톡방이에요 🥊\n대회 일정·계체·집합 안내가 여기로 올라가요. 아래 링크로 꼭 들어와 주세요!\n👉 ${c.chat}`))toast('카톡에서 선수들을 여러 명 골라 보내면 돼요',3000)};
+    el.querySelector('#ivCopy').onclick=()=>copyText(`[탕정 엔엔엔복싱] ${c.title} 출전 선수 단톡방이에요 🥊\n👉 ${c.chat}`,'초대 글을')})}
+const COMP_PRESET={title:'제1회 세종특별자치시시장배 전국생활체육복싱대회',place:'세종특별자치시',chat:'https://open.kakao.com/o/gJZDxFVi',names:'권순상 김도영 이은주 박후영 박목화 이자원 이재왕 원유현 윤중민 유재홍 유정우 김태준 배선율 이승훈 김대린 박형기 김아산 선성우 홍석환 최동환 박성수 최인규 임채영 김수원 백기윤 진서연 김동영 이희수 박혜인'};
 async function compEdit(){const c0=local.meta.comp||{};const C=Object.assign({title:'',date:'',place:'',note:'',ids:[],full:true},c0);let sel=new Set(compIds(C));
   const all=(await DB.all()).filter(m=>!m.demo&&!isStaff(m)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));
   sheet(`<h2>🥊 생체 대회 출전 명단</h2>
     <div class="field"><label for="cmT">대회 이름</label><input id="cmT" maxlength="40" placeholder="예: 아산시장배 생활체육 복싱대회" value="${esc(C.title)}"></div>
     <div class="row"><div class="field grow"><label for="cmD">경기 날짜</label><input type="date" id="cmD" value="${esc(C.date||'')}"></div><div class="field grow"><label for="cmP">장소</label><input id="cmP" maxlength="40" value="${esc(C.place||'')}"></div></div>
+    <div class="field"><label for="cmK">선수 단톡방 링크 <span class="small">(카톡 오픈채팅 · 출전 선수에게만 보여요)</span></label><input id="cmK" maxlength="120" placeholder="https://open.kakao.com/o/…" value="${esc(C.chat||'')}"></div>
     <div class="field"><label for="cmN">한마디 <span class="small">(선택)</span></label><textarea id="cmN" rows="2" maxlength="200" placeholder="다 같이 응원 가요! 다음 대회 나가고 싶은 분은 아래 버튼 눌러 주세요">${esc(C.note||'')}</textarea></div>
     <div class="memsum"><b>📋 신청서 명단 한 번에 넣기</b><div class="small">이름을 띄어쓰기·줄바꿈으로 붙여넣으면 회원을 자동으로 체크해요. 앱에 없는 이름은 이름만 올라가요.</div>
       <textarea id="cmPaste" rows="2" placeholder="권순상 김도영 이은주 …"></textarea>
@@ -7109,9 +7135,9 @@ async function compEdit(){const c0=local.meta.comp||{};const C=Object.assign({ti
       el.querySelector('#cmCnt').textContent=sel.size;el.querySelector('#cmQ').value='';draw();
       el.querySelector('#cmPasteRes').innerHTML=`✅ 회원 연결 <b>${ok.length}</b>명`+(no.length?`<br>📝 앱에 없어 이름만: ${esc(no.join(', '))}`:'')+(dup.length?`<br>⚠️ 같은 이름 여러 명 — 아래에서 직접 골라 주세요: ${esc(dup.join(', '))}`:'')};
     el.querySelector('#cmPasteGo').onclick=()=>pasteGo(el.querySelector('#cmPaste').value);
-    el.querySelector('#cmPreset').onclick=()=>{const t=el.querySelector('#cmT'),pl=el.querySelector('#cmP');if(!t.value.trim())t.value=COMP_PRESET.title;if(!pl.value.trim())pl.value=COMP_PRESET.place;el.querySelector('#cmPaste').value=COMP_PRESET.names;pasteGo(COMP_PRESET.names)};
+    el.querySelector('#cmPreset').onclick=()=>{const t=el.querySelector('#cmT'),pl=el.querySelector('#cmP');if(!t.value.trim())t.value=COMP_PRESET.title;if(!pl.value.trim())pl.value=COMP_PRESET.place;const k=el.querySelector('#cmK');if(!k.value.trim())k.value=COMP_PRESET.chat;el.querySelector('#cmPaste').value=COMP_PRESET.names;pasteGo(COMP_PRESET.names)};
     el.querySelector('#cmSv').onclick=async()=>{const v=k=>el.querySelector(k).value.trim();if(!v('#cmT')){toast('대회 이름을 적어 주세요');return}
-      const n={title:v('#cmT'),date:v('#cmD'),place:v('#cmP'),note:v('#cmN'),ids:[...sel],names:Object.fromEntries([...sel].map(id=>[id,id.startsWith('n:')?id.slice(2):el.querySelector('#cmFull').checked?(all.find(m=>String(m.id)===id)||{}).name||'':''])),full:el.querySelector('#cmFull').checked,hidden:el.querySelector('#cmHide').checked,at:Date.now()};
+      const n={title:v('#cmT'),date:v('#cmD'),place:v('#cmP'),chat:/^https:\/\/open\.kakao\.com\//.test(v('#cmK'))?v('#cmK'):'',note:v('#cmN'),ids:[...sel],names:Object.fromEntries([...sel].map(id=>[id,id.startsWith('n:')?id.slice(2):el.querySelector('#cmFull').checked?(all.find(m=>String(m.id)===id)||{}).name||'':''])),full:el.querySelector('#cmFull').checked,hidden:el.querySelector('#cmHide').checked,at:Date.now()};
       local.meta.comp=n;if(FB_ON()){try{await gref('meta/comp').set(clean(n))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('저장했어요. 회원 앱 공지에 떠요');close();renderCompAdm();renderPins()};
     const d=el.querySelector('#cmDel');if(d)d.onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 지워요';return}local.meta.comp=null;if(FB_ON()){try{await gref('meta/comp').set(null)}catch(x){}}else persist();close();renderCompAdm();renderPins()}})}
 /* 출석패드 층 (기기마다) */
