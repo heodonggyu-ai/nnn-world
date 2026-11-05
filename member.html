@@ -3354,7 +3354,7 @@ function mealScan(text,rec){const flat=String(text||'').replace(/\s+/g,'');const
   if(rec){if(rec.paid&&nums.length&&!nums.includes(+rec.paid))out.amt=1;if(date&&rec.date&&date!==rec.date)out.dd=1}return out}
 /* 식대 규정 (영수증 찍기 전 확인) */
 const MEAL_RULES=()=>[
-  ['🗓️','근무 시간 중 식사만','출근한 날, 출근~퇴근 사이에 먹은 식사만 돼요. 퇴근 후 식사, 휴가·휴무일 식사는 인정되지 않아요.'],
+  ['🗓️','출근 3시간 전 ~ 퇴근까지 식사만','출근한 날, 출근 3시간 전부터 퇴근 전까지 결제한 식사만 돼요. 퇴근 후 식사, 휴가·휴무일 식사는 인정되지 않아요.'],
   ['🍱','하루 1장 · 내 식사 1인분만','같이 먹었으면 내 몫만 결제하거나 내 몫 금액만 적어 주세요. 한 끼를 여러 장으로 나눠 결제하면 안 돼요.'],
   ['🚫','식비 외 물건은 절대 안 돼요','담배·전자담배, 술, 복권·로또, 상품권·기프티콘, 교통카드 충전, 생필품(휴지·세제·샴푸), 화장품, 약, 간식 사재기 등 개인 물품이 영수증에 있으면 반려돼요.'],
   ['🏪','편의점은 식사만 따로 계산','편의점에서 개인 물건도 살 땐 식사(도시락·김밥·음료)를 먼저 따로 결제해서 그 영수증만 올려 주세요.'],
@@ -3373,7 +3373,7 @@ async function mealNew(file){let img;try{img=await imgShrink(file,1100,.7)}catch
     <div class="row" style="gap:8px"><div class="field grow" style="margin:0"><label for="mlD">날짜</label><input id="mlD" class="dpick" readonly max="${TODAY()}" min="${dAdd(TODAY(),-31)}" value="${TODAY()}"></div><div class="field grow" style="margin:0"><label for="mlP">결제 금액 <span class="small" style="color:var(--red)">(필수)</span></label><input id="mlP" inputmode="numeric" placeholder="예: 9,000"></div></div>
     <div class="small" id="mlChk" style="color:var(--muted)"></div>
     <div class="field" style="margin:0"><label for="mlM">메모 <span class="small">(식당 이름 등)</span></label><input id="mlM" maxlength="40" placeholder="예: 김밥천국 점심"></div>
-    <div class="small">지원 금액은 <b>결제 금액과 ${won(mealAmt())} 중 적은 쪽</b>이에요. 하루 1장, <b>근무 시간 중</b> 식사만 돼요 (퇴근 후 식사 ✕).</div>
+    <div class="small">지원 금액은 <b>결제 금액과 ${won(mealAmt())} 중 적은 쪽</b>이에요. 하루 1장, <b>출근 3시간 전 ~ 퇴근 전</b> 식사만 돼요 (퇴근 후 ✕).</div>
     <label class="check mlchk" style="margin:0"><input type="checkbox" id="mlOk"><span>이 영수증엔 <b>내 식사만</b> 있고, 담배·술·생필품 같은 <b>개인 물품이 없어요</b></span></label>
     <button class="btn red" id="mlGo">기록하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{const $e=q=>el.querySelector(q);
     let all0=null,ph='';hget('hr/meal/'+CW.code).then(v=>{all0=v||{};chk()});dHash(img.d).then(h=>{ph=h;chk()});
@@ -3398,7 +3398,7 @@ async function mealView(code,id){const v=await hget(`hr/mealimg/${code}/${id}`);
 function mealFlags(q,x,allC){const f=[];const att=(x.att||{})[q.date];if(leaveOn(x.lvs,q.date))f.push(['휴가인 날','r']);else if(!att)f.push(['출근 기록 없음','r']);
   if(q.dupOf){const o=(allC||{})[q.dupOf];f.push([`비슷한 영수증 (${o?md(o.date):'?'})`,'r'])}
   if(att&&q.scan&&q.scan.time!=null){const hm=ts=>{const d=new Date(ts);return d.getHours()*60+d.getMinutes()};const t=q.scan.time,ft=`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
-    if(att.out&&t>hm(att.out)+10)f.push([`퇴근 후 결제 (${ft})`,'r']);else if(att.in&&t<hm(att.in)-90)f.push([`출근 전 결제 (${ft})`,'y']);else f.push([`결제 ${ft} · 근무 중`,'g'])}
+    if(att.out&&t>hm(att.out)+10)f.push([`퇴근 후 결제 (${ft})`,'r']);else if(att.in&&t<hm(att.in)-180)f.push([`출근 3시간 전보다 이른 결제 (${ft})`,'r']);else f.push([`결제 ${ft} · 인정 시간`,'g'])}
   const late=Math.floor((q.at-new Date(q.date+'T23:59:59').getTime())/864e5);if(late>=3)f.push([`${late}일 늦게 올림`,'y']);
   const sc=q.scan;if(sc){(sc.hits||[]).forEach(h=>f.push(['⚠ '+h,'r']));if(sc.amt)f.push([`금액 확인 (영수증 ${sc.total?won(sc.total):'?'})`,'y']);if(sc.dd)f.push([`영수증 날짜 ${md(sc.date)}`,'y']);if(!(sc.hits||[]).length&&!sc.amt&&!sc.dd&&!f.some(x=>x[1]==='r'))f.push(['✓ 글자 검사 이상 없음','g'])}
   return f}
