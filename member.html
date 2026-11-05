@@ -6357,7 +6357,9 @@ function openAdjSheet(m,pre={},onDone){const mem=m.mem;if(!mem||!mem.end){toast(
     const draw=()=>{el.querySelectorAll('#adT [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const p=holdPolicy(mem),lf=holdLeft(mem);
       if(tab==='hold'){const s0=rq?rq.start:dAdd(T,1),n0=rq?rq.days:(lf&&lf.days?lf.days:7);rs=rq?(HOLD_RS.includes(rq.reason)?rq.reason:'기타'):'';
         body.innerHTML=`<div class="small">${p?`규정 ${esc(p.label)} · 남은 정지 <b>${lf.n}회 ${lf.days}일</b>`:'이 회원권은 규정상 정지가 없어요 (관장 재량으로만 가능)'}</div>
-          <div class="row"><div class="field grow"><label for="adS">정지 시작일</label><input id="adS" class="dpick" readonly value="${s0}" max="${mem.end}"></div><div class="field grow"><label for="adN">정지 일수</label><input id="adN" type="number" min="1" max="120" value="${n0}"></div></div>
+          <div class="row"><div class="field grow"><label for="adS">정지 시작일</label><input id="adS" class="dpick" readonly value="${s0}" max="${mem.end}"></div><div class="field grow"><label for="adRe">다시 나오는 날 <span class="small">(재시작일)</span></label><input id="adRe" class="dpick" readonly value="${dAdd(s0,n0)}"></div></div>
+          <div class="row" style="align-items:flex-end;gap:8px"><div class="field" style="margin:0;width:110px"><label for="adN">정지 일수</label><input id="adN" type="number" min="1" max="365" value="${n0}"></div><div class="chips" style="flex:1">${[7,14,30].map(n=>`<button type="button" class="chip" data-hq="${n}">${n}일</button>`).join('')}</div></div>
+          <div class="small" style="color:var(--muted)">재시작일을 고르면 정지 일수가 자동으로 맞춰져요 (재시작일 전날까지 정지).</div>
           <div class="field"><span>사유</span>${chipsR(HOLD_RS,rs)}</div>
           <div class="field"><label for="adM">메모 <span class="small">(진단서 확인 등)</span></label><input id="adM" maxlength="100" value="${rq&&rq.memo?esc(rq.memo):''}"></div>
           <label class="check" id="adExF" hidden style="margin:0"><input type="checkbox" id="adEx"><span><b>규정 예외로 처리</b> <span class="small" id="adExW"></span></span></label>`}
@@ -6368,13 +6370,17 @@ function openAdjSheet(m,pre={},onDone){const mem=m.mem;if(!mem||!mem.end){toast(
           <div class="field"><label for="adE">새 종료일</label><input id="adE" class="dpick" readonly value="${mem.end}"></div>
           <div class="field"><label for="adM">사유</label><input id="adM" maxlength="100" placeholder="예: 등록일 잘못 입력 정정"></div>`}
       bindR();body.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{body.querySelector('#adN').value=b.dataset.q;calc()});
-      body.querySelectorAll('input').forEach(x=>{x.oninput=calc;x.onchange=calc});calc()};
+      body.querySelectorAll('input').forEach(x=>{x.oninput=calc;x.onchange=calc});
+      {const S=body.querySelector('#adS'),N=body.querySelector('#adN'),R=body.querySelector('#adRe');if(S&&N&&R){const fromN=()=>{const n=Math.max(1,+N.value||1);R.value=dAdd(S.value,n);calc()};
+        S.onchange=()=>{fromN()};N.oninput=fromN;N.onchange=fromN;R.onchange=()=>{let n=dDiff(R.value,S.value);if(n<1){toast('재시작일은 정지 시작일 다음 날부터예요');n=1;R.value=dAdd(S.value,1)}N.value=n;calc()};
+        body.querySelectorAll('[data-hq]').forEach(b=>b.onclick=()=>{N.value=b.dataset.hq;fromN()})}}
+      calc()};
     const calc=()=>{const p=holdPolicy(mem),lf=holdLeft(mem);
       if(tab==='hold'){const s=el.querySelector('#adS').value,n=Math.max(0,+el.querySelector('#adN').value||0);const e=dAdd(s,n-1);const warn=[];
         if(s<T)warn.push('지난 날짜부터 시작(소급)');if(!p)warn.push('규정상 정지 불가 회원권');else{if(lf.n<1)warn.push(`정지 ${p.n}회 모두 사용`);if(n>lf.days)warn.push(`남은 ${lf.days}일 초과`)}
         const ov=holdsDone(mem).find(h=>!(e<h.start||s>h.end));if(ov)warn.push('기존 정지 기간과 겹침');
         el.querySelector('#adExF').hidden=!warn.length;el.querySelector('#adExW').textContent=warn.length?'('+warn.join(' · ')+')':'';
-        prev.innerHTML=n?`<div class="small">정지 ${md(s)} ~ ${md(e)} · ${n}일</div><b class="num">종료일 ${md(mem.end)} → ${md(dAdd(mem.end,n))}</b>`:''}
+        prev.innerHTML=n?`<div class="small">정지 ${md(s)} ~ ${md(e)} · ${n}일 · <b>${md(dAdd(s,n))}부터 다시 운동</b></div><b class="num">종료일 ${md(mem.end)} → ${md(dAdd(mem.end,n))}</b>`:''}
       else if(tab==='extend'){const n=Math.max(0,+el.querySelector('#adN').value||0);prev.innerHTML=n?`<b class="num">종료일 ${md(mem.end)} → ${md(dAdd(mem.end,n))}</b> <span class="small">(+${n}일)</span>`:''}
       else{const e=el.querySelector('#adE').value;const d=dDiff(e,mem.end);prev.innerHTML=`<b class="num">종료일 ${md(mem.end)} → ${md(e)}</b> <span class="small">(${d>0?'+':''}${d}일)</span>`}};
     el.querySelectorAll('#adT [data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
@@ -6414,12 +6420,15 @@ function holdReqLine(m){const r=m.holdReq;if(!r)return '';
 function canReqHold(m){const mem=m.mem;const st=memStatus(m);if(!mem||!mem.end||!['active','soon','upcoming'].includes(st.state))return false;const lf=holdLeft(mem);return !!(lf&&lf.n>0&&lf.days>0&&!(m.holdReq&&m.holdReq.status==='pending'))}
 function openHoldReq(){const m=ME;const mem=m.mem;const lf=holdLeft(mem),p=holdPolicy(mem);if(!lf){toast('이 회원권은 정지할 수 없어요');return}const tmr=dAdd(TODAY(),1);let rs='';
   sheet(`<h2>정지(연기) 신청</h2><div class="mhint">${esc(p.label)} · 남은 정지 ${lf.n}회 ${lf.days}일<br>신청하면 관장님이 확인 후 처리해요. 시작일은 내일부터, 지난 날짜는 안 돼요.</div>
-    <div class="row"><div class="field grow"><label for="hrS">시작일</label><input id="hrS" class="dpick" readonly min="${tmr}" max="${mem.end}" value="${tmr}"></div><div class="field grow"><label for="hrN">일수 (최대 ${lf.days}일)</label><input id="hrN" type="number" min="1" max="${lf.days}" value="${lf.days}"></div></div>
+    <div class="row"><div class="field grow"><label for="hrS">시작일</label><input id="hrS" class="dpick" readonly min="${tmr}" max="${mem.end}" value="${tmr}"></div><div class="field grow"><label for="hrRe">다시 나오는 날</label><input id="hrRe" class="dpick" readonly min="${dAdd(tmr,1)}" max="${dAdd(tmr,lf.days)}" value="${dAdd(tmr,lf.days)}"></div></div>
+    <div class="field"><label for="hrN">정지 일수 (최대 ${lf.days}일)</label><input id="hrN" type="number" min="1" max="${lf.days}" value="${lf.days}"></div>
     <div class="field"><span>사유</span><div class="chips" id="hrR">${HOLD_RS.map(r=>`<button type="button" class="chip" data-r="${r}">${r}</button>`).join('')}</div></div>
     <div class="field"><label for="hrM">자세한 내용 <span class="small">(선택)</span></label><input id="hrM" maxlength="100" placeholder="예: 발목 부상으로 2주 쉬어요"></div>
     <div class="small" id="hrP" style="font-weight:600"></div>
     <button class="btn red" id="hrGo">신청하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
-    const s=el.querySelector('#hrS'),n=el.querySelector('#hrN');const pv=()=>{const k=clamp(+n.value||0,1,lf.days);el.querySelector('#hrP').textContent=`${md(s.value)} ~ ${md(dAdd(s.value,k-1))} 정지 → 종료일 ${md(mem.end)} → ${md(dAdd(mem.end,k))} (승인 후 적용)`};s.onchange=pv;n.oninput=pv;pv();
+    const s=el.querySelector('#hrS'),n=el.querySelector('#hrN');const re=el.querySelector('#hrRe');const pv=()=>{const k=clamp(+n.value||0,1,lf.days);el.querySelector('#hrP').textContent=`${md(s.value)} ~ ${md(dAdd(s.value,k-1))} 정지 · ${md(dAdd(s.value,k))}부터 다시 운동 → 종료일 ${md(mem.end)} → ${md(dAdd(mem.end,k))} (승인 후 적용)`};
+    const fromN=()=>{const k=clamp(+n.value||0,1,lf.days);re.value=dAdd(s.value,k);re.min=dAdd(s.value,1);re.max=dAdd(s.value,lf.days);pv()};
+    s.onchange=fromN;n.oninput=fromN;re.onchange=()=>{let k=dDiff(re.value,s.value);if(k<1){k=1;toast('재시작일은 시작일 다음 날부터예요')}if(k>lf.days){k=lf.days;toast(`정지는 최대 ${lf.days}일이에요`)}n.value=k;re.value=dAdd(s.value,k);pv()};fromN();
     el.querySelectorAll('#hrR [data-r]').forEach(b=>b.onclick=()=>{rs=b.dataset.r;el.querySelectorAll('#hrR [data-r]').forEach(x=>x.classList.toggle('on',x===b))});
     el.querySelector('#hrGo').onclick=async()=>{const k=+n.value||0;if(k<1||k>lf.days){toast(`일수는 1~${lf.days}일이에요`);return}if(!rs){toast('사유를 골라 주세요');return}if(s.value<tmr){toast('시작일은 내일부터예요');return}
       ME.holdReq={start:s.value,days:k,reason:rs,memo:el.querySelector('#hrM').value.trim(),at:Date.now(),status:'pending'};await DB.savePriv(ME);toast('정지 신청을 보냈어요. 관장님이 확인하면 반영돼요',3500);close();renderMemCard()}})}
