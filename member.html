@@ -3349,18 +3349,19 @@ function mealScan(text,rec){const flat=String(text||'').replace(/\s+/g,'');const
   const nums=[...String(text||'').matchAll(/(\d{1,3}(?:[,.]\d{3})+|\d{4,6})\s*원?/g)].map(m=>+m[1].replace(/[,.]/g,'')).filter(n=>n>=500&&n<=1000000);
   const tm=String(text||'').replace(/\s+/g,'').match(/(?:합계|총액|결제금액|받을금액|승인금액|판매금액|total)[^\d]{0,6}(\d{1,3}(?:[,.]\d{3})+|\d{3,6})/i);const total=tm?+tm[1].replace(/[,.]/g,''):(nums.length?Math.max(...nums):0);
   const dm=String(text||'').match(/(20\d\d|\d\d)[-./년\s]{1,2}(\d{1,2})[-./월\s]{1,2}(\d{1,2})/);let date='';if(dm){const y=dm[1].length===2?'20'+dm[1]:dm[1];date=`${y}-${String(+dm[2]).padStart(2,'0')}-${String(+dm[3]).padStart(2,'0')}`;if(!/^20\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(date))date=''}
-  const out={hits,total,date,at:Date.now(),t:String(text||'').replace(/\s+/g,' ').trim().slice(0,400)};
+  const tmm=[...String(text||'').matchAll(/(?:^|[^\d])([01]?\d|2[0-3])\s*[:시]\s*([0-5]\d)(?:\s*[:분]\s*[0-5]\d)?/g)].map(m=>+m[1]*60+(+m[2]));const time=tmm.length?tmm[0]:null;
+  const out={hits,total,date,time,at:Date.now(),t:String(text||'').replace(/\s+/g,' ').trim().slice(0,400)};
   if(rec){if(rec.paid&&nums.length&&!nums.includes(+rec.paid))out.amt=1;if(date&&rec.date&&date!==rec.date)out.dd=1}return out}
 /* 식대 규정 (영수증 찍기 전 확인) */
 const MEAL_RULES=()=>[
-  ['🗓️','근무한 날 식사만','출근 기록이 있는 날의 식사만 돼요. 휴가·휴무일·퇴근 후 개인 약속은 안 돼요.'],
+  ['🗓️','근무 시간 중 식사만','출근한 날, 출근~퇴근 사이에 먹은 식사만 돼요. 퇴근 후 식사, 휴가·휴무일 식사는 인정되지 않아요.'],
   ['🍱','하루 1장 · 내 식사 1인분만','같이 먹었으면 내 몫만 결제하거나 내 몫 금액만 적어 주세요. 한 끼를 여러 장으로 나눠 결제하면 안 돼요.'],
   ['🚫','식비 외 물건은 절대 안 돼요','담배·전자담배, 술, 복권·로또, 상품권·기프티콘, 교통카드 충전, 생필품(휴지·세제·샴푸), 화장품, 약, 간식 사재기 등 개인 물품이 영수증에 있으면 반려돼요.'],
   ['🏪','편의점은 식사만 따로 계산','편의점에서 개인 물건도 살 땐 식사(도시락·김밥·음료)를 먼저 따로 결제해서 그 영수증만 올려 주세요.'],
-  ['🧾','영수증 전체가 보이게','상호·날짜·품목·금액이 다 보이게 찍어 주세요. 카드 문자·결제 알림 캡처는 안 돼요. 배달앱은 주문 상세(품목·금액·날짜) 화면 캡처로 올려요.'],
+  ['🧾','영수증 전체가 보이게','상호·날짜·품목·금액이 다 보이게 찍어 주세요. 카드 문자·결제 알림 캡처는 안 돼요. 배달앱 주문도 돼요 — 주문 상세(가게·품목·금액·날짜·시간) 화면을 캡처해서 올려요.'],
   ['💰',`지원은 최대 ${won(mealAmt())}`,`결제 금액과 ${won(mealAmt())} 중 적은 금액만 지원돼요. 넘는 금액은 본인 부담이에요. 결제 금액은 영수증과 똑같이 적어 주세요.`],
   ['⏰','당일·3일 안에 올리기','늦게 올리거나, 같은 영수증을 다시 올리거나, 다른 사람 영수증을 올리면 안 돼요.'],
-  ['⚠️','어기면','해당 영수증은 반려되고, 반복되면 식대 지원 대상에서 빠질 수 있어요. 영수증 글자는 앱이 자동으로 읽어 확인해요.']];
+  ['⚠️','어기면 반려','규정에 맞지 않는 영수증은 반려돼요. 영수증 글자(품목·시간)는 앱이 자동으로 읽어 확인해요.']];
 function mealRulesHTML(){return `<div class="mlrules">${MEAL_RULES().map(([e,t,d])=>`<div class="mlr"><span>${e}</span><div><b>${esc(t)}</b><small>${esc(d)}</small></div></div>`).join('')}</div>`}
 const mealAgreeKey=()=>'nnn_mealok_'+(CW.code||'')+'_'+TODAY().slice(0,7);
 function mealRulesSheet(after){sheet(`<h2>🍱 식대 영수증 규정</h2><div class="small">영수증을 찍기 전에 꼭 읽어 주세요. 한 달에 한 번 확인해요.</div>${mealRulesHTML()}
@@ -3372,7 +3373,7 @@ async function mealNew(file){let img;try{img=await imgShrink(file,1100,.7)}catch
     <div class="row" style="gap:8px"><div class="field grow" style="margin:0"><label for="mlD">날짜</label><input id="mlD" class="dpick" readonly max="${TODAY()}" min="${dAdd(TODAY(),-31)}" value="${TODAY()}"></div><div class="field grow" style="margin:0"><label for="mlP">결제 금액 <span class="small" style="color:var(--red)">(필수)</span></label><input id="mlP" inputmode="numeric" placeholder="예: 9,000"></div></div>
     <div class="small" id="mlChk" style="color:var(--muted)"></div>
     <div class="field" style="margin:0"><label for="mlM">메모 <span class="small">(식당 이름 등)</span></label><input id="mlM" maxlength="40" placeholder="예: 김밥천국 점심"></div>
-    <div class="small">지원 금액은 <b>결제 금액과 ${won(mealAmt())} 중 적은 쪽</b>이에요. 하루 1장, 근무한 날만 올릴 수 있어요.</div>
+    <div class="small">지원 금액은 <b>결제 금액과 ${won(mealAmt())} 중 적은 쪽</b>이에요. 하루 1장, <b>근무 시간 중</b> 식사만 돼요 (퇴근 후 식사 ✕).</div>
     <label class="check mlchk" style="margin:0"><input type="checkbox" id="mlOk"><span>이 영수증엔 <b>내 식사만</b> 있고, 담배·술·생필품 같은 <b>개인 물품이 없어요</b></span></label>
     <button class="btn red" id="mlGo">기록하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{const $e=q=>el.querySelector(q);
     let all0=null,ph='';hget('hr/meal/'+CW.code).then(v=>{all0=v||{};chk()});dHash(img.d).then(h=>{ph=h;chk()});
@@ -3396,8 +3397,10 @@ async function mealNew(file){let img;try{img=await imgShrink(file,1100,.7)}catch
 async function mealView(code,id){const v=await hget(`hr/mealimg/${code}/${id}`);if(!v||!v.d){toast('사진을 불러오지 못했어요');return}sheet(`<h2>영수증</h2><img src="${v.d}" alt="영수증" style="width:100%;border-radius:10px"><button class="btn ghost" data-close>닫기</button>`)}
 function mealFlags(q,x,allC){const f=[];const att=(x.att||{})[q.date];if(leaveOn(x.lvs,q.date))f.push(['휴가인 날','r']);else if(!att)f.push(['출근 기록 없음','r']);
   if(q.dupOf){const o=(allC||{})[q.dupOf];f.push([`비슷한 영수증 (${o?md(o.date):'?'})`,'r'])}
+  if(att&&q.scan&&q.scan.time!=null){const hm=ts=>{const d=new Date(ts);return d.getHours()*60+d.getMinutes()};const t=q.scan.time,ft=`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+    if(att.out&&t>hm(att.out)+10)f.push([`퇴근 후 결제 (${ft})`,'r']);else if(att.in&&t<hm(att.in)-90)f.push([`출근 전 결제 (${ft})`,'y']);else f.push([`결제 ${ft} · 근무 중`,'g'])}
   const late=Math.floor((q.at-new Date(q.date+'T23:59:59').getTime())/864e5);if(late>=3)f.push([`${late}일 늦게 올림`,'y']);
-  const sc=q.scan;if(sc){(sc.hits||[]).forEach(h=>f.push(['⚠ '+h,'r']));if(sc.amt)f.push([`금액 확인 (영수증 ${sc.total?won(sc.total):'?'})`,'y']);if(sc.dd)f.push([`영수증 날짜 ${md(sc.date)}`,'y']);if(!(sc.hits||[]).length&&!sc.amt&&!sc.dd)f.push(['✓ 글자 검사 이상 없음','g'])}
+  const sc=q.scan;if(sc){(sc.hits||[]).forEach(h=>f.push(['⚠ '+h,'r']));if(sc.amt)f.push([`금액 확인 (영수증 ${sc.total?won(sc.total):'?'})`,'y']);if(sc.dd)f.push([`영수증 날짜 ${md(sc.date)}`,'y']);if(!(sc.hits||[]).length&&!sc.amt&&!sc.dd&&!f.some(x=>x[1]==='r'))f.push(['✓ 글자 검사 이상 없음','g'])}
   return f}
 async function mealOcrRun(L,all,box){if(MEAL.ocrBusy)return;const todo=[];L.forEach(x=>Object.entries(all[x.code]||{}).forEach(([id,q])=>{if(q&&!q.scan&&(q.st==='sub'||q.st==='rec')&&q.date&&q.date.startsWith(MEAL.amon))todo.push([x.code,id,q])}));if(!todo.length)return;
   MEAL.ocrBusy=true;const st=box.querySelector('#mlOcr');let n=0;try{for(const [code,id,q] of todo){if(st)st.textContent=`🔍 영수증 글자 읽는 중… ${++n}/${todo.length} (처음엔 1분쯤 걸려요)`;const im=await hget(`hr/mealimg/${code}/${id}`);if(!im||!im.d)continue;let text='';try{text=await ocrRead(im.d)}catch(e){if(st)st.textContent='글자 읽기를 못 했어요 (인터넷 확인)';break}
