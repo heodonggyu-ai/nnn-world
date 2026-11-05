@@ -708,7 +708,10 @@ input.dpick{cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns=
 .crr{width:100%;border:0;border-top:1px solid var(--mat);background:#fff;font:inherit;color:var(--ink);text-align:left;cursor:pointer}.crr:active{background:#FFF4D6}.crn{color:#8A8F99;font-size:12px}.crm{min-width:0;display:flex;align-items:baseline;gap:5px;white-space:nowrap;overflow:hidden}.crm b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis}.crm small{font-size:10.5px;color:#8A8F99}.crr>span.num,.crr>b{font-size:13px}
 .crbar{display:block;height:4px;background:var(--mat);border-radius:9px;overflow:hidden}.crbar i{display:block;height:100%}.crc{font-size:14px!important}.crc.ok{color:#1E6B45}.crgo{color:#8A8F99;font-weight:700;text-align:center}
 .catk{display:flex;align-items:center;gap:6px;background:#FFF8E1;border:1.5px dashed #E0A100;border-radius:12px;padding:8px 10px}.stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;background:#fff}.stepper button{border:0;background:none;font:inherit;font-size:18px;width:30px;height:30px;cursor:pointer}.stepper b{min-width:22px;text-align:center}
-.mlrow{display:flex;align-items:center;gap:8px;border-top:1px solid var(--mat);padding:7px 0}.mlth{flex:0 0 auto;width:48px;height:48px;border-radius:8px;background:#F1EDE4 center/cover;cursor:zoom-in}.mlrow.adm{flex-wrap:wrap}.mlrow.adm>.grow{min-width:0;flex:1}.mlact{display:flex;gap:6px;align-items:center;justify-content:flex-end;width:100%}.mlflags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}.mlf{font-size:11px;border-radius:5px;padding:1px 6px;font-weight:700}.mlf.r{background:#FDECEC;color:#B4232A}.mlf.y{background:#FFF4D6;color:#8A5A00}.mlf.g{background:#E8F6EE;color:#1E6B45}.mlco{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}
+.mlrow{display:flex;align-items:center;gap:8px;border-top:1px solid var(--mat);padding:7px 0}.mlth{flex:0 0 auto;width:48px;height:48px;border-radius:8px;background:#F1EDE4 center/cover;cursor:zoom-in}.mlrow.adm{flex-wrap:wrap}.mlrow.adm>.grow{min-width:0;flex:1}.mlact{display:flex;gap:6px;align-items:center;justify-content:flex-end;width:100%}.mlrules{display:flex;flex-direction:column;gap:6px}.mlr{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}.mlr>span{font-size:22px;line-height:1.2}.mlr b{display:block;font-size:14.5px}.mlr small{font-size:12.5px;color:#555;line-height:1.45}
+.mlwarn{margin-top:8px;background:#FDECEC;border:1px solid #F3B9BC;color:#8A1F24;border-radius:10px;padding:7px 10px;font-size:12.5px;line-height:1.5}.mlwarn .link{font-size:12.5px;color:#8A1F24}
+.mlchk{background:#FFF4D6;border:1.5px solid #E0A100;border-radius:10px;padding:8px 10px}.shake{animation:shk .5s}@keyframes shk{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.mlflags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}.mlf{font-size:11px;border-radius:5px;padding:1px 6px;font-weight:700}.mlf.r{background:#FDECEC;color:#B4232A}.mlf.y{background:#FFF4D6;color:#8A5A00}.mlf.g{background:#E8F6EE;color:#1E6B45}.mlco{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff}
 .mealc .stats div{background:#FFFBEA;border-radius:10px;padding:6px;text-align:center;display:flex;flex-direction:column}.mealc .stats b{font-size:16px}.mealc .stats span{font-size:11px;color:#6B4A00}
 .sigbox{position:relative;border:2px dashed #C9CDD4;border-radius:12px;background:#fff;touch-action:none}.sigbox canvas{display:block;width:100%;height:auto;aspect-ratio:600/240;touch-action:none}.sigbox span{position:absolute;inset:0;display:grid;place-items:center;color:#B0B5BE;pointer-events:none;font-size:14px;transition:opacity .2s}.sigbox button{position:absolute;right:6px;top:6px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:12px;padding:3px 8px}
 .cpsig{display:block;width:180px;max-width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;margin:6px auto 0}.cpsig.sm{width:72px;margin:0;flex:0 0 auto}
@@ -3318,11 +3321,14 @@ async function renderCoachMeal(){const box=$('#cvMeal');if(!box)return;if(!CW.co
       <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-top:6px"><div><b class="num">${live.length}장</b><span>이달 영수증</span></div><div><b class="num">${won(live.reduce((t,x)=>t+(+x.sup||A),0))}</b><span>지원 금액</span></div><div><b class="num">${won(L.filter(x=>x.st==='ok').reduce((t,x)=>t+(+x.sup||A),0))}</b><span>승인됨</span></div></div>
       <div class="row" style="gap:6px;margin-top:8px"><label class="btn red grow" for="mlCam" style="text-align:center">📷 영수증 찍기</label><label class="btn ghost" for="mlPic" style="text-align:center">사진첩</label><input id="mlCam" type="file" accept="image/*" capture="environment" hidden><input id="mlPic" type="file" accept="image/*" hidden></div>
       ${recN?`<button class="btn gold" id="mlSub" style="margin-top:6px">📤 관장님께 제출하기 (${recN}장 · ${won(L.filter(x=>x.st==='rec').reduce((t,x)=>t+(+x.sup||A),0))})</button>`:''}
-      <div class="small" style="color:var(--muted);margin-top:4px">찍어서 기록해 두고, 모아서 제출해요. 제출 전까지는 지우고 다시 올릴 수 있어요.</div></div>
+      <div class="small" style="color:var(--muted);margin-top:4px">찍어서 기록해 두고, 모아서 제출해요. 제출 전까지는 지우고 다시 올릴 수 있어요.</div>
+      <div class="mlwarn">🚫 <b>담배·술·생필품 등 식비 외 물건이 있는 영수증은 반려돼요.</b> <button class="link" id="mlRules">규정 전체 보기 ›</button></div></div>
     <div class="card"><h3 style="font-size:18px">${+mon.slice(5)}월 영수증 <span class="small num">${L.length}장</span></h3>
       ${L.length?L.map(x=>`<div class="mlrow"><div class="mlth" data-mv="${esc(x.id)}" style="${x.th?`background-image:url('${x.th}')`:''}"></div><div class="grow"><b class="num">${md(x.date)} (${DAYN[new Date(x.date+'T00:00:00').getDay()]})</b>${x.memo?` · ${esc(x.memo)}`:''}<div class="small">${x.paid?'결제 '+won(x.paid)+' · ':''}지원 ${won(x.sup||A)}${x.why?` · <span style="color:var(--red)">${esc(x.why)}</span>`:''}</div></div><span class="pill" style="background:${MST[x.st][1]};color:#fff">${MST[x.st][0]}</span>${x.st==='rec'||x.st==='no'?`<button class="btn sm ghost" data-md="${esc(x.id)}" style="color:var(--red)">지우기</button>`:''}</div>`).join(''):'<div class="small">아직 올린 영수증이 없어요.</div>'}</div>`;
   box.querySelectorAll('[data-mm]').forEach(b=>b.onclick=()=>{MEAL.mon=monShift(MEAL.mon,+b.dataset.mm);renderCoachMeal()});
-  const pick=e=>{const f=e.target.files&&e.target.files[0];if(f)mealNew(f)};box.querySelector('#mlCam').onchange=pick;box.querySelector('#mlPic').onchange=pick;
+  const pick=e=>{const f=e.target.files&&e.target.files[0];if(f)mealNew(f);e.target.value=''};box.querySelector('#mlCam').onchange=pick;box.querySelector('#mlPic').onchange=pick;
+  box.querySelectorAll('label[for="mlCam"],label[for="mlPic"]').forEach(l=>l.addEventListener('click',ev=>{let ok=false;try{ok=!!localStorage.getItem(mealAgreeKey())}catch(x){}if(ok)return;ev.preventDefault();const id=l.getAttribute('for');mealRulesSheet(()=>{box.querySelector('#'+id).click()})}));
+  {const r=box.querySelector('#mlRules');if(r)r.onclick=()=>mealRulesSheet()}
   {const b=box.querySelector('#mlSub');if(b)b.onclick=async()=>{b.disabled=true;let n=0;for(const x of L.filter(x=>x.st==='rec')){const v=Object.assign({},all[x.id],{st:'sub',subAt:Date.now()});if(await hset(`hr/meal/${CW.code}/${x.id}`,v))n++}toast(`${n}장을 제출했어요. 관장님 승인을 기다려 주세요`,3000);renderCoachMeal()}}
   box.querySelectorAll('[data-md]').forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더';return}await hset(`hr/mealimg/${CW.code}/${b.dataset.md}`,null);if(await hset(`hr/meal/${CW.code}/${b.dataset.md}`,null)){toast('지웠어요');renderCoachMeal()}});
   box.querySelectorAll('[data-mv]').forEach(t=>t.onclick=()=>mealView(CW.code,t.dataset.mv))}
@@ -3345,12 +3351,29 @@ function mealScan(text,rec){const flat=String(text||'').replace(/\s+/g,'');const
   const dm=String(text||'').match(/(20\d\d|\d\d)[-./년\s]{1,2}(\d{1,2})[-./월\s]{1,2}(\d{1,2})/);let date='';if(dm){const y=dm[1].length===2?'20'+dm[1]:dm[1];date=`${y}-${String(+dm[2]).padStart(2,'0')}-${String(+dm[3]).padStart(2,'0')}`;if(!/^20\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(date))date=''}
   const out={hits,total,date,at:Date.now(),t:String(text||'').replace(/\s+/g,' ').trim().slice(0,400)};
   if(rec){if(rec.paid&&nums.length&&!nums.includes(+rec.paid))out.amt=1;if(date&&rec.date&&date!==rec.date)out.dd=1}return out}
+/* 식대 규정 (영수증 찍기 전 확인) */
+const MEAL_RULES=()=>[
+  ['🗓️','근무한 날 식사만','출근 기록이 있는 날의 식사만 돼요. 휴가·휴무일·퇴근 후 개인 약속은 안 돼요.'],
+  ['🍱','하루 1장 · 내 식사 1인분만','같이 먹었으면 내 몫만 결제하거나 내 몫 금액만 적어 주세요. 한 끼를 여러 장으로 나눠 결제하면 안 돼요.'],
+  ['🚫','식비 외 물건은 절대 안 돼요','담배·전자담배, 술, 복권·로또, 상품권·기프티콘, 교통카드 충전, 생필품(휴지·세제·샴푸), 화장품, 약, 간식 사재기 등 개인 물품이 영수증에 있으면 반려돼요.'],
+  ['🏪','편의점은 식사만 따로 계산','편의점에서 개인 물건도 살 땐 식사(도시락·김밥·음료)를 먼저 따로 결제해서 그 영수증만 올려 주세요.'],
+  ['🧾','영수증 전체가 보이게','상호·날짜·품목·금액이 다 보이게 찍어 주세요. 카드 문자·결제 알림 캡처는 안 돼요. 배달앱은 주문 상세(품목·금액·날짜) 화면 캡처로 올려요.'],
+  ['💰',`지원은 최대 ${won(mealAmt())}`,`결제 금액과 ${won(mealAmt())} 중 적은 금액만 지원돼요. 넘는 금액은 본인 부담이에요. 결제 금액은 영수증과 똑같이 적어 주세요.`],
+  ['⏰','당일·3일 안에 올리기','늦게 올리거나, 같은 영수증을 다시 올리거나, 다른 사람 영수증을 올리면 안 돼요.'],
+  ['⚠️','어기면','해당 영수증은 반려되고, 반복되면 식대 지원 대상에서 빠질 수 있어요. 영수증 글자는 앱이 자동으로 읽어 확인해요.']];
+function mealRulesHTML(){return `<div class="mlrules">${MEAL_RULES().map(([e,t,d])=>`<div class="mlr"><span>${e}</span><div><b>${esc(t)}</b><small>${esc(d)}</small></div></div>`).join('')}</div>`}
+const mealAgreeKey=()=>'nnn_mealok_'+(CW.code||'')+'_'+TODAY().slice(0,7);
+function mealRulesSheet(after){sheet(`<h2>🍱 식대 영수증 규정</h2><div class="small">영수증을 찍기 전에 꼭 읽어 주세요. 한 달에 한 번 확인해요.</div>${mealRulesHTML()}
+    <label class="check" style="margin:4px 0 0"><input type="checkbox" id="mrOk"><span><b>규정을 읽었고, 식비 외 개인 물품은 올리지 않을게요</b></span></label>
+    <button class="btn red" id="mrGo" disabled>확인했어요 · 영수증 올리기</button><button class="btn ghost" data-close>닫기</button>`,(el,close)=>{const c=el.querySelector('#mrOk'),g=el.querySelector('#mrGo');c.onchange=()=>{g.disabled=!c.checked};
+    g.onclick=()=>{try{localStorage.setItem(mealAgreeKey(),String(Date.now()))}catch(e){}try{after&&after()}catch(e){}close()}})}
 async function mealNew(file){let img;try{img=await imgShrink(file,1100,.7)}catch(e){toast('사진을 열지 못했어요');return}
   sheet(`<h2>🍱 영수증 기록</h2><img src="${img.d}" alt="영수증" style="width:100%;max-height:44vh;object-fit:contain;border-radius:10px;background:#F1EDE4">
     <div class="row" style="gap:8px"><div class="field grow" style="margin:0"><label for="mlD">날짜</label><input id="mlD" class="dpick" readonly max="${TODAY()}" min="${dAdd(TODAY(),-31)}" value="${TODAY()}"></div><div class="field grow" style="margin:0"><label for="mlP">결제 금액 <span class="small" style="color:var(--red)">(필수)</span></label><input id="mlP" inputmode="numeric" placeholder="예: 9,000"></div></div>
     <div class="small" id="mlChk" style="color:var(--muted)"></div>
     <div class="field" style="margin:0"><label for="mlM">메모 <span class="small">(식당 이름 등)</span></label><input id="mlM" maxlength="40" placeholder="예: 김밥천국 점심"></div>
     <div class="small">지원 금액은 <b>결제 금액과 ${won(mealAmt())} 중 적은 쪽</b>이에요. 하루 1장, 근무한 날만 올릴 수 있어요.</div>
+    <label class="check mlchk" style="margin:0"><input type="checkbox" id="mlOk"><span>이 영수증엔 <b>내 식사만</b> 있고, 담배·술·생필품 같은 <b>개인 물품이 없어요</b></span></label>
     <button class="btn red" id="mlGo">기록하기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{const $e=q=>el.querySelector(q);
     let all0=null,ph='';hget('hr/meal/'+CW.code).then(v=>{all0=v||{};chk()});dHash(img.d).then(h=>{ph=h;chk()});
     const chk=()=>{const date=$e('#mlD').value||TODAY();const msgs=[];if(all0&&Object.values(all0).some(x=>x&&x.date===date&&x.st!=='no'))msgs.push('<b style="color:var(--red)">이날은 이미 영수증을 올렸어요 (하루 1장)</b>');
@@ -3360,6 +3383,7 @@ async function mealNew(file){let img;try{img=await imgShrink(file,1100,.7)}catch
     $e('#mlD').addEventListener('change',chk);
     $e('#mlP').oninput=()=>{const v=+$e('#mlP').value.replace(/\D/g,'')||0;$e('#mlP').value=v?v.toLocaleString():'';chk()};
     $e('#mlGo').onclick=async()=>{const b=$e('#mlGo');const date=$e('#mlD').value||TODAY();const paid=+$e('#mlP').value.replace(/\D/g,'')||0;
+      if(!$e('#mlOk').checked){toast('영수증에 개인 물품이 없는지 확인하고 체크해 주세요',3000);$e('#mlOk').closest('label').classList.add('shake');setTimeout(()=>$e('#mlOk').closest('label').classList.remove('shake'),600);return}
       if(!paid){toast('영수증의 결제 금액을 적어 주세요');$e('#mlP').focus();return}
       const all=(await hget('hr/meal/'+CW.code))||{};if(Object.values(all).some(x=>x&&x.date===date&&x.st!=='no')){toast('이날은 이미 영수증을 올렸어요. 하루 1장만 지원돼요',3500);return}
       if(leaveOn(CW.lvs,date)){toast('휴가인 날은 식대를 올릴 수 없어요',3000);return}
