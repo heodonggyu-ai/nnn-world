@@ -7084,7 +7084,7 @@ async function renderCompAdm(){const box=$('#cmpAdmBox');if(!box)return;const c=
   box.querySelector('#cmpW').onclick=async()=>{const all=await DB.all();const by={};all.forEach(m=>by[m.id]=m);const L=Object.entries(wants).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
     sheet(`<h2>다음 대회 출전 희망 ${L.length}명</h2><div style="display:flex;flex-direction:column;gap:4px">${L.map(([id,v])=>{const m=by[id];return`<div class="rfp"><b class="grow">${esc(m?m.name:id)} <span class="small num">${esc(id)}</span><br><span class="small">${new Date(v.at).toLocaleDateString('ko-KR')} 신청${m&&m.phone?' · '+esc(m.phone):''}</span></b><button class="btn sm ghost" data-wx="${esc(id)}">확인 완료</button></div>`}).join('')||'<div class="small">아직 없어요</div>'}</div><button class="btn ghost" data-close>닫기</button>`,(el)=>{
       el.querySelectorAll('[data-wx]').forEach(b=>b.onclick=async()=>{if(await hset('compwant/'+b.dataset.wx,null)){b.closest('.rfp').remove();renderCompAdm()}})})}}
-const COMP_PRESET={title:'제1회 세종특별자치시시장배 전국생활체육복싱대회',place:'세종특별자치시',names:'권순상 김도영 이은주 박후영 박목화 이자원 이재왕 원유현 윤중민 유재홍 유정우 김태준 배선율 이승훈 김대린 백기윤'};
+const COMP_PRESET={title:'제1회 세종특별자치시시장배 전국생활체육복싱대회',place:'세종특별자치시',names:'권순상 김도영 이은주 박후영 박목화 이자원 이재왕 원유현 윤중민 유재홍 유정우 김태준 배선율 이승훈 김대린 박형기 김아산 선성우 홍석환 최동환 박성수 최인규 임채영 김수원 백기윤 진서연 김동영 이희수 박혜인'};
 async function compEdit(){const c0=local.meta.comp||{};const C=Object.assign({title:'',date:'',place:'',note:'',ids:[],full:true},c0);let sel=new Set(compIds(C));
   const all=(await DB.all()).filter(m=>!m.demo&&!isStaff(m)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));
   sheet(`<h2>🥊 생체 대회 출전 명단</h2>
