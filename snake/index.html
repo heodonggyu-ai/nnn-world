@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 꼬리 뱀</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script>
+/* 꼬리 뱀: 먹을수록 길어지고 빨라져요. 벽이나 내 몸에 부딪히면 끝 */
+const N=20,C=10,OY=20;
+let snake,dir,queue,food,star,moveT,eaten,stage,walls,dead,deadT;
+function freeCell(){for(let i=0;i<500;i++){const x=Math.floor(Math.random()*N),y=Math.floor(Math.random()*N);
+  if(!snake.some(s=>s.x===x&&s.y===y)&&!walls.has(x+','+y)&&!(food&&food.x===x&&food.y===y))return{x,y}}return{x:0,y:0}}
+function buildWalls(){walls=new Set();const add=(x,y)=>walls.add(x+','+y);
+  if(stage>=2){for(let i=5;i<15;i++){add(i,5);add(i,14)}}
+  if(stage>=3){for(let i=7;i<13;i++){add(4,i);add(15,i)}}
+  if(stage>=4){add(9,9);add(10,9);add(9,10);add(10,10)}}
+function speed(){return Math.max(.05,.14-eaten*.0025)}
+Retro.boot({id:'snake',title:'NNN 꼬리 뱀',en:'SNAKE',w:200,h:220,a:'부스터',b:false,diag:false,
+  intro:'사과를 먹을 때마다 꼬리가 길어져요. 벽과 내 꼬리에 부딪히지 마세요!',
+  help:'<b>십자키</b> 또는 <b>화면 밀기</b>로 방향 바꾸기<br><b>A</b> 누르고 있으면 빨리 가기<br>🍎 10점 · ⭐ 반짝 별 50점(빨리 먹어야 해요)<br>사과 10개마다 장애물이 늘어나요',
+  init(G){snake=[{x:6,y:10},{x:5,y:10},{x:4,y:10}];dir={x:1,y:0};queue=[];eaten=0;stage=1;buildWalls();food=null;food=freeCell();star=null;moveT=0;dead=false},
+  update(G,dt){
+    if(dead){deadT+=dt;if(deadT>1)G.over(`꼬리 길이 ${snake.length}`);return}
+    const h=G.hit;const D={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+    for(const k of ['up','down','left','right'])if(h[k]||h.swipe===k){const last=queue.length?queue[queue.length-1]:dir;const [x,y]=D[k];
+      if(!(x===-last.x&&y===-last.y)&&!(x===last.x&&y===last.y)&&queue.length<3)queue.push({x,y})}
+    if(star){star.t-=dt;if(star.t<=0)star=null}
+    moveT+=dt*(G.keys.a?2:1);
+    if(moveT<speed())return;moveT=0;
+    if(queue.length)dir=queue.shift();
+    const hd={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    if(hd.x<0||hd.y<0||hd.x>=N||hd.y>=N||walls.has(hd.x+','+hd.y)||snake.slice(0,-1).some(s=>s.x===hd.x&&s.y===hd.y)){dead=true;deadT=0;G.sfx('die');return}
+    snake.unshift(hd);
+    if(hd.x===food.x&&hd.y===food.y){eaten++;G.add(10*stage);G.sfx('coin');
+      if(eaten%10===0){stage++;buildWalls();for(const s of snake)walls.delete(s.x+','+s.y);G.msg('스테이지 '+stage+'!');G.sfx('power')}
+      food=freeCell();if(!star&&Math.random()<.25){const p=freeCell();star={...p,t:5}}}
+    else if(star&&hd.x===star.x&&hd.y===star.y){G.add(50);G.sfx('power');star=null}
+    else snake.pop();
+  },
+  draw(G,c){c.fillStyle='#0b1a12';c.fillRect(0,0,G.W,G.H);
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){c.fillStyle=(x+y)%2?'#16331f':'#1a3a24';c.fillRect(x*C,OY+y*C,C,C)}
+    c.fillStyle='#0b1a12';c.fillRect(0,0,G.W,OY);
+    G.text('LEN '+(snake?snake.length:3),4,6,{color:'#4fe3b2',size:7});G.text('STAGE '+(stage||1),G.W-4,6,{color:'#ffd23f',size:7,align:'right'});
+    if(walls)for(const k of walls){const [x,y]=k.split(',').map(Number);c.fillStyle='#6b5a44';c.fillRect(x*C,OY+y*C,C,C);c.fillStyle='#8d785b';c.fillRect(x*C+1,OY+y*C+1,C-2,3)}
+    if(food){const fx=food.x*C,fy=OY+food.y*C;c.fillStyle='#e8453c';c.fillRect(fx+2,fy+3,6,6);c.fillRect(fx+1,fy+4,8,4);c.fillStyle='#ff9a8f';c.fillRect(fx+3,fy+4,2,2);c.fillStyle='#5be37d';c.fillRect(fx+5,fy+1,3,2);c.fillStyle='#6b4423';c.fillRect(fx+4,fy+1,1,3)}
+    if(star&&(star.t>1.5||Math.floor(G.t*10)%2)){const sx=star.x*C,sy=OY+star.y*C;c.fillStyle='#ffd23f';c.fillRect(sx+4,sy,2,10);c.fillRect(sx,sy+4,10,2);c.fillRect(sx+2,sy+2,6,6);c.fillStyle='#fff';c.fillRect(sx+4,sy+3,2,2)}
+    if(snake)snake.forEach((s,i)=>{const x=s.x*C,y=OY+s.y*C;const blink=dead&&Math.floor(deadT*12)%2;
+      c.fillStyle=blink?'#fff':(i===0?'#9cff6b':(i%2?'#4fd65a':'#43c050'));c.fillRect(x+1,y+1,C-2,C-2);
+      if(i===0&&!blink){c.fillStyle='#000';const ex=dir.x,ey=dir.y;
+        if(ex){c.fillRect(x+(ex>0?6:2),y+2,2,2);c.fillRect(x+(ex>0?6:2),y+6,2,2)}else{c.fillRect(x+2,y+(ey>0?6:2),2,2);c.fillRect(x+6,y+(ey>0?6:2),2,2)}
+        c.fillStyle='#ff4f7b';if(Math.floor(G.t*4)%2)c.fillRect(x+4+ex*5,y+4+ey*5,2,2)}});
+  }
+});
+</script>
+</body>
+</html>

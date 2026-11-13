@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 궁전 탈출</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script>
+/* 궁전 탈출: 15분 안에 지하 궁전 3층을 빠져나가요. 달려서 뛰고, 매달려 오르고, 함정과 경비병을 넘어서! */
+const W=320,H=208,TW=32,TH=64,FL=58,ROOM=10;
+/* ' '빈곳 '_'바닥 '#'벽 '^'가시 '~'흔들바닥 'a'발판 'A'철문 'h'물약 'H'큰물약 'E'출구 'S'시작 'g'경비병 */
+const LEVELS=[
+ {name:'1층 · 지하 감옥',rows:[
+  "#         ___h______      _E_#",
+  "#_S_____  ___^___~~_a_ _A____#",
+  "#____h_______________________#"],guard:0},
+ {name:'2층 · 경비병 회랑',rows:[
+  "#           __~~___     ___________ ___#",
+  "#_S___ __~~___g___ ##### __ __h_A_E____#",
+  "#__________^_________a__________g______#"],guard:1},
+ {name:'3층 · 왕의 탑',rows:[
+  "#            ___H____         __________         #",
+  "#_S__  __^___g____~__  ______ _g____a_ _A___  _E_#",
+  "#__h_______^^______g_______~~~_______^^______h___#"],guard:2},
+];
+const floorY=r=>r*TH+FL;
+let L,map,lvlI,pl,guards,parts,gates,shakes,timeLeft,deadT,room,winT,msgT,maxHp,hp,lastRoom;
+const tl=(c,r)=>(map[r]&&map[r][c])||'#';
+const hasFloor=(c,r)=>{const t=tl(c,r);return t!==' '&&t!=='#'};
+const isWall=(c,r)=>tl(c,r)==='#';
+function gateBlocks(c,r){return tl(c,r)==='A'&&gates.open<.75}
+function load(i,keepHp){lvlI=i;L=LEVELS[i];map=L.rows.map(r=>r.split(''));gates={open:0,timer:0};shakes={};parts=[];guards=[];deadT=0;winT=0;
+  let sc=1,sr=1;map.forEach((row,r)=>row.forEach((ch,c)=>{if(ch==='S'){sc=c;sr=r;row[c]='_'}if(ch==='g'){row[c]='_';guards.push({c,r,x:c*TW+16,hp:3+L.guard,max:3+L.guard,st:'idle',t:0,face:-1,cd:1})}}));
+  if(!keepHp)hp=maxHp;
+  pl={x:sc*TW+16,y:floorY(sr),vx:0,vy:0,face:1,st:'stand',t:0,ground:true,fallTop:floorY(sr),combat:null,blockT:0};room=Math.floor(pl.x/(ROOM*TW));lastRoom=room}
+function die(G,why){if(pl.st==='dead')return;pl.st='dead';pl.why=why;pl.t=0;hp=0;deadT=2.2;G.sfx(why==='fall'?'land':'die');G.sfx('die');navigator.vibrate&&navigator.vibrate(200)}
+function hurt(G,n){hp-=n||1;G.sfx('hit');if(hp<=0)die(G,'sword')}
+function burst(x,y,col,n){for(let i=0;i<(n||6);i++)parts.push({x,y,vx:(Math.random()-.5)*80,vy:-Math.random()*90,t:.9,col})}
+Retro.boot({id:'palace',title:'NNN 궁전 탈출',en:'PALACE ESCAPE',w:W,h:H,a:'점프·베기',b:'살금·막기',diag:false,
+  intro:'15분 안에 지하 궁전 3층을 빠져나가야 해요! 달려서 뛰고, 턱에 매달려 오르고, 가시·무너지는 바닥·경비병을 넘으세요.',
+  help:'<b>◀ ▶</b> 달리기 · <b>B</b> 누르며 이동 = 살금살금(가시 위도 안전)<br><b>달리면서 A</b> = 멀리뛰기 (구멍 2칸)<br><b>▲</b> 또는 제자리 <b>A</b> = 위 턱 잡고 오르기<br><b>▼</b> 낭떠러지 앞에서 = 매달려 내려가기<br>떨어질 때 <b>▲</b> 누르고 있으면 턱을 잡아요<br>⚔ 경비병: <b>A</b> 베기 · <b>B</b> 막기 (번쩍할 때!)<br>발판을 밟으면 철문이 잠깐 열려요 · 출구에서 <b>▲</b>',
+  init(G){maxHp=3;timeLeft=15*60;load(0)},
+  update(G,dt){
+    for(const p of parts){p.vy+=400*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt}parts=parts.filter(p=>p.t>0);
+    timeLeft-=dt;if(timeLeft<=0){timeLeft=0;return G.over('시간이 다 됐어요…')}
+    if(gates.timer>0){gates.timer-=dt;gates.open=Math.min(1,gates.open+dt*2)}else gates.open=Math.max(0,gates.open-dt*.35);
+    for(const k in shakes){shakes[k]-=dt;if(shakes[k]<=0){const [c,r]=k.split(',').map(Number);map[r][c]=' ';delete shakes[k];burst(c*TW+16,floorY(r),'#8a7a6a',8);G.sfx('boom')}}
+    if(winT){winT-=dt;if(winT<=0){if(lvlI>=LEVELS.length-1){G.add(Math.floor(timeLeft)*10);return G.win('궁전 탈출 성공!',`남은 시간 ${fmt(timeLeft)}`)}load(lvlI+1,true);hp=maxHp;G.msg(L.name,1600)}return}
+    if(pl.st==='dead'){pl.t+=dt;deadT-=dt;if(deadT<=0){load(lvlI);G.msg('다시 도전!',900)}return}
+    updatePlayer(G,dt);for(const g of guards)updateGuard(G,g,dt);
+    const nr=Math.floor(pl.x/(ROOM*TW));if(nr!==room){room=nr}
+  },
+  draw(G,c){c.fillStyle='#0b0d1c';c.fillRect(0,0,W,H);if(!map)return;const c0=room*ROOM;
+    for(let r=0;r<3;r++)for(let i=0;i<ROOM;i++){const x=i*TW,y=r*TH;c.fillStyle=((i+r)%2)?'#1d2340':'#1a1f3a';c.fillRect(x,y,TW,TH);c.fillStyle='#141830';
+      for(let by=0;by<TH;by+=16)c.fillRect(x,y+by,TW,1);for(let by=0;by<TH;by+=16)c.fillRect(x+((by/16)%2?8:24),y+by,1,16);
+      if((c0+i)%5===2&&r<3&&!isWall(c0+i,r)){const f=Math.floor(G.t*10+i)%3;c.fillStyle='#5a4030';c.fillRect(x+15,y+24,3,10);c.fillStyle=['#ffd23f','#ff9b3d','#ff5a3a'][f];c.fillRect(x+14,y+17-f,5,7+f);c.fillStyle='#fff3a8';c.fillRect(x+15,y+20,3,3);
+        c.fillStyle='rgba(255,180,80,.06)';c.beginPath();c.arc(x+16,y+22,26,0,7);c.fill()}}
+    for(let r=0;r<3;r++)for(let i=-1;i<=ROOM;i++)drawTile(c,c0+i,r,i*TW,r*TH,G.t);
+    for(const g of guards)if(Math.floor(g.x/(ROOM*TW))===room||Math.abs(g.x-pl.x)<200)drawGuard(c,g,G.t,c0);
+    if(pl)drawPlayer(c,pl,G.t,c0);
+    for(let r=0;r<3;r++)for(let i=0;i<ROOM;i++){const ch=tl(c0+i,r);if(ch==='A')drawGate(c,i*TW,r*TH)}
+    for(const p of parts){c.fillStyle=p.col;c.fillRect(Math.round(p.x-c0*TW),Math.round(p.y),3,3)}
+    c.fillStyle='#000';c.fillRect(0,192,W,16);
+    for(let i=0;i<maxHp;i++){const x=6+i*10;c.fillStyle=i<hp?'#ff3b3b':'#4a2030';c.beginPath();c.moveTo(x,197);c.lineTo(x+8,197);c.lineTo(x+4,205);c.fill()}
+    G.text(L.name,W/2,196,{k:1,size:10,align:'center',color:'#d9d4ff'});G.text(fmt(timeLeft||0),W-6,197,{size:7,align:'right',color:timeLeft<120?'#ff4f7b':'#ffd23f'});
+    const cg=pl&&pl.combat;if(cg&&cg.hp>0)for(let i=0;i<cg.max;i++){const x=W-70-i*9;c.fillStyle=i<cg.hp?'#4fe3b2':'#20403a';c.beginPath();c.moveTo(x,197);c.lineTo(x+7,197);c.lineTo(x+3.5,205);c.fill()}
+    if(winT)G.text('탈출!',W/2,80,{k:1,size:22,align:'center',color:'#ffd23f'});
+  }
+});
+function fmt(t){t=Math.max(0,Math.ceil(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
+/* ---------- 플레이어 ---------- */
+function canStand(x,r){return hasFloor(Math.floor(x/TW),r)}
+function blockedX(nx,r,dir){const c=Math.floor((nx+dir*6)/TW);if(isWall(c,r))return true;
+  const oc=Math.floor(pl.x/TW);for(const gc of [c,oc]){if(tl(gc,r)==='A'&&gates.open<.75){const gx=gc*TW+16;if((pl.x<=gx&&nx+dir*6>gx-3)&&dir>0)return true;if((pl.x>=gx&&nx+dir*6<gx+3)&&dir<0)return true}}return false}
+function tryClimbUp(G,dirFirst){const c=Math.floor(pl.x/TW),r=Math.floor((pl.y-1)/TH);if(r<=0)return false;
+  if(hasFloor(c,r-1)||isWall(c,r-1))return false;
+  for(const d of [dirFirst,-dirFirst]){if(hasFloor(c+d,r-1)&&!isWall(c+d,r-1)){const tx=(d>0?(c+1)*TW:c*TW)+d*8;startClimb(G,tx,floorY(r-1),d);return true}}return false}
+function startClimb(G,tx,ty,d){pl.st='climb';pl.t=0;pl.face=d;pl.cx0=pl.x;pl.cy0=pl.y;pl.cx1=tx;pl.cy1=ty;pl.vx=0;pl.vy=0;G.sfx('jump')}
+function updatePlayer(G,dt){const k=G.keys,h=G.hit;pl.t+=dt;const r=Math.floor((pl.y-1)/TH),c=Math.floor(pl.x/TW);
+  if(pl.st==='climb'){const p=Math.min(1,pl.t/.55);const e=p<.5?p*2:1;pl.x=pl.cx0+(pl.cx1-pl.cx0)*(p<.5?0:(p-.5)*2);pl.y=pl.cy0+(pl.cy1-pl.cy0)*e;if(p>=1){pl.st='stand';pl.ground=true;pl.fallTop=pl.y}return}
+  if(pl.st==='exit'){return}
+  /* 전투 감지 */
+  let foe=null;for(const g of guards)if(g.hp>0&&g.r===r&&Math.abs(g.x-pl.x)<130&&!wallBetween(g.x,pl.x,r))foe=g;
+  pl.combat=pl.ground?foe:null;
+  if(pl.ground){
+    const dir=(k.right?1:0)-(k.left?1:0);
+    if(pl.combat){const g=pl.combat;pl.face=g.x>pl.x?1:-1;
+      if(pl.st==='strike'){if(pl.t>.12&&!pl.hitDone){pl.hitDone=1;swordHit(G,g)}if(pl.t>.32)pl.st='stand';return}
+      if(h.a){pl.st='strike';pl.t=0;pl.hitDone=0;G.sfx('shoot');return}
+      pl.blockT=k.b?pl.blockT+dt:0;pl.st=k.b?'block':'guard';
+      if(dir&&!k.b){const nx=pl.x+dir*42*dt;if(!blockedX(nx,r,dir)&&canStand(nx,r)&&Math.abs(nx-g.x)>18)pl.x=nx}
+      afterMove(G,r);return}
+    if(pl.st==='strike'||pl.st==='block'||pl.st==='guard')pl.st='stand';
+    if(h.up||(h.a&&!dir)){if(r>=0&&tl(c,r)==='E'&&h.up){pl.st='exit';winT=1.6;G.add(1000*(lvlI+1));G.sfx('clear');return}if(tryClimbUp(G,pl.face))return;if(h.a||h.up){pl.vy=-120;pl.vx=0;pl.ground=false;pl.st='jump';pl.fallTop=pl.y;G.sfx('jump');return}}
+    if(h.down){const fc=c+pl.face;const edge=pl.face>0?(c+1)*TW:c*TW;if(!hasFloor(fc,r)&&!isWall(fc,r)&&Math.abs(edge-pl.x)<22){pl.x=edge+pl.face*7;pl.y=floorY(r)+40;pl.ground=false;pl.vy=0;pl.vx=0;pl.st='fall';pl.fallTop=pl.y;pl.hang=.25;return}
+      if(!hasFloor(c-pl.face,r)&&!isWall(c-pl.face,r)){pl.face=-pl.face;return}}
+    if(h.a&&dir){pl.face=dir;pl.vx=dir*165;pl.vy=-175;pl.ground=false;pl.st='jump';pl.fallTop=pl.y;G.sfx('jump');return}
+    const careful=k.b;
+    if(dir){if(dir!==pl.face){pl.face=dir;pl.st='turn';pl.t=0}
+      const sp=careful?34:(pl.st==='run'?100:Math.min(100,30+pl.t*300));const nx=pl.x+dir*sp*dt;
+      if(!blockedX(nx,r,dir)){const oc=Math.floor(pl.x/TW);pl.x=nx;const ncl=Math.floor(pl.x/TW);if(ncl!==oc&&tl(ncl,r)==='^'&&!careful){die(G,'spike');return}}
+      if(pl.st!=='turn'||pl.t>.12)pl.st=careful?'walk':'run'}
+    else if(pl.st!=='turn'||pl.t>.12)pl.st='stand';
+    afterMove(G,r);
+  }else{
+    if(pl.hang>0){pl.hang-=dt;return}
+    pl.vy+=560*dt;if(pl.vy>420)pl.vy=420;const py=pl.y;
+    const nx=pl.x+pl.vx*dt;const br=Math.floor((pl.y-20)/TH);if(isWall(Math.floor((nx+Math.sign(pl.vx||1)*6)/TW),br)||(pl.vx&&gateBlocks(Math.floor((nx+Math.sign(pl.vx)*6)/TW),br)&&Math.abs(nx-(Math.floor(nx/TW)*TW+16))<8)){pl.vx=-pl.vx*.2}else pl.x=nx;
+    pl.y+=pl.vy*dt;if(pl.vy<0)pl.fallTop=Math.min(pl.fallTop,pl.y);
+    /* 턱 잡기 */
+    if(pl.vy>0&&(k.up||k.a)){const hy0=py-44,hy1=pl.y-44;const rr=Math.floor(hy1/TH);const fy=floorY(rr);
+      if(rr>=0&&hy0<=fy&&hy1>=fy-2){const cc=Math.floor(pl.x/TW);if(!hasFloor(cc,rr)){for(const d of [pl.face,-pl.face]){if(hasFloor(cc+d,rr)&&!isWall(cc+d,rr)){const edge=d>0?(cc+1)*TW:cc*TW;if(Math.abs(edge-pl.x)<16){pl.x=edge-d*6;pl.y=fy+44;startClimb(G,edge+d*8,fy,d);pl.cy0=fy+44;return}}}}}}
+    /* 착지 */
+    if(pl.vy>0){const rr=Math.floor((pl.y-1)/TH);const fy=floorY(rr);if(py<=fy&&pl.y>=fy&&canStand(pl.x,rr)&&!isWall(Math.floor(pl.x/TW),rr)){pl.y=fy;pl.ground=true;pl.vy=0;pl.vx=0;const d=pl.y-pl.fallTop;
+        const cc=Math.floor(pl.x/TW);if(tl(cc,rr)==='^'){die(G,'spike');return}
+        if(d>170){die(G,'fall');return}else if(d>100){hurt(G,1);pl.st='land';pl.t=0;G.msg('아야!',600)}else{G.sfx('land');pl.st='land';pl.t=0}
+        afterMove(G,rr)}}
+    if(pl.y>3*TH+40){die(G,'fall')}
+    if(pl.ground)return;pl.st=pl.vy<0?'jump':'fall'}
+}
+function afterMove(G,r){const c=Math.floor(pl.x/TW);
+  if(pl.st==='land'&&pl.t<.25)return;
+  if(!canStand(pl.x,r)){pl.ground=false;pl.vy=20;pl.fallTop=pl.y;pl.vx=pl.st==='run'?pl.face*40:0;pl.st='fall';return}
+  const t=tl(c,r);
+  if(t==='~'&&!shakes[c+','+r]){shakes[c+','+r]=.55;G.sfx('tick')}
+  if(t==='a'&&gates.timer<=0){gates.timer=7;G.sfx('power');G.msg('철문이 열려요!',900)}else if(t==='a')gates.timer=Math.max(gates.timer,7);
+  if((t==='h'||t==='H')&&Math.abs(pl.x-(c*TW+16))<10){map[r][c]='_';if(t==='H'){maxHp++;hp=maxHp;G.msg('최대 체력 +1!',1000)}else{hp=Math.min(maxHp,hp+1);G.msg('체력 회복',700)}G.add(100);G.sfx('power')}}
+function wallBetween(a,b,r){const c0=Math.floor(Math.min(a,b)/TW),c1=Math.floor(Math.max(a,b)/TW);for(let c=c0;c<=c1;c++)if(isWall(c,r)||gateBlocks(c,r))return true;return false}
+function swordHit(G,g){if(Math.abs(g.x-pl.x)>44)return G.sfx('tick');
+  if(g.st==='idle'||g.st==='walk'||g.st==='ready'){if(Math.random()<.3+L.guard*.12){g.st='block';g.t=0;G.sfx('block');g.cd=Math.min(g.cd,.35);return}}
+  g.hp--;g.st='hit';g.t=0;g.x+=Math.sign(g.x-pl.x)*8;G.sfx('hit');burst(g.x-0,floorY(g.r)-26,'#ff3b3b',4);G.add(100);
+  if(g.hp<=0){g.st='dying';g.t=0;G.add(300);G.sfx('boom');G.msg('경비병 쓰러뜨림!',900)}}
+/* ---------- 경비병 ---------- */
+function updateGuard(G,g,dt){g.t+=dt;if(g.st==='dying'||g.hp<=0)return;const fy=floorY(g.r);
+  const same=pl.st!=='dead'&&Math.floor((pl.y-1)/TH)===g.r&&pl.ground&&!wallBetween(g.x,pl.x,g.r);const dist=Math.abs(pl.x-g.x);
+  if(!same||dist>150){if(g.st!=='idle'&&g.t>.4){g.st='idle';g.t=0}return}
+  g.face=pl.x>g.x?1:-1;const lv=L.guard;
+  if(g.st==='hit'){if(g.t>.35){g.st='ready';g.t=0;g.cd=.4}return}
+  if(g.st==='block'){if(g.t>.25){g.st='ready';g.t=0;g.cd=Math.min(g.cd,.3)}return}
+  if(g.st==='stagger'){if(g.t>.6){g.st='ready';g.t=0;g.cd=.6}return}
+  if(g.st==='windup'){const wt=.6-lv*.1;if(g.t>=wt){g.st='strike';g.t=0;
+      if(dist<46){if(pl.st==='block'&&pl.blockT<.9+lv*0){g.st='stagger';g.t=0;G.sfx('block');G.add(50)}else{hurt(G,1);pl.x-=g.face*-10;if(pl.x<0)pl.x=8}}}return}
+  if(g.st==='strike'){if(g.t>.25){g.st='ready';g.t=0;g.cd=.5+Math.random()*(1.1-lv*.25)}return}
+  if(dist>34){g.st='walk';const nx=g.x+g.face*38*dt;if(hasFloor(Math.floor((nx+g.face*8)/TW),g.r)&&!isWall(Math.floor((nx+g.face*8)/TW),g.r)&&!gateBlocks(Math.floor((nx+g.face*8)/TW),g.r))g.x=nx;else g.st='ready';return}
+  g.st='ready';g.cd-=dt;if(g.cd<=0){g.st='windup';g.t=0;G.sfx('tick')}}
+/* ---------- 그리기 ---------- */
+function drawTile(c,col,r,x,y,t){const ch=tl(col,r);if(ch===' ')return;
+  if(ch==='#'){c.fillStyle='#4a4a6a';c.fillRect(x,y,TW,TH);c.fillStyle='#5e5e82';for(let by=0;by<TH;by+=16){c.fillRect(x+((by/16)%2?0:16),y+by+1,15,14)}c.fillStyle='#7a7aa0';c.fillRect(x,y,TW,2);c.fillStyle='#2a2a40';c.fillRect(x,y+TH-2,TW,2);return}
+  let sy=y+FL;if(ch==='~'&&shakes[col+','+r])sy+=Math.round(Math.sin(t*60)*1.5);
+  if(ch==='a'){const pressed=gates.timer>0&&Math.abs(pl.x-(col*TW+16))<16;sy+=pressed?2:0}
+  c.fillStyle=ch==='~'?'#7a6e8a':'#8a8fb0';c.fillRect(x,sy,TW,4);c.fillStyle=ch==='~'?'#5a5068':'#5a5f80';c.fillRect(x,sy+4,TW,TH-FL-4+(r<2?0:0));
+  c.fillStyle='#b8bed8';c.fillRect(x,sy,TW,1);c.fillStyle='#3a3f5a';c.fillRect(x+TW-1,sy,1,6);
+  if(ch==='~'){c.fillStyle='#3a3048';c.fillRect(x+8,sy+1,1,3);c.fillRect(x+9,sy+2,5,1);c.fillRect(x+20,sy+1,1,3)}
+  if(ch==='a'){c.fillStyle='#ffd23f';c.fillRect(x+6,sy-2,20,2)}
+  if(ch==='^'){const near=Math.abs(pl.x-(col*TW+16))<56&&Math.floor((pl.y-1)/TH)===r;const ext=near?1:0.25;c.fillStyle='#d8d8e8';for(let i=0;i<4;i++){const sx=x+3+i*7;const hgt=Math.round(12*ext);c.fillRect(sx+2,sy-hgt,2,hgt);c.fillRect(sx+1,sy-hgt*.4,4,hgt*.4)}}
+  if(ch==='h'||ch==='H'){const px=x+12,py=sy-12;c.fillStyle='#d8e8ff';c.fillRect(px+2,py,4,3);c.fillStyle=ch==='H'?'#4fe3b2':'#ff3b5c';c.fillRect(px,py+3,8,9);c.fillStyle='#fff';c.fillRect(px+1,py+4,2,3);
+    if(Math.floor(t*4)%2){c.fillStyle='#fff';c.fillRect(px+3,py-3-Math.floor(t*8)%4,1,1)}}
+  if(ch==='E'){c.fillStyle='#2a2040';c.fillRect(x+2,y+6,28,FL-6);c.fillStyle='#ffd23f';c.fillRect(x,y+4,32,3);c.fillRect(x,y+4,3,FL-4);c.fillRect(x+29,y+4,3,FL-4);c.fillStyle='#ffe98a';for(let i=0;i<4;i++)c.fillRect(x+6+i*2,y+FL-8-i*8,20-i*4,2);
+    if(winT){c.fillStyle='#fff8d0';c.fillRect(x+4,y+8,24,FL-8)}}}
+function drawGate(c,x,y){const h=Math.round((FL-2)*(1-gates.open));if(h<2)return;c.fillStyle='#2a2a3a';c.fillRect(x+12,y,8,h);c.fillStyle='#9aa0c0';for(let i=0;i<3;i++)c.fillRect(x+12+i*3,y,1,h);for(let yy=6;yy<h;yy+=10)c.fillRect(x+11,y+yy,10,1);c.fillStyle='#c8cce0';c.fillRect(x+11,y+h-2,10,2)}
+function figure(c,x,y,f,pose,t,col,isGuard,blink){if(blink)return;c.save();c.translate(Math.round(x),Math.round(y));if(f<0)c.scale(-1,1);
+  const skin='#f0c090',body=col.body,pants=col.pants,hat=col.hat;const P=(a,b,w,h,cl)=>{c.fillStyle=cl;c.fillRect(a,b,w,h)};
+  let legA=[-3,-12,3,12],legB=[1,-12,3,12],arm=[[4,-30,3,10]],sword=null,yo=0,lean=0;
+  const fr=Math.floor(t*10)%4;
+  if(pose==='run'){const s=[[-6,4],[-2,2],[4,-4],[2,-2]][fr];legA=[s[0],-12,3,12];legB=[s[1],-11,3,11];arm=[[2-s[0]/2,-30,3,10]]}
+  else if(pose==='walk'){const s=[-2,0,2,0][fr];legA=[-2+s,-12,3,12];legB=[1-s,-12,3,12]}
+  else if(pose==='jump'){legA=[-7,-13,3,10];legB=[3,-11,3,8];arm=[[3,-38,3,9]]}
+  else if(pose==='fall'){legA=[-4,-12,3,12];legB=[1,-14,3,10];arm=[[3,-44,3,12],[-6,-44,3,12]]}
+  else if(pose==='climb'){yo=0;legA=[-2,-12,3,12];legB=[1,-10,3,10];arm=[[2,-48,3,16],[-3,-48,3,16]]}
+  else if(pose==='land'){yo=4;legA=[-5,-9,3,9];legB=[2,-9,3,9]}
+  else if(pose==='guard'||pose==='ready'||pose==='walkg'){legA=[-6,-12,3,12];legB=[3,-12,3,12];arm=[[5,-28,3,8]];sword=[8,-30,16,2]}
+  else if(pose==='strike'){legA=[-7,-12,3,12];legB=[5,-12,3,12];arm=[[5,-29,9,3]];sword=[14,-29,18,2];lean=2}
+  else if(pose==='windup'){legA=[-6,-12,3,12];legB=[3,-12,3,12];arm=[[1,-38,3,9]];sword=[0,-52,2,16]}
+  else if(pose==='block'){legA=[-6,-12,3,12];legB=[2,-12,3,12];arm=[[5,-34,3,8]];sword=[9,-48,2,20]}
+  else if(pose==='hit'||pose==='stagger'){legA=[-5,-12,3,12];legB=[0,-12,3,12];lean=-3;arm=[[-3,-30,3,8]];sword=[-8,-26,12,2]}
+  if(pose==='dead'||pose==='dying'){c.rotate(-Math.PI/2);c.translate(0,-2);P(-4,-40,8,6,skin);P(-5,-34,10,16,body);P(-4,-18,8,4,pants);P(-4,-14,3,14,pants);P(1,-14,3,14,pants);c.restore();return}
+  c.translate(0,yo);
+  P(legA[0],legA[1],legA[2],legA[3],pants);P(legB[0],legB[1],legB[2],legB[3],pants);P(legA[0]-1,-2,5,2,'#5a3a20');P(legB[0]-1,-2,5,2,'#5a3a20');
+  P(-4+lean,-32,8,20,body);P(-4+lean,-14,8,3,pants);if(!isGuard)P(-4+lean,-20,8,2,'#ff3b3b');
+  P(-3+lean,-41,7,9,skin);P(-4+lean,-43,8,4,hat);if(!isGuard){P(-5+lean,-39,2,6,'#ff3b3b')}else{P(-5+lean,-44,10,3,hat);P(-1+lean,-47,2,4,'#ffd23f')}
+  P(2+lean,-38,2,2,'#111');
+  for(const a of arm)P(a[0]+lean,a[1],a[2],a[3],skin);
+  if(sword){P(sword[0]+lean,sword[1],sword[2],sword[3],'#e8ecff');P(sword[0]+lean-1,sword[1]-1,3,4,'#ffd23f')}
+  c.restore()}
+function drawPlayer(c,p,t,c0){const pose=p.st==='dead'?'dead':p.st==='climb'?'climb':p.st==='strike'?'strike':p.st==='block'?'block':p.st==='guard'?'guard':p.st==='turn'?'stand':p.st;
+  let x=p.x-c0*TW,y=p.y;if(p.st==='fall'&&p.hang>0)y=p.y;figure(c,x,y,p.face,pose,t,{body:'#e8ecff',pants:'#2a5adf',hat:'#2a1a10'},false);
+  if(p.st==='dead'&&p.why==='spike'){c.fillStyle='#ff3b3b';c.fillRect(x-8,y-6,16,3)}}
+function drawGuard(c,g,t,c0){const pose=g.st==='dying'?'dying':g.st==='walk'?'walkg':g.st==='strike'?'strike':g.st==='windup'?'windup':g.st==='block'?'block':g.st==='hit'||g.st==='stagger'?'hit':g.st==='idle'?'stand':'ready';
+  const x=g.x-c0*TW,y=floorY(g.r);figure(c,x,y,g.face,pose,t,{body:'#7a3ab8',pants:'#3a1a5a',hat:'#ff9b3d'},true);
+  if(g.st==='windup'&&Math.floor(t*16)%2){c.fillStyle='#fff';c.fillRect(x-1+g.face*2,y-56,3,3);c.fillRect(x-4+g.face*2,y-55,9,1);c.fillRect(x+g.face*2,y-59,1,9)}}
+</script>
+</body>
+</html>

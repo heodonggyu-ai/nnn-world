@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 벽돌깨기</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script>
+/* 벽돌깨기: 공을 튕겨 벽돌을 모두 깨요. 캡슐을 받으면 특별한 힘! */
+const W=208,H=256,L=8,R=200,T=24,PY=236,BW=16,BH=8,BC=12;
+const LEVELS=[
+ ['............','............','rrrrrrrrrrrr','oooooooooooo','yyyyyyyyyyyy','gggggggggggg','bbbbbbbbbbbb','pppppppppppp'],
+ ['s..........s','ss........ss','rrr......rrr','.oooo..oooo.','..yyyyyyyy..','...gggggg...','....bbbb....','.....pp.....'],
+ ['............','.ssssssssss.','.r........r.','.r.oooooo.r.','.r.y....y.r.','.r.y.gg.y.r.','.r.y....y.r.','.r.oooooo.r.','.r........r.','.ssssssssss.'],
+ ['g.g.g.g.g.g.','.b.b.b.b.b.b','r.r.r.r.r.r.','.y.y.y.y.y.y','o.o.o.o.o.o.','.p.p.p.p.p.p','GGG......GGG'],
+ ['pppppppppppp','p..........p','p.ssssssss.p','p.s......s.p','p.s.yyyy.s.p','p.s.yyyy.s.p','p.s......s.p','p.ssssssss.p','p..........p','GGGG....GGGG'],
+ ['rrooyyggbbpp','rrooyyggbbpp','............','ssss....ssss','............','ppbbggyyoorr','ppbbggyyoorr'],
+ ['.....ss.....','....ssss....','...rrrrrr...','..oooooooo..','.yyyyyyyyyy.','gggggggggggg','.bbbbbbbbbb.','..pppppppp..','...GG..GG...'],
+ ['ssssssssssss','s.r.o.y.g.bs','s..........s','sGGGG..GGGGs','s.p.b.g.y.os','s..........s','ssssssssssss'],
+];
+const BCOL={r:'#ff5a6e',o:'#ff9b3d',y:'#ffd23f',g:'#5be37d',b:'#3fd0ff',p:'#c46bff',s:'#c9c9d6',G:'#e8b923'};
+const CAPS=[['E','#4f7dff','늘어나요'],['S','#ff9b3d','느려져요'],['C','#5be37d','공 붙잡기'],['D','#3fd0ff','공 3개'],['L','#ff5a6e','레이저'],['P','#c9c9d6','목숨 +1']];
+let bricks,balls,pad,caps,lasers,lives,lvl,power,stuck,laserCd,dying,parts;
+function loadLevel(n){bricks=[];const m=LEVELS[n%LEVELS.length];m.forEach((row,j)=>[...row].forEach((ch,i)=>{if(ch==='.')return;
+    bricks.push({x:L+i*BW,y:T+j*BH,c:ch,hp:ch==='s'?2+Math.floor(n/LEVELS.length):ch==='G'?99:1})}));resetBall()}
+function resetBall(){pad={x:W/2,w:32};balls=[{x:W/2,y:PY-4,vx:0,vy:0,sp:120+lvl*6,stick:1,off:0}];caps=[];lasers=[];power=null;stuck=true}
+function launch(b){const a=-Math.PI/2+(Math.random()-.5)*.6;b.vx=Math.cos(a)*b.sp;b.vy=Math.sin(a)*b.sp;b.stick=0}
+function burst(x,y,col){for(let i=0;i<6;i++)parts.push({x,y,vx:(Math.random()-.5)*80,vy:(Math.random()-.5)*80,t:.4,col})}
+Retro.boot({id:'bricks',title:'NNN 벽돌깨기',en:'BRICK BREAKER',w:W,h:H,a:'발사',b:false,diag:false,
+  intro:'공을 받아쳐서 벽돌을 다 깨면 다음 판! 떨어지는 캡슐을 받으면 특별한 힘이 생겨요.',
+  help:'<b>◀ ▶</b> 또는 <b>화면을 문질러</b> 판 움직이기<br><b>A</b> 공 발사 · 레이저 쏘기<br>캡슐: <b>E</b> 판 커짐 · <b>S</b> 느리게 · <b>C</b> 붙잡기 · <b>D</b> 공 3개 · <b>L</b> 레이저 · <b>P</b> 목숨<br>은색 벽돌은 여러 번, 금색은 안 깨져요',
+  init(G){lives=3;lvl=0;parts=[];laserCd=0;dying=0;loadLevel(0)},
+  update(G,dt){
+    for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt}parts=parts.filter(p=>p.t>0);
+    if(dying>0){dying-=dt;if(dying<=0){dying=0;if(lives<=0)return G.over(`${lvl+1}판까지 왔어요`);resetBall()}return}
+    const k=G.keys,pw=power==='E'?48:32;pad.w+=(pw-pad.w)*.2;
+    if(G.ptr.down){pad.x+=(G.ptr.x-pad.x)*.5}else{const sp=180;if(k.left)pad.x-=sp*dt;if(k.right)pad.x+=sp*dt}
+    pad.x=Math.max(L+pad.w/2,Math.min(R-pad.w/2,pad.x));
+    if(G.hit.a||(G.hit.tap&&balls.some(b=>b.stick))){let launched=false;for(const b of balls)if(b.stick){launch(b);launched=true}
+      if(!launched&&power==='L'&&laserCd<=0){lasers.push({x:pad.x-pad.w/2+3,y:PY},{x:pad.x+pad.w/2-3,y:PY});laserCd=.25;G.sfx('shoot')}}
+    if(power==='L'&&k.a&&laserCd<=0&&!balls.some(b=>b.stick)){lasers.push({x:pad.x-pad.w/2+3,y:PY},{x:pad.x+pad.w/2-3,y:PY});laserCd=.3;G.sfx('shoot')}
+    laserCd-=dt;
+    for(const z of lasers){z.y-=300*dt;for(const br of bricks)if(br.hp>0&&z.x>=br.x&&z.x<br.x+BW&&z.y>=br.y&&z.y<br.y+BH){hitBrick(G,br);z.y=-99;break}}
+    lasers=lasers.filter(z=>z.y>T-4);
+    for(const b of balls){
+      if(b.stick){b.x=pad.x+b.off;b.y=PY-4;continue}
+      const spd=power==='S'?b.sp*.65:b.sp;const n=Math.hypot(b.vx,b.vy)||1;b.vx=b.vx/n*spd;b.vy=b.vy/n*spd;
+      const steps=4;for(let s=0;s<steps;s++){
+        b.x+=b.vx*dt/steps;if(b.x<L+2){b.x=L+2;b.vx=Math.abs(b.vx);G.sfx('tick')}if(b.x>R-2){b.x=R-2;b.vx=-Math.abs(b.vx);G.sfx('tick')}
+        for(const br of bricks)if(br.hp>0&&b.x+2>br.x&&b.x-2<br.x+BW&&b.y+2>br.y&&b.y-2<br.y+BH){b.x-=b.vx*dt/steps;b.vx*=-1;hitBrick(G,br);break}
+        b.y+=b.vy*dt/steps;if(b.y<T+2){b.y=T+2;b.vy=Math.abs(b.vy);G.sfx('tick')}
+        for(const br of bricks)if(br.hp>0&&b.x+2>br.x&&b.x-2<br.x+BW&&b.y+2>br.y&&b.y-2<br.y+BH){b.y-=b.vy*dt/steps;b.vy*=-1;hitBrick(G,br);break}
+        if(b.vy>0&&b.y+2>=PY&&b.y<PY+4&&b.x>pad.x-pad.w/2-2&&b.x<pad.x+pad.w/2+2){const rel=(b.x-pad.x)/(pad.w/2);const a=-Math.PI/2+rel*1.05;
+          b.vx=Math.cos(a)*spd;b.vy=Math.sin(a)*spd;b.y=PY-2;b.sp=Math.min(b.sp+1.5,260);G.sfx('blip');
+          if(power==='C'){b.stick=1;b.off=b.x-pad.x}}
+      }
+      if(Math.abs(b.vy)<30&&!b.stick)b.vy=b.vy<0?-30:30;
+    }
+    balls=balls.filter(b=>b.y<H+4);
+    if(!balls.length){lives--;dying=1.2;G.sfx('die');return}
+    for(const cp of caps){cp.y+=50*dt;if(cp.y>PY-4&&cp.y<PY+6&&Math.abs(cp.x-pad.x)<pad.w/2+6){cp.got=1;G.add(100);G.sfx('power');
+        const t=cp.t;if(t==='P'){lives++;G.msg('목숨 +1')}else if(t==='D'){const b0=balls[0];if(b0){if(b0.stick)launch(b0);for(const a of [-.5,.5]){const an=Math.atan2(b0.vy,b0.vx)+a;balls.push({x:b0.x,y:b0.y,vx:Math.cos(an)*b0.sp,vy:Math.sin(an)*b0.sp,sp:b0.sp,stick:0,off:0})}}power=null}
+        else{if(power==='C'&&t!=='C')balls.forEach(b=>{if(b.stick)launch(b)});power=t;G.msg(CAPS.find(x=>x[0]===t)[2],900)}}}
+    caps=caps.filter(c=>!c.got&&c.y<H);
+    if(!bricks.some(b=>b.hp>0&&b.c!=='G')){lvl++;G.add(1000);G.sfx('clear');G.msg(`${lvl+1}판!`);loadLevel(lvl)}
+  },
+  draw(G,c){c.fillStyle='#0c1030';c.fillRect(0,0,W,H);
+    for(let y=T;y<H;y+=16)for(let x=L;x<R;x+=16){c.fillStyle=((x+y)/16)%2?'#11163d':'#0e1336';c.fillRect(x,y,16,16)}
+    c.fillStyle='#5a5f8a';c.fillRect(0,T-4,L,H);c.fillRect(R,T-4,W-R,H);c.fillRect(0,T-6,W,4);c.fillStyle='#8c91bd';c.fillRect(2,T-4,2,H);c.fillRect(R+4,T-4,2,H);
+    G.text('LIFE',4,4,{color:'#9a93c7',size:7});for(let i=0;i<Math.min(lives||0,8);i++){c.fillStyle='#ff4f7b';c.fillRect(38+i*9,4,6,4)}
+    G.text('STAGE '+((lvl||0)+1),W-4,4,{color:'#ffd23f',size:7,align:'right'});
+    if(bricks)for(const b of bricks)if(b.hp>0){c.fillStyle=BCOL[b.c];c.fillRect(b.x,b.y,BW-1,BH-1);c.fillStyle='rgba(255,255,255,.5)';c.fillRect(b.x,b.y,BW-1,1);c.fillRect(b.x,b.y,1,BH-1);
+      c.fillStyle='rgba(0,0,0,.35)';c.fillRect(b.x+1,b.y+BH-2,BW-2,1);if(b.c==='s'&&b.hp>1){c.fillStyle='#fff';c.fillRect(b.x+6,b.y+3,3,1)}}
+    if(caps)for(const cp of caps){const d=CAPS.find(x=>x[0]===cp.t);c.fillStyle=d[1];c.fillRect(cp.x-7,cp.y-3,14,7);c.fillStyle='#fff';c.fillRect(cp.x-6,cp.y-3,12,1);G.text(cp.t,cp.x,cp.y-3,{size:6,align:'center',color:'#fff'})}
+    if(lasers){c.fillStyle='#ff5a6e';for(const z of lasers)c.fillRect(z.x-1,z.y-5,2,6)}
+    if(pad&&!dying){const x=pad.x-pad.w/2;c.fillStyle='#ff4f7b';c.fillRect(x,PY,4,6);c.fillRect(x+pad.w-4,PY,4,6);c.fillStyle=power==='L'?'#ff8a8a':'#d6d9f2';c.fillRect(x+4,PY,pad.w-8,6);
+      c.fillStyle='#fff';c.fillRect(x+4,PY,pad.w-8,1);c.fillStyle='#7d82b0';c.fillRect(x+4,PY+5,pad.w-8,1);if(power==='L'){c.fillStyle='#ff5a6e';c.fillRect(x+2,PY-3,2,3);c.fillRect(x+pad.w-4,PY-3,2,3)}}
+    if(balls)for(const b of balls){c.fillStyle='#fff';c.fillRect(b.x-2,b.y-1,4,2);c.fillRect(b.x-1,b.y-2,2,4)}
+    if(parts)for(const p of parts){c.fillStyle=p.col;c.fillRect(p.x,p.y,2,2)}
+    if(G.state==='play'&&balls&&balls.some(b=>b.stick)&&Math.floor(G.t*3)%2)G.text('A 또는 화면 톡!',W/2,PY-34,{k:1,size:12,align:'center',color:'#ffd23f'});
+  }
+});
+function hitBrick(G,br){if(br.c==='G'){G.sfx('block');return}br.hp--;
+  if(br.hp<=0){const pts={r:90,o:60,y:120,g:80,b:70,p:110,s:50*(1+lvl)}[br.c]||50;G.add(pts);G.sfx('pop');burst(br.x+8,br.y+4,BCOL[br.c]);
+    if(Math.random()<.13&&caps.length<2&&balls.length<2){const t=CAPS[Math.floor(Math.random()*CAPS.length)][0];if(t!=='P'||Math.random()<.4)caps.push({x:br.x+8,y:br.y+4,t})}}
+  else G.sfx('block')}
+</script>
+</body>
+</html>

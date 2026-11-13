@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 길 건너기</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script>
+/* 길 건너기: 찻길을 건너고 강물의 통나무·거북이를 밟아 집 다섯 칸을 채워요 */
+const T=16,COLS=14,W=224,H=256,HOME_ROW=1,START_ROW=13;
+/* 줄 정의: 위에서부터. kind, 속도(+오른쪽), 물체 길이(칸), 간격(칸) */
+const LANES_BASE={
+ 2:{k:'log',v:28,len:4,gap:3},3:{k:'turtle',v:-36,len:2,gap:2,dive:1},4:{k:'log',v:50,len:6,gap:4},5:{k:'log',v:20,len:3,gap:3},6:{k:'turtle',v:-30,len:3,gap:2,dive:1},
+ 8:{k:'truck',v:-30,len:2,gap:4},9:{k:'car3',v:52,len:1,gap:4},10:{k:'car2',v:-40,len:1,gap:3},11:{k:'car1',v:30,len:1,gap:4},12:{k:'car4',v:-34,len:1,gap:3}};
+let lanes,frog,homes,lives,level,timer,best,dying,flyT,fly,hopT,winT;
+function mkLanes(){lanes={};for(const r in LANES_BASE){const b=LANES_BASE[r];const sp=b.v*(1+(level-1)*.15);const objs=[];const per=(b.len+b.gap)*T;
+    const n=Math.ceil((W+per*2)/per);for(let i=0;i<n;i++)objs.push({x:i*per+Math.random()*T*.5,len:b.len*T,dive:b.dive&&i%3===1});lanes[r]={...b,v:sp,objs,per:n*per}}}
+function resetFrog(){frog={c:7,r:START_ROW,x:7*T,y:START_ROW*T,dir:0,hop:0,fx:7*T,fy:START_ROW*T};best=START_ROW;timer=30}
+function die(G,why){if(dying)return;dying=1.2;G.sfx('die');lives--;frog.why=why}
+Retro.boot({id:'crossing',title:'NNN 길 건너기',en:'ROAD & RIVER',w:W,h:H,a:'점프',b:false,diag:false,
+  intro:'개구리를 집으로! 자동차를 피해 찻길을 건너고, 강에서는 통나무와 거북이 등을 밟고 건너요.',
+  help:'<b>십자키</b> 또는 <b>화면 밀기</b>로 한 칸씩 폴짝<br><b>A</b> 앞으로 폴짝<br>강물에 빠지면 안 돼요! 거북이는 가끔 잠수해요<br>집 5칸을 다 채우면 다음 레벨 · 🪰 파리 보너스',
+  init(G){level=1;lives=4;homes=[0,0,0,0,0];dying=0;fly=null;flyT=3;winT=0;mkLanes();resetFrog()},
+  update(G,dt){
+    for(const r in lanes){const L=lanes[r];for(const o of L.objs){o.x+=L.v*dt;if(L.v>0&&o.x>W+T)o.x-=L.per;if(L.v<0&&o.x+o.len<-T)o.x+=L.per}}
+    flyT-=dt;if(flyT<=0){const free=homes.map((h,i)=>h?-1:i).filter(i=>i>=0);fly=free.length&&!fly?free[Math.floor(Math.random()*free.length)]:null;flyT=fly!=null?4:3}
+    if(winT){winT-=dt;if(winT<=0){winT=0;level++;homes=[0,0,0,0,0];mkLanes();resetFrog();G.msg(`레벨 ${level}!`)}return}
+    if(dying){dying-=dt;if(dying<=0){dying=0;if(lives<=0)return G.over(`레벨 ${level}`);resetFrog()}return}
+    timer-=dt;if(timer<=0){die(G,'time');return}
+    const h=G.hit;let mv=null;for(const k of ['up','down','left','right'])if(h[k]||h.swipe===k)mv=k;if(h.a||h.tap&&!h.swipe)mv=mv||'up';
+    if(mv&&frog.hop<=0){const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[mv];const nr=frog.r+d[1];const nx=frog.x+d[0]*T;
+      if(nr>=HOME_ROW&&nr<=START_ROW&&nx>=-2&&nx<=W-T+2){frog.r=nr;frog.fx=nx;frog.fy=nr*T;frog.sx=frog.x;frog.sy=frog.y;frog.hop=.12;frog.dir=mv;G.sfx('jump');
+        if(nr<best){best=nr;G.add(10)}}}
+    if(frog.hop>0){frog.hop-=dt;const p=1-Math.max(0,frog.hop)/.12;frog.x=frog.sx+(frog.fx-frog.sx)*p;frog.y=frog.sy+(frog.fy-frog.sy)*p;
+      if(frog.hop<=0){frog.x=frog.fx;frog.y=frog.fy;land(G)}return}
+    const L=lanes[frog.r];
+    if(L&&L.k!=='log'&&L.k!=='turtle'){}
+    else if(L){frog.x+=L.v*dt;frog.fx=frog.x;if(frog.x<-6||frog.x>W-T+6){die(G,'drown');return}if(!onFloat(L,G)){die(G,'drown');return}}
+    if(L&&L.k!=='log'&&L.k!=='turtle'){for(const o of L.objs)if(frog.x+T-3>o.x&&frog.x+3<o.x+o.len){die(G,'car');return}}
+  },
+  draw(G,c){
+    c.fillStyle='#0a0a2a';c.fillRect(0,0,W,H);
+    c.fillStyle='#163a8a';c.fillRect(0,2*T,W,5*T);
+    for(let i=0;i<40;i++){c.fillStyle='#2453b0';c.fillRect((i*37+G.t*10)%W,2*T+(i*23)%(5*T),4,1)}
+    c.fillStyle='#2f7a3a';c.fillRect(0,HOME_ROW*T-6,W,T+6);
+    for(let i=0;i<5;i++){const x=8+i*48;c.fillStyle='#163a8a';c.fillRect(x,HOME_ROW*T,24,T);if(homes&&homes[i]){drawFrog(c,x+4,HOME_ROW*T,'up',0,true)}
+      if(fly===i&&!(homes&&homes[i])){c.fillStyle='#222';c.fillRect(x+10,HOME_ROW*T+6,4,4);c.fillStyle='#cfe';c.fillRect(x+8+(Math.floor(G.t*20)%2)*6,HOME_ROW*T+4,2,2)}}
+    c.fillStyle='#7b4fb8';c.fillRect(0,7*T,W,T);c.fillRect(0,START_ROW*T,W,T);
+    for(let x=0;x<W;x+=8){c.fillStyle='#9a6fd8';c.fillRect(x,7*T+(x%16?2:10),4,2);c.fillRect(x,START_ROW*T+(x%16?10:2),4,2)}
+    c.fillStyle='#202028';c.fillRect(0,8*T,W,5*T);
+    for(let r=8;r<12;r++)for(let x=0;x<W;x+=24){c.fillStyle='#ccc';c.fillRect(x+6,r*T+T-1,10,1)}
+    if(lanes)for(const r in lanes){const L=lanes[r];for(const o of L.objs)drawObj(c,L,o,+r*T,G.t)}
+    if(frog){if(dying)drawDeath(c,frog,G.t);else drawFrog(c,frog.x,frog.y,frog.dir,frog.hop>0)}
+    c.fillStyle='#000';c.fillRect(0,14*T,W,2*T);
+    G.text('LV '+(level||1),4,14*T+4,{color:'#ffd23f',size:7});
+    for(let i=0;i<Math.max(0,(lives||0)-1);i++)drawFrog(c,4+i*11,15*T+2,'up',0,true,.6);
+    if(timer!=null){const tw=Math.max(0,timer)/30*90;c.fillStyle=timer<8?'#ff4f7b':'#5be37d';c.fillRect(W-4-tw,15*T+5,tw,6);G.text('TIME',W-98,15*T+4,{size:6,color:'#9a93c7',align:'right'})}
+    if(winT)G.text('모두 집에 왔어요!',W/2,7*T+2,{k:1,size:12,align:'center',color:'#ffd23f'});
+  }
+});
+function onFloat(L,G){for(const o of L.objs){if(o.dive&&diveState(o,G.t)>1.5)continue;if(frog.x+T/2>o.x&&frog.x+T/2<o.x+o.len)return true}return false}
+function diveState(o,t){const ph=(t+o.x*0)%6;return ph<3.5?0:ph<4.2?1:ph<5.4?2:1}
+function land(G){if(frog.r===HOME_ROW){const slot=[0,1,2,3,4].find(i=>Math.abs(frog.x-(8+i*48+4))<10);
+    if(slot==null||homes[slot]){die(G,'wall');return}homes[slot]=1;let pts=50+Math.floor(timer)*10;if(fly===slot){pts+=200;fly=null;G.msg('파리 보너스 +200',900)}G.add(pts);G.sfx('coin');
+    if(homes.every(Boolean)){G.add(1000);G.sfx('clear');winT=2}else resetFrog();return}
+  const L=lanes[frog.r];if(L&&(L.k==='log'||L.k==='turtle')&&!onFloat(L,G))die(G,'drown')}
+function drawFrog(c,x,y,dir,hop,small,sc){x=Math.round(x);y=Math.round(y);c.save();c.translate(x+8,y+8);c.rotate({up:0,right:Math.PI/2,down:Math.PI,left:-Math.PI/2}[dir]||0);if(sc)c.scale(sc,sc);
+  c.fillStyle='#4fd65a';c.fillRect(-5,-5,10,11);c.fillStyle='#3aa847';c.fillRect(-7,hop?-8:-4,3,5);c.fillRect(4,hop?-8:-4,3,5);c.fillRect(-7,hop?5:3,3,5);c.fillRect(4,hop?5:3,3,5);
+  c.fillStyle='#fff';c.fillRect(-5,-7,4,4);c.fillRect(1,-7,4,4);c.fillStyle='#000';c.fillRect(-4,-6,2,2);c.fillRect(2,-6,2,2);c.fillStyle='#ffd23f';c.fillRect(-2,0,4,3);c.restore()}
+function drawDeath(c,f,t){const x=Math.round(f.x),y=Math.round(f.y);if(f.why==='drown'){c.strokeStyle='#bfe6f5';c.lineWidth=1;const r=2+((t*12)%8);c.beginPath();c.arc(x+8,y+8,r,0,7);c.stroke()}
+  else{c.fillStyle=Math.floor(t*10)%2?'#ff4f7b':'#fff';for(let i=0;i<6;i++){const a=i*1.05;c.fillRect(x+8+Math.cos(a)*6-1,y+8+Math.sin(a)*6-1,3,3)}}}
+function drawObj(c,L,o,y,t){const x=Math.round(o.x);
+  if(L.k==='log'){c.fillStyle='#8a5a2b';c.fillRect(x,y+3,o.len,10);c.fillStyle='#a87038';c.fillRect(x+2,y+4,o.len-4,2);c.fillStyle='#6b4423';for(let i=8;i<o.len-4;i+=12)c.fillRect(x+i,y+8,6,1);c.fillStyle='#c79a5e';c.fillRect(x+o.len-3,y+4,3,8)}
+  else if(L.k==='turtle'){const ds=o.dive?diveState(o,t):0;for(let i=0;i<o.len;i+=T){const tx=x+i;if(ds===2)continue;c.globalAlpha=ds===1?.5:1;
+      c.fillStyle='#c0392b';c.fillRect(tx+2,y+3,12,10);c.fillStyle='#e85d4a';c.fillRect(tx+4,y+5,8,6);c.fillStyle='#5be37d';c.fillRect(L.v<0?tx:tx+13,y+6,3,4);
+      c.fillRect(tx+3,y+1+(Math.floor(t*4)%2),2,2);c.fillRect(tx+11,y+1+(Math.floor(t*4+1)%2),2,2);c.fillRect(tx+3,y+13,2,2);c.fillRect(tx+11,y+13,2,2);c.globalAlpha=1}}
+  else{const col={car1:'#ffd23f',car2:'#ff4f7b',car3:'#3fd0ff',car4:'#c46bff',truck:'#e8e8f0'}[L.k];const f=L.v>0;
+    if(L.k==='truck'){c.fillStyle=col;c.fillRect(x,y+2,o.len-6,12);c.fillStyle='#ff9b3d';c.fillRect(f?x+o.len-8:x-2,y+3,8,10);c.fillStyle='#3a3a50';c.fillRect(f?x+o.len-4:x-2,y+4,3,8);c.fillStyle='#111';c.fillRect(x+3,y+1,5,2);c.fillRect(x+3,y+13,5,2);c.fillRect(x+o.len-12,y+1,5,2);c.fillRect(x+o.len-12,y+13,5,2)}
+    else{c.fillStyle='#111';c.fillRect(x+2,y+1,4,2);c.fillRect(x+10,y+1,4,2);c.fillRect(x+2,y+13,4,2);c.fillRect(x+10,y+13,4,2);c.fillStyle=col;c.fillRect(x,y+3,16,10);
+      c.fillStyle='#bfe6f5';c.fillRect(f?x+9:x+3,y+4,4,8);c.fillStyle='#fff';c.fillRect(f?x+15:x,y+4,1,2);c.fillRect(f?x+15:x,y+10,1,2)}}}
+</script>
+</body>
+</html>
