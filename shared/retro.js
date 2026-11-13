@@ -166,7 +166,7 @@
       msg(s,ms){const m=document.createElement('div');m.className='rt-msg';m.textContent=s;stage.appendChild(m);setTimeout(()=>m.remove(),ms||1200)},
       over(extra){if(G.state==='over')return;G.state='over';sfx('over');
         ov.innerHTML=`<div class="rt-card"><h1>게임 오버</h1><div class="rt-big">${G.score}</div>${G._newBest?'<span class="rt-new">★ 최고 기록!</span>':`<p>최고 기록 ${best}</p>`}
-          ${extra?`<p>${extra}</p>`:''}<button class="rt-go" id="rtAgain">다시 하기</button><a class="rt-go soft" style="display:grid;place-items:center;text-decoration:none;color:#fff;margin-top:10px" href="../">NNN 월드로</a></div>`;
+          ${extra?`<p>${extra}</p>`:''}<p style="font-size:12.5px;color:#9a93c7">🏆 최고 기록은 NNN WORLD 랭킹에 올라가요</p><button class="rt-go" id="rtAgain">다시 하기</button><a class="rt-go soft" style="display:grid;place-items:center;text-decoration:none;color:#fff;margin-top:10px" href="../">NNN 월드로</a></div>`;
         ov.hidden=false;ov.querySelector('#rtAgain').onclick=start},
       win(title,extra){G.state='over';sfx('clear');
         ov.innerHTML=`<div class="rt-card"><h1>${title||'클리어!'}</h1><div class="rt-big">${G.score}</div>${G._newBest?'<span class="rt-new">★ 최고 기록!</span>':`<p>최고 기록 ${best}</p>`}

@@ -4091,6 +4091,8 @@ function readGameStats(){const g={};
   for(const [k,ls] of [['omok','nnnomok.rec'],['baduk','nnnbaduk.rec'],['janggi','nnnjanggi.rec'],['alkka','nnnalkka.rec']]){try{const R=lsRaw(ls);if(R&&+R.w)g[k]=+R.w}catch(e){}}
   try{const A=lsRaw('nnnalkka.prog');if(A&&A.stars){const n=Object.values(A.stars).reduce((t,x)=>t+(+x||0),0);if(n)g.alkkaStar=n}}catch(e){}
   try{const c=+lsRaw('nnncharade.best')||0;if(c)g.charade=c}catch(e){}
+  /* 레트로 엔진(shared/retro.js) 게임: nnnretro_<게임id> 최고점 → 자동으로 랭킹에 */
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k||!k.startsWith('nnnretro_')||k==='nnnretro_mute')continue;const v=+localStorage.getItem(k)||0;if(v>0)g['r_'+k.slice(9)]=v}}catch(e){}
   try{const me=lsRaw('cd-me'),b=lsRaw('cd-bests')||{};const mb=(me&&b[me])||Object.values(b).find(x=>x&&typeof x==='object'&&!('score' in x))||b;let st=0;Object.values(mb||{}).forEach(r=>{if(r&&+r.stars)st+=+r.stars});if(st)g.crash=st}catch(e){}
   try{let pets=0,stars=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('mingnyu-forest-v1')){const S=lsRaw(k);if(S&&Array.isArray(S.pets))pets=Math.max(pets,S.pets.length);if(S&&+S.stars)stars=Math.max(stars,+S.stars)}}if(pets)g.forest=pets;if(stars)g.forestStar=stars}catch(e){}
   return g}
@@ -4101,6 +4103,8 @@ const RK=[
   ['gym','체육관',[['att','이달 출석왕','회'],['inv','이달 추천왕','명'],['sns','이달 홍보왕','회'],['lv','레벨','XP'],['skill','승급 레벨','']]],
   ['fit','미니게임',[['bag','샌드백','점'],['rope','줄넘기','점'],['shadow','쉐도우','점']]],
   ['arc','게임장',[['g_plays','많이 한 사람','판'],['g_quiz','퀴즈왕','점'],['g_kart','드리프트 카트','',1],['g_bori','보리보리쌀','연속'],['g_crash','크래시 드라이브','★'],['g_forest','밍뉴의숲 동물','마리'],['g_eng','잉글리시','XP'],['g_beat','샌드백 비트','점'],['g_ppopgi','뽑기 도감','종'],['g_omok','오목','승'],['g_baduk','바둑','승'],['g_janggi','장기','승'],['g_alkkaStar','알까기','★'],['g_charade','몸으로 말해요','개']]]];
+/* 게임장(ARCADE)에 rank 표시가 있거나 '레트로' 태그인 게임은 랭킹 칩이 자동으로 생겨요 */
+(()=>{const arc=RK.find(x=>x[0]==='arc')[2];for(const g of ARCADE){if(!(g.rank||(g.tags||[]).includes('레트로')))continue;const k='g_r_'+g.id;if(!arc.some(x=>x[0]===k))arc.push([k,g.name.replace(/^NNN /,''),g.rank||'점'])}})();
 const rkFmt=(k,v)=>k==='g_kart'?`${Math.floor(v/60)}:${(v%60).toFixed(1).padStart(4,'0')}`:Number(v).toLocaleString();
 async function renderRank(){try{syncGameStats()}catch(e){}
   const flat=RK.flatMap(([,,L])=>L);if(!flat.some(x=>x[0]===rkMode))rkMode='att';
