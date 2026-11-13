@@ -1536,7 +1536,7 @@ function joinM(pub,prv){if(!pub)return null;const m=mig({...pub,...(prv||{})});i
 const isLocal=id=>!FB_ON()||id==='0000';
 let IS_ADMIN=false;
 const DB={
-  async meta(){if(FB_ON()){try{const v=(await gref('meta').get()).val();if(v){const pay=Object.assign({},local.meta.pay,v.pay||{});Object.assign(local.meta,v);local.meta.pay=pay;if(!Array.isArray(pay.products))pay.products=[]}}catch(e){}}return local.meta},
+  async meta(){if(FB_ON()){try{const v=(await gref('meta').get()).val();if(v){const pay=Object.assign({},local.meta.pay,v.pay||{});Object.assign(local.meta,v);local.meta.pay=pay;if(!Array.isArray(pay.products))pay.products=[];try{localStorage.setItem('nnn_padpinh',local.meta.padPinH||'')}catch(e){}}}catch(e){}}return local.meta},
   async saveMeta(){if(FB_ON()){try{const {pin,nextId,...rest}=local.meta;await gref('meta').set(clean(rest));return true}catch(e){toast('저장 권한이 없어요. 관장 PIN으로 다시 들어와 주세요');return false}}return persist()},
   async get(id){if(isLocal(id))return mig(local.members[id])||null;
     try{const pub=(await gref('members/'+id).get()).val();if(!pub)return null;let prv=null;try{prv=(await gref('private/'+id).get()).val()}catch(e){}return joinM(pub,prv)}catch(e){return null}},
@@ -4119,14 +4119,23 @@ $('#logoutBtn').onclick=()=>{stopLive();W.others={};if(meOff){meOff();meOff=null
 /* ================= 출석패드 ================= */
 let padBuf='',padTimer=0;
 async function padHash(p){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('nnnpad:'+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return ''}}
+const withTO=(p,ms)=>Promise.race([Promise.resolve(p).catch(()=>'__err'),new Promise(r=>setTimeout(()=>r('__to'),ms))]);
+const padDevMark=()=>{try{localStorage.setItem('nnn_paddev','1')}catch(e){}};const padDevLocal=()=>{try{return localStorage.getItem('nnn_paddev')==='1'}catch(e){return false}};
+const padPinLocal=()=>{try{return localStorage.getItem('nnn_padpinh')||''}catch(e){return ''}};
 async function padDevOk(){if(!FB_ON())return true;try{return !!(await gref('admins/'+fuid).get()).val()}catch(e){return false}}
-async function padPinSheet(title,ok){try{await fbWait();await DB.meta()}catch(e){}const H=local.meta.padPinH;if(!H){pinSheet(title,ok);return}
+async function padPinSheet(title,ok){let H=local.meta.padPinH||padPinLocal();
+  if(!H){await withTO((async()=>{await fbWait();await DB.meta()})(),4000);H=local.meta.padPinH||padPinLocal()}else{withTO((async()=>{await fbWait();await DB.meta()})(),8000)}
+  if(!H){pinSheet(title,ok);return}const okD=async()=>{padDevMark();await ok()};
   sheet(`<h2>${esc(title)}</h2><div class="field"><label for="ppIn">출석패드 비밀번호</label><input id="ppIn" inputmode="numeric" maxlength="6" type="password" autocomplete="off"></div><button class="btn red" id="ppOk">확인</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const inp=el.querySelector('#ppIn');setTimeout(()=>inp.focus(),50);
     const go=async()=>{const v=inp.value.trim();if(!/^\d{4,6}$/.test(v)){toast('숫자 4~6자리를 넣어 주세요');return}
-      if((await padHash(v))!==H){toast('출석패드 비밀번호가 맞지 않아요',3000);inp.value='';return}
-      close();if(await padDevOk()){try{await ok()}catch(e){console.error(e)}return}
-      sheet(`<h2>이 태블릿은 처음이에요</h2><p style="margin:0">출석패드로 쓰려면 <b>관장님이 관장 PIN을 딱 한 번</b> 넣어 주셔야 해요. 그다음부터는 출석패드 비밀번호만 쓰면 돼요.</p><button class="btn red" id="ppReg">관장 PIN 넣기</button><button class="btn ghost" data-close>취소</button>`,(e2,c2)=>{e2.querySelector('#ppReg').onclick=()=>{c2();pinSheet('이 태블릿 출석패드 등록 (최초 1번)',ok)}})};
+      const bt=el.querySelector('#ppOk');bt.disabled=true;bt.textContent='확인 중…';
+      const hv=await padHash(v);const H2=local.meta.padPinH||H;if(hv!==H2){bt.disabled=false;bt.textContent='확인';toast(hv?'출석패드 비밀번호가 맞지 않아요':'이 브라우저에서 확인이 안 돼요. 크롬으로 열어 주세요',3000);inp.value='';return}
+      close();if(padDevLocal()){try{await ok()}catch(e){console.error(e);toast('출석패드를 여는 중 문제: '+(e&&e.message||e),5000)}return}
+      const dv=await withTO((async()=>{await fbWait();return padDevOk()})(),6000);
+      if(dv==='__to'||dv==='__err'){toast('서버 연결이 느려서 일단 출석패드를 열어요. 와이파이를 확인해 주세요',4500);try{await ok()}catch(e){console.error(e)}return}
+      if(dv){padDevMark();try{await ok()}catch(e){console.error(e)}return}
+      sheet(`<h2>이 태블릿은 처음이에요</h2><p style="margin:0">출석패드로 쓰려면 <b>관장님이 관장 PIN을 딱 한 번</b> 넣어 주셔야 해요. 그다음부터는 출석패드 비밀번호만 쓰면 돼요.</p><button class="btn red" id="ppReg">관장 PIN 넣기</button><button class="btn ghost" data-close>취소</button>`,(e2,c2)=>{e2.querySelector('#ppReg').onclick=()=>{c2();pinSheet('이 태블릿 출석패드 등록 (최초 1번)',okD)}})};
     el.querySelector('#ppOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go()}})}
 function padApprove(title,ok){if(local.meta.padApprove&&local.meta.padPinH)padPinSheet(title,ok);else pinSheet(title,ok)}
 function pinSheet(title,ok){
@@ -4138,7 +4147,7 @@ function pinSheet(title,ok){
 }
 $('#goPad').onclick=()=>padPinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>padPinSheet('출석패드 종료',()=>{show('v-home');try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}try{screen.orientation.unlock()}catch(e){}});
-async function openPad(){await DB.meta();setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{padOriUI();padOriApply(true)}catch(e){}try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
+async function openPad(){padDevMark();await withTO(DB.meta(),2500);setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{padOriUI();padOriApply(true)}catch(e){}try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
 let PADSP_T=0;async function updPadCount(){try{if(Date.now()-PADSP_T>180000){PADSP_T=Date.now();padSparRender()}}catch(e){}const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
