@@ -46,11 +46,11 @@ function buildPad(G){const st=document.createElement('style');st.textContent=`.f
   .fo-b{border-radius:16px;border:2px solid #fff3;color:#fff;font-family:'Press Start 2P',monospace;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 rgba(0,0,0,.45);touch-action:none}
   .fo-b small{font-family:Jua,sans-serif;font-size:11px}.fo-b.on{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.45);filter:brightness(1.3)}
   .fo-b[data-k=S]{background:#2f9a44}.fo-b[data-k=W]{background:#2a6adf}.fo-b[data-k=A]{background:#c46bff}.fo-b[data-k=D]{background:#e8453c}.fo-b[data-k=E]{background:#ff9b3d}.fo-b[data-k=Q]{background:#5a5f8a}
-  .fo-b.arm{outline:3px solid #ffd23f}.fo-c{position:absolute;right:0;top:-50px;width:58px;height:42px;border-radius:14px;background:#3a3270;font-size:11px}
+  .fo-b.arm{outline:3px solid #ffd23f}.fo-c{position:absolute;right:-14px;top:-14px;width:50px;height:50px;border-radius:50%;background:#ffd23f;color:#222;font-size:12px;z-index:3}.fo-c small{color:#222}
   .rt-ab{padding-bottom:0!important}`;document.head.appendChild(st);
   const ab=document.querySelector('.rt-ab');ab.innerHTML='';const pad=document.createElement('div');pad.className='fo-pad';
   for(const k of ['Q','W','E','A','S','D','C']){const b=document.createElement('button');b.className='fo-b'+(k==='C'?' fo-c':'');b.dataset.k=k;b.innerHTML=`${k}<small></small>`;
-    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);press(k);navigator.vibrate&&navigator.vibrate(6)});const up=()=>release(k);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);pad.appendChild(b);BTN[k]=b}
+    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.setPointerCapture(e.pointerId);press(k);navigator.vibrate&&navigator.vibrate(6)});const up=()=>release(k);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);(k==='C'&&document.getElementById('rtD')?document.getElementById('rtD'):pad).appendChild(b);BTN[k]=b}
   ab.appendChild(pad);setInterval(()=>{if(!M)return;const b=M.ball;const att=M.state==='setpiece'?(M.sp&&M.sp.team===0):(b.owner?b.owner.team===0:b.last===0&&!!b.target);const m=att?'att':'def';
     if(m!==mode){mode=m;for(const k in BTN)BTN[k].querySelector('small').textContent=LAB[m][k]}BTN.Q.classList.toggle('arm',(M.qArm||0)>0)},100)}
 function drawOverlay(G,c){if(!M||!F3)return;const p=M.ctrl;if(!p||M.state==='pens')return;const s=F3.project(p.x,p.y,13);if(s.behind)return;
@@ -62,12 +62,12 @@ function drawOverlay(G,c){if(!M||!F3)return;const p=M.ctrl;if(!p||M.state==='pen
   for(const q of M.P)if(q.yc&&!q.off){const t=F3.project(q.x,q.y,15);if(!t.behind){c.fillStyle='#ffd23f';c.fillRect(t.x-2,t.y-4,4,5)}}}
 Retro.boot({id:'soccer',title:'NNN 오락실 축구',en:'ARCADE FOOTBALL 11',w:W,h:H,hd:2,a:false,b:false,noWASD:true,diag:true,
   stages:{label:'번째 경기',max:8},
-  options:[{k:'time',label:'경기 시간',ch:[['150','2분 30초'],['210','3분 30초'],['300','5분']],def:'210'},{k:'map',label:'작은 지도',ch:[['on','보이기'],['off','숨기기']],def:'on'}],
+  options:[{k:'speed',label:'경기 속도',ch:[['0.55','아주 느리게'],['0.7','느리게'],['0.85','보통'],['1','빠르게']],def:'0.7',note:'선수·공·패스 전부 같이 느려져요 (경기 시간은 그대로)'},{k:'time',label:'경기 시간',ch:[['150','2분 30초'],['210','3분 30초'],['300','5분']],def:'210'},{k:'map',label:'작은 지도',ch:[['on','보이기'],['off','숨기기']],def:'on'}],
   intro:'피파온라인2 방식 조작! 게이지 패스·스루패스·로빙·크로스·2:1 패스, 파워·칩·감아차기 슛, 헤딩, 압박·슬라이딩·선수 교체, 오프사이드와 반칙·카드까지. 동네 리그부터 월드 투어 결승까지 8경기.',
-  help:'<b>공격</b> (누른 시간 = 게이지 세기)<br><b>S</b> 짧은 패스 · <b>W</b> 스루패스 · <b>A</b> 로빙/크로스 · <b>D</b> 슛<br><b>E</b> 누르고 있기 = 대시 (체력 소모) · <b>C</b> 개인기<br><b>Q</b>+S 2:1 패스 · <b>Q</b>+W 로빙 스루 · <b>Q</b>+D 칩슛 · <b>C</b>+D 감아차기<br>공중볼 근처에서 D = 헤딩/발리슛<br><b>수비</b> <b>S</b> 압박·태클 · <b>D</b> 슬라이딩 · <b>Q</b> 선수 교체 · <b>A</b> 팀원 압박 · <b>W</b> 키퍼 나오기<br>뒤에서 슬라이딩하면 반칙·경고! 박스 안이면 페널티킥<br>폰: Q를 톡 누르고 바로 다음 버튼 = 조합 · PC: 방향키 + Q W E A S D C',
+  help:'<b>공격</b> (누른 시간 = 게이지 세기)<br><b>S</b> 짧은 패스 · <b>W</b> 스루패스 · <b>A</b> 로빙/크로스 · <b>D</b> 슛<br><b>E</b> 누르고 있기 = 대시 (공을 길게 차 놓고 달려요, 체력 소모)<br><b>C</b> 톡 = 개인기 · <b>C</b> 누르고 있기 = 공 붙여서 짧게 드리블<br><b>Q</b>+S 2:1 패스 · <b>Q</b>+W 로빙 스루 · <b>Q</b>+D 칩슛 · <b>C</b>+D 감아차기<br>공중볼 근처에서 D = 헤딩/발리슛<br><b>수비</b> <b>S</b> 압박·태클 · <b>D</b> 슬라이딩 · <b>Q</b> 선수 교체 · <b>A</b> 팀원 압박 · <b>W</b> 키퍼 나오기<br>뒤에서 슬라이딩하면 반칙·경고! 박스 안이면 페널티킥<br>폰: Q를 톡 누르고 바로 다음 버튼 = 조합 · PC: 방향키 + Q W E A S D C',
   setup(G){G0=G;buildPad(G);mi=0;nextT=0;dur=210;newMatch(G,true)},
   init(G){G0=G;mi=G.start-1;nextT=0;dur=+G.opt('time');newMatch(G)},
-  update(G,dt){if(nextT>0){nextT-=dt;if(nextT<=0)newMatch(G);return}if(M){M.inp={held:INP.held,down:INP.down,up:INP.up};M.update(G,dt);INP.down={};INP.up={}}},
+  update(G,dt){if(nextT>0){nextT-=dt;if(nextT<=0)newMatch(G);return}if(M){const ts=+G.opt('speed')||.7;M.timeScale=ts;M.inp={held:INP.held,down:INP.down,up:INP.up};const st0=M.state;M.update(G,dt*ts);if(st0==='play'&&M.state==='play')M.clock-=dt*(1-ts);INP.down={};INP.up={}}},
   draw(G,c){c.fillStyle='#0b0d1c';c.fillRect(0,0,W,H);if(!M)return;F3.render(G,c);if(M.state==='pens')M.drawPens(G,c,{w:W,h:H});
     if(G.opt('map')!=='off'&&M.state!=='pens'){const mw=34,mh=52,mx=W-mw-4,my=HUD+4;c.fillStyle='rgba(0,40,10,.6)';c.fillRect(mx,my,mw,mh);c.strokeStyle='rgba(255,255,255,.5)';c.strokeRect(mx+.5,my+.5,mw,mh);
       for(const p of M.P){c.fillStyle=p.team===0?(p===M.ctrl?'#ffd23f':'#ff4f7b'):'#bfe6ff';c.fillRect(mx+(p.x-M.MX)/M.PW*mw-1,my+(p.y-M.MY)/M.PH*mh-1,2,2)}

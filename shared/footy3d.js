@@ -25,6 +25,7 @@ function create(M,o){const THREE=window.THREE,cfg=M.cfg;const W=o.W,H=o.H,HD=o.H
       else if(p.gk&&p.dive&&b.shot&&!b.owner){const dl=(p.team===0?-p.dive:p.dive);pose={act:'dive',dir:dl,k:.8,high:b.z>cfg.GH*.45}}
       else if(p.charge>0)pose={act:'windup',k:Math.min(1,p.charge/.6)};
       else if(p.kcd>.05&&b.lastP===p&&!b.owner)pose={act:'kick',k:1-p.kcd/.3};
+      else if(p.touch>0&&b.owner===p)pose={act:'kick',k:.55+.45*(1-p.touch/.32),spd:0};
       else if(p.gk&&sp<5)pose={act:'ready'};
       m.pose(pose)});
     const bx=b.x-cx,bz=b.y-cz,by=b.z*(o.zScale||1)+ballR;ball.position.set(bx,by,bz);if(!b.owner||Math.hypot(b.vx,b.vy)>1){ball.rotation.x+=b.vy*dt/ballR;ball.rotation.z-=b.vx*dt/ballR}
