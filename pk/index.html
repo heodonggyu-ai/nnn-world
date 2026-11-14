@@ -9,6 +9,8 @@
 </head>
 <body>
 <script src="../shared/retro.js"></script>
+<script src="../shared/lib/three-r128.min.js"></script>
+<script src="../shared/stadium3d.js"></script>
 <script>
 /* NNN 승부차기: 차고, 막고! 5번씩 번갈아 차서 더 많이 넣으면 다음 상대로. 상대 골키퍼는 내 버릇을 기억해요 */
 const W=240,H=300,GX=120,GY=150,GW=82,GH=70; /* 골대: 가운데 GX, 골라인 높이 GY, 반폭 GW, 높이 GH */
@@ -38,7 +40,7 @@ function endKick(G,goal){(turn==='me'?kicks.me:kicks.op).push(goal);const d=deci
   if(d==='lose'){ph='lost';phT=0;G.sfx('over');return}
   if(sd&&kicks.me.length===kicks.op.length&&turn==='op')G.msg('서든데스!',900);
   turn=turn==='me'?'op':'me';startTurn()}
-Retro.boot({id:'pk',title:'NNN 승부차기',en:'PENALTY SHOOTOUT',w:W,h:H,a:'멈춤·킥',b:false,diag:true,
+Retro.boot({id:'pk',title:'NNN 승부차기',en:'PENALTY SHOOTOUT',w:W,h:H,hd:2,a:'멈춤·킥',b:false,diag:true,
   stages:{label:'번째 상대',max:MAXT},
   options:[{k:'ctrl',label:'차는 방법',ch:[['timing','타이밍 3번 (기본)'],['easy','방향 고르고 A']],def:'timing',note:'간단 조작은 정확하지만 세기가 자동이라 골키퍼가 잘 막아요'}],
   intro:'5번씩 번갈아 차서 더 많이 넣으면 이겨요! 동네 조기축구회부터 월드 올스타까지 8팀. 상대 골키퍼는 내가 자주 차는 쪽을 기억해요.',
@@ -54,7 +56,7 @@ Retro.boot({id:'pk',title:'NNN 승부차기',en:'PENALTY SHOOTOUT',w:W,h:H,a:'�
       if(p>=1&&!result)resolve(G)}
     if(result){result.t+=dt;if(result.kind==='goal'){ball.x+=(ball.vx||0)*dt*.2}if(result.t>1.7)endKick(G,result.kind==='goal')}
   },
-  draw(G,c){c.save();if(shake)c.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawScene(c,G);c.restore();
+  draw(G,c){drawScene(c,G);
     if(flash){c.fillStyle=`rgba(255,255,255,${flash})`;c.fillRect(0,0,W,H)}drawHud(c,G)}
 });
 function meTurn(G,dt,h,k){const easy=G0.opt('ctrl')==='easy';const lv=ti+lap*2;
@@ -93,54 +95,43 @@ function keeperReach(tx,ty){const d=keeper.act?keeper.dive:0;const hi=keeper.hi;
   if(turn==='me'){const corner=ax>.8&&ty>.7;if(corner&&Math.random()>T.skill*.55)return false;if(ax>.88&&Math.random()>T.skill)return false}
   if(hi)return ax<1&&ty>.28;return ax<.98&&ty<.72}
 /* ---------- 그리기 ---------- */
-function drawScene(c,G){
-  const sk=c.createLinearGradient(0,0,0,92);sk.addColorStop(0,'#0c1238');sk.addColorStop(1,'#2a1e5a');c.fillStyle=sk;c.fillRect(0,0,W,92);
-  for(let i=0;i<120;i++){const x=(i*29)%W,y=20+(i*7)%56;const cheer=result&&result.kind==='goal'&&turn==='me'?Math.sin(G.t*20+i)*2:0;c.fillStyle=['#ff4f7b','#ffd23f','#3fd0ff','#fff','#4fe3b2'][i%5];c.globalAlpha=.55;c.fillRect(x,y+cheer,3,3);c.globalAlpha=1}
-  c.fillStyle='#14102e';c.fillRect(0,14,W,4);for(let i=0;i<4;i++){c.fillStyle='#fffbe0';c.fillRect(20+i*64,6,10,6)}
-  c.fillStyle='#1a1a3a';c.fillRect(0,88,W,6);c.fillStyle='#ffd23f';c.font='7px "Press Start 2P",monospace';c.textAlign='center';c.fillText('NNN BOXING  ★  TANGJEONG',W/2+((G.t*20)%40)-20,93);
-  for(let i=0;i<10;i++){const y=94+i*21;c.fillStyle=i%2?'#2f9a44':'#36a94c';c.fillRect(0,y,W,21)}
-  c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=1.5;c.beginPath();c.moveTo(0,GY+.5);c.lineTo(W,GY+.5);c.stroke();
-  c.beginPath();c.moveTo(GX-GW-28,GY);c.lineTo(GX-GW-48,GY+60);c.lineTo(GX+GW+48,GY+60);c.lineTo(GX+GW+28,GY);c.stroke();c.fillStyle='#fff';c.fillRect(GX-2,256,4,3);
-  /* 골대·그물 */
-  const nb=GY-GH-10;const ripple=result&&result.kind==='goal'?Math.sin(result.t*30)*Math.max(0,1-result.t)*4:0;
-  c.fillStyle='rgba(255,255,255,.07)';c.fillRect(GX-GW+6,nb,GW*2-12,GH+10);c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=1;
-  for(let x=GX-GW+6;x<=GX+GW-6;x+=7){c.beginPath();c.moveTo(x,nb);c.lineTo(x+ripple*Math.sin(x),GY-2);c.stroke()}for(let y=nb;y<GY;y+=7){c.beginPath();c.moveTo(GX-GW+6,y);c.lineTo(GX+GW-6,y+ripple);c.stroke()}
-  c.fillStyle='#f4f4f8';c.fillRect(GX-GW-3,GY-GH-3,4,GH+3);c.fillRect(GX+GW-1,GY-GH-3,4,GH+3);c.fillRect(GX-GW-3,GY-GH-3,GW*2+6,4);
-  c.fillStyle='rgba(0,0,0,.2)';c.fillRect(GX-GW+1,GY-GH+1,2,GH);
-  /* 조준선 */
-  if(turn==='me'&&['aimX','aimY','power'].includes(ph)){const ax=gx2s(aim.lx!=null?aim.lx:aim.x),ay=gy2s(ph==='aimX'?.5:aim.ly!=null?aim.ly:aim.y);
-    if(ph==='aimX'){c.fillStyle='rgba(255,210,63,.35)';c.fillRect(ax-1,GY-GH-14,2,GH+14)}
-    c.strokeStyle='#ffd23f';c.lineWidth=1.5;c.beginPath();c.arc(ax,ay,6,0,7);c.stroke();c.fillStyle='#ffd23f';c.fillRect(ax-9,ay-.5,5,1.5);c.fillRect(ax+4,ay-.5,5,1.5);c.fillRect(ax-.5,ay-9,1.5,5);c.fillRect(ax-.5,ay+4,1.5,5);
-    if(ph==='aimY'){c.fillStyle='rgba(255,210,63,.35)';c.fillRect(GX-GW,ay-1,GW*2,2)}}
-  drawKeeper(c,G);
-  if(turn==='me')drawShooter(c,G,'#e8231f','#fff',true);else drawShooter(c,G,T.col,T.col2,false);
-  if(ball){const bs=Math.max(3,8*ball.s);const bx=ball.x,by=ball.on?ball.y:258;
-    c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.ellipse(bx,ball.on?258+(gy2s(0)-258)*Math.min(1,ball.t/ball.dur):260,bs,bs*.35,0,0,7);c.fill();
-    c.fillStyle='#fff';c.beginPath();c.arc(bx,by-bs*.5,bs,0,7);c.fill();c.fillStyle='#222';const rot=ball.on?ball.t*20:0;for(let i=0;i<3;i++){const a=rot+i*2.1;c.fillRect(bx+Math.cos(a)*bs*.5-1,by-bs*.5+Math.sin(a)*bs*.5-1,Math.max(1.5,bs*.35),Math.max(1.5,bs*.35))}}
+/* ---------- 3D 그리기 ---------- */
+let R3,SC,CAM,KICK,KEEP,BALL3,GOAL3,V3,camShake=0;
+const GZ=-52.5,SPOT=GZ+11,GWm=3.66,GHm=2.44;
+const g2w=(gx,gy)=>new THREE.Vector3(gx*GWm,gy*GHm,GZ);
+function hexc(c){return new THREE.Color(c).getHex()}
+function build3D(){R3=S3.renderer(W,H,2);SC=new THREE.Scene();S3.stadium(SC,{PW:68,PH:105,margin:4,GW:7.32,GH:2.44,GD:2,boxW:40.3,boxH:16.5,sboxW:18.3,sboxH:5.5,circle:9.15,spot:11,unit:1,stripes:14,night:true,shadowExt:20});
+  CAM=new THREE.PerspectiveCamera(42,W/H,.1,400);BALL3=S3.ball(.13);SC.add(BALL3);V3=new THREE.Vector3()}
+function setTeams(){if(KICK){SC.remove(KICK.root);SC.remove(KEEP.root)}
+  const meKick=turn==='me';const kc=meKick?{shirt:0xe8231f,shorts:0xffffff,num:7}:{shirt:hexc(T.col),shorts:hexc(T.col2),num:9};
+  KICK=S3.player({height:1.8,shirt:kc.shirt,shorts:kc.shorts,socks:kc.shirt,num:kc.num,numCol:meKick?'#ffffff':T.col2});
+  const kp=meKick?{shirt:hexc(T.col),gk:1}:{shirt:0xffd23f,gk:1};KEEP=S3.player({height:1.85,shirt:kp.shirt,shorts:0x222222,socks:kp.shirt,gk:true,num:1,numCol:'#222'});
+  SC.add(KICK.root);SC.add(KEEP.root);KICK.side=turn}
+function render3D(G,c){if(!R3)build3D();if(!KICK||KICK.side!==turn)setTeams();
+  /* 키커 */const meK=turn==='me';const run=ph==='run'||ph==='opRun';const dur=meK?.75:(kicker.dur||1.4);const p=run?Math.min(1,kicker.t/dur):0;
+  const sx=-2.6+2.25*p,sz=SPOT+2.9-2.6*p;KICK.root.position.set(sx,0,sz);KICK.root.rotation.set(0,Math.PI+.35*(1-p),meK?0:(kicker.lean||0)*.28);
+  if(kicker.kicked){const k=Math.min(1,(ball.t||0)/.25+.5);KICK.pose({act:'kick',k})}else if(run)KICK.pose({act:'run',spd:.8,ph:kicker.t*13});else KICK.pose({act:'ready'});
+  /* 키퍼 */const kx=keeper.act?keeper.dive*Math.min(1,keeper.t/.25)*2.2:Math.sin(G.t*3)*.25;KEEP.root.position.set(kx,0,GZ+.4);KEEP.root.rotation.set(0,0,0);
+  if(keeper.act&&keeper.dive!==0)KEEP.pose({act:'dive',dir:keeper.dive,k:Math.min(1,keeper.t/.3),high:keeper.hi});else if(keeper.act&&keeper.hi)KEEP.pose({act:'jump',k:Math.min(1,keeper.t/.35)});else KEEP.pose({act:'ready'});
+  if(turn==='op'&&!keeper.act)KEEP.pose({act:'ready'});
+  /* 공 */if(ball.on){const q=Math.min(1,ball.t/ball.dur);const tgt=g2w(ball.tx,ball.ty);let x=tgt.x*q,y=.13+(tgt.y-.13)*q+Math.sin(q*Math.PI)*ball.arc*.03,z=SPOT+(GZ-SPOT)*q;
+      if(result&&result.kind==='goal'){const e=Math.min(1,result.t*2);z=GZ-1.6*e;y=Math.max(.13,tgt.y*(1-e*.7))}
+      if(result&&(result.kind==='save'||result.kind==='post')){const e=Math.min(1,result.t*1.5);z=GZ+e*5;x=tgt.x+(tgt.x>0?1:-1)*e*3;y=Math.max(.13,tgt.y+Math.sin(e*Math.PI)*1.2-e*tgt.y)}
+      BALL3.position.set(x,y,z);BALL3.rotation.x-=.4}else BALL3.position.set(0,.13,SPOT);
+  /* 카메라 */camShake=shake;const sh=()=>(Math.random()-.5)*camShake*.02;
+  const fov=meK?42:62;if(CAM.fov!==fov){CAM.fov=fov;CAM.updateProjectionMatrix()}
+  if(meK){CAM.position.set(.7+sh(),1.75+sh(),SPOT+5.6);V3.set(0,1.1,GZ);CAM.lookAt(V3)}
+  else{CAM.position.set(sh(),2.7+sh(),GZ-7.8);V3.set(0,.4,SPOT);CAM.lookAt(V3)}
+  R3.render(SC,CAM);c.drawImage(R3.domElement,0,0,W,H)}
+function drawScene(c,G){render3D(G,c);const pj=v=>S3.project(v,CAM,W,H);
+  if(turn==='me'&&['aimX','aimY','power'].includes(ph)){const ax=aim.lx!=null?aim.lx:aim.x,ay=ph==='aimX'?.5:(aim.ly!=null?aim.ly:aim.y);const pt=pj(g2w(ax,ay));
+    if(ph==='aimX'){const a=pj(g2w(ax,0)),b=pj(g2w(ax,1.05));c.fillStyle='rgba(255,210,63,.4)';c.fillRect(a.x-1.5,b.y,3,a.y-b.y)}
+    if(ph==='aimY'){const a=pj(g2w(-1,ay)),b=pj(g2w(1,ay));c.fillStyle='rgba(255,210,63,.4)';c.fillRect(a.x,a.y-1.5,b.x-a.x,3)}
+    c.strokeStyle='#ffd23f';c.lineWidth=2;c.beginPath();c.arc(pt.x,pt.y,7,0,7);c.stroke();c.fillStyle='#ffd23f';c.fillRect(pt.x-11,pt.y-1,6,2);c.fillRect(pt.x+5,pt.y-1,6,2);c.fillRect(pt.x-1,pt.y-11,2,6);c.fillRect(pt.x-1,pt.y+5,2,6)}
   for(const q of confetti){c.fillStyle=q.col;c.fillRect(q.x,q.y,3,2)}
-  if(turn==='me'&&ph==='power'){const x=W-18,y=150;c.fillStyle='#000';c.fillRect(x,y,10,90);const g=c.createLinearGradient(0,y+90,0,y);g.addColorStop(0,'#4fe3b2');g.addColorStop(.75,'#ffd23f');g.addColorStop(.9,'#ff4f7b');c.fillStyle=g;c.fillRect(x+1,y+89-88*aim.p,8,88*aim.p);c.fillStyle='#fff';c.fillRect(x-2,y+90-90*.88,14,1)}
+  if(turn==='me'&&ph==='power'){const x=W-18,y=150;c.fillStyle='rgba(0,0,0,.6)';c.fillRect(x,y,10,90);const g=c.createLinearGradient(0,y+90,0,y);g.addColorStop(0,'#4fe3b2');g.addColorStop(.75,'#ffd23f');g.addColorStop(.9,'#ff4f7b');c.fillStyle=g;c.fillRect(x+1,y+89-88*aim.p,8,88*aim.p);c.fillStyle='#fff';c.fillRect(x-2,y+90-90*.88,14,1)}
   if(G.state==='play'){let tip='';if(turn==='me'){tip={aimX:'A: 좌우 멈춤',aimY:'A: 높이 멈춤',power:'A: 세기 (빨간 선 넘으면 하늘로!)'}[ph]||'';if(G0.opt('ctrl')==='easy'&&ph==='aimX')tip='◀ ▶ ▲ 로 방향, A로 슛'}
-    else if(!kicker.kicked)tip=keeper.act?'':'차는 순간 ◀ ▶ 다이빙!';if(tip)G.text(tip,W/2,276,{k:1,size:11,align:'center',color:'#fff'})}}
-function drawKeeper(c,G){const mine=turn==='op';const col=mine?'#ffd23f':T.col,col2=mine?'#222':T.col2;let kx=GX,ky=GY-2,ang=0,arm=0;
-  if(keeper.act){const p=Math.min(1,keeper.t/.22);const d=keeper.dive;
-    if(d!==0){kx=GX+d*p*58;ky=GY-2-(keeper.hi?p*34:p*8);ang=d*p*(keeper.hi?1.1:1.4)}else{ky=GY-2-(keeper.hi?p*20:0);arm=keeper.hi?1:0}}
-  else{kx=GX+Math.sin(G.t*3)*6}
-  c.save();c.translate(kx,ky);c.rotate(ang);
-  c.fillStyle='rgba(0,0,0,.25)';c.fillRect(-10,0,20,3);
-  c.fillStyle='#222';c.fillRect(-6,-10,4,10);c.fillRect(2,-10,4,10);c.fillStyle=col2;c.fillRect(-7,-16,14,7);
-  c.fillStyle=col;c.fillRect(-8,-32,16,17);c.fillStyle=col2;c.fillRect(-2,-30,4,3);
-  c.fillStyle='#f0c090';c.fillRect(-5,-42,10,10);c.fillStyle='#2a1a10';c.fillRect(-5,-44,10,4);
-  c.fillStyle=col;const up=keeper.act&&(keeper.dive!==0||arm)?-1:0;c.fillRect(-13,-31+up*14,5,up?15:12);c.fillRect(8,-31+up*14,5,up?15:12);
-  c.fillStyle='#4fe3b2';c.fillRect(-14,-31+up*16+(up?-2:11),7,6);c.fillRect(7,-31+up*16+(up?-2:11),7,6);
-  c.restore()}
-function drawShooter(c,G,col,col2,me){let t=kicker?kicker.t:0;const run=ph==='run'||ph==='opRun';const dur=me?.75:(kicker.dur||1.4);const p=run?Math.min(1,t/dur):0;
-  let x=me?150-p*24:150-p*24,y=296-p*30,lean=me?0:kicker.lean*.5;if(!run){x=150;y=296}
-  const step=run&&!kicker.kicked?Math.floor(t*10)%2:0;c.save();c.translate(x,y);c.rotate(lean);const sc=1.25;c.scale(sc,sc);
-  c.fillStyle='#f0c090';c.fillRect(-6+(step?2:0),-12,4,10);c.fillRect(2-(step?2:0),-12,4,10);if(kicker&&kicker.kicked){c.fillRect(-10,-16,4,8)}
-  c.fillStyle='#fff';c.fillRect(-7,-14,14,6);c.fillStyle=col;c.fillRect(-9,-34,18,21);c.fillStyle=col2;c.fillRect(-3,-30,6,10);
-  c.fillStyle='#f0c090';c.fillRect(-13,-32,4,12);c.fillRect(9,-32,4,12);c.fillStyle='#2a1a10';c.fillRect(-6,-46,12,12);c.fillStyle='#f0c090';c.fillRect(-6,-36,12,2);
-  if(me){c.fillStyle='#ffd23f';c.font='6px "Press Start 2P",monospace';c.textAlign='center';c.fillText('7',0,-22)}
-  c.restore()}
+    else if(!kicker.kicked)tip=keeper.act?'':'차는 순간 ◀ ▶ 다이빙! (▲ 같이 = 높이)';if(tip){c.fillStyle='rgba(0,0,0,.45)';c.fillRect(0,266,W,22);G.text(tip,W/2,270,{k:1,size:11,align:'center',color:'#fff'})}}}
 function drawHud(c,G){if(!T)return;c.fillStyle='rgba(8,6,20,.85)';c.fillRect(0,0,W,30);
   const row=(arr,y,lab,col)=>{G.text(lab,6,y,{k:1,size:10,color:col});for(let i=0;i<Math.max(5,arr.length);i++){const x=78+i*11;c.fillStyle=i<arr.length?(arr[i]?'#4fe3b2':'#ff4f7b'):'#3a3560';c.beginPath();c.arc(x,y+5,4,0,7);c.fill()}};
   row(kicks.me,3,'NNN','#ffd23f');row(kicks.op,16,T.name.slice(0,6),'#d9d4ff');

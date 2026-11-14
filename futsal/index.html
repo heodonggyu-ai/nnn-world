@@ -10,6 +10,9 @@
 <body>
 <script src="../shared/retro.js"></script>
 <script src="../shared/footy.js"></script>
+<script src="../shared/lib/three-r128.min.js"></script>
+<script src="../shared/stadium3d.js"></script>
+<script src="../shared/footy3d.js"></script>
 <script>
 /* NNN 미니 풋살: 2대2(+골키퍼) 빠른 경기. 벽에 튕기는 공, 태클, 기를 모아 쏘는 불꽃슛! 컵 3개 × 8강·4강·결승 */
 const W=228,H=316,HUD=16;
@@ -18,7 +21,7 @@ const OPP=[
  ['매곡리 꼬마들','#3fae4a','#fff'],['탕정 형제','#ff9b3d','#222'],['아산 번개','#2a6adf','#fff'],
  ['천안 불도저','#8a5a2b','#ffd23f'],['충남 쌍둥이','#c46bff','#fff'],['대전 스피드','#3fd0ff','#222'],
  ['브라질 거리축구','#ffd23f','#2a6adf'],['스페인 패스왕','#e8e8f0','#c00'],['NNN 레전드','#111','#ffd23f']];
-let G0,M,mi,nextT;
+let G0,M,mi,nextT,F3,REN;
 function oppSkill(i,G){const t=i/8,d=G.diff;return{spd:(.86+t*.24)*(.88+.12*d),pass:.5+t*.42,shot:.42+t*.45,tackle:(.7+t*1.6)*d,slide:.2+t*1.1,keeper:.5+t*.45,think:.8+t*.6}}
 function newMatch(G,silent){const o=OPP[mi];
   M=Footy.create({PW:200,PH:272,margin:14,GWD:42,GH:10,walls:true,energy:true,speed:68,pscale:1.4,stripe:22,circle:24,boxW:84,boxH:40,shootRange:118,lobDist:999,pressDist:20,oy:HUD,goalPts:300,
@@ -26,7 +29,7 @@ function newMatch(G,silent){const o=OPP[mi];
     mySkill:{spd:1,pass:.8,shot:.72,tackle:1.2,slide:0,keeper:.82,think:1},opSkill:oppSkill(mi,G),
     myCol:{shirt:'#e8231f',shorts:'#fff',gk:'#ffd23f'},opCol:{shirt:o[1],shorts:o[2],gk:'#4fe3b2',hair:'#111'},
     duration:120,onEnd:m=>matchEnd(m)});
-  M.kickoff(0);if(!silent)G.msg(`${CUPS[Math.floor(mi/3)]} ${RND[mi%3]} · vs ${o[0]}`,1800)}
+  M.kickoff(0);REN=REN||S3.renderer(W,H,2);F3=Footy3D.create(M,{W,H,HD:2,R:REN,height:12,ballR:1.8,fov:40,camMode:'arena',camH:150,camD:150,camAhead:14,camFollowX:.6,stripes:10,night:true,shadowExt:180});if(!silent)G.msg(`${CUPS[Math.floor(mi/3)]} ${RND[mi%3]} · vs ${o[0]}`,1800)}
 function matchEnd(m){const G=G0;const [a,b]=m.score;
   if(m.pensResult){return m.pensResult==='win'?advance(G,a,b,true):G.over(`${OPP[mi][0]}에게 승부차기 패배`)}
   if(a===b){m.startPens(G);return}
@@ -34,7 +37,7 @@ function matchEnd(m){const G=G0;const [a,b]=m.score;
 function advance(G,a,b,pens){G.add(800+(mi+1)*400+(a-b)*150);G.sfx('clear');mi++;
   if(mi%3===0){G.msg(`🏆 ${CUPS[(mi-1)/3|0]} 우승!`,2200);G.add(3000)}
   if(mi>=OPP.length)return G.win('NNN 월드컵 우승!','풋살 컵 3개 모두 정복 🏆');G.reach(mi+1);nextT=2.4}
-Retro.boot({id:'futsal',title:'NNN 미니 풋살',en:'FUTSAL 2 VS 2',w:W,h:H,a:'패스',b:'슛·태클',diag:true,
+Retro.boot({id:'futsal',title:'NNN 미니 풋살',en:'FUTSAL 2 VS 2',w:W,h:H,hd:2,a:'패스',b:'슛·태클',diag:true,
   stages:{label:'번째 경기',max:9},
   options:[{k:'time',label:'경기 시간',ch:[['90','1분 30초'],['120','2분'],['180','3분']],def:'120'}],
   intro:'2대2(+골키퍼) 빠른 풋살! 벽에 튕기는 공으로 패스하고, 기를 모아 불꽃슛을 날려요. 컵 3개 × 8강·4강·결승.',
@@ -42,7 +45,7 @@ Retro.boot({id:'futsal',title:'NNN 미니 풋살',en:'FUTSAL 2 VS 2',w:W,h:H,a:'
   setup(G){G0=G;mi=0;nextT=0;newMatch(G,true)},
   init(G){G0=G;mi=G.start-1;nextT=0;newMatch(G);M.clock=+G.opt('time')},
   update(G,dt){if(nextT>0){nextT-=dt;if(nextT<=0){newMatch(G);M.clock=+G.opt('time')}return}if(M)M.update(G,dt)},
-  draw(G,c){c.fillStyle='#0b0d1c';c.fillRect(0,0,W,H);if(!M)return;M.draw(G,c);
+  draw(G,c){c.fillStyle='#0b0d1c';c.fillRect(0,0,W,H);if(!M)return;F3.render(G,c);if(M.state==='pens')M.drawPens(G,c,{w:W,h:H});
     c.fillStyle='rgba(8,6,20,.92)';c.fillRect(0,0,W,HUD);const mm=Math.floor(M.clock/60),ss=Math.floor(M.clock%60);
     G.text(`NNN ${M.score[0]}:${M.score[1]} ${OPP[mi]?OPP[mi][0]:''}`,4,3,{k:1,size:10,color:'#fff'});G.text(`${mm}:${String(ss).padStart(2,'0')}`,W-4,2,{size:7,align:'right',color:'#ffd23f'});
     const e=M.energy;c.fillStyle='#2a2550';c.fillRect(W-46,12,42,3);c.fillStyle=e>=1?(Math.floor(G.t*8)%2?'#ffd23f':'#ff4f7b'):'#ff9b3d';c.fillRect(W-46,12,42*e,3);

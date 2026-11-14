@@ -122,7 +122,7 @@
       <div class="rt-pad" id="rtPad">${cfg.noDpad?'<div></div>':`<div class="rt-dpad" id="rtD"><i class="u">▲</i><i class="l">◀</i><i class="c"></i><i class="r">▶</i><i class="d">▼</i></div>`}
       <div class="rt-ab">${cfg.b===false?'':`<button class="rt-btn b" data-k="b">B<small>${cfg.b||''}</small></button>`}${cfg.a===false?'':`<button class="rt-btn a" data-k="a">A<small>${cfg.a||''}</small></button>`}</div></div>`;
     document.body.appendChild(root);
-    const cv=root.querySelector('#rtCv'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+    const cv=root.querySelector('#rtCv'),ctx=cv.getContext('2d');const HD=cfg.hd||1;if(HD>1){cv.width=W*HD;cv.height=H*HD;cv.style.imageRendering='auto'}ctx.imageSmoothingEnabled=false;
     const stage=root.querySelector('#rtStage'),ov=root.querySelector('#rtOv');
     const $S=root.querySelector('#rtS'),$B=root.querySelector('#rtB');
     const bestKey='nnnretro_'+cfg.id;let best=0;try{best=+localStorage.getItem(bestKey)||0}catch(e){}
@@ -182,7 +182,7 @@
     document.addEventListener('contextmenu',e=>e.preventDefault());
 
     /* 게임 객체 */
-    const G={W,H,ctx,cv,keys:held,hit:{},ptr,score:0,best,t:0,state:'title',scale:1,_kb:{},
+    const G={W,H,HD,ctx,cv,keys:held,hit:{},ptr,score:0,best,t:0,state:'title',scale:1,_kb:{},
       sfx,sprite,spr:drawSpr,text:(s,x,y,o)=>text(ctx,s,x,y,o),
       rnd:(a,b)=>a+Math.random()*(b-a),ri:(a,b)=>Math.floor(a+Math.random()*(b-a+1)),
       opt:k=>optGet(k),
@@ -230,7 +230,7 @@
     function frame(now){let d=(now-last)/1000;last=now;if(d>.25)d=.25;
       if(G.state==='play'){acc+=d;let first=true;while(acc>=STEP){G.hit=first?pend:{};if(first)pend={};first=false;G.t+=STEP;cfg.update(G,STEP);acc-=STEP;if(G.state!=='play')break}}
       else{acc=0;pend={};G.hit={}}
-      ctx.imageSmoothingEnabled=false;cfg.draw(G,ctx);
+      ctx.setTransform(HD,0,0,HD,0,0);ctx.imageSmoothingEnabled=HD>1;cfg.draw(G,ctx);
       if(cfg.attract&&G.state==='title')cfg.attract(G,ctx);
       requestAnimationFrame(frame)}
     if(cfg.setup)cfg.setup(G);else cfg.init(G);

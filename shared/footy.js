@@ -213,6 +213,7 @@ function create(cfg){
     else{const p=Math.min(1,P.t/.35);const bx=gx+(P.res.miss?(P.res.kick||1)*90:P.res.kick*48)*p,by=230-(230-(gy-18))*p;c.fillStyle='#fff';c.beginPath();c.arc(bx,by,4,0,TAU);c.fill();
       if(P.t>.4)G.text(P.res.miss?'빗나감!':P.res.goal?'골!':'막혔다!',cx,195,{k:1,size:20,align:'center',color:P.res.goal===(P.turn==='me')?'#4fe3b2':'#ff4f7b'})}
     c.fillStyle='#fff';c.beginPath();c.arc(cx,230,4,0,TAU);c.fill()}
+  M.drawPens=(G,c,v)=>drawPens(G,c,v);
   return M}
 window.Footy={create};
 })();
