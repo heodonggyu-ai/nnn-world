@@ -10,7 +10,7 @@
 <body>
 <script src="../shared/retro.js"></script>
 <script>
-/* 궁전 탈출: 15분 안에 지하 궁전 3층을 빠져나가요. 달려서 뛰고, 매달려 오르고, 함정과 경비병을 넘어서! */
+/* 궁전 탈출: 제한 시간 안에 지하 궁전 6층을 빠져나가요. 달려서 뛰고, 매달려 오르고, 함정과 경비병을 넘어서! */
 const W=320,H=208,TW=32,TH=64,FL=58,ROOM=10;
 /* ' '빈곳 '_'바닥 '#'벽 '^'가시 '~'흔들바닥 'a'발판 'A'철문 'h'물약 'H'큰물약 'E'출구 'S'시작 'g'경비병 */
 const LEVELS=[
@@ -26,9 +26,21 @@ const LEVELS=[
   "#            ___H____         __________         #",
   "#_S__  __^___g____~__  ______ _g____a_ _A___  _E_#",
   "#__h_______^^______g_______~~~_______^^______h___#"],guard:2},
+ {name:'4층 · 무너지는 다리',rows:[
+  "#                              _a___             #",
+  "#_S__~~~~~~~~_^__  ___g_____ ________A___  __E___#",
+  "#____        __h__________________g______________#"],guard:2},
+ {name:'5층 · 쌍둥이 경비병',rows:[
+  "#                           __H___               #",
+  "#_S_  __a__ _A___g____g__  _~~~____^_a_ _A__  _E_#",
+  "#___h__________^^_________g______~~____________h_#"],guard:2},
+ {name:'6층 · 왕좌의 문',rows:[
+  "#              __H___                       _a__           #",
+  "#_S___^^__  __g___~~___  _a___ _A____g____ _____A___  __E__#",
+  "#__h___________^^___________g_____~~~_________^__________h_#"],guard:3},
 ];
 const floorY=r=>r*TH+FL;
-let L,map,lvlI,pl,guards,parts,gates,shakes,timeLeft,deadT,room,winT,msgT,maxHp,hp,lastRoom;
+let GG,GD=1,L,map,lvlI,pl,guards,parts,gates,shakes,timeLeft,deadT,room,winT,msgT,maxHp,hp,lastRoom;
 const tl=(c,r)=>(map[r]&&map[r][c])||'#';
 const hasFloor=(c,r)=>{const t=tl(c,r);return t!==' '&&t!=='#'};
 const isWall=(c,r)=>tl(c,r)==='#';
@@ -41,15 +53,16 @@ function die(G,why){if(pl.st==='dead')return;pl.st='dead';pl.why=why;pl.t=0;hp=0
 function hurt(G,n){hp-=n||1;G.sfx('hit');if(hp<=0)die(G,'sword')}
 function burst(x,y,col,n){for(let i=0;i<(n||6);i++)parts.push({x,y,vx:(Math.random()-.5)*80,vy:-Math.random()*90,t:.9,col})}
 Retro.boot({id:'palace',title:'NNN 궁전 탈출',en:'PALACE ESCAPE',w:W,h:H,a:'점프·베기',b:'살금·막기',diag:false,
-  intro:'15분 안에 지하 궁전 3층을 빠져나가야 해요! 달려서 뛰고, 턱에 매달려 오르고, 가시·무너지는 바닥·경비병을 넘으세요.',
+  stages:{label:'층',max:6},options:[{k:'grab',label:'떨어질 때 턱 잡기',ch:[['hold','▲ 누르고 있을 때만'],['auto','자동으로 잡기']],def:'hold',note:'제한 시간: 쉬움 35분 · 보통 25분 · 어려움 18분'}],
+  intro:'제한 시간(보통 25분) 안에 지하 궁전 6층을 빠져나가야 해요! 달려서 뛰고, 턱에 매달려 오르고, 가시·무너지는 바닥·경비병을 넘으세요.',
   help:'<b>◀ ▶</b> 달리기 · <b>B</b> 누르며 이동 = 살금살금(가시 위도 안전)<br><b>달리면서 A</b> = 멀리뛰기 (구멍 2칸)<br><b>▲</b> 또는 제자리 <b>A</b> = 위 턱 잡고 오르기<br><b>▼</b> 낭떠러지 앞에서 = 매달려 내려가기<br>떨어질 때 <b>▲</b> 누르고 있으면 턱을 잡아요<br>⚔ 경비병: <b>A</b> 베기 · <b>B</b> 막기 (번쩍할 때!)<br>발판을 밟으면 철문이 잠깐 열려요 · 출구에서 <b>▲</b>',
-  init(G){maxHp=3;timeLeft=15*60;load(0)},
+  init(G){GG=G;GD=G.diff;maxHp=3;timeLeft=({easy:35,normal:25,hard:18})[G.level]*60;load(G.start-1)},
   update(G,dt){
     for(const p of parts){p.vy+=400*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt}parts=parts.filter(p=>p.t>0);
     timeLeft-=dt;if(timeLeft<=0){timeLeft=0;return G.over('시간이 다 됐어요…')}
     if(gates.timer>0){gates.timer-=dt;gates.open=Math.min(1,gates.open+dt*2)}else gates.open=Math.max(0,gates.open-dt*.35);
     for(const k in shakes){shakes[k]-=dt;if(shakes[k]<=0){const [c,r]=k.split(',').map(Number);map[r][c]=' ';delete shakes[k];burst(c*TW+16,floorY(r),'#8a7a6a',8);G.sfx('boom')}}
-    if(winT){winT-=dt;if(winT<=0){if(lvlI>=LEVELS.length-1){G.add(Math.floor(timeLeft)*10);return G.win('궁전 탈출 성공!',`남은 시간 ${fmt(timeLeft)}`)}load(lvlI+1,true);hp=maxHp;G.msg(L.name,1600)}return}
+    if(winT){winT-=dt;if(winT<=0){if(lvlI>=LEVELS.length-1){G.add(Math.floor(timeLeft)*10);return G.win('궁전 탈출 성공!',`남은 시간 ${fmt(timeLeft)}`)}load(lvlI+1,true);hp=maxHp;G.reach(lvlI+1);G.msg(L.name,1600)}return}
     if(pl.st==='dead'){pl.t+=dt;deadT-=dt;if(deadT<=0){load(lvlI);G.msg('다시 도전!',900)}return}
     updatePlayer(G,dt);for(const g of guards)updateGuard(G,g,dt);
     const nr=Math.floor(pl.x/(ROOM*TW));if(nr!==room){room=nr}
@@ -112,7 +125,7 @@ function updatePlayer(G,dt){const k=G.keys,h=G.hit;pl.t+=dt;const r=Math.floor((
     const nx=pl.x+pl.vx*dt;const br=Math.floor((pl.y-20)/TH);if(isWall(Math.floor((nx+Math.sign(pl.vx||1)*6)/TW),br)||(pl.vx&&gateBlocks(Math.floor((nx+Math.sign(pl.vx)*6)/TW),br)&&Math.abs(nx-(Math.floor(nx/TW)*TW+16))<8)){pl.vx=-pl.vx*.2}else pl.x=nx;
     pl.y+=pl.vy*dt;if(pl.vy<0)pl.fallTop=Math.min(pl.fallTop,pl.y);
     /* 턱 잡기 */
-    if(pl.vy>0&&(k.up||k.a)){const hy0=py-44,hy1=pl.y-44;const rr=Math.floor(hy1/TH);const fy=floorY(rr);
+    if(pl.vy>0&&(k.up||k.a||GG.opt('grab')==='auto')){const hy0=py-44,hy1=pl.y-44;const rr=Math.floor(hy1/TH);const fy=floorY(rr);
       if(rr>=0&&hy0<=fy&&hy1>=fy-2){const cc=Math.floor(pl.x/TW);if(!hasFloor(cc,rr)){for(const d of [pl.face,-pl.face]){if(hasFloor(cc+d,rr)&&!isWall(cc+d,rr)){const edge=d>0?(cc+1)*TW:cc*TW;if(Math.abs(edge-pl.x)<16){pl.x=edge-d*6;pl.y=fy+44;startClimb(G,edge+d*8,fy,d);pl.cy0=fy+44;return}}}}}}
     /* 착지 */
     if(pl.vy>0){const rr=Math.floor((pl.y-1)/TH);const fy=floorY(rr);if(py<=fy&&pl.y>=fy&&canStand(pl.x,rr)&&!isWall(Math.floor(pl.x/TW),rr)){pl.y=fy;pl.ground=true;pl.vy=0;pl.vx=0;const d=pl.y-pl.fallTop;
@@ -142,7 +155,7 @@ function updateGuard(G,g,dt){g.t+=dt;if(g.st==='dying'||g.hp<=0)return;const fy=
   if(g.st==='hit'){if(g.t>.35){g.st='ready';g.t=0;g.cd=.4}return}
   if(g.st==='block'){if(g.t>.25){g.st='ready';g.t=0;g.cd=Math.min(g.cd,.3)}return}
   if(g.st==='stagger'){if(g.t>.6){g.st='ready';g.t=0;g.cd=.6}return}
-  if(g.st==='windup'){const wt=.6-lv*.1;if(g.t>=wt){g.st='strike';g.t=0;
+  if(g.st==='windup'){const wt=Math.max(.25,(.6-lv*.1)/GD);if(g.t>=wt){g.st='strike';g.t=0;
       if(dist<46){if(pl.st==='block'&&pl.blockT<.9+lv*0){g.st='stagger';g.t=0;G.sfx('block');G.add(50)}else{hurt(G,1);pl.x-=g.face*-10;if(pl.x<0)pl.x=8}}}return}
   if(g.st==='strike'){if(g.t>.25){g.st='ready';g.t=0;g.cd=.5+Math.random()*(1.1-lv*.25)}return}
   if(dist>34){g.st='walk';const nx=g.x+g.face*38*dt;if(hasFloor(Math.floor((nx+g.face*8)/TW),g.r)&&!isWall(Math.floor((nx+g.face*8)/TW),g.r)&&!gateBlocks(Math.floor((nx+g.face*8)/TW),g.r))g.x=nx;else g.st='ready';return}

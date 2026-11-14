@@ -20,10 +20,20 @@ const LEVELS=[
  {p:[[4,6,25],[8,2,5],[8,26,29],[9,9,22],[13,2,12],[13,19,29],[17,9,22],[21,2,8],[21,23,29]],e:[['w',8,3],['w',23,3],['w',12,8],['w',19,8],['f',6,11],['f',25,11]],c:['#c46bff','#ead2ff']},
  {p:[[6,2,12],[6,19,29],[11,7,24],[16,2,12],[16,19,29],[21,7,24]],e:[['f',6,4],['f',24,4],['w',10,10],['w',21,10],['f',8,14],['f',23,14],['w',15,20]],c:['#ff5a5a','#ffc9c0']},
 ];
+/* 7라운드부터는 라운드 번호로 발판 모양을 만들어요 (같은 라운드는 늘 같은 모양) — 모두 30라운드 */
+const MAXR=30,PALS=[['#ff7aa8','#ffc2d6'],['#4fb8ff','#bfe6ff'],['#5be37d','#c4f7d0'],['#ffb03f','#ffe0a8'],['#c46bff','#ead2ff'],['#ff5a5a','#ffc9c0'],['#3fd0d0','#bff5f5'],['#e8e8f0','#ffffff']];
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function genRound(n){const R=rng(n*4111+7);const rows=R()<.5?[5,10,15,20]:[4,8,12,16,20];const p=[],e=[];
+  for(const r of rows){let x=2;const segs=[];while(x<15){const len=3+Math.floor(R()*6);const gap=1+Math.floor(R()*4);if(R()<.75)segs.push([x,Math.min(15,x+len-1)]);x+=len+gap}
+    if(!segs.length)segs.push([4,10]);for(const [a,b] of segs){if(b>=14&&R()<.5){p.push([r,a,29-a])}else{p.push([r,a,b]);p.push([r,29-b,29-a])}}}
+  const nE=Math.min(9,4+Math.floor(n/4));const plats=p.filter(q=>q[2]-q[1]>=2);
+  for(let i=0;i<nE;i++){const q=plats[Math.floor(R()*plats.length)];const fl=R()<Math.min(.5,.15+n*.012);e.push([fl?'f':'w',q[1]+Math.floor((q[2]-q[1])/2),q[0]-1])}
+  return{p,e,c:PALS[n%PALS.length]}}
+const RC={};const roundDef=i=>i<LEVELS.length?LEVELS[i]:(RC[i]||(RC[i]=genRound(i)));
 const FRUITS=[['#ff3b5c','cherry'],['#ffd23f','banana'],['#5be37d','melon'],['#ff9b3d','orange'],['#c46bff','grape']];
-let map,lvl,pl,bubbles,foes,items,lives,levT,endT,hurry,pops;
+let GD=1,map,lvl,pl,bubbles,foes,items,lives,levT,endT,hurry,pops;
 function solid(cx,cy){if(cy<0||cy>=MH)return false;if(cx<=1||cx>=MW-2)return true;return map[cy][cx]}
-function build(i){const L=LEVELS[i%LEVELS.length];map=Array.from({length:MH},(_,y)=>Array.from({length:MW},(_,x)=>(y===0||y===MH-1)&&(x<13||x>18)));
+function build(i){const L=roundDef(i);map=Array.from({length:MH},(_,y)=>Array.from({length:MW},(_,x)=>(y===0||y===MH-1)&&(x<13||x>18)));
   for(const [r,a,b] of L.p)for(let x=a;x<=b;x++)map[r][x]=true;
   foes=L.e.map(([t,x,r])=>({t,x:x*T,y:r*T-14-80,vx:(x<16?1:-1)*(t==='f'?34:30),vy:t==='f'?30:0,w:14,h:14,ang:0,drop:80,face:x<16?1:-1}));
   bubbles=[];items=[];levT=0;endT=0;hurry=false;pops=[];respawn()}
@@ -35,9 +45,10 @@ function walls(o){if(o.x<2*T){o.x=2*T;return -1}if(o.x+o.w>(MW-2)*T){o.x=(MW-2)*
 function wrap(o){if(o.y>MH*T)o.y=-o.h;if(o.y<-o.h-4&&o.vy<0)o.y=-o.h-4}
 const ov=(a,b,m)=>a.x<b.x+b.w-(m||0)&&a.x+a.w>b.x+(m||0)&&a.y<b.y+b.h-(m||0)&&a.y+a.h>b.y+(m||0);
 Retro.boot({id:'bubble',title:'NNN 비눗방울 대작전',en:'BUBBLE BUSTERS',w:W,h:H,a:'점프',b:'방울',diag:true,
+  stages:{label:'라운드',max:MAXR},
   intro:'뽀글이가 비눗방울을 불어 몬스터를 가둬요! 갇힌 방울을 톡 터뜨리면 과일로 변해요.',
-  help:'<b>◀ ▶</b> 걷기 · <b>A</b> 점프 · <b>B</b> 방울 불기<br>몬스터가 든 방울에 몸을 대면 펑!<br>여러 개를 한 번에 터뜨리면 점수가 두 배씩<br>A를 누른 채 방울 위에 떨어지면 통통 올라타요<br>바닥 구멍으로 떨어지면 꼭대기에서 나와요',
-  init(G){lvl=0;lives=3;build(0)},
+  help:'<b>◀ ▶</b> 걷기 · <b>A</b> 점프 · <b>B</b> 방울 불기<br>몬스터가 든 방울에 몸을 대면 펑!<br>여러 개를 한 번에 터뜨리면 점수가 두 배씩<br>A를 누른 채 방울 위에 떨어지면 통통 올라타요<br>바닥 구멍으로 떨어지면 꼭대기에서 나와요 · 모두 30라운드!',
+  init(G){GD=G.diff;lvl=G.start-1;lives=G.lives(3);build(lvl)},
   update(G,dt){levT+=dt;for(const p of pops)p.t-=dt;pops=pops.filter(p=>p.t>0);
     if(!hurry&&levT>40){hurry=true;G.msg('서둘러!');G.sfx('bell');for(const f of foes)f.angry=1}
     /* 플레이어 */
@@ -64,7 +75,7 @@ Retro.boot({id:'bubble',title:'NNN 비눗방울 대작전',en:'BUBBLE BUSTERS',w
         else popChain(G,b)}}
     bubbles=bubbles.filter(b=>!b.gone);
     /* 몬스터 */
-    for(const f of foes){if(f.dead||f.caught)continue;const sp=(f.angry?1.6:1)*(1+lvl*.04);
+    for(const f of foes){if(f.dead||f.caught)continue;const sp=(f.angry?1.6:1)*(1+Math.min(lvl,29)*.03)*GD;
       if(f.drop>0){f.drop-=60*dt;f.y+=60*dt;continue}
       if(f.t==='f'){f.x+=f.vx*sp*dt;f.y+=f.vy*sp*dt;const wl=walls(f);if(wl)f.vx=-f.vx;if(f.y<T){f.y=T;f.vy=Math.abs(f.vy)}if(f.y+f.h>(MH-1)*T){f.y=(MH-1)*T-f.h;f.vy=-Math.abs(f.vy)};f.face=Math.sign(f.vx)}
       else{const g=onGround(f);
@@ -80,9 +91,9 @@ Retro.boot({id:'bubble',title:'NNN 비눗방울 대작전',en:'BUBBLE BUSTERS',w
       if(!pl.dead&&it.t>.4&&ov(pl,it,1)){it.got=1;G.add(500);pops.push({x:it.x,y:it.y,s:500,t:.8});G.sfx('coin')}
       if(it.t>12)it.got=1}
     items=items.filter(i=>!i.got);
-    if(!foes.some(f=>!f.dead)){endT+=dt;if(endT>(items.length?6:2)){lvl++;G.add(1000);G.sfx('clear');G.msg(`라운드 ${lvl+1}`);build(lvl)}}
+    if(!foes.some(f=>!f.dead)){endT+=dt;if(endT>(items.length?6:2)){lvl++;G.add(1000+lvl*200);if(lvl>=MAXR)return G.win('30라운드 모두 클리어!',`남은 목숨 ${lives}`);G.reach(lvl+1);G.sfx('clear');G.msg(`라운드 ${lvl+1}`);build(lvl)}}
   },
-  draw(G,c){const L=LEVELS[lvl%LEVELS.length];c.fillStyle='#07061a';c.fillRect(0,0,W,H);
+  draw(G,c){const L=roundDef(lvl);c.fillStyle='#07061a';c.fillRect(0,0,W,H);
     for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(!solid(x,y))continue;const px=x*T,py=OY+y*T;c.fillStyle=L.c[0];c.fillRect(px,py,T,T);c.fillStyle=L.c[1];c.fillRect(px,py,T-1,1);c.fillRect(px,py,1,T-1);c.fillStyle='rgba(0,0,0,.3)';c.fillRect(px+1,py+T-1,T-1,1);c.fillRect(px+T-1,py+1,1,T-1);
       if((x+y)%3===0){c.fillStyle=L.c[1];c.fillRect(px+3,py+3,2,2)}}
     G.text('ROUND '+(lvl+1),6,4,{size:7,color:'#ffd23f'});for(let i=0;i<Math.max(0,lives-(pl&&pl.dead?0:1));i++)drawHero(c,W-18-i*14,3,1,0,G.t,.6);

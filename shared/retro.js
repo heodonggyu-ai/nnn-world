@@ -45,6 +45,16 @@
   .rt-new{display:inline-block;background:var(--sun);color:#222;border-radius:999px;padding:3px 10px;font-size:13px;margin-top:4px}
   .rt-msg{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:24px;color:#fff;text-shadow:0 3px 0 #000,0 0 18px #000;pointer-events:none;white-space:nowrap;z-index:4;animation:rtpop .25s}
   @keyframes rtpop{from{transform:translate(-50%,-50%) scale(.6);opacity:0}}
+  .rt.lefty .rt-pad{flex-direction:row-reverse}.rt.lefty .rt-ab{flex-direction:row-reverse}
+  .rt.bs .rt-btn{width:62px;height:62px;font-size:15px}.rt.bs .rt-dpad{transform:scale(.84)}
+  .rt.bl .rt-btn{width:88px;height:88px;font-size:20px}.rt.bl .rt-dpad{transform:scale(1.12)}.rt.bl .rt-pad{height:196px}
+  .rt-opts{text-align:left;margin:10px 0 4px;display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow:auto;padding-right:2px}
+  .rt-orow b{display:block;font-weight:400;font-size:14px;color:#d9d4ff;margin-bottom:5px}.rt-orow small{display:block;font-size:11.5px;color:var(--mute);margin-top:4px}
+  .rt-seg{display:flex;gap:6px;flex-wrap:wrap}.rt-seg button{flex:1;min-width:58px;height:38px;border-radius:10px;border:2px solid var(--line);background:#0f0c24;font-size:14px;color:#cfc9f6}
+  .rt-seg button.on{background:var(--mint);border-color:var(--mint);color:#0d0b1e}
+  .rt-step{display:flex;align-items:center;gap:8px}.rt-step button{width:42px;height:38px;border-radius:10px;border:2px solid var(--line);background:#0f0c24;font-size:18px}
+  .rt-step span{flex:1;text-align:center;font-size:17px;color:var(--sun)}
+  .rt-cur{font-size:12.5px;color:var(--mute);margin:8px 0 0}
   @media (hover:hover) and (pointer:fine){.rt-pad{display:none}}
   @media (orientation:landscape) and (max-height:560px){
     .rt-top{padding:4px 10px}.rt-ic{width:34px;height:34px}
@@ -116,6 +126,19 @@
     const $S=root.querySelector('#rtS'),$B=root.querySelector('#rtB');
     const bestKey='nnnretro_'+cfg.id;let best=0;try{best=+localStorage.getItem(bestKey)||0}catch(e){}
     $B.textContent=best;
+    /* 옵션 · 단계 해금 */
+    const OKEY='nnnretro_opt_'+cfg.id,RKEY='nnnretro_reach_'+cfg.id;let OPT={};try{OPT=JSON.parse(localStorage.getItem(OKEY)||'{}')||{}}catch(e){}
+    let reach=1;try{reach=Math.max(1,+localStorage.getItem(RKEY)||1)}catch(e){}
+    const DEFS=[{k:'diff',label:'난이도',ch:[['easy','쉬움'],['normal','보통'],['hard','어려움']],def:'normal',note:'점수 배율: 쉬움 ×0.5 · 보통 ×1 · 어려움 ×1.5'}]
+      .concat(cfg.stages?[{k:'start',label:'시작 '+cfg.stages.label,type:'start',note:'한 번 도착한 '+cfg.stages.label+'부터 바로 시작할 수 있어요'}]:[])
+      .concat(cfg.options||[])
+      .concat([{k:'snd',label:'소리',ch:[['on','켜기'],['off','끄기']],def:'on'},{k:'vib',label:'진동',ch:[['on','켜기'],['off','끄기']],def:'on'},
+        {k:'hand',label:'버튼 배치',ch:[['r','기본 (십자키 왼쪽)'],['l','왼손잡이']],def:'r'},{k:'size',label:'버튼 크기',ch:[['s','작게'],['m','보통'],['l','크게']],def:'m'}]);
+    const optGet=k=>{if(k==='snd')return muted?'off':'on';const d=DEFS.find(x=>x.k===k);return OPT[k]!=null?OPT[k]:d?d.def:undefined};
+    function optSet(k,v){if(k==='snd'){muted=v==='off';try{localStorage.setItem('nnnretro_mute',muted?'1':'0')}catch(e){}const sb=root.querySelector('#rtSnd');if(sb)sb.textContent=muted?'🔇':'🔊';return}
+      OPT[k]=v;try{localStorage.setItem(OKEY,JSON.stringify(OPT))}catch(e){}applyUI()}
+    function applyUI(){root.classList.toggle('lefty',optGet('hand')==='l');root.classList.toggle('bs',optGet('size')==='s');root.classList.toggle('bl',optGet('size')==='l');setTimeout(fit,30)}
+    try{const rv=navigator.vibrate&&navigator.vibrate.bind(navigator);if(rv)navigator.vibrate=function(){return optGet('vib')==='off'?false:rv.apply(null,arguments)}}catch(e){}
 
     function fit(){const r=stage.getBoundingClientRect();const land=matchMedia('(orientation:landscape) and (max-height:560px)').matches&&getComputedStyle(root.querySelector('#rtPad')).display!=='none';
       const availW=r.width-(land?400:12),availH=r.height-8;let s=Math.min(availW/W,availH/H);if(s>=2)s=Math.floor(s*2)/2;
@@ -161,7 +184,14 @@
     const G={W,H,ctx,cv,keys:held,hit:{},ptr,score:0,best,t:0,state:'title',scale:1,_kb:{},
       sfx,sprite,spr:drawSpr,text:(s,x,y,o)=>text(ctx,s,x,y,o),
       rnd:(a,b)=>a+Math.random()*(b-a),ri:(a,b)=>Math.floor(a+Math.random()*(b-a+1)),
-      add(n){G.score+=n;$S.textContent=G.score;if(G.score>best){best=G.score;G.best=best;$B.textContent=best;try{localStorage.setItem(bestKey,best)}catch(e){}G._newBest=true}},
+      opt:k=>optGet(k),
+      get diff(){return {easy:.75,normal:1,hard:1.3}[optGet('diff')]||1},
+      get level(){return optGet('diff')},
+      lives(n){const d=optGet('diff');return d==='easy'?n+2:d==='hard'?Math.max(1,n-1):n},
+      get start(){const m=cfg.stages?cfg.stages.max||999:1;return Math.max(1,Math.min(+OPT.start||1,reach,m))},
+      reach(n){const m=cfg.stages?cfg.stages.max||999:1;n=Math.min(n,m);if(n>reach){reach=n;try{localStorage.setItem(RKEY,reach)}catch(e){}}},
+      _frac:0,
+      add(n){const mul={easy:.5,normal:1,hard:1.5}[optGet('diff')]||1;G._frac+=n*mul;n=Math.floor(G._frac);G._frac-=n;if(!n)return;G.score+=n;$S.textContent=G.score;if(G.score>best){best=G.score;G.best=best;$B.textContent=best;try{localStorage.setItem(bestKey,best)}catch(e){}G._newBest=true}},
       setScore(n){G.score=n;$S.textContent=n},
       msg(s,ms){const m=document.createElement('div');m.className='rt-msg';m.textContent=s;stage.appendChild(m);setTimeout(()=>m.remove(),ms||1200)},
       over(extra){if(G.state==='over')return;G.state='over';sfx('over');
@@ -173,11 +203,21 @@
           ${extra?`<p>${extra}</p>`:''}<button class="rt-go" id="rtAgain">처음부터 다시</button><a class="rt-go soft" style="display:grid;place-items:center;text-decoration:none;color:#fff;margin-top:10px" href="../">NNN 월드로</a></div>`;
         ov.hidden=false;ov.querySelector('#rtAgain').onclick=start},
     };
-    function start(){ac();G.score=0;G._newBest=false;$S.textContent=0;G.t=0;for(const k in held)held[k]=0;pend={};G.state='play';ov.hidden=true;sfx('start');cfg.init(G)}
+    function start(){ac();G.score=0;G._frac=0;G._newBest=false;$S.textContent=0;G.t=0;for(const k in held)held[k]=0;pend={};G.state='play';ov.hidden=true;sfx('start');cfg.init(G)}
+    const curLine=()=>`난이도 ${({easy:'쉬움',normal:'보통',hard:'어려움'})[optGet('diff')]}${cfg.stages?` · ${G.start}${cfg.stages.label}부터`:''}`;
     function title(){ov.innerHTML=`<div class="rt-card"><h1>${cfg.title.replace('NNN ','')}</h1><div class="en">${cfg.en||''}</div><p>${cfg.intro||''}</p>
-      <div class="rt-help">${cfg.help}</div><button class="rt-go" id="rtStart">▶ 시작</button></div>`;ov.hidden=false;ov.querySelector('#rtStart').onclick=start}
-    function togglePause(){if(G.state==='play'){G.state='pause';ov.innerHTML=`<div class="rt-card"><h1>잠깐 멈춤</h1><button class="rt-go" id="rtRes">계속하기</button><button class="rt-go soft" id="rtRe" style="margin-top:10px">처음부터</button></div>`;ov.hidden=false;
-        ov.querySelector('#rtRes').onclick=()=>{G.state='play';ov.hidden=true;for(const k in held)held[k]=0};ov.querySelector('#rtRe').onclick=start}
+      <div class="rt-help">${cfg.help}</div><button class="rt-go" id="rtStart">▶ 시작</button><button class="rt-go soft" id="rtOpt" style="margin-top:10px">⚙ 옵션</button><p class="rt-cur">${curLine()}</p></div>`;ov.hidden=false;
+      ov.querySelector('#rtStart').onclick=start;ov.querySelector('#rtOpt').onclick=()=>options(title)}
+    function options(back){const row=d=>{const v=optGet(d.k);
+        if(d.type==='start'){const cur=G.start;return `<div class="rt-orow"><b>${d.label}</b><div class="rt-step"><button data-st="-1">−</button><span>${cur}${cfg.stages.label} <small style="display:inline;color:#9a93c7">/ ${reach}까지 열림</small></span><button data-st="1">+</button></div><small>${d.note}</small></div>`}
+        return `<div class="rt-orow"><b>${d.label}</b><div class="rt-seg">${d.ch.map(([cv,cl])=>`<button data-k="${d.k}" data-v="${cv}" class="${String(v)===String(cv)?'on':''}">${cl}</button>`).join('')}</div>${d.note?`<small>${d.note}</small>`:''}</div>`};
+      ov.innerHTML=`<div class="rt-card"><h1>⚙ 옵션</h1><div class="rt-opts">${DEFS.map(row).join('')}</div><button class="rt-go" id="rtOk">확인</button></div>`;ov.hidden=false;
+      ov.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{optSet(b.dataset.k,b.dataset.v);sfx('blip');options(back)});
+      ov.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{let n=G.start+ +b.dataset.st;n=Math.max(1,Math.min(reach,n));OPT.start=n;try{localStorage.setItem(OKEY,JSON.stringify(OPT))}catch(e){}sfx('blip');options(back)});
+      ov.querySelector('#rtOk').onclick=back}
+    G.options=options;
+    function togglePause(){if(G.state==='play'){G.state='pause';ov.innerHTML=`<div class="rt-card"><h1>잠깐 멈춤</h1><button class="rt-go" id="rtRes">계속하기</button><button class="rt-go soft" id="rtRe" style="margin-top:10px">처음부터</button><button class="rt-go soft" id="rtPO" style="margin-top:10px">⚙ 옵션</button><p class="rt-cur">난이도·시작 단계는 다음 판부터 적용돼요</p></div>`;ov.hidden=false;
+        ov.querySelector('#rtRes').onclick=()=>{G.state='play';ov.hidden=true;for(const k in held)held[k]=0};ov.querySelector('#rtRe').onclick=start;ov.querySelector('#rtPO').onclick=()=>options(()=>{G.state='play';togglePause()})}
       else if(G.state==='pause'){G.state='play';ov.hidden=true}}
     G.pause=togglePause;
     root.querySelector('#rtPause').onclick=togglePause;
@@ -193,7 +233,7 @@
       if(cfg.attract&&G.state==='title')cfg.attract(G,ctx);
       requestAnimationFrame(frame)}
     if(cfg.setup)cfg.setup(G);else cfg.init(G);
-    title();fit();(document.fonts&&document.fonts.ready||Promise.resolve()).then(fit);
+    applyUI();title();fit();(document.fonts&&document.fonts.ready||Promise.resolve()).then(fit);
     requestAnimationFrame(frame);
     window.__G=G;window.__start=start;
     return G;

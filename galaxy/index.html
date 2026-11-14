@@ -21,28 +21,36 @@ const SPR={
 };
 const S={};function sp(k,i){const key=k+(i||0);if(!S[key])S[key]=Retro.sprite(Array.isArray(SPR[k][0])?SPR[k][i||0]:SPR[k],PAL);return S[key]}
 let ship,shots,eshots,foes,stars,booms,stage,lives,diveT,respawn,stageT,clearT,shotCd;
-function makeStage(){foes=[];const rows=[['boss',4],['bee',8],['bee',8],['bug',10],['bug',10]];
+let GD=1,chal=null;
+const isChal=n=>n%4===3;
+/* 보너스 스테이지: 외계인이 줄지어 날아가기만 해요 (총 안 쏨). 다 맞히면 PERFECT 보너스 */
+const WAVES=[[-10,30,90,40,50,30,2.2,'bee'],[W+10,30,-90,40,50,30,2.2,'bug'],[-10,150,100,-20,40,60,2.6,'bee'],[W+10,150,-100,-20,40,60,2.6,'bug'],[W/2,-10,0,70,80,30,2.8,'boss']];
+function makeChal(){foes=[];chal={hit:0,total:0,t:0};WAVES.forEach((w,wi)=>{for(let i=0;i<8;i++){chal.total++;foes.push({type:w[7],st:'chal',x:-50,y:-50,w,del:wi*2.3+i*.16,t:0,hp:1,pts:100,sx:0,sy:0,dir:(i%2?1:-1)})}});diveT=999;stageT=0}
+function makeStage(){if(isChal(stage))return makeChal();chal=null;foes=[];const nb=Math.min(8,4+Math.floor(stage/6)*2);const rows=[['boss',nb],['bee',8],['bee',8],['bug',10],['bug',10]].concat(stage>=10?[['bug',10]]:[]);
   rows.forEach(([type,n],r)=>{for(let i=0;i<n;i++){const sx=(i-(n-1)/2)*18,sy=40+r*16;
     foes.push({type,sx,sy,x:sx+W/2+(i%2?-160:160),y:-30-r*25-i*6,st:'enter',hp:type==='boss'?2:1,t:0,ph:Math.random()*6,pts:type==='boss'?150:type==='bee'?80:50})}});
   diveT=2.2;stageT=0}
 function slotPos(f){const sway=Math.sin(stageT*.8)*20,breathe=1+Math.sin(stageT*1.6)*.06*Math.min(1,stageT/6);return{x:W/2+sway+f.sx*breathe,y:f.sy+(f.sy-40)*(breathe-1)}}
 function boom(x,y,big){booms.push({x,y,t:0,big})}
 Retro.boot({id:'galaxy',title:'NNN 우주 침공',en:'GALAXY RAID',w:W,h:H,a:'발사',b:false,diag:false,
+  stages:{label:'스테이지',max:99},options:[{k:'auto',label:'자동 연사',ch:[['on','A 누르고 있으면 계속'],['off','한 번에 한 발']],def:'on'}],
   intro:'줄지어 선 외계인 편대를 모두 물리치세요! 빙글 돌며 내려꽂는 녀석과 총알을 조심해요.',
-  help:'<b>◀ ▶</b> 비행기 움직이기<br><b>A</b> 쏘기 (누르고 있으면 계속)<br>보라 대장은 두 번 맞혀야 해요<br>날아드는 녀석을 맞히면 점수 2배!',
-  init(G){ship={x:W/2,dead:0};shots=[];eshots=[];booms=[];stage=1;lives=3;respawn=0;clearT=0;shotCd=0;
+  help:'<b>◀ ▶</b> 비행기 움직이기<br><b>A</b> 쏘기 (누르고 있으면 계속)<br>보라 대장은 두 번 맞혀야 해요<br>날아드는 녀석을 맞히면 점수 2배!<br>4스테이지마다 보너스 스테이지 — 다 맞히면 PERFECT!',
+  init(G){GD=G.diff;ship={x:W/2,dead:0};shots=[];eshots=[];booms=[];stage=G.start;lives=G.lives(3);respawn=0;clearT=0;shotCd=0;
     stars=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,s:.3+Math.random()*1.4,c:['#fff','#9a93c7','#4fe3b2','#ff4f7b'][Math.floor(Math.random()*4)]}));makeStage()},
   update(G,dt){stageT+=dt;for(const s of stars){s.y+=s.s*30*dt;if(s.y>H)s.y=0}
     for(const b of booms)b.t+=dt;booms=booms.filter(b=>b.t<.5);
     const k=G.keys;
     if(ship.dead){respawn-=dt;if(respawn<=0){if(lives<=0)return G.over(`${stage}스테이지까지 왔어요`);if(!foes.some(f=>f.st==='dive')){ship.dead=0;ship.inv=2}}}
     else{if(k.left)ship.x-=110*dt;if(k.right)ship.x+=110*dt;ship.x=Math.max(8,Math.min(W-8,ship.x));if(ship.inv)ship.inv=Math.max(0,ship.inv-dt);
-      shotCd-=dt;if((G.hit.a||k.a)&&shotCd<=0&&shots.length<2){shots.push({x:ship.x,y:PY-6});shotCd=.18;G.sfx('shoot')}}
+      shotCd-=dt;if((G.hit.a||(k.a&&G.opt('auto')!=='off'))&&shotCd<=0&&shots.length<2){shots.push({x:ship.x,y:PY-6});shotCd=.18;G.sfx('shoot')}}
     for(const s of shots)s.y-=280*dt;shots=shots.filter(s=>s.y>-8);
     for(const s of eshots){s.x+=s.vx*dt;s.y+=s.vy*dt}eshots=eshots.filter(s=>s.y<H+4);
-    const diveSp=1+stage*.12;
+    const diveSp=(1+Math.min(stage,30)*.1)*GD;
     for(const f of foes){f.t+=dt;const sl=slotPos(f);
-      if(f.st==='enter'){f.x+=(sl.x-f.x)*Math.min(1,dt*2.2);f.y+=(sl.y-f.y)*Math.min(1,dt*2.2);if(Math.hypot(sl.x-f.x,sl.y-f.y)<1.5)f.st='form'}
+      if(f.st==='chal'){f.del-=dt;if(f.del>0){f.x=-50;continue}f.ct=(f.ct||0)+dt;const w=f.w,tt=f.ct;f.x=w[0]+w[2]*tt+Math.sin(tt*w[6])*w[4]*f.dir;f.y=w[1]+w[3]*tt+(1-Math.cos(tt*w[6]))*w[5];
+        if(tt>5||f.y>H+20||f.x<-60||f.x>W+60&&tt>1){f.st='dead';f.missed=1}}
+      else if(f.st==='enter'){f.x+=(sl.x-f.x)*Math.min(1,dt*2.2);f.y+=(sl.y-f.y)*Math.min(1,dt*2.2);if(Math.hypot(sl.x-f.x,sl.y-f.y)<1.5)f.st='form'}
       else if(f.st==='form'){f.x=sl.x;f.y=sl.y}
       else if(f.st==='dive'){f.dt+=dt*diveSp;
         if(f.dt<1.1){const a=f.dt/1.1*Math.PI;f.x=f.ox+f.dir*Math.sin(a)*26;f.y=f.oy-Math.sin(a)*20+f.dt*14}
@@ -52,15 +60,17 @@ Retro.boot({id:'galaxy',title:'NNN 우주 침공',en:'GALAXY RAID',w:W,h:H,a:'�
         if(f.y>H+10){f.y=-12;f.st='enter';f.shot=0;f.vx=0}}
       if(f.st!=='dead'&&!ship.dead&&!ship.inv&&Math.abs(f.x-ship.x)<9&&Math.abs(f.y-(PY))<8){f.st='dead';boom(f.x,f.y);killShip(G)}
       for(const s of shots)if(f.st!=='dead'&&Math.abs(s.x-f.x)<7&&Math.abs(s.y-f.y)<6){s.y=-99;f.hp--;
-        if(f.hp<=0){f.st==='dive'?G.add(f.pts*2):G.add(f.pts);f.st='dead';boom(f.x,f.y,f.type==='boss');G.sfx(f.type==='boss'?'boom':'hit')}else{G.sfx('block');f.hurt=1}}}
+        if(f.hp<=0){if(f.st==='chal')chal.hit++;f.st==='dive'?G.add(f.pts*2):G.add(f.pts);f.st='dead';boom(f.x,f.y,f.type==='boss');G.sfx(f.type==='boss'?'boom':'hit')}else{G.sfx('block');f.hurt=1}}}
     foes=foes.filter(f=>f.st!=='dead');
     for(const s of eshots)if(!ship.dead&&!ship.inv&&Math.abs(s.x-ship.x)<5&&Math.abs(s.y-PY)<6){s.y=H+9;killShip(G)}
+    if(stage>=5&&!chal&&!ship.dead&&Math.random()<dt*Math.min(.9,.15+stage*.04)*GD){const fm=foes.filter(f=>f.st==='form');if(fm.length){const f=fm[Math.floor(Math.random()*fm.length)];eshots.push({x:f.x,y:f.y,vx:(ship.x-f.x)*.15,vy:90+stage*2})}}
     diveT-=dt;const forming=foes.filter(f=>f.st==='form');const maxDive=Math.min(1+Math.floor(stage/2),4);
     if(diveT<=0&&!ship.dead&&forming.length&&foes.filter(f=>f.st==='dive').length<maxDive){const f=forming[Math.floor(Math.random()*forming.length)];
       f.st='dive';f.dt=0;f.ox=f.x;f.oy=f.y;f.dir=f.x<W/2?-1:1;f.vx=0;f.shot=0;G.sfx('turn');
       if(f.type==='boss'){forming.filter(e=>e!==f&&e.type==='bee'&&Math.abs(e.sx-f.sx)<24).slice(0,2).forEach(e=>{e.st='dive';e.dt=-.1;e.ox=e.x;e.oy=e.y;e.dir=f.dir;e.vx=0;e.shot=0})}
       diveT=Math.max(.5,2.2-stage*.18)*(.6+Math.random()*.8)}
-    if(!foes.length){clearT+=dt;if(clearT>1.4){clearT=0;stage++;G.add(500);G.sfx('clear');G.msg(`스테이지 ${stage}`);eshots=[];makeStage()}}
+    if(!foes.length){clearT+=dt;if(clearT>1.4){clearT=0;if(chal){const perfect=chal.hit===chal.total;const b=perfect?10000:chal.hit*100;G.add(b);G.msg(perfect?'PERFECT! +10000':`보너스 ${chal.hit}/${chal.total} +${b}`,1800)}else G.add(500);
+      stage++;G.reach(stage);G.sfx('clear');setTimeout(()=>G.msg(isChal(stage)?'보너스 스테이지!':`스테이지 ${stage}`),chal?1600:0);eshots=[];makeStage()}}
   },
   draw(G,c){c.fillStyle='#05040f';c.fillRect(0,0,W,H);
     if(stars)for(const s of stars){c.fillStyle=s.c;c.globalAlpha=Math.floor((G.t+s.x)*3)%3?1:.3;c.fillRect(s.x,s.y,1,s.s>1?2:1)}c.globalAlpha=1;

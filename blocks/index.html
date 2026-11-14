@@ -17,7 +17,7 @@ const SHAPES={
   S:[[1,0],[2,0],[0,1],[1,1]],Z:[[0,0],[1,0],[1,1],[2,1]],J:[[0,0],[0,1],[1,1],[2,1]],L:[[2,0],[0,1],[1,1],[2,1]]};
 const COL={I:'#3fd0ff',O:'#ffd23f',T:'#c46bff',S:'#5be37d',Z:'#ff5a6e',J:'#4f7dff',L:'#ff9b3d'};
 const SIZE={I:4,O:4,T:3,S:3,Z:3,J:3,L:3};
-let board,cur,nextQ,hold,canHold,bag,lines,level,dropT,lockT,lockMoves,das,dasDir,arr,clearing,clearRows,clearT,softCount;
+let G0,startLv=1,board,cur,nextQ,hold,canHold,bag,lines,level,dropT,lockT,lockMoves,das,dasDir,arr,clearing,clearRows,clearT,softCount;
 function rot(cells,n,size){let c=cells.map(p=>p.slice());for(let i=0;i<((n%4)+4)%4;i++)c=c.map(([x,y])=>[size-1-y,x]);return c}
 function cellsOf(p){return rot(SHAPES[p.t],p.r,SIZE[p.t]).map(([x,y])=>[x+p.x,y+p.y])}
 function fits(p){return cellsOf(p).every(([x,y])=>x>=0&&x<COLS&&y<ROWS&&(y<0||!board[y][x]))}
@@ -25,7 +25,7 @@ function fromBag(){if(!bag.length){bag='IOTSZJL'.split('');for(let i=bag.length-
 function spawn(t,G){cur={t,r:0,x:t==='O'?3:3,y:t==='I'?-1:0};lockT=0;lockMoves=0;canHold=canHold;
   if(!fits(cur)){cur.y--;if(!fits(cur)){G.over(`${lines}줄 · 레벨 ${level}`);}}}
 function nextPiece(G){const t=nextQ.shift();nextQ.push(fromBag());spawn(t,G);canHold=true}
-function gravity(){return Math.max(.016,Math.pow(.8-(level-1)*.007,level-1))}
+function gravity(){return Math.max(.012,Math.pow(.8-(level-1)*.007,level-1)/G0.diff)}
 function tryMove(dx,dy){const p={...cur,x:cur.x+dx,y:cur.y+dy};if(fits(p)){cur=p;return true}return false}
 function tryRot(d,G){const p={...cur,r:cur.r+d};const kicks=cur.t==='I'?[[0,0],[-1,0],[1,0],[-2,0],[2,0],[0,-1]]:[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]];
   for(const [kx,ky] of kicks){const q={...p,x:p.x+kx,y:p.y+ky};if(fits(q)){cur=q;G.sfx('turn');if(lockMoves<15){lockT=0;lockMoves++}return}}}
@@ -38,13 +38,14 @@ function lock(G){for(const [x,y] of cellsOf(cur)){if(y<0){G.over(`${lines}줄 ·
   else nextPiece(G)}
 function hardDrop(G){let n=0;while(tryMove(0,1))n++;G.add(n*2);lock(G)}
 Retro.boot({id:'blocks',title:'NNN 블록 쌓기',en:'FALLING BLOCKS',w:184,h:224,a:'돌리기',b:'보관',diag:false,
+  stages:{label:'레벨',max:30},options:[{k:'ghost',label:'떨어질 자리 미리보기',ch:[['off','끄기'],['on','켜기']],def:'off',note:'켜면 쉬워져요'}],
   intro:'떨어지는 블록을 돌리고 옮겨서 가로 한 줄을 꽉 채우면 사라져요!',
-  help:'<b>◀ ▶</b> 옮기기 · <b>▼</b> 빨리 내리기<br><b>▲</b> 한 번에 쾅 내리기<br><b>A</b> 돌리기 · <b>B</b> 보관(바꿔치기)<br>화면을 톡 쳐도 돌아가요. 10줄마다 레벨 업!',
-  init(G){board=Array.from({length:ROWS},()=>Array(COLS).fill(null));bag=[];nextQ=[fromBag(),fromBag(),fromBag()];hold=null;canHold=true;
-    lines=0;level=1;dropT=0;das=0;dasDir=0;arr=0;clearing=false;softCount=0;nextPiece(G)},
+  help:'<b>◀ ▶</b> 옮기기 · <b>▼</b> 빨리 내리기<br><b>▲</b> 한 번에 쾅 내리기<br><b>A</b> 돌리기 · <b>B</b> 보관(바꿔치기)<br>화면을 톡 쳐도 돌아가요. 10줄마다 레벨 업! (최대 30레벨까지 점점 빨라져요)',
+  init(G){G0=G;startLv=G.start;board=Array.from({length:ROWS},()=>Array(COLS).fill(null));bag=[];nextQ=[fromBag(),fromBag(),fromBag()];hold=null;canHold=true;
+    lines=0;level=startLv;dropT=0;das=0;dasDir=0;arr=0;clearing=false;softCount=0;nextPiece(G)},
   update(G,dt){
     if(clearing){clearT+=dt;if(clearT>.28){for(const y of clearRows){board.splice(y,1);board.unshift(Array(COLS).fill(null))}
-        const old=level;lines+=clearRows.length;level=1+Math.floor(lines/10);if(level>old){G.msg('레벨 '+level+'!');G.sfx('power')}
+        const old=level;lines+=clearRows.length;level=startLv+Math.floor(lines/10);if(level>old){G.msg('레벨 '+level+'!');G.sfx('power');G.reach(level)}
         clearing=false;nextPiece(G)}return}
     if(!cur)return;const k=G.keys,h=G.hit;
     if(h.a||h.tap)tryRot(1,G);
@@ -69,7 +70,7 @@ Retro.boot({id:'blocks',title:'NNN 블록 쌓기',en:'FALLING BLOCKS',w:184,h:22
     if(board)for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(board[y][x]){
       if(clearing&&clearRows.includes(y)){c.fillStyle=(Math.floor(clearT*20)%2)?'#fff':'#ffd23f';c.fillRect(BX+x*CW,BY+y*CW,CW,CW)}else blk(x,y,board[y][x])}
     if(cur&&G.state!=='over'){let g={...cur};while(fits({...g,y:g.y+1}))g.y++;
-      for(const [x,y] of cellsOf(g))if(y>=0){c.strokeStyle=COL[cur.t];c.globalAlpha=.5;c.lineWidth=1;c.strokeRect(BX+x*CW+1.5,BY+y*CW+1.5,CW-3,CW-3);c.globalAlpha=1}
+      if(G.opt('ghost')==='on')for(const [x,y] of cellsOf(g))if(y>=0){c.strokeStyle=COL[cur.t];c.globalAlpha=.5;c.lineWidth=1;c.strokeRect(BX+x*CW+1.5,BY+y*CW+1.5,CW-3,CW-3);c.globalAlpha=1}
       for(const [x,y] of cellsOf(cur))if(y>=0)blk(x,y,cur.t)}
     const SX=118;const mini=(t,x,y)=>{if(!t)return;const cs=rot(SHAPES[t],0,SIZE[t]);const s=6;const ox=t==='I'||t==='O'?-3:0;
       for(const [a,b] of cs){c.fillStyle=COL[t];c.fillRect(x+ox+a*s,y+b*s,s-1,s-1);c.fillStyle='rgba(255,255,255,.4)';c.fillRect(x+ox+a*s,y+b*s,s-1,1)}};

@@ -12,9 +12,11 @@
 <script>
 /* 점프 왕국: 복싱 꼬마가 달리고 점프해서 깃발까지! 몬스터는 밟고, 블록은 머리로 쳐요 */
 const W=256,H=224,T=16,ROWS=14;
-let lv,map,LW,ents,pl,cam,coins,lives,time,parts,pops,finish,check,deadT,bumps,world;
+let TH=1,GD=1,lv,map,LW,ents,pl,cam,coins,lives,time,parts,pops,finish,check,deadT,bumps,world;
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const MAXW=12;
 const SOLID=new Set(['#','B','?','M','U','S','p','q','P','Q','H']);
-function build(n){world=n;LW=n===1?210:n===2?190:200;map=Array.from({length:ROWS},()=>Array(LW).fill(' '));ents=[];
+function build(n){world=n;TH=((n-1)%3)+1;LW=n===1?210:n===2?190:n===3?200:Math.min(250,180+n*6);map=Array.from({length:ROWS},()=>Array(LW).fill(' '));ents=[];
   const set=(x,y,c)=>{if(x>=0&&x<LW&&y>=0&&y<ROWS)map[y][x]=c};
   const ground=(a,b)=>{for(let x=a;x<=b;x++){set(x,12,'#');set(x,13,'#')}};
   const row=(x,y,s)=>{[...s].forEach((c,i)=>{if(c!=='.')set(x+i,y,c)})};
@@ -44,7 +46,7 @@ function build(n){world=n;LW=n===1?210:n===2?190:200;map=Array.from({length:ROWS
     row(124,8,'B?B?B');row(124,4,'BBBBB');e('h',130);e('e',134);e('e',136);pipe(140,2);pipe(148,3);e('e',145);
     stairs(156,6,1);row(164,8,'cccc');stairs(170,8,1);for(let k=0;k<8;k++)set(178,11-k,'S');
     finish={x:182*T,door:187*T};check=75}
-  else{ground(0,18);for(const [a,b] of [[22,26],[30,33],[37,44],[48,52],[56,60],[64,64],[67,67],[70,72],[76,90],[95,98],[102,104],[108,120],[124,126],[130,132],[136,150],[154,LW-1]])ground(a,b);
+  else if(n===3){ground(0,18);for(const [a,b] of [[22,26],[30,33],[37,44],[48,52],[56,60],[64,64],[67,67],[70,72],[76,90],[95,98],[102,104],[108,120],[124,126],[130,132],[136,150],[154,LW-1]])ground(a,b);
     row(20,8,'SS');row(28,7,'SS');row(35,8,'SSS');row(46,6,'SS');row(54,8,'SS');coinsRow(46,4,2);
     e('e',39);e('e',42);e('k',58);row(62,8,'?');row(66,6,'M');row(69,8,'?');
     row(80,8,'BBMBB');e('h',82);e('h',86);e('e',88);
@@ -52,10 +54,29 @@ function build(n){world=n;LW=n===1?210:n===2?190:200;map=Array.from({length:ROWS
     row(128,8,'SS');row(133,7,'SS');row(139,5,'BBBB');coinsRow(139,4,4);e('e',140);e('e',142);e('h',146);e('k',148);
     stairs(156,6,1);row(166,8,'?B?');e('e',168);e('e',170);e('h',172);stairs(178,8,1);for(let k=0;k<8;k++)set(186,11-k,'S');
     finish={x:192*T,door:197*T};check=99}
+  else{/* 4월드부터: 월드 번호로 코스를 만들어요 (같은 월드는 늘 같은 코스). 뒤로 갈수록 구멍이 넓어지고 몬스터가 많아져요 */
+    const R=rng(n*3301+5);const ri=(a,b)=>a+Math.floor(R()*(b-a+1));const endX=LW-30;
+    if(TH===2){for(let x=0;x<LW;x++)set(x,2,'B');for(let y=3;y<12;y++)set(0,y,'B')}
+    ground(0,16);let x=17;const maxPit=Math.min(5,2+Math.floor(n/4));const eChance=Math.min(.85,.35+n*.04);
+    const foe=(fx,fy)=>{const r=R();e(r<.12+n*.015?'h':r<.35?'k':'e',fx,fy)};
+    while(x<endX-6){const f=Math.max(0,ri(0,9)-(n>6?1:0)-(n>9?1:0));
+      if(f<=2){const w=ri(2,maxPit);const after=ri(5,10);ground(x+w,x+w+after);if(TH===3&&w>=3)row(x,7+ri(0,1),'SS'.slice(0,Math.min(2,w-1)));if(R()<eChance)foe(x+w+ri(2,after-1));x+=w+after+1}
+      else{const len=ri(8,14);ground(x,x+len);
+        if(f===3)pipe(x+ri(2,len-3),ri(2,4));
+        else if(f===4){const bx=x+ri(1,len-6);row(bx,8,['B?B','?M?','BB?BB','B?','?B?B?'][ri(0,4)]);if(R()<.5)row(bx+1,4,'?');if(R()<.4)coinsRow(bx,5,3)}
+        else if(f===5){stairs(x+ri(1,3),ri(2,4),1)}
+        else if(f===6){coinsRow(x+2,ri(7,9),ri(3,6))}
+        else if(f===7){row(x+2,8,'BMB');row(x+6,4,'BBBB')}
+        if(R()<eChance)foe(x+ri(3,len-2));if(R()<eChance*.6)foe(x+ri(3,len-2));if(n>6&&R()<eChance*.4)foe(x+ri(3,len-2));
+        x+=len+1}}
+    ground(endX-6,LW-1);stairs(endX-12+4,6,1);for(let k=0;k<6;k++)set(endX-2,11-k,'S');
+    for(let xx=endX-14;xx<endX-1;xx++)if(map[12][xx]===' '){set(xx,12,'#');set(xx,13,'#')}
+    finish={x:(endX+4)*T,door:(endX+9)*T};check=Math.floor(LW/2);
+    for(let k=check-2;k<=check+2;k++){set(k,12,'#');set(k,13,'#');for(let y=3;y<12;y++)if(map[y][k]==='S'||map[y][k]==='P'||map[y][k]==='Q'||map[y][k]==='p'||map[y][k]==='q')set(k,y,' ')}}
   for(let y=0;y<ROWS;y++)for(let x=0;x<LW;x++)if(map[y][x]==='c'){map[y][x]=' ';ents.push({t:'coin',x:x*T+3,y:y*T+2,w:10,h:12})}}
 function spawnPlayer(atCheck){pl={x:(atCheck?check:2)*T,y:10*T,vx:0,vy:0,w:12,h:14,big:pl&&pl.big&&!pl.dead?1:0,face:1,inv:0,dead:0,ground:0,flag:0};if(pl.big){pl.h=28;pl.y-=14}
   cam=Math.max(0,pl.x-100);time=300;deadT=0;bumps=[];parts=[];pops=[];
-  for(const e of ents){if(e.t==='coin')continue;e.x=e.sx;e.y=e.sy;e.w=e.t==='shake'?14:14;e.h=14;e.vx=-30;e.vy=0;e.on=0;e.st=e.t==='k'?'walk':'';e.gone=e.sx<pl.x+40&&e.t!=='coin'?1:0;e.flat=0}
+  for(const e of ents){if(e.t==='coin')continue;e.x=e.sx;e.y=e.sy;e.w=e.t==='shake'?14:14;e.h=14;e.vx=-30*GD;e.vy=0;e.on=0;e.st=e.t==='k'?'walk':'';e.gone=e.sx<pl.x+40&&e.t!=='coin'?1:0;e.flat=0}
   ents=ents.filter(e=>e.t!=='shake')}
 const tile=(x,y)=>{const cx=Math.floor(x/T),cy=Math.floor(y/T);if(cx<0||cx>=LW)return '#';if(cy<0||cy>=ROWS)return ' ';return map[cy][cx]};
 const solid=(x,y)=>SOLID.has(tile(x,y));
@@ -71,19 +92,20 @@ function burst(x,y,col,n){for(let i=0;i<(n||4);i++)parts.push({x,y,vx:(i%2?1:-1)
 function hurt(G){if(pl.inv||pl.dead)return;if(pl.big){pl.big=0;pl.h=14;pl.y+=14;pl.inv=2;G.sfx('hit')}else kill(G)}
 function kill(G){if(pl.dead)return;pl.dead=1;pl.vy=-260;pl.vx=0;deadT=2.6;lives--;G.sfx('die');navigator.vibrate&&navigator.vibrate(200)}
 Retro.boot({id:'jump',title:'NNN 점프 왕국',en:'JUMP KINGDOM',w:W,h:H,a:'점프',b:'달리기',diag:true,
+  stages:{label:'월드',max:MAXW},options:[{k:'run',label:'달리기',ch:[['hold','B 누르고 있을 때'],['always','항상 달리기']],def:'hold'}],
   intro:'복싱 꼬마가 달리고 점프해서 깃발까지! 몬스터는 위에서 밟고, ? 블록은 머리로 쳐서 코인과 단백질 셰이크를 꺼내요.',
-  help:'<b>◀ ▶</b> 걷기 · <b>B</b> 누르고 있으면 달리기<br><b>A</b> 점프 (길게 누르면 더 높이)<br>🥤 셰이크를 먹으면 커지고 벽돌을 깰 수 있어요<br>가시 고슴도치는 밟으면 안 돼요! 등껍질을 차서 맞히기<br>코인 100개 = 목숨 +1 · 월드 3개',
-  init(G){lives=3;coins=0;pl=null;build(1);spawnPlayer()},
+  help:'<b>◀ ▶</b> 걷기 · <b>B</b> 누르고 있으면 달리기<br><b>A</b> 점프 (길게 누르면 더 높이)<br>🥤 셰이크를 먹으면 커지고 벽돌을 깰 수 있어요<br>가시 고슴도치는 밟으면 안 돼요! 등껍질을 차서 맞히기<br>코인 100개 = 목숨 +1 · 모두 12월드!',
+  init(G){GD=G.diff;lives=G.lives(3);coins=0;pl=null;build(G.start);spawnPlayer()},
   update(G,dt){const k=G.keys;
     for(const p of parts){p.vy+=700*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt}parts=parts.filter(p=>p.t>0);
     for(const p of pops)p.t-=dt;pops=pops.filter(p=>p.t>0);for(const b of bumps)b.t-=dt;bumps=bumps.filter(b=>b.t>0);
     if(pl.dead){pl.vy+=900*dt;pl.y+=pl.vy*dt;deadT-=dt;if(deadT<=0){if(lives<=0)return G.over(`월드 ${world}`);spawnPlayer(pl.x>check*T)}return}
     if(pl.flag){pl.flag+=dt;if(pl.flag<1.1){pl.vy=0;pl.y=Math.min(pl.y+130*dt,11*T-pl.h);pl.vx=0}else{pl.vx=60;pl.face=1;pl.vy+=900*dt;moveBody(pl,dt,true);
         if(pl.x>finish.door-4){if(time>0){const d=Math.min(time,dt*120);time-=d;G.add(Math.ceil(d)*10);if(Math.floor(G.t*30)%3===0)G.sfx('tick')}else if(pl.flag>2){
-          if(world>=3)return G.win('왕국을 구했어요!',`코인 ${coins}개`);build(world+1);spawnPlayer();G.msg(`월드 ${world}`)}}}return}
+          if(world>=MAXW)return G.win('왕국을 구했어요!',`12월드 모두 클리어 · 코인 ${coins}개`);build(world+1);G.reach(world);spawnPlayer();G.msg(`월드 ${world}`)}}}return}
     time-=dt*2.5;if(time<=0){time=0;kill(G);return}
     pl.inv=Math.max(0,pl.inv-dt);
-    const dir=(k.right?1:0)-(k.left?1:0);const run=k.b;const max=run?135:80,acc=run?380:300;
+    const dir=(k.right?1:0)-(k.left?1:0);const run=k.b||G.opt('run')==='always';const max=run?135:80,acc=run?380:300;
     if(dir){pl.face=dir;if(Math.sign(pl.vx)!==dir&&pl.vx!==0)pl.vx+=dir*acc*1.8*dt;else pl.vx+=dir*acc*dt;if(Math.abs(pl.vx)>max)pl.vx=Math.sign(pl.vx)*Math.max(max,Math.abs(pl.vx)-300*dt)}
     else{const f=(pl.ground?380:120)*dt;pl.vx=Math.abs(pl.vx)<=f?0:pl.vx-Math.sign(pl.vx)*f}
     if(G.hit.a&&pl.ground){pl.vy=Math.abs(pl.vx)>110?-330:-305;G.sfx('jump')}
@@ -114,10 +136,10 @@ Retro.boot({id:'jump',title:'NNN 점프 왕국',en:'JUMP KINGDOM',w:W,h:H,a:'점
     }
     ents=ents.filter(e=>!e.gone||e.t==='coin'&&false||!e.gone);
   },
-  draw(G,c){if(!map)return;const sky=world===2?'#05040f':world===3?'#ff9d6c':'#62b8ff';c.fillStyle=sky;c.fillRect(0,0,W,H);
-    if(world===3){const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#4a2a86');g.addColorStop(.7,'#ff8d6c');c.fillStyle=g;c.fillRect(0,0,W,H)}
-    if(world!==2){for(let i=0;i<12;i++){const x=Math.round(i*120-cam*.4)%(W+120);const cx=(x+W+120)%(W+120)-60;c.fillStyle=world===3?'rgba(255,220,200,.6)':'#fff';const cy=30+(i*37)%50;c.fillRect(cx,cy,32,8);c.fillRect(cx+6,cy-6,18,6)}
-      for(let i=0;i<10;i++){const x=((i*170-cam*.7)%(W+170)+W+170)%(W+170)-80;c.fillStyle=world===3?'#7a3d6e':'#3faa55';c.beginPath();c.moveTo(x,12*T);c.lineTo(x+40,12*T-30-(i%3)*12);c.lineTo(x+80,12*T);c.fill()}}
+  draw(G,c){if(!map)return;const sky=TH===2?'#05040f':TH===3?'#ff9d6c':'#62b8ff';c.fillStyle=sky;c.fillRect(0,0,W,H);
+    if(TH===3){const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#4a2a86');g.addColorStop(.7,'#ff8d6c');c.fillStyle=g;c.fillRect(0,0,W,H)}
+    if(TH!==2){for(let i=0;i<12;i++){const x=Math.round(i*120-cam*.4)%(W+120);const cx=(x+W+120)%(W+120)-60;c.fillStyle=TH===3?'rgba(255,220,200,.6)':'#fff';const cy=30+(i*37)%50;c.fillRect(cx,cy,32,8);c.fillRect(cx+6,cy-6,18,6)}
+      for(let i=0;i<10;i++){const x=((i*170-cam*.7)%(W+170)+W+170)%(W+170)-80;c.fillStyle=TH===3?'#7a3d6e':'#3faa55';c.beginPath();c.moveTo(x,12*T);c.lineTo(x+40,12*T-30-(i%3)*12);c.lineTo(x+80,12*T);c.fill()}}
     const c0=Math.floor(cam/T),ox=-Math.round(cam%T);
     for(let y=0;y<ROWS;y++)for(let i=0;i<=W/T+1;i++){const x=c0+i;if(x>=LW)break;const ch=map[y][x];if(ch===' ')continue;let px=ox+i*T,py=y*T;
       const bmp=bumps.find(b=>b.x===x&&b.y===y);if(bmp)py-=Math.sin(bmp.t/.15*Math.PI)*4;drawTile(c,ch,px,py,G.t,x,y)}
@@ -141,9 +163,9 @@ function hitBlock(G,bx,by){const ch=map[by]&&map[by][bx];if(!ch)return;
   else if(ch==='B'){if(pl.big){map[by][bx]=' ';G.add(50);G.sfx('boom');burst(bx*T+6,by*T+6,'#c86b3c',4)}else{bumps.push({x:bx,y:by,t:.15});G.sfx('land')}}
   else G.sfx('land')}
 function drawTile(c,ch,x,y,t,tx,ty){
-  const ug=world===2;
-  if(ch==='#'){c.fillStyle=ug?'#2a4a9a':world===3?'#7a4a2a':'#c06a2b';c.fillRect(x,y,T,T);c.fillStyle=ug?'#5577d8':world===3?'#a0683a':'#e8955a';c.fillRect(x,y,T,2);
-    c.fillStyle='rgba(0,0,0,.25)';c.fillRect(x+((tx+ty)%2?3:9),y+6,4,2);c.fillRect(x+((tx+ty)%2?10:2),y+11,3,2);if(ty===12&&world!==2){c.fillStyle=world===3?'#ff6fa8':'#46c35f';c.fillRect(x,y,T,3)}}
+  const ug=TH===2;
+  if(ch==='#'){c.fillStyle=ug?'#2a4a9a':TH===3?'#7a4a2a':'#c06a2b';c.fillRect(x,y,T,T);c.fillStyle=ug?'#5577d8':TH===3?'#a0683a':'#e8955a';c.fillRect(x,y,T,2);
+    c.fillStyle='rgba(0,0,0,.25)';c.fillRect(x+((tx+ty)%2?3:9),y+6,4,2);c.fillRect(x+((tx+ty)%2?10:2),y+11,3,2);if(ty===12&&TH!==2){c.fillStyle=TH===3?'#ff6fa8':'#46c35f';c.fillRect(x,y,T,3)}}
   else if(ch==='B'||ch==='H'){c.fillStyle=ug?'#3a5ab8':'#d2763c';c.fillRect(x,y,T,T);c.fillStyle=ug?'#122050':'#5a2a10';c.fillRect(x,y+7,T,1);c.fillRect(x,y+15,T,1);c.fillRect(x+7,y,1,7);c.fillRect(x+3,y+8,1,7);c.fillRect(x+12,y+8,1,7);c.fillStyle=ug?'#6688ee':'#f0a070';c.fillRect(x,y,T,1)}
   else if(ch==='?'||ch==='M'){const f=Math.floor(t*3)%3;c.fillStyle=['#ffc83d','#ffd96a','#f0a82a'][f];c.fillRect(x,y,T,T);c.fillStyle='#8a4a10';c.fillRect(x,y+15,T,1);c.fillRect(x+15,y,1,T);
     c.fillRect(x+1,y+1,1,1);c.fillRect(x+14,y+1,1,1);c.fillRect(x+1,y+14,1,1);c.fillRect(x+14,y+14,1,1);c.fillStyle='#fff8e0';c.fillRect(x+5,y+3,6,2);c.fillRect(x+10,y+4,2,4);c.fillRect(x+7,y+8,3,2);c.fillRect(x+7,y+12,3,2)}

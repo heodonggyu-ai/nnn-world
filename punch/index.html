@@ -10,29 +10,34 @@
 <body>
 <script src="../shared/retro.js"></script>
 <script>
-/* NNN 펀치왕: 상대의 '번쩍' 신호를 보고 피한 다음, 빈틈에 카운터! 4명을 이기면 챔피언 */
+/* NNN 펀치왕: 상대의 '번쩍' 신호를 보고 피한 다음, 빈틈에 카운터! 8명을 이기면 챔피언, 그다음은 끝없는 방어전 */
 const W=256,H=224,CX=128;
 const FIGHTERS=[
  {name:'김뚝딱',title:'탕정 새내기',hp:100,tell:.85,gap:[2.2,3.4],atk:{hookL:3,hookR:3,jab:1},guard:'low',swap:.15,combo:0,feint:0,upper:0,skin:'#f2c79a',hair:'#3a2410',trunk:'#3fae4a',glove:'#2a6adf',bw:46,dmg:10},
  {name:'박지구력',title:'마라톤 체력왕',hp:110,tell:.62,gap:[1.7,2.8],atk:{hookL:2,hookR:2,jab:4},guard:'high',swap:.25,combo:.45,feint:0,upper:0,skin:'#d9a273',hair:'#111',trunk:'#ff9b3d',glove:'#e8231f',bw:42,dmg:11},
+ {name:'오꼼수',title:'눈속임의 달인',hp:115,tell:.6,gap:[1.6,2.7],atk:{hookL:3,hookR:3,jab:2},guard:'low',swap:.5,combo:.25,feint:.4,upper:0,skin:'#f0c090',hair:'#5a2a8a',trunk:'#ff4f7b',glove:'#f4f4f4',bw:44,dmg:12},
  {name:'최철벽',title:'철벽 가드',hp:130,tell:.55,gap:[1.6,2.6],atk:{hookL:3,hookR:3,jab:2,upper:2},guard:'high',swap:.6,combo:.3,feint:.1,upper:1,skin:'#ffd7b0',hair:'#6b3a1a',trunk:'#5a5f8a',glove:'#222',bw:54,dmg:13},
+ {name:'윤스텝',title:'번개 잽',hp:125,tell:.45,gap:[1.2,2.1],atk:{jab:6,hookL:2,hookR:2},guard:'high',swap:.4,combo:.65,feint:.1,upper:0,skin:'#ffd7b0',hair:'#ff9b3d',trunk:'#3fd0ff',glove:'#3fd0ff',bw:42,dmg:12},
+ {name:'한바위',title:'헤비급 바위',hp:170,tell:.7,gap:[2,3.2],atk:{hookL:3,hookR:3,upper:3},guard:'high',swap:.2,combo:.15,feint:0,upper:1,skin:'#c98a5a',hair:'#222',trunk:'#2a2a2a',glove:'#8a4a10',bw:62,dmg:20},
+ {name:'강핵주먹',title:'어퍼컷 장인',hp:150,tell:.48,gap:[1.4,2.4],atk:{hookL:2,hookR:2,jab:2,upper:4},guard:'high',swap:.5,combo:.4,feint:.2,upper:1,skin:'#e0a878',hair:'#8a1a1a',trunk:'#e8231f',glove:'#111',bw:52,dmg:16},
  {name:'이번개',title:'체육관 챔피언',hp:140,tell:.42,gap:[1.2,2.2],atk:{hookL:3,hookR:3,jab:3,upper:3},guard:'high',swap:.45,combo:.55,feint:.25,upper:1,skin:'#e8b98c',hair:'#ffd23f',trunk:'#c46bff',glove:'#ffd23f',bw:48,dmg:15},
 ];
-let fi,F,op,me,round,clock,phase,phaseT,intro,stats,popTxt,shake,flashT;
+let G0,fi,F,op,me,round,clock,phase,phaseT,intro,stats,popTxt,shake,flashT;
 function rnd(a,b){return a+Math.random()*(b-a)}
 function pickAtk(){const w=F.atk;let s=0;for(const k in w)s+=w[k];let r=Math.random()*s;for(const k in w){r-=w[k];if(r<=0)return k}return 'jab'}
-function newFight(){F=FIGHTERS[fi];op={hp:F.hp,max:F.hp,st:'idle',t:0,next:2,guard:F.guard,atk:null,kd:0,count:0,combo:0,dx:0,hurtSide:0};
+let lap=0,GD=1;function newFight(){const B=FIGHTERS[fi],k=Math.pow(.88,lap);F={...B,tell:Math.max(.28,B.tell*k/GD),gap:[B.gap[0]*Math.max(.6,k),B.gap[1]*Math.max(.6,k)],hp:Math.round(B.hp*(1+lap*.12)),dmg:B.dmg*(1+lap*.15)*GD,combo:Math.min(.85,B.combo+lap*.08),feint:Math.min(.5,B.feint+lap*.05)};op={hp:F.hp,max:F.hp,st:'idle',t:0,next:2,guard:F.guard,atk:null,kd:0,count:0,combo:0,dx:0,hurtSide:0};
   me={hp:100,hearts:20,stars:0,st:'idle',t:0,cd:0,kd:0,mash:0,need:0,face:0,tired:0,lastA:-9,lastB:-9};
   round=1;clock=90;phase='intro';phaseT=2.2;stats={landed:0,taken:0};popTxt=[]}
 function say(s,col){popTxt.push({s,t:1,col:col||'#fff'})}
 Retro.boot({id:'punch',title:'NNN 펀치왕',en:'NNN PUNCH CHAMP',w:W,h:H,a:'왼손',b:'오른손',diag:false,
-  intro:'상대가 <b style="color:#ffd23f">번쩍</b> 하면 공격 신호! 좌우로 피하고, 헛친 빈틈에 카운터를 꽂으세요. 4명을 이기면 체육관 챔피언!',
+  stages:{label:'번째 상대',max:8},options:[{k:'hint',label:'공격 신호 글자 표시 (!)',ch:[['first','첫 상대만'],['all','모든 상대'],['off','끄기']],def:'first'}],
+  intro:'상대가 <b style="color:#ffd23f">번쩍</b> 하면 공격 신호! 좌우로 피하고, 헛친 빈틈에 카운터를 꽂으세요. 8명을 이기면 체육관 챔피언! 그다음은 점점 강해지는 방어전.',
   help:'<b>A</b> 왼손 · <b>B</b> 오른손 (몸통)<br><b>▲ 누른 채</b> A/B = 얼굴 펀치<br><b>◀ ▶</b> 피하기 · <b>▼</b> 가드<br>훅은 반대쪽으로, 어퍼는 옆으로만 피해요<br>카운터 성공 = ★ · <b>A+B 동시</b> = ★ 필살 어퍼컷<br>♥가 0이 되면 지쳐서 잠깐 못 때려요',
-  init(G){fi=0;shake=0;flashT=0;newFight();G.sfx('bell')},
+  init(G){G0=G;GD=G.diff;lap=0;fi=G.start-1;shake=0;flashT=0;newFight();G.sfx('bell')},
   update(G,dt){for(const p of popTxt)p.t-=dt;popTxt=popTxt.filter(p=>p.t>0);shake=Math.max(0,shake-dt*20);flashT=Math.max(0,flashT-dt);
     if(phase==='intro'){phaseT-=dt;if(phaseT<=0){phase='fight';G.sfx('bell');G.msg('파이트!',800)}return}
     if(phase==='between'){phaseT-=dt;if(phaseT<=0){round++;clock=90;phase='fight';me.hp=Math.min(100,me.hp+30);me.hearts=Math.max(me.hearts,15);op.st='idle';op.next=2;G.sfx('bell');G.msg(`라운드 ${round}`,900)}return}
-    if(phase==='win'){phaseT-=dt;if(phaseT<=0){fi++;if(fi>=FIGHTERS.length)return G.win('챔피언 등극!',`4명 모두 이겼어요 🏆`);newFight();G.sfx('bell')}return}
+    if(phase==='win'){phaseT-=dt;if(phaseT<=0){fi++;if(fi>=FIGHTERS.length){fi=0;lap++;G.add(20000*lap);G.msg(lap===1?'🏆 챔피언 등극! 이제 방어전':`방어전 ${lap}회차 통과!`,2200)}else G.reach(fi+1);newFight();G.sfx('bell')}return}
     if(phase==='lose'){phaseT-=dt;if(phaseT<=0)G.over(`${F.name}에게 졌어요 (${fi+1}번째 상대)`);return}
     if(op.st==='down'){downCount(G,dt);return}
     if(me.st==='down'){myDown(G,dt);return}
@@ -43,7 +48,7 @@ Retro.boot({id:'punch',title:'NNN 펀치왕',en:'NNN PUNCH CHAMP',w:W,h:H,a:'왼
     if(flashT){c.fillStyle=`rgba(255,255,255,${flashT*2})`;c.fillRect(0,0,W,H)}
     if(op)drawHud(c,G);
     for(const p of popTxt)G.text(p.s,CX,70-(1-p.t)*16,{k:1,size:14,align:'center',color:p.col});
-    if(phase==='intro'&&F){G.text(`${fi+1}번째 상대`,CX,92,{k:1,size:12,align:'center',color:'#ffd23f'});G.text(F.name,CX,108,{k:1,size:22,align:'center'});G.text(F.title,CX,134,{k:1,size:12,align:'center',color:'#9a93c7'})}
+    if(phase==='intro'&&F){G.text(lap?`방어전 ${lap}회차 · ${fi+1}번째`:`${fi+1}번째 상대`,CX,92,{k:1,size:12,align:'center',color:'#ffd23f'});G.text(F.name,CX,108,{k:1,size:22,align:'center'});G.text(F.title,CX,134,{k:1,size:12,align:'center',color:'#9a93c7'})}
     if(op&&op.st==='down'&&phase==='fight')G.text(String(Math.min(10,Math.floor(op.count))),CX,40,{size:24,align:'center',color:'#ffd23f'});
     if(me&&me.st==='down'&&phase==='fight'){G.text(String(Math.min(10,Math.floor(me.count))),CX,40,{size:24,align:'center',color:'#ff4f7b'});
       G.text('A·B 연타로 일어나!',CX,150,{k:1,size:14,align:'center',color:'#fff'});c.fillStyle='#333';c.fillRect(CX-50,170,100,8);c.fillStyle='#4fe3b2';c.fillRect(CX-50,170,100*Math.min(1,me.mash/me.need),8)}
@@ -163,7 +168,7 @@ function drawOp(c,t){const f=F,s=op.st;let cx=CX+op.dx,base=196,lean=0,crouch=0;
   [[gL,sh[0],'L'],[gR,sh[1],'R']].forEach(([g,sp,side])=>{const gx=cx+g.x+lean,gy=g.y+by;c.strokeStyle=f.skin;c.lineWidth=9;c.beginPath();c.moveTo(sp.x,sp.y);c.lineTo(gx,gy);c.stroke();
     glove(c,gx,gy,g.s,f.glove,glint===side?t+1:0)});
   if(s==='down')c.restore();
-  if(s==='tell'&&fi===0){c.fillStyle='#ffd23f';c.font='16px Jua';c.textAlign='center';c.fillText('!',hx+20,hy)}}
+  if(s==='tell'&&(G0.opt('hint')==='all'||(G0.opt('hint')!=='off'&&fi===0&&!lap))){c.fillStyle='#ffd23f';c.font='16px Jua';c.textAlign='center';c.fillText('!',hx+20,hy)}}
 function drawMe(c,t){const s=me.st;let x=CX,y=0,tilt=0;
   if(s==='dodgeL'){x-=46*Math.min(1,me.t/.08);tilt=-.15}else if(s==='dodgeR'){x+=46*Math.min(1,me.t/.08);tilt=.15}else if(s==='duck')y=20;else if(s==='hit'){y=6;x+=(Math.random()-.5)*4}else if(s==='down'){y=40}
   c.save();c.globalAlpha=.88;c.translate(x,200+y);c.rotate(tilt);
@@ -183,7 +188,7 @@ function drawHud(c,G){c.fillStyle='#0b0820';c.fillRect(0,0,W,30);
   bar(6,me.hp,100,me.hp<30?'#ff4f7b':'#4fe3b2','나 (NNN)');bar(W-98,op.hp,op.max,'#ffd23f',F.name,1);
   const mm=Math.floor(clock/60),ss=Math.floor(clock%60);G.text(`R${round}`,CX,3,{size:7,align:'center',color:'#ff4f7b'});G.text(`${mm}:${String(ss).padStart(2,'0')}`,CX,14,{size:8,align:'center'});
   G.text('♥'+me.hearts,6,22,{k:1,size:9,color:me.tired?'#ff8fc8':'#ff4f7b'});G.text('★'.repeat(me.stars),40,22,{k:1,size:9,color:'#ffd23f'});
-  G.text(`${fi+1}/4`,W-6,22,{size:6,align:'right',color:'#9a93c7'})}
+  G.text(lap?`방어${lap} ${fi+1}/8`:`${fi+1}/8`,W-6,22,{size:6,align:'right',color:'#9a93c7'})}
 </script>
 </body>
 </html>

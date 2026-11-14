@@ -15,15 +15,27 @@ const N=20,C=10,OY=20;
 let snake,dir,queue,food,star,moveT,eaten,stage,walls,dead,deadT;
 function freeCell(){for(let i=0;i<500;i++){const x=Math.floor(Math.random()*N),y=Math.floor(Math.random()*N);
   if(!snake.some(s=>s.x===x&&s.y===y)&&!walls.has(x+','+y)&&!(food&&food.x===x&&food.y===y))return{x,y}}return{x:0,y:0}}
-function buildWalls(){walls=new Set();const add=(x,y)=>walls.add(x+','+y);
-  if(stage>=2){for(let i=5;i<15;i++){add(i,5);add(i,14)}}
-  if(stage>=3){for(let i=7;i<13;i++){add(4,i);add(15,i)}}
-  if(stage>=4){add(9,9);add(10,9);add(9,10);add(10,10)}}
-function speed(){return Math.max(.05,.14-eaten*.0025)}
+/* 스테이지 10개: 사과 10개마다 다음 판, 장애물 모양이 바뀌고 점점 빨라져요 */
+const PATS=[
+ ()=>[],
+ a=>{for(let i=5;i<15;i++){a(i,5);a(i,14)}},
+ a=>{for(let i=5;i<15;i++){a(i,5);a(i,14)}for(let i=7;i<13;i++){a(4,i);a(15,i)}},
+ a=>{for(let i=0;i<8;i++){a(i,9);a(19-i,10)}for(let i=0;i<6;i++){a(9,i);a(10,19-i)}},
+ a=>{for(let y=3;y<17;y+=4)for(let x=3;x<17;x+=4){a(x,y);a(x+1,y);a(x,y+1);a(x+1,y+1)}},
+ a=>{for(let i=2;i<18;i++){if(i<8||i>11){a(i,2);a(i,17);a(2,i);a(17,i)}}},
+ a=>{for(let i=0;i<15;i++){a(i,4);a(19-i,9);a(i,14)}},
+ a=>{for(let i=3;i<17;i++){a(i,i);if(Math.abs(i-9.5)>2)a(19-i,i)}},
+ a=>{for(let y=2;y<18;y+=3)for(let x=(y%2?2:4);x<18;x+=5){a(x,y);a(x+1,y)}},
+ a=>{for(let i=1;i<19;i++){if(i!==9&&i!==10){a(i,6);a(i,13)}}for(let i=1;i<6;i++){a(6,i);a(13,19-i)}for(let i=14;i<19;i++){a(13,i-13);a(6,i)}},
+];
+function buildWalls(){walls=new Set();PATS[(stage-1)%PATS.length](( x,y)=>{if(x>=0&&y>=0&&x<N&&y<N)walls.add(x+','+y)});
+  for(let dx=-3;dx<=3;dx++)for(let dy=-1;dy<=1;dy++)walls.delete((snake[0].x+dx)+','+(snake[0].y+dy));for(const s of snake)walls.delete(s.x+','+s.y)}
+let GG;function speed(){const loop=Math.floor((stage-1)/PATS.length);return Math.max(.045,(.15-((stage-1)%PATS.length)*.007-loop*.02-(eaten%10)*.002)/GG.diff)}
 Retro.boot({id:'snake',title:'NNN 꼬리 뱀',en:'SNAKE',w:200,h:220,a:'부스터',b:false,diag:false,
+  stages:{label:'스테이지',max:30},options:[{k:'wrap',label:'바깥 벽',ch:[['wall','부딪히면 끝'],['wrap','반대편으로 통과']],def:'wall'}],
   intro:'사과를 먹을 때마다 꼬리가 길어져요. 벽과 내 꼬리에 부딪히지 마세요!',
-  help:'<b>십자키</b> 또는 <b>화면 밀기</b>로 방향 바꾸기<br><b>A</b> 누르고 있으면 빨리 가기<br>🍎 10점 · ⭐ 반짝 별 50점(빨리 먹어야 해요)<br>사과 10개마다 장애물이 늘어나요',
-  init(G){snake=[{x:6,y:10},{x:5,y:10},{x:4,y:10}];dir={x:1,y:0};queue=[];eaten=0;stage=1;buildWalls();food=null;food=freeCell();star=null;moveT=0;dead=false},
+  help:'<b>십자키</b> 또는 <b>화면 밀기</b>로 방향 바꾸기<br><b>A</b> 누르고 있으면 빨리 가기<br>🍎 10점 · ⭐ 반짝 별 50점(빨리 먹어야 해요)<br>사과 10개마다 다음 스테이지 — 장애물 10가지, 점점 빨라져요',
+  init(G){GG=G;snake=[{x:6,y:10},{x:5,y:10},{x:4,y:10}];dir={x:1,y:0};queue=[];eaten=0;stage=G.start;buildWalls();food=null;food=freeCell();star=null;moveT=0;dead=false},
   update(G,dt){
     if(dead){deadT+=dt;if(deadT>1)G.over(`꼬리 길이 ${snake.length}`);return}
     const h=G.hit;const D={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
@@ -33,11 +45,11 @@ Retro.boot({id:'snake',title:'NNN 꼬리 뱀',en:'SNAKE',w:200,h:220,a:'부스�
     moveT+=dt*(G.keys.a?2:1);
     if(moveT<speed())return;moveT=0;
     if(queue.length)dir=queue.shift();
-    const hd={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    let hd={x:snake[0].x+dir.x,y:snake[0].y+dir.y};if(G.opt('wrap')==='wrap'){hd.x=(hd.x+N)%N;hd.y=(hd.y+N)%N}
     if(hd.x<0||hd.y<0||hd.x>=N||hd.y>=N||walls.has(hd.x+','+hd.y)||snake.slice(0,-1).some(s=>s.x===hd.x&&s.y===hd.y)){dead=true;deadT=0;G.sfx('die');return}
     snake.unshift(hd);
     if(hd.x===food.x&&hd.y===food.y){eaten++;G.add(10*stage);G.sfx('coin');
-      if(eaten%10===0){stage++;buildWalls();for(const s of snake)walls.delete(s.x+','+s.y);G.msg('스테이지 '+stage+'!');G.sfx('power')}
+      if(eaten%10===0){stage++;G.reach(stage);buildWalls();G.msg('스테이지 '+stage+'!');G.sfx('power');G.add(100*stage)}
       food=freeCell();if(!star&&Math.random()<.25){const p=freeCell();star={...p,t:5}}}
     else if(star&&hd.x===star.x&&hd.y===star.y){G.add(50);G.sfx('power');star=null}
     else snake.pop();
