@@ -847,7 +847,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 <section class="view" id="v-home">
   <div class="hero">
     <div class="hero-top"><div class="lg" id="heroLogo"></div>
-      <div><div class="label">탕정 엔엔엔복싱</div><h1>NNN WORLD</h1><p>출석하면 크레딧, 크레딧으로 내 복서 꾸미기.</p></div></div>
+      <div><div class="label">탕정 엔엔엔복싱</div><h1>NNN WORLD</h1><p>출석하면 크레딧 + 🎟️ 복권 1장! 복권 긁고 음료·단백질바·핸드랩·PT 당첨, 크레딧으로 내 복서 꾸미기.</p></div></div>
     <canvas id="parade" width="720" height="240"></canvas>
   </div>
   <div id="homeLive" hidden></div>
@@ -7259,9 +7259,9 @@ function crGuideTry(tries=0){if(!ME||isStaff(ME)||ME.demo||(typeof isGuest==='fu
 function crGuide(st){const m=ME;const F=funCfg();const cr=+m.credits||0;const L=(F.store||[]).filter(z=>+z.p>0).sort((a,b)=>a.p-b.p);const drink=L.find(z=>/음료/.test(z.name))||L[0];const tkP=+F.buyP||0;
   const pct=drink?Math.min(100,Math.round(cr/drink.p*100)):0;
   sheet(`<div class="crg"><div class="crg-h"><span class="crg-coin">N</span><div><div class="label" style="color:#8A5A00">NNN 크레딧 안내</div><h2>크레딧은 <span>현금처럼!</span></h2></div></div>
-    <p style="margin:0">운동하고 모은 크레딧으로 <b>복권을 긁고</b>, <b>음료·용품을 살 수 있어요.</b></p>
+    <p style="margin:0">출석할 때마다 <b>크레딧</b>과 <b>🎟️ 복권 1장</b>이 들어와요. 복권을 긁으면 <b>음료·단백질바·핸드랩·PT 1회권</b>이 당첨될 수 있고, 모은 크레딧으로 <b>복권을 더 사거나 음료·용품을 살 수 있어요.</b></p>
     <div class="crg-me"><div class="row" style="align-items:baseline"><span class="grow">내 크레딧</span><b class="num">${cr.toLocaleString()}</b></div>${drink?`<div class="crg-bar"><i style="width:${pct}%"></i></div><div class="small">${cr>=drink.p?`🎉 지금 바로 <b>${esc(drink.emo||'')} ${esc(drink.name)}</b> 바꿀 수 있어요!`:`${esc(drink.emo||'')} ${esc(drink.name)}까지 <b class="num">${(drink.p-cr).toLocaleString()}</b> 남았어요`}</div>`:''}</div>
-    <div class="crg-g"><div class="crg-col"><b>💰 모으기</b><span>출석 <b>+50~100</b></span><span>오운완 사진 <b>+100</b></span><span>SNS 인증 <b>+500</b></span><span>게임·미션 <b>+α</b></span></div>
+    <div class="crg-g"><div class="crg-col"><b>💰 모으기</b><span>출석 <b>+50~100</b></span>${FT('lotto')?'<span>출석 복권 <b>1장</b></span>':''}<span>오운완 사진 <b>+100</b></span><span>SNS 인증 <b>+500</b></span><span>게임·미션 <b>+α</b></span></div>
       <div class="crg-col use"><b>🛍️ 쓰기</b>${tkP&&FT('lotto')?`<span>🎟️ 복권 <b class="num">${tkP.toLocaleString()}</b></span>`:''}${L.slice(0,5).map(z=>`<span>${esc(z.emo||'')} ${esc(z.name)} <b class="num">${(+z.p).toLocaleString()}</b></span>`).join('')}</div></div>
     <div class="small" style="text-align:center;color:#6B4A00">교환하면 쿠폰함에 쿠폰이 생겨요 → 데스크에서 보여 주세요</div></div>
     <div class="row" style="gap:6px"><button class="btn red grow" id="cgStore">🛒 매점 보기</button>${FT('lotto')?'<button class="btn gold grow" id="cgTk">🎟️ 복권 바꾸기</button>':''}</div>
