@@ -158,14 +158,19 @@ function create(cfg){
   /* 드리블: 공을 발에 붙이지 않고 툭툭 차면서 따라가요.
      천천히 = 발밑, 뛰기 = 앞으로 툭, 대시 = 길게 차 놓고 쫓기, C 누르고 있기 = 짧게 붙여서. 방향을 확 틀면 공이 원래 방향으로 굴러가요 */
   function dribble(o,dt,G){const b=M.ball;const sp=hyp(o.vx,o.vy);b.z=0;b.vz=0;b.last=o.team;b.shot=false;b.fire=0;
-    b.x+=b.vx*dt;b.y+=b.vy*dt;const fr=Math.exp(-2.4*dt);b.vx*=fr;b.vy*=fr;b.spin+=hyp(b.vx,b.vy)*dt*.2;
-    const dx=b.x-o.x,dy=b.y-o.y,d=hyp(dx,dy);o.touch=Math.max(0,(o.touch||0)-dt);
-    const ahead=dx*o.dir.x+dy*o.dir.y,side=Math.abs(dx*o.dir.y-dy*o.dir.x);const close=o.closeCtl;
-    if(sp<14){/* 멈춰 있으면 발밑으로 끌어와요 */const tx=o.x+o.dir.x*4,ty=o.y+o.dir.y*4;b.vx+=(tx-b.x)*dt*28;b.vy+=(ty-b.y)*dt*28;b.vx*=.86;b.vy*=.86}
-    else{const lead=close?2.5:o.sprint?6:4;if((ahead<lead||side>4||d<2.5)&&o.touch<=0&&d<11){
-        const k=close?1.06:o.sprint?1.8+Math.random()*.25:1.3+Math.random()*.12;const v=sp*k;const turn=side>4||ahead<0;
-        b.vx=o.dir.x*v*(turn?.8:1);b.vy=o.dir.y*v*(turn?.8:1);o.touch=close?.12:o.sprint?.32:.2;if(turn){o.vx*=.75;o.vy*=.75}}}
-    if(d>(o.sprint?22:16)){b.owner=null;o.kcd=.12}}
+    b.x+=b.vx*dt;b.y+=b.vy*dt;const fr=Math.exp(-3*dt);b.vx*=fr;b.vy*=fr;b.spin+=hyp(b.vx,b.vy)*dt*.2;
+    o.touch=Math.max(0,(o.touch||0)-dt);const close=o.closeCtl;
+    /* 공이 있어야 할 자리: 발 앞 (뛰는 속도에 따라 조금씩 멀리) */
+    const lead=sp<14?3.2:close?2.6:o.sprint?6:4.2;const fx=o.x+o.dir.x*lead,fy=o.y+o.dir.y*lead;
+    const ex=b.x-fx,ey=b.y-fy,err=hyp(ex,ey);const rx=b.x-o.x,ry=b.y-o.y;const ang=Math.acos(clamp((rx*o.dir.x+ry*o.dir.y)/(hyp(rx,ry)||1),-1,1));
+    if(sp<14){/* 서 있으면 발밑에 붙여요 */b.vx+=(fx-b.x)*dt*30;b.vy+=(fy-b.y)*dt*30;b.vx*=.84;b.vy*=.84}
+    else{const iv=close?.15:o.sprint?.3:.22;/* 다음 터치까지 걸리는 시간 */
+      const cut=ang>1.1&&hyp(rx,ry)>1.5;/* 방향을 크게 틀면 바로 방향 전환 터치 */
+      if((o.touch<=0&&(err>1.2||ahead()))||(cut&&o.touch<iv*.8)||err>(o.sprint?10:7)){
+        const tx=o.x+o.vx*iv+o.dir.x*(lead+(o.sprint?2:.6)),ty=o.y+o.vy*iv+o.dir.y*(lead+(o.sprint?2:.6));const j=1+rnd(-.08,.08);
+        b.vx=(tx-b.x)/iv*j;b.vy=(ty-b.y)/iv*j;o.touch=iv;if(cut){o.vx*=.8;o.vy*=.8}}
+      function ahead(){return true}}
+    if(hyp(b.x-o.x,b.y-o.y)>(o.sprint?20:15)){b.owner=null;o.kcd=.12}}
   /* 줄 밖으로 나간 공 정리 (드리블로 나가거나 한 번에 넘어간 경우) */
   function bounds(G){const b=M.ball;if(M.state!=='play')return false;const inM=Math.abs(b.x-goalX)<GWD/2;
     if(b.y<MY-1||b.y>MY+PH+1){const top=b.y<MY;const ly=top?MY:MY+PH;
