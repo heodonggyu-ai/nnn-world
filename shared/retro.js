@@ -151,6 +151,7 @@
     const press=k=>{if(!held[k]){pend[k]=1}held[k]=1};const rel=k=>{held[k]=0};
     const KM={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',
       KeyZ:'a',Space:'a',KeyJ:'a',KeyX:'b',KeyK:'b',ShiftLeft:'b'};
+    if(cfg.noWASD){for(const k of ['KeyA','KeyD','KeyW','KeyS','KeyZ','KeyX','Space','KeyJ','KeyK','ShiftLeft'])delete KM[k]}
     addEventListener('keydown',e=>{if(e.code==='KeyP'||e.code==='Escape'){togglePause();return}
       if(e.code==='Enter'){if(G.state!=='play'){const b=ov.querySelector('.rt-go');b&&b.click()}return}
       const k=KM[e.code];if(k){e.preventDefault();if(!e.repeat)press(k)}});

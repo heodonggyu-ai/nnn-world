@@ -17,7 +17,7 @@ function create(M,o){const THREE=window.THREE,cfg=M.cfg;const W=o.W,H=o.H,HD=o.H
   const tgt=new THREE.Vector3(),camPos=new THREE.Vector3(),look=new THREE.Vector3();let first=true,lastT=0;
   const V=new THREE.Vector3();
   function update(G){const dt=Math.min(.05,Math.max(0,G.t-lastT||1/60));lastT=G.t;const b=M.ball;
-    M.P.forEach((p,i)=>{const m=models[i];m.root.position.set(p.x-cx,0,p.y-cz);const sp=Math.hypot(p.vx,p.vy);
+    M.P.forEach((p,i)=>{const m=models[i];m.root.visible=!p.off;if(p.off)return;m.root.position.set(p.x-cx,0,p.y-cz);const sp=Math.hypot(p.vx,p.vy);
       let ang=Math.atan2(p.dir.x,p.dir.y);if(p.slide>0)ang=Math.atan2(p.vx,p.vy);m.root.rotation.y=ang;
       let pose={spd:Math.min(1,sp/(cfg.speed||60)),ph:p.anim*2.2,act:'run'};
       if(M.state==='goal'){if(p.team===M.goalTeam&&!p.gk)pose={act:'celebrate',ph:G.t*6+i,spd:.3};else pose={spd:0,act:'idle'}}
