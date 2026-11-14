@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 오락실 축구</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script src="../shared/footy.js"></script>
+<script>
+/* NNN 오락실 축구: 11대11 진짜 경기! 위에서 내려다보는 옛날 오락실 스타일. 동네 리그부터 월드 투어 결승까지 8경기 */
+const W=224,H=304,HUD=16,VW=224,VH=288;
+const TEAMS=[
+ ['탕정 조기회','#8a8a8a','#fff',0],['아산 시민구단','#2a6adf','#fff',1],['충남 도대표','#ff9b3d','#222',2],['서울 유나이티드','#111','#ff4f7b',3],
+ ['사막 팔콘스','#e8d08a','#8a5a2b',4],['바이킹 FC','#3fd0ff','#fff',5],['삼바 스타즈','#ffd23f','#3fae4a',6],['탱고 마스터즈','#bfe6ff','#222',7]];
+const ROUNDS=['동네 리그','시민 대회','도 대회','전국 대회','아시아 투어','월드 투어 16강','월드 투어 4강','월드 투어 결승'];
+const FORM=[[.5,.98,'gk'],[.14,.8,'def'],[.38,.85,'def'],[.62,.85,'def'],[.86,.8,'def'],[.14,.6,'mid'],[.38,.64,'mid'],[.62,.64,'mid'],[.86,.6,'mid'],[.38,.43,'fwd'],[.62,.43,'fwd']];
+let G0,M,mi,nextT,dur;
+function oppSkill(i,G){const t=i/7,d=G.diff;return{spd:(.84+t*.26)*(.88+.12*d),pass:.5+t*.42,shot:.4+t*.45,tackle:(.6+t*1.5)*d,slide:.15+t*.9,keeper:.45+t*.47,think:.8+t*.6}}
+function newMatch(G,silent){const o=TEAMS[mi];
+  M=Footy.create({PW:300,PH:480,margin:20,GWD:44,GH:11,walls:false,energy:false,speed:60,stripe:32,circle:38,boxW:150,boxH:72,shootRange:125,lobDist:115,pressDist:18,rushDist:60,shiftX:.34,shiftY:.4,
+    view:{w:VW,h:VH},oy:HUD,goalPts:300,formation:FORM,
+    mySkill:{spd:1,pass:.8,shot:.72,tackle:1.1,slide:0,keeper:.8,think:1},opSkill:oppSkill(mi,G),
+    myCol:{shirt:'#e8231f',shorts:'#fff',gk:'#ffd23f'},opCol:{shirt:o[1],shorts:o[2],gk:'#4fe3b2',hair:'#111'},
+    duration:dur,onEnd:m=>matchEnd(m)});
+  M.kickoff(0);M.snapCam();if(!silent)G.msg(`${ROUNDS[mi]} · vs ${o[0]}`,1800)}
+function matchEnd(m){const G=G0;const [a,b]=m.score;
+  if(m.pensResult)return m.pensResult==='win'?advance(G,a,b):G.over(`${ROUNDS[mi]}에서 승부차기 패배`);
+  if(a===b){m.startPens(G);return}
+  if(a>b)advance(G,a,b);else G.over(`${ROUNDS[mi]} ${TEAMS[mi][0]}에게 ${a}:${b} 패배`)}
+function advance(G,a,b){G.add(1500*(mi+1)+(a-b)*200);G.sfx('clear');mi++;if(mi>=TEAMS.length)return G.win('월드 투어 우승!','🏆 8경기 모두 승리');G.reach(mi+1);G.msg(`승리! 다음: ${ROUNDS[mi]}`,2000);nextT=2.6}
+Retro.boot({id:'soccer',title:'NNN 오락실 축구',en:'ARCADE FOOTBALL 11',w:W,h:H,a:'패스',b:'슛·태클',diag:true,
+  stages:{label:'번째 경기',max:8},
+  options:[{k:'time',label:'경기 시간',ch:[['150','2분 30초'],['210','3분 30초'],['300','5분']],def:'210'},{k:'map',label:'작은 지도',ch:[['on','보이기'],['off','숨기기']],def:'on'}],
+  intro:'11대11 진짜 축구! 공에 가까운 선수로 자동으로 바뀌어요. 동네 리그부터 월드 투어 결승까지 8경기, 비기면 승부차기.',
+  help:'<b>십자키</b> 이동 · <b>A</b> 패스 (누른 방향 쪽 동료에게, 멀면 띄워서)<br><b>B 꾹 눌렀다 떼기</b> = 슛 (◀▶ 누르면 그쪽 구석으로)<br>너무 오래 누르면 하늘로 날아가요!<br>수비: <b>A</b> 선수 바꾸기 · <b>B</b> 슬라이딩 태클<br>공을 가진 상대에게 붙어 있으면 뺏어요<br>노란 동그라미 = 내가 조종하는 선수',
+  setup(G){G0=G;mi=0;nextT=0;dur=210;newMatch(G,true)},
+  init(G){G0=G;mi=G.start-1;nextT=0;dur=+G.opt('time');newMatch(G)},
+  update(G,dt){if(nextT>0){nextT-=dt;if(nextT<=0)newMatch(G);return}if(M)M.update(G,dt)},
+  draw(G,c){c.fillStyle='#0b0d1c';c.fillRect(0,0,W,H);if(!M)return;M.draw(G,c);
+    if(G.opt('map')!=='off'&&M.state!=='pens'){const mw=34,mh=52,mx=W-mw-4,my=HUD+4;c.fillStyle='rgba(0,40,10,.6)';c.fillRect(mx,my,mw,mh);c.strokeStyle='rgba(255,255,255,.5)';c.strokeRect(mx+.5,my+.5,mw,mh);
+      for(const p of M.P){c.fillStyle=p.team===0?(p===M.ctrl?'#ffd23f':'#ff4f7b'):'#bfe6ff';c.fillRect(mx+(p.x-M.MX)/M.PW*mw-1,my+(p.y-M.MY)/M.PH*mh-1,2,2)}
+      c.fillStyle='#fff';c.fillRect(mx+(M.ball.x-M.MX)/M.PW*mw-1,my+(M.ball.y-M.MY)/M.PH*mh-1,2,2);
+      c.strokeStyle='rgba(255,255,255,.6)';c.strokeRect(mx+(M.cam.x-M.MX)/M.PW*mw,my+(M.cam.y-M.MY)/M.PH*mh,VW/M.PW*mw,VH/M.PH*mh)}
+    c.fillStyle='rgba(8,6,20,.92)';c.fillRect(0,0,W,HUD);const min=Math.min(90,Math.floor((1-M.clock/dur)*90));
+    G.text(`NNN ${M.score[0]}:${M.score[1]} ${TEAMS[mi]?TEAMS[mi][0]:''}`,4,3,{k:1,size:10});G.text(`${min}'`,W-4,4,{size:7,align:'right',color:'#ffd23f'});
+    if(M.msg)G.text(M.msg.s,W/2,M.msg.big?120:160,{k:1,size:M.msg.big?28:14,align:'center',color:'#ffd23f'});
+    if(M.state==='kickoff'&&G.state==='play')G.text(ROUNDS[mi]||'',W/2,HUD+30,{k:1,size:12,align:'center',color:'#bfe6ff'})}
+});
+</script>
+</body>
+</html>

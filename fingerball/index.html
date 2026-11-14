@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 손가락 축구</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script>
+/* 손가락 축구: 내 쪽 화면에 손가락을 대고 선수를 움직여 공을 쳐요. 한 폰으로 둘이, 또는 컴퓨터와! */
+const W=180,H=320,GWID=58,BR=6,SR=12,GKR=8;
+const CPU=[{n:'꼬마 키퍼',sp:150,err:26,react:.35},{n:'동네 형',sp:190,err:20,react:.28},{n:'반장',sp:230,err:15,react:.22},{n:'체육 선생님',sp:270,err:11,react:.17},
+ {n:'유소년 에이스',sp:310,err:8,react:.13},{n:'도 대표',sp:350,err:6,react:.1},{n:'국가대표',sp:400,err:4,react:.07},{n:'손가락의 신',sp:460,err:2,react:.04}];
+let G0,mode,lv,ball,P,goalT,scores,clock,items,item,itemT,eff,parts,pops,shake,winTo,serve,cpuT,cpuTgt,endT;
+function reset(toward){ball={x:W/2,y:H/2,vx:0,vy:0,fire:0};goalT=0;serve=1.1;
+  if(toward){ball.vy=0}
+  for(const p of P){p.x=W/2;p.y=p.bot?H-48:48;p.vx=0;p.vy=0;p.tx=p.x;p.ty=p.y;p.gk.x=W/2}}
+function mkPlayer(bot){return{bot,x:W/2,y:bot?H-48:48,vx:0,vy:0,tx:W/2,ty:bot?H-48:48,ptr:null,col:bot?'#e8231f':'#2a6adf',gk:{x:W/2,y:bot?H-14:14},slow:0,big:0}}
+function newMatch(G){P=[mkPlayer(true),mkPlayer(false)];scores=[0,0];clock=150;items=[];item=null;itemT=8;eff=[];parts=[];pops=[];shake=0;endT=0;reset()}
+Retro.boot({id:'fingerball',title:'NNN 손가락 축구',en:'FINGER FOOTBALL',w:W,h:H,a:false,b:false,noPad:true,
+  stages:{label:'단계 (컴퓨터)',max:8},
+  options:[{k:'mode',label:'누구랑?',ch:[['cpu','컴퓨터와 (랭킹)'],['two','둘이서 한 폰으로']],def:'cpu',note:'둘이서 할 때는 폰을 탁자에 놓고 마주 보고 앉아요 (점수는 랭킹에 안 올라가요)'},
+    {k:'goals',label:'몇 골 먼저?',ch:[['3','3골'],['5','5골'],['7','7골']],def:'5'},{k:'items',label:'아이템',ch:[['on','나와요'],['off','안 나와요']],def:'on'}],
+  intro:'내 쪽 화면에 손가락을 대고 움직이면 선수가 따라와요. 공을 세게 쳐서 상대 골대에 넣어요! 컴퓨터 8단계, 또는 한 폰으로 둘이서.',
+  help:'<b>손가락으로 끌기</b> = 선수 움직이기 (빠르게 휘두르면 강슛)<br>아래 반쪽은 나, 위 반쪽은 상대 (둘이서 모드)<br>골키퍼는 알아서 움직여요<br>아이템: 🔥 불꽃슛 · 🥅 상대 골대 커짐 · ❄ 상대 얼리기<br>먼저 정한 골 수를 넣거나, 시간이 끝났을 때 앞서면 승리',
+  setup(G){G0=G;bindTouch(G);mode='cpu';lv=0;newMatch(G)},
+  init(G){mode=G.opt('mode');G.practice=mode==='two';winTo=+G.opt('goals');lv=G.start-1;cpuT=0;newMatch(G);G.msg(mode==='two'?'둘이서 대결!':`${CPU[lv].n} 등장!`,1200)},
+  update(G,dt){shake=Math.max(0,shake-dt*20);for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.96;p.vy*=.96;p.t-=dt}parts=parts.filter(p=>p.t>0);for(const p of pops)p.t-=dt;pops=pops.filter(p=>p.t>0);
+    if(endT){endT-=dt;if(endT<=0)finish(G);return}
+    if(goalT>0){goalT-=dt;if(goalT<=0)reset();return}
+    clock-=dt;if(clock<=0){clock=0;endT=1.2;G.sfx('bell');return}
+    if(serve>0)serve-=dt;
+    /* 아이템 */
+    if(G.opt('items')!=='off'){itemT-=dt;if(itemT<=0&&!item){item={x:30+Math.random()*(W-60),y:H/2-30+Math.random()*60,k:['fire','goal','ice'][Math.floor(Math.random()*3)],t:9};itemT=12+Math.random()*6}
+      if(item){item.t-=dt;if(item.t<=0)item=null;else if(Math.hypot(ball.x-item.x,ball.y-item.y)<12){const who=ball.last!=null?ball.last:0;applyItem(G,who,item.k);item=null}}}
+    for(const p of P){p.slow=Math.max(0,p.slow-dt);p.big=Math.max(0,p.big-dt)}
+    if(mode==='cpu')cpuMove(G,dt);
+    for(const p of P)movePlayer(p,dt);
+    physics(G,dt);
+  },
+  draw(G,c){c.save();if(shake)c.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawField(c,G);c.restore();drawHud(c,G)}
+});
+function finish(G){const [me,op]=scores;
+  if(mode==='two'){G.practice=true;return G.win(me>op?'빨강 승리!':op>me?'파랑 승리!':'무승부!',`${me} : ${op}`)}
+  if(me>op){G.add(1000*(lv+1)+(me-op)*200+Math.round(clock)*5);G.sfx('clear');lv++;if(lv>=CPU.length)return G.win('손가락의 신을 이겼다!',`최종 ${me}:${op}`);G.reach(lv+1);
+    G.msg(`승리! 다음 상대: ${CPU[lv].n}`,1800);newMatch(G)}
+  else if(me===op){G.msg('무승부! 다시 한 판',1400);newMatch(G)}
+  else G.over(`${CPU[lv].n}에게 ${me}:${op} 패배`)}
+function applyItem(G,who,k){const me=P[who],op=P[1-who];G.sfx('power');
+  if(k==='fire'){ball.fire=6;pops.push({x:ball.x,y:ball.y,s:'🔥 불꽃슛!',t:1.2})}
+  else if(k==='goal'){op.big=8;pops.push({x:W/2,y:who===0?40:H-40,s:'🥅 골대 커짐!',t:1.4})}
+  else{op.slow=5;pops.push({x:op.x,y:op.y,s:'❄ 꽁꽁!',t:1.2})}}
+function goalW(p){return GWID+(p.big?30:0)}
+function movePlayer(p,dt){const max=(p.slow?160:900);let dx=p.tx-p.x,dy=p.ty-p.y;const d=Math.hypot(dx,dy);const step=Math.min(d,max*dt);const nx=d?p.x+dx/d*step:p.x,ny=d?p.y+dy/d*step:p.y;
+  p.vx=(nx-p.x)/dt;p.vy=(ny-p.y)/dt;p.x=nx;p.y=ny;
+  p.x=Math.max(SR+4,Math.min(W-SR-4,p.x));if(p.bot)p.y=Math.max(H/2+SR,Math.min(H-SR-22,p.y));else p.y=Math.max(SR+22,Math.min(H/2-SR,p.y));
+  const gw=goalW(p);const gk=p.gk;const tx=Math.max(W/2-gw/2+GKR,Math.min(W/2+gw/2-GKR,ball.x));const gsp=60+(mode==='cpu'&&!p.bot?lv*8:30);gk.x+=Math.max(-gsp*dt,Math.min(gsp*dt,tx-gk.x));}
+function cpuMove(G,dt){const p=P[1],L=CPU[lv];cpuT-=dt;const sp=L.sp*(G0.diff);
+  if(cpuT<=0){cpuT=L.react;const inMy=ball.y<H/2+10;
+    if(inMy&&ball.y>p.y-4){/* 공 뒤로 돌아가서 아래로 친다 */const aimX=W/2+(Math.random()-.5)*40;const ang=Math.atan2(H-ball.y,aimX-ball.x);cpuTgt={x:ball.x-Math.cos(ang)*(SR+BR-2)+ball.vx*.06+(Math.random()-.5)*L.err,y:ball.y-Math.sin(ang)*(SR+BR-2)+ball.vy*.06,strike:true}}
+    else if(inMy){cpuTgt={x:ball.x+(ball.x<W/2?8:-8),y:Math.max(30,ball.y-20)}}
+    else{cpuTgt={x:W/2+(ball.x-W/2)*.6+(Math.random()-.5)*L.err,y:H*.2}}}
+  if(!cpuTgt)return;let tx=cpuTgt.x,ty=cpuTgt.y;if(cpuTgt.strike){const dd=Math.hypot(tx-p.x,ty-p.y);if(dd<6){tx=ball.x;ty=ball.y+10}}
+  const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);const step=Math.min(d,sp*dt*(p.slow?.35:1));p.tx=p.x+(d?dx/d*step:0);p.ty=p.y+(d?dy/d*step:0)}
+function physics(G,dt){const steps=4;for(let s=0;s<steps;s++){const h=dt/steps;
+    ball.x+=ball.vx*h;ball.y+=ball.vy*h;const fr=Math.pow(.55,h);ball.vx*=fr;ball.vy*=fr;
+    if(ball.x<BR+4){ball.x=BR+4;ball.vx=Math.abs(ball.vx)*.9;tick(G)}if(ball.x>W-BR-4){ball.x=W-BR-4;ball.vx=-Math.abs(ball.vx)*.9;tick(G)}
+    for(const [idx,top] of [[0,false],[1,true]]){const p=P[idx];const gw=goalW(p);const inMouth=Math.abs(ball.x-W/2)<gw/2-2;
+      if(top&&ball.y<BR+4){if(inMouth){if(ball.y<-4){goal(G,0)}}else{ball.y=BR+4;ball.vy=Math.abs(ball.vy)*.9;tick(G)}}
+      if(!top&&ball.y>H-BR-4){if(inMouth){if(ball.y>H+4){goal(G,1)}}else{ball.y=H-BR-4;ball.vy=-Math.abs(ball.vy)*.9;tick(G)}}}
+    if(goalT>0)return;
+    for(const [i,p] of P.entries()){hitCircle(G,p,SR,i,true);hitCircle(G,p.gk,GKR,i,false)}
+    const sp=Math.hypot(ball.vx,ball.vy),cap=ball.fire?620:430;if(sp>cap){ball.vx*=cap/sp;ball.vy*=cap/sp}}
+  if(ball.fire){ball.fire-=dt;parts.push({x:ball.x,y:ball.y,vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*30,t:.4,col:Math.random()<.5?'#ff9b3d':'#ffd23f'})}}
+function tick(G){if(Math.abs(ball.vx)+Math.abs(ball.vy)>60)G.sfx('tick')}
+function hitCircle(G,o,r,i,striker){const dx=ball.x-o.x,dy=ball.y-o.y,d=Math.hypot(dx,dy),min=r+BR;if(d>=min||d===0)return;
+  const nx=dx/d,ny=dy/d;ball.x=o.x+nx*min;ball.y=o.y+ny*min;const ovx=striker?o.vx||0:0,ovy=striker?o.vy||0:0;
+  const rvx=ball.vx-ovx,rvy=ball.vy-ovy,dot=rvx*nx+rvy*ny;if(dot<0){ball.vx-=1.9*dot*nx;ball.vy-=1.9*dot*ny}
+  if(striker){const push=Math.max(0,ovx*nx+ovy*ny);ball.vx+=nx*push*1.05;ball.vy+=ny*push*1.05;if(ball.fire>0){ball.vx*=1.25;ball.vy*=1.25}}
+  ball.last=i;const sp=Math.hypot(ball.vx,ball.vy);if(sp>250){G.sfx('punch');shake=Math.min(4,sp/120);for(let k=0;k<5;k++)parts.push({x:ball.x,y:ball.y,vx:(Math.random()-.5)*120,vy:(Math.random()-.5)*120,t:.3,col:'#fff'})}else G.sfx('blip')}
+function goal(G,who){scores[who]++;goalT=1.6;shake=8;G.sfx('clear');navigator.vibrate&&navigator.vibrate(150);
+  if(mode==='cpu'&&who===0)G.add(200);
+  pops.push({x:W/2,y:H/2,s:'GOAL!!',t:1.5,big:1});for(let i=0;i<40;i++)parts.push({x:W/2,y:who===0?4:H-4,vx:(Math.random()-.5)*220,vy:(who===0?1:-1)*Math.random()*200,t:1.2,col:['#ff4f7b','#ffd23f','#4fe3b2','#3fd0ff','#fff'][i%5]});
+  if(scores[who]>=winTo)endT=1.6}
+function bindTouch(G){const cv=G.cv;const owner=new Map();
+  const pos=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}};
+  cv.addEventListener('pointerdown',e=>{if(G.state!=='play')return;const q=pos(e);const bot=q.y>H/2;if(!bot&&mode==='cpu')return;const p=P[bot?0:1];if(p.ptr!=null&&owner.get(p.ptr))return;p.ptr=e.pointerId;owner.set(e.pointerId,p);setT(p,q)});
+  cv.addEventListener('pointermove',e=>{const p=owner.get(e.pointerId);if(p)setT(p,pos(e))});
+  const up=e=>{const p=owner.get(e.pointerId);if(p){p.ptr=null;owner.delete(e.pointerId)}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  /* 키보드(PC): 방향키로 빨강 선수 */
+  setInterval(()=>{if(G.state!=='play'||!P)return;const k=G.keys,p=P[0];if(p.ptr!=null)return;const dx=(k.right?1:0)-(k.left?1:0),dy=(k.down?1:0)-(k.up?1:0);if(dx||dy){p.tx=p.x+dx*14;p.ty=p.y+dy*14}},16)}
+function setT(p,q){p.tx=q.x;p.ty=q.y-(p.bot?14:-14)}
+/* ---------- 그리기 ---------- */
+function drawField(c,G){for(let i=0;i<10;i++){c.fillStyle=i%2?'#2f9a44':'#36a94c';c.fillRect(0,i*H/10,W,H/10)}
+  c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=2;c.strokeRect(4,4,W-8,H-8);c.beginPath();c.moveTo(4,H/2);c.lineTo(W-4,H/2);c.stroke();c.beginPath();c.arc(W/2,H/2,26,0,7);c.stroke();
+  c.fillStyle='#fff';c.beginPath();c.arc(W/2,H/2,2.5,0,7);c.fill();
+  for(const [p,top] of [[P[0],false],[P[1],true]]){const gw=goalW(p);const y=top?4:H-4;c.strokeRect(W/2-gw/2-10,top?4:H-34,gw+20,30);
+    c.fillStyle=p.big?'rgba(255,79,123,.35)':'rgba(255,255,255,.25)';c.fillRect(W/2-gw/2,top?0:H-4,gw,4);c.fillStyle='#fff';c.fillRect(W/2-gw/2-3,top?0:H-6,3,6);c.fillRect(W/2+gw/2,top?0:H-6,3,6)}
+  c.globalAlpha=.12;c.fillStyle='#fff';c.font='16px Jua';c.textAlign='center';c.fillText('NNN',W/2,H/2+40);c.save();c.translate(W/2,H/2-40);c.rotate(Math.PI);c.fillText('NNN',0,6);c.restore();c.globalAlpha=1;
+  if(item){const em={fire:'🔥',goal:'🥅',ice:'❄'}[item.k];const b=Math.sin(G.t*6)*2;c.fillStyle='rgba(255,255,255,.25)';c.beginPath();c.arc(item.x,item.y,11+b,0,7);c.fill();c.font='14px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(em,item.x,item.y+1)}
+  for(const p of parts){c.fillStyle=p.col;c.fillRect(p.x-1,p.y-1,3,3)}
+  for(const p of P){drawGK(c,p.gk,p.col);drawStriker(c,p,G.t)}
+  if(ball){c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(ball.x+2,ball.y+3,BR,BR*.6,0,0,7);c.fill();c.fillStyle=ball.fire?'#ffd23f':'#fff';c.beginPath();c.arc(ball.x,ball.y,BR,0,7);c.fill();
+    c.fillStyle='#222';const a=(ball.x+ball.y)*.15;for(let i=0;i<3;i++){const q=a+i*2.1;c.fillRect(ball.x+Math.cos(q)*3-1,ball.y+Math.sin(q)*3-1,2.5,2.5)}}
+  for(const p of pops){const top=p.y<H/2&&mode==='two';c.save();c.translate(p.x,p.y-(1-p.t)*14);if(top&&!p.big)c.rotate(Math.PI);G.text(p.s,0,0,{k:1,size:p.big?30:13,align:'center',color:'#ffd23f'});c.restore()}}
+function drawStriker(c,p,t){const r=SR;c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.ellipse(p.x+2,p.y+4,r,r*.7,0,0,7);c.fill();
+  c.fillStyle=p.slow?'#bfe6ff':p.col;c.beginPath();c.arc(p.x,p.y,r,0,7);c.fill();c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.arc(p.x-3,p.y-4,r*.45,0,7);c.fill();
+  c.fillStyle='#fff';c.font='9px "Press Start 2P",monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(p.bot?'10':'7',p.x,p.y+1);c.textBaseline='alphabetic';
+  c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1.5;c.beginPath();c.arc(p.x,p.y,r,0,7);c.stroke();if(p.slow){c.fillStyle='#fff';c.fillRect(p.x-8,p.y-r-4,16,2)}}
+function drawGK(c,g,col){c.fillStyle='#ffd23f';c.beginPath();c.arc(g.x,g.y,GKR,0,7);c.fill();c.strokeStyle=col;c.lineWidth=2;c.stroke();c.fillStyle='#4fe3b2';c.fillRect(g.x-GKR-2,g.y-2,4,4);c.fillRect(g.x+GKR-2,g.y-2,4,4)}
+function drawHud(c,G){if(!scores)return;const mm=Math.floor(clock/60),ss=Math.floor(clock%60);
+  const box=(y,flip)=>{c.save();c.translate(W-24,y);if(flip)c.rotate(Math.PI);c.fillStyle='rgba(0,0,0,.45)';c.fillRect(-20,-12,40,24);G.text(`${flip?scores[1]:scores[0]}:${flip?scores[0]:scores[1]}`,0,-9,{size:8,align:'center'});G.text(`${mm}:${String(ss).padStart(2,'0')}`,0,2,{size:6,align:'center',color:'#ffd23f'});c.restore()};
+  box(H/2+20,false);if(mode==='two')box(H/2-20,true);else G.text(CPU[lv]?CPU[lv].n:'',8,H/2-14,{k:1,size:10,color:'#bfe6ff'});
+  if(serve>0&&G.state==='play'&&goalT<=0)G.text(mode==='two'?'손가락을 대고 움직여요!':'아래쪽에 손가락을 대고 움직여요!',W/2,H/2+50,{k:1,size:10,align:'center'})}
+</script>
+</body>
+</html>

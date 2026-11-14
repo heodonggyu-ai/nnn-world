@@ -45,6 +45,7 @@
   .rt-new{display:inline-block;background:var(--sun);color:#222;border-radius:999px;padding:3px 10px;font-size:13px;margin-top:4px}
   .rt-msg{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:24px;color:#fff;text-shadow:0 3px 0 #000,0 0 18px #000;pointer-events:none;white-space:nowrap;z-index:4;animation:rtpop .25s}
   @keyframes rtpop{from{transform:translate(-50%,-50%) scale(.6);opacity:0}}
+  .rt.nopad .rt-pad{display:none!important}
   .rt.lefty .rt-pad{flex-direction:row-reverse}.rt.lefty .rt-ab{flex-direction:row-reverse}
   .rt.bs .rt-btn{width:62px;height:62px;font-size:15px}.rt.bs .rt-dpad{transform:scale(.84)}
   .rt.bl .rt-btn{width:88px;height:88px;font-size:20px}.rt.bl .rt-dpad{transform:scale(1.12)}.rt.bl .rt-pad{height:196px}
@@ -113,7 +114,7 @@
   function boot(cfg){
     const W=cfg.w,H=cfg.h;
     document.title=cfg.title;
-    const root=document.createElement('div');root.className='rt';
+    const root=document.createElement('div');root.className='rt'+(cfg.noPad?' nopad':'');
     root.innerHTML=`<div class="rt-top"><a class="rt-ic" href="../" aria-label="NNN 월드로">←</a><div class="rt-ttl">${cfg.title}</div>
       <div class="rt-sc">SCORE <b id="rtS">0</b><br>BEST <b id="rtB">0</b></div>
       <button class="rt-ic" id="rtSnd" aria-label="소리">${muted?'🔇':'🔊'}</button><button class="rt-ic" id="rtPause" aria-label="일시정지">⏸</button></div>
@@ -191,7 +192,7 @@
       get start(){const m=cfg.stages?cfg.stages.max||999:1;return Math.max(1,Math.min(+OPT.start||1,reach,m))},
       reach(n){const m=cfg.stages?cfg.stages.max||999:1;n=Math.min(n,m);if(n>reach){reach=n;try{localStorage.setItem(RKEY,reach)}catch(e){}}},
       _frac:0,
-      add(n){const mul={easy:.5,normal:1,hard:1.5}[optGet('diff')]||1;G._frac+=n*mul;n=Math.floor(G._frac);G._frac-=n;if(!n)return;G.score+=n;$S.textContent=G.score;if(G.score>best){best=G.score;G.best=best;$B.textContent=best;try{localStorage.setItem(bestKey,best)}catch(e){}G._newBest=true}},
+      add(n){const mul={easy:.5,normal:1,hard:1.5}[optGet('diff')]||1;G._frac+=n*mul;n=Math.floor(G._frac);G._frac-=n;if(!n)return;G.score+=n;$S.textContent=G.score;if(G.score>best&&!G.practice){best=G.score;G.best=best;$B.textContent=best;try{localStorage.setItem(bestKey,best)}catch(e){}G._newBest=true}},
       setScore(n){G.score=n;$S.textContent=n},
       msg(s,ms){const m=document.createElement('div');m.className='rt-msg';m.textContent=s;stage.appendChild(m);setTimeout(()=>m.remove(),ms||1200)},
       over(extra){if(G.state==='over')return;G.state='over';sfx('over');
@@ -203,7 +204,7 @@
           ${extra?`<p>${extra}</p>`:''}<button class="rt-go" id="rtAgain">처음부터 다시</button><a class="rt-go soft" style="display:grid;place-items:center;text-decoration:none;color:#fff;margin-top:10px" href="../">NNN 월드로</a></div>`;
         ov.hidden=false;ov.querySelector('#rtAgain').onclick=start},
     };
-    function start(){ac();G.score=0;G._frac=0;G._newBest=false;$S.textContent=0;G.t=0;for(const k in held)held[k]=0;pend={};G.state='play';ov.hidden=true;sfx('start');cfg.init(G)}
+    function start(){ac();G.score=0;G._frac=0;G.practice=false;G._newBest=false;$S.textContent=0;G.t=0;for(const k in held)held[k]=0;pend={};G.state='play';ov.hidden=true;sfx('start');cfg.init(G)}
     const curLine=()=>`난이도 ${({easy:'쉬움',normal:'보통',hard:'어려움'})[optGet('diff')]}${cfg.stages?` · ${G.start}${cfg.stages.label}부터`:''}`;
     function title(){ov.innerHTML=`<div class="rt-card"><h1>${cfg.title.replace('NNN ','')}</h1><div class="en">${cfg.en||''}</div><p>${cfg.intro||''}</p>
       <div class="rt-help">${cfg.help}</div><button class="rt-go" id="rtStart">▶ 시작</button><button class="rt-go soft" id="rtOpt" style="margin-top:10px">⚙ 옵션</button><p class="rt-cur">${curLine()}</p></div>`;ov.hidden=false;
