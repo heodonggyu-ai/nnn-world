@@ -72,7 +72,7 @@ function kick(G){const p=aim.lp!=null?aim.lp:aim.p;let tx=aim.lx+(Math.random()-
   let guess;const tot=hist[-1]+hist[0]+hist[1];
   if(Math.random()<T.skill*.9){const r=Math.random()*tot;guess=r<hist[-1]?-1:r<hist[-1]+hist[0]?0:1}else guess=[-1,0,1][Math.floor(Math.random()*3)];
   if(ball.dur>.48&&Math.random()<T.skill)guess=side;
-  hist[side]+=1.4;keeper.dive=guess;keeper.hi=ty>.6&&Math.random()<.5+T.skill*.4;keeper.act=true;keeper.t=0}
+  hist[side]+=1.4;keeper.dive=guess;keeper.hi=ty>.6&&Math.random()<.5+T.skill*.4;keeper.act=true;keeper.t=0;ball.pre=keeperReach(ball.tx,ball.ty)}
 function opTurn(G,dt,h,k){const dur=kicker.dur;kicker.t=phT;kicker.lean=phT>dur*.45?kicker.tell*Math.min(1,(phT-dur*.45)/(dur*.4)):0;
   if(!keeper.act){let d=null;if(h.left)d=-1;else if(h.right)d=1;else if(h.down||h.a)d=0;else if(h.up)d=0;
     if(d!==null){keeper.dive=d;keeper.hi=!!k.up||h.up;keeper.act=true;keeper.t=0;keeper.at=phT;G.sfx('jump')}}
@@ -84,7 +84,7 @@ function opTurn(G,dt,h,k){const dur=kicker.dur;kicker.t=phT;kicker.lean=phT>dur*
 function resolve(G){const tx=ball.tx,ty=ball.ty,ax=Math.abs(tx);
   if(ty>1.06||ax>1.06){result={kind:'miss',t:0};G.sfx('over');G.msg(ty>1.06?'하늘로~':'빗나감!',900);return}
   if((ax>.95&&ax<=1.06)||(ty>.95&&ty<=1.06)){result={kind:'post',t:0};G.sfx('block');shake=5;G.msg('골대 땡!',900);return}
-  const reach=keeperReach(tx,ty);
+  const reach=turn==='me'&&ball.pre!=null?ball.pre:keeperReach(tx,ty);
   if(reach){result={kind:'save',t:0};G.sfx('hit');shake=4;if(turn==='op'){G.add(150);G.msg('선방!!',900);flash=.25}else G.msg('막혔다!',900);return}
   result={kind:'goal',t:0};shake=6;G.sfx('clear');flash=.3;if(turn==='me'){const corner=ax>.7&&ty>.6;G.add(corner?150:100);G.msg(corner?'구석에 꽂혔다! 골!!':'골!!',1000);
     for(let i=0;i<40;i++)confetti.push({x:Math.random()*W,y:-10,vx:(Math.random()-.5)*60,vy:20+Math.random()*60,t:2.2,col:['#ff4f7b','#ffd23f','#4fe3b2','#3fd0ff','#fff'][i%5]})}else G.msg('실점…',900)}
@@ -111,8 +111,14 @@ function render3D(G,c){if(!R3)build3D();if(!KICK||KICK.side!==turn)setTeams();
   /* 키커 */const meK=turn==='me';const run=ph==='run'||ph==='opRun';const dur=meK?.75:(kicker.dur||1.4);const p=run?Math.min(1,kicker.t/dur):0;
   const sx=-2.6+2.25*p,sz=SPOT+2.9-2.6*p;KICK.root.position.set(sx,0,sz);KICK.root.rotation.set(0,Math.PI+.35*(1-p),meK?0:(kicker.lean||0)*.28);
   if(kicker.kicked){const k=Math.min(1,(ball.t||0)/.25+.5);KICK.pose({act:'kick',k})}else if(run)KICK.pose({act:'run',spd:.8,ph:kicker.t*13});else KICK.pose({act:'ready'});
-  /* 키퍼 */const kx=keeper.act?keeper.dive*Math.min(1,keeper.t/.25)*2.2:Math.sin(G.t*3)*.25;KEEP.root.position.set(kx,0,GZ+.4);KEEP.root.rotation.set(0,0,0);
-  if(keeper.act&&keeper.dive!==0)KEEP.pose({act:'dive',dir:keeper.dive,k:Math.min(1,keeper.t/.3),high:keeper.hi});else if(keeper.act&&keeper.hi)KEEP.pose({act:'jump',k:Math.min(1,keeper.t/.35)});else KEEP.pose({act:'ready'});
+  /* 키퍼: 판정 결과에 맞춰 손이 공 도착 순간 공 위치로 (못 막는 공이면 손이 짧게) */
+  const cl=(v,a,b)=>Math.max(a,Math.min(b,v));let kx=Math.sin(G.t*3)*.25,ke=0,kHigh=keeper.hi;
+  if(keeper.act){ke=(turn==='me'&&ball.on)?cl((ball.t-.05)/(ball.dur-.05),0,1):Math.min(1,keeper.t/.3);const tm=ball.tx*GWm,tym=ball.ty*GHm,d=keeper.dive;
+    const save=ball.on&&(turn==='me'?!!ball.pre:keeperReach(ball.tx,ball.ty))&&!(result&&result.kind!=='save')&&Math.abs(ball.tx)<=1&&ball.ty<=1;let full;
+    if(d!==0){full=save?cl(tm-d*2.55,-1.6,1.6):d*.8;if(!save&&Math.sign(tm)===d){full=d*cl(Math.abs(tm)-.7-2.9,-.6,.8)}if(save)kHigh=tym>1.15}else{full=save?cl(tm,-.9,.9):0;if(save)kHigh=tym>1.3}
+    kx=full*ke}
+  KEEP.root.position.set(kx,0,GZ+.4);KEEP.root.rotation.set(0,0,0);
+  if(keeper.act&&keeper.dive!==0)KEEP.pose({act:'dive',dir:keeper.dive,k:ke,high:kHigh});else if(keeper.act&&kHigh)KEEP.pose({act:'jump',k:ke});else KEEP.pose({act:'ready'});
   if(turn==='op'&&!keeper.act)KEEP.pose({act:'ready'});
   /* 공 */if(ball.on){const q=Math.min(1,ball.t/ball.dur);const tgt=g2w(ball.tx,ball.ty);let x=tgt.x*q,y=.13+(tgt.y-.13)*q+Math.sin(q*Math.PI)*ball.arc*.03,z=SPOT+(GZ-SPOT)*q;
       if(result&&result.kind==='goal'){const e=Math.min(1,result.t*2);z=GZ-1.6*e;y=Math.max(.13,tgt.y*(1-e*.7))}

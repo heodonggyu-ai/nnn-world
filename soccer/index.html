@@ -29,7 +29,7 @@ function newMatch(G,silent){const o=TEAMS[mi];
     mySkill:{spd:1,pass:.8,shot:.72,tackle:1.1,slide:0,keeper:.8,think:1},opSkill:oppSkill(mi,G),
     myCol:{shirt:'#e8231f',shorts:'#fff',gk:'#ffd23f'},opCol:{shirt:o[1],shorts:o[2],gk:'#4fe3b2',hair:'#111'},
     duration:dur,onEnd:m=>matchEnd(m)});
-  M.kickoff(0);M.snapCam();REN=REN||S3.renderer(W,H,2);F3=Footy3D.create(M,{W,H,HD:2,R:REN,height:9,ballR:1.3,fov:36,camH:92,camD:118,camAhead:26,camEdge:40,stripes:16});if(!silent)G.msg(`${ROUNDS[mi]} · vs ${o[0]}`,1800)}
+  M.kickoff(0);M.snapCam();REN=REN||S3.renderer(W,H,2);F3=Footy3D.create(M,{W,H,HD:2,R:REN,height:9,ballR:1.3,fov:34,camH:74,camD:96,camAhead:24,camEdge:40,stripes:16});if(!silent)G.msg(`${ROUNDS[mi]} · vs ${o[0]}`,1800)}
 function matchEnd(m){const G=G0;const [a,b]=m.score;
   if(m.pensResult)return m.pensResult==='win'?advance(G,a,b):G.over(`${ROUNDS[mi]}에서 승부차기 패배`);
   if(a===b){m.startPens(G);return}

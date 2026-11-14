@@ -94,14 +94,15 @@ function kick(G){const f=F,a=f.aim;let tx=a.x+(Math.random()-.5)*.06,ty,curve=ev
   const b={t:0,dur:.75-p*.3,tx,ty:Math.max(0,ty),curve,p:0};f.ball=b;G.sfx('punch');
   if(f.wall){/* 벽 통과 판정: 벽 위치에서 공의 좌우·높이 */const w=f.wall;b.pw=(BY-w.y)/(BY-GY);const wx=tx*b.pw+curve*.9*Math.sin(Math.PI*b.pw);const halfW=w.n*.11;const zAtWall=p*1.25;
     w.jump=.4;b.blocked=Math.abs(wx-w.cx*b.pw)<halfW&&zAtWall<.62;
-    const kp=f.keeper;kp.act=true;kp.t=0;const read=.3+f.dist*.08;kp.dive=Math.random()<read?Math.sign(tx-kp.base)||1:(Math.random()<.5?-1:1);kp.reach=.42+f.dist*.03}}
+    const kp=f.keeper;kp.act=true;kp.t=0;const read=.3+f.dist*.08;kp.dive=Math.random()<read?Math.sign(tx-kp.base)||1:(Math.random()<.5?-1:1);kp.reach=.42+f.dist*.03;
+    const ax=Math.abs(tx),fty=Math.max(0,ty);b.pre=ax<=.95&&fty<=.95&&Math.abs(tx-(kp.base+kp.dive*.7))<kp.reach&&!(ax>.75&&fty>.6&&Math.random()<.6)}}
 function resolveShot(G){const f=F,b=f.ball,ax=Math.abs(b.tx),ty=b.ty;f.ph='res';phT=0;
   if(ty>1.06||ax>1.06){f.res=ty>1.06?'하늘로~':'빗나감!';G.sfx('over');return}
   if(ev.k==='target'){if(ty>.95||ax>.95){score(G,500,gx2s(b.tx),gy2s(ty),'땡!! +500');f.res='크로스바!';G.sfx('block');shake=6;return}
     let hit=null;for(const t of f.targets)if(!t.hit&&Math.hypot(b.tx-t.x,(ty-t.y)*GH/GW)<t.r)hit=t;
     if(hit){hit.hit=1;const pts=Math.round(.06/hit.r*1000/10)*10;score(G,pts,gx2s(hit.x),gy2s(hit.y),`과녁! +${pts}`);f.res='명중!';G.sfx('coin');burst(gx2s(hit.x),gy2s(hit.y))}else{f.res='과녁을 빗나갔어요';G.sfx('tick')}return}
   if(ax>.95||ty>.95){f.res='골대 땡!';G.sfx('block');shake=5;return}
-  const kp=f.keeper;const kx=kp.base+kp.dive*Math.min(1,kp.t/.3)*.7;if(Math.abs(b.tx-kx)<kp.reach&&!(ax>.75&&ty>.6&&Math.random()<.6)){f.res='골키퍼 선방!';G.sfx('hit');return}
+  if(b.pre){f.res='골키퍼 선방!';G.sfx('hit');return}
   let pts=300,tag='골!';if(ax>.7&&ty>.55){pts+=150;tag='구석 골!'}if(Math.abs(b.curve)>.55){pts+=100;tag='감아차기 골!'}
   score(G,pts,GX,GY-30,`${tag} +${pts}`);f.res=tag;G.sfx('clear');shake=6;burst(gx2s(b.tx),gy2s(ty))}
 function burst(x,y){for(let i=0;i<30;i++)parts.push({x,y,vx:(Math.random()-.5)*160,vy:-Math.random()*140,t:1.2,col:['#ff4f7b','#ffd23f','#4fe3b2','#3fd0ff','#fff'][i%5]})}
@@ -113,7 +114,9 @@ function ball3(){const b=F.ball;const Z=bz();if(!b)return new THREE.Vector3(0,.1
 function drawShoot(c,G){if(!R3)build3D();const f=F;const Z=bz();PL.root.visible=true;
   /* 키커 */const p=f.ball?f.ball.p:0;PL.root.position.set(-.9+(f.ball?.55:0),0,Z+1.1-(f.ball?.8:0));PL.root.rotation.y=Math.PI+.4;
   if(f.ball&&p<.35)PL.pose({act:'kick',k:Math.min(1,.4+p*2)});else if(f.ph==='power')PL.pose({act:'windup',k:f.aim.p});else PL.pose({act:'ready'});
-  /* 키퍼·벽·과녁 */KP.root.visible=ev.k==='free';if(ev.k==='free'){const kp=f.keeper;const e=kp.act?Math.min(1,kp.t/.3):0;KP.root.position.set((kp.base+(kp.act?kp.dive*e*.7:0))*GWm,0,GZ+.4);if(kp.act)KP.pose({act:'dive',dir:kp.dive,k:e,high:f.ball&&f.ball.ty>.5});else KP.pose({act:'ready'})}
+  /* 키퍼·벽·과녁 */KP.root.visible=ev.k==='free';if(ev.k==='free'){const kp=f.keeper,b=f.ball;const cl=(v,a,c)=>Math.max(a,Math.min(c,v));const e=kp.act&&b?cl((b.t-.05)/(b.dur-.05),0,1):0;const base=kp.base*GWm;let full=kp.dive*.8;
+    if(b){const tm=b.tx*GWm,d=kp.dive;if(b.pre)full=cl(tm-d*2.55-base,-2.4,2.4);else if(Math.sign(tm-base)===d)full=d*cl(Math.abs(tm-base)-.7-2.9,-.6,.8)}
+    KP.root.position.set(base+full*e,0,GZ+.4);if(kp.act)KP.pose({act:'dive',dir:kp.dive,k:e,high:b&&b.ty*GHm>1.15});else KP.pose({act:'ready'})}
   WALL.forEach((w,i)=>{const on=ev.k==='free'&&i<f.wall.n;w.root.visible=on;if(!on)return;const pw=9.15/(Z-GZ);const wx=f.wall.cx*pw*GWm+(i-(f.wall.n-1)/2)*.62;w.root.position.set(wx,0,Z-9.15);w.root.rotation.y=0;
     if(f.wall.jump>0)w.pose({act:'jump',k:1-f.wall.jump/.4});else{w.pose({act:'idle'});w.armL.pv.rotation.set(-.4,0,.5);w.armR.pv.rotation.set(-.4,0,-.5)}});
   while(TG.length<f.targets.length){const m=new THREE.Mesh(new THREE.TorusGeometry(1,.08,8,28),new THREE.MeshBasicMaterial({color:0xff4f7b}));const inner=new THREE.Mesh(new THREE.CircleGeometry(.95,24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.35}));m.add(inner);SC.add(m);TG.push(m)}

@@ -11,7 +11,7 @@
 <script src="../shared/retro.js"></script>
 <script>
 /* 손가락 축구: 내 쪽 화면에 손가락을 대고 선수를 움직여 공을 쳐요. 한 폰으로 둘이, 또는 컴퓨터와! */
-const W=180,H=320,GWID=58,BR=6,SR=12,GKR=8;
+const W=180,H=320,GWID=66,BR=6,SR=12,GKR=6.5;
 const CPU=[{n:'꼬마 키퍼',sp:150,err:26,react:.35},{n:'동네 형',sp:190,err:20,react:.28},{n:'반장',sp:230,err:15,react:.22},{n:'체육 선생님',sp:270,err:11,react:.17},
  {n:'유소년 에이스',sp:310,err:8,react:.13},{n:'도 대표',sp:350,err:6,react:.1},{n:'국가대표',sp:400,err:4,react:.07},{n:'손가락의 신',sp:460,err:2,react:.04}];
 let G0,mode,lv,ball,P,goalT,scores,clock,items,item,itemT,eff,parts,pops,shake,winTo,serve,cpuT,cpuTgt,endT;
@@ -57,7 +57,16 @@ function goalW(p){return GWID+(p.big?30:0)}
 function movePlayer(p,dt){const max=(p.slow?160:900);let dx=p.tx-p.x,dy=p.ty-p.y;const d=Math.hypot(dx,dy);const step=Math.min(d,max*dt);const nx=d?p.x+dx/d*step:p.x,ny=d?p.y+dy/d*step:p.y;
   p.vx=(nx-p.x)/dt;p.vy=(ny-p.y)/dt;p.x=nx;p.y=ny;
   p.x=Math.max(SR+4,Math.min(W-SR-4,p.x));if(p.bot)p.y=Math.max(H/2+SR,Math.min(H-SR-22,p.y));else p.y=Math.max(SR+22,Math.min(H/2-SR,p.y));
-  const gw=goalW(p);const gk=p.gk;const tx=Math.max(W/2-gw/2+GKR,Math.min(W/2+gw/2-GKR,ball.x));const gsp=60+(mode==='cpu'&&!p.bot?lv*8:30);gk.x+=Math.max(-gsp*dt,Math.min(gsp*dt,tx-gk.x));}
+  keeperMove(p,dt)}
+/* 골키퍼: 사람처럼 반응이 늦고, 예측이 틀리기도 하고, 다이빙하면 잠깐 못 일어나요 */
+function keeperMove(p,dt){const gk=p.gk,gw=goalW(p);const lo=W/2-gw/2+GKR-2,hi=W/2+gw/2-GKR+2;const lvl=mode==='cpu'&&!p.bot?lv:2;
+  gk.stun=Math.max(0,(gk.stun||0)-dt);gk.think=(gk.think||0)-dt;if(gk.dive>0){gk.dive-=dt;gk.x+=gk.dvx*dt;gk.x=Math.max(lo-6,Math.min(hi+6,gk.x));if(gk.dive<=0)gk.stun=.45;return}
+  if(gk.stun>0)return;
+  const toward=p.bot?ball.vy>40:ball.vy<-40;const sp=Math.hypot(ball.vx,ball.vy);
+  if(gk.think<=0){gk.think=.36-lvl*.02;if(toward){const t=Math.abs((gk.y-ball.y)/(ball.vy||1));let cx=ball.x+ball.vx*t;cx+=(Math.random()*2-1)*(sp*.09+14-lvl);gk.tx=cx;
+      /* 빠른 슛이면 다이빙 */if(sp>210&&t<.35&&Math.abs(cx-gk.x)>GKR&&Math.random()<.3+lvl*.04){gk.dive=.22;gk.dvx=Math.sign(cx-gk.x)*125;gk.lean=Math.sign(cx-gk.x);return}}
+    else gk.tx=W/2+(ball.x-W/2)*.4}
+  const tx=Math.max(lo,Math.min(hi,gk.tx==null?W/2:gk.tx));const gsp=30+lvl*3.5;gk.x+=Math.max(-gsp*dt,Math.min(gsp*dt,tx-gk.x));gk.lean=0}
 function cpuMove(G,dt){const p=P[1],L=CPU[lv];cpuT-=dt;const sp=L.sp*(G0.diff);
   if(cpuT<=0){cpuT=L.react;const inMy=ball.y<H/2+10;
     if(inMy&&ball.y>p.y-4){/* 공 뒤로 돌아가서 아래로 친다 */const aimX=W/2+(Math.random()-.5)*40;const ang=Math.atan2(H-ball.y,aimX-ball.x);cpuTgt={x:ball.x-Math.cos(ang)*(SR+BR-2)+ball.vx*.06+(Math.random()-.5)*L.err,y:ball.y-Math.sin(ang)*(SR+BR-2)+ball.vy*.06,strike:true}}
@@ -72,15 +81,15 @@ function physics(G,dt){const steps=4;for(let s=0;s<steps;s++){const h=dt/steps;
       if(top&&ball.y<BR+4){if(inMouth){if(ball.y<-4){goal(G,0)}}else{ball.y=BR+4;ball.vy=Math.abs(ball.vy)*.9;tick(G)}}
       if(!top&&ball.y>H-BR-4){if(inMouth){if(ball.y>H+4){goal(G,1)}}else{ball.y=H-BR-4;ball.vy=-Math.abs(ball.vy)*.9;tick(G)}}}
     if(goalT>0)return;
-    for(const [i,p] of P.entries()){hitCircle(G,p,SR,i,true);hitCircle(G,p.gk,GKR,i,false)}
+    for(const [i,p] of P.entries()){hitCircle(G,p,SR,i,true);if(!(ball.fire>0&&Math.random()<.7))if(hitCircle(G,p.gk,GKR,i,false)){p.gk.stun=Math.max(p.gk.stun||0,.3)}}
     const sp=Math.hypot(ball.vx,ball.vy),cap=ball.fire?620:430;if(sp>cap){ball.vx*=cap/sp;ball.vy*=cap/sp}}
   if(ball.fire){ball.fire-=dt;parts.push({x:ball.x,y:ball.y,vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*30,t:.4,col:Math.random()<.5?'#ff9b3d':'#ffd23f'})}}
 function tick(G){if(Math.abs(ball.vx)+Math.abs(ball.vy)>60)G.sfx('tick')}
-function hitCircle(G,o,r,i,striker){const dx=ball.x-o.x,dy=ball.y-o.y,d=Math.hypot(dx,dy),min=r+BR;if(d>=min||d===0)return;
+function hitCircle(G,o,r,i,striker){const dx=ball.x-o.x,dy=ball.y-o.y,d=Math.hypot(dx,dy),min=r+BR;if(d>=min||d===0)return false;
   const nx=dx/d,ny=dy/d;ball.x=o.x+nx*min;ball.y=o.y+ny*min;const ovx=striker?o.vx||0:0,ovy=striker?o.vy||0:0;
   const rvx=ball.vx-ovx,rvy=ball.vy-ovy,dot=rvx*nx+rvy*ny;if(dot<0){ball.vx-=1.9*dot*nx;ball.vy-=1.9*dot*ny}
   if(striker){const push=Math.max(0,ovx*nx+ovy*ny);ball.vx+=nx*push*1.05;ball.vy+=ny*push*1.05;if(ball.fire>0){ball.vx*=1.25;ball.vy*=1.25}}
-  ball.last=i;const sp=Math.hypot(ball.vx,ball.vy);if(sp>250){G.sfx('punch');shake=Math.min(4,sp/120);for(let k=0;k<5;k++)parts.push({x:ball.x,y:ball.y,vx:(Math.random()-.5)*120,vy:(Math.random()-.5)*120,t:.3,col:'#fff'})}else G.sfx('blip')}
+  ball.last=i;const sp=Math.hypot(ball.vx,ball.vy);if(sp>250){G.sfx('punch');shake=Math.min(4,sp/120);for(let k=0;k<5;k++)parts.push({x:ball.x,y:ball.y,vx:(Math.random()-.5)*120,vy:(Math.random()-.5)*120,t:.3,col:'#fff'})}else G.sfx('blip');return true}
 function goal(G,who){scores[who]++;goalT=1.6;shake=8;G.sfx('clear');navigator.vibrate&&navigator.vibrate(150);
   if(mode==='cpu'&&who===0)G.add(200);
   pops.push({x:W/2,y:H/2,s:'GOAL!!',t:1.5,big:1});for(let i=0;i<40;i++)parts.push({x:W/2,y:who===0?4:H-4,vx:(Math.random()-.5)*220,vy:(who===0?1:-1)*Math.random()*200,t:1.2,col:['#ff4f7b','#ffd23f','#4fe3b2','#3fd0ff','#fff'][i%5]});
@@ -110,7 +119,7 @@ function drawStriker(c,p,t){const r=SR;c.fillStyle='rgba(0,0,0,.3)';c.beginPath(
   c.fillStyle=p.slow?'#bfe6ff':p.col;c.beginPath();c.arc(p.x,p.y,r,0,7);c.fill();c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.arc(p.x-3,p.y-4,r*.45,0,7);c.fill();
   c.fillStyle='#fff';c.font='9px "Press Start 2P",monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(p.bot?'10':'7',p.x,p.y+1);c.textBaseline='alphabetic';
   c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1.5;c.beginPath();c.arc(p.x,p.y,r,0,7);c.stroke();if(p.slow){c.fillStyle='#fff';c.fillRect(p.x-8,p.y-r-4,16,2)}}
-function drawGK(c,g,col){c.fillStyle='#ffd23f';c.beginPath();c.arc(g.x,g.y,GKR,0,7);c.fill();c.strokeStyle=col;c.lineWidth=2;c.stroke();c.fillStyle='#4fe3b2';c.fillRect(g.x-GKR-2,g.y-2,4,4);c.fillRect(g.x+GKR-2,g.y-2,4,4)}
+function drawGK(c,g,col){if(g.dive>0||g.stun>.2){c.save();c.translate(g.x,g.y);c.scale(1.35,.75);c.translate(-g.x,-g.y)}c.fillStyle=g.stun>0?'#e8c23f':'#ffd23f';c.beginPath();c.arc(g.x,g.y,GKR,0,7);c.fill();c.strokeStyle=col;c.lineWidth=2;c.stroke();c.fillStyle='#4fe3b2';c.fillRect(g.x-GKR-2,g.y-2,4,4);c.fillRect(g.x+GKR-2,g.y-2,4,4);if(g.dive>0||g.stun>.2)c.restore()}
 function drawHud(c,G){if(!scores)return;const mm=Math.floor(clock/60),ss=Math.floor(clock%60);
   const box=(y,flip)=>{c.save();c.translate(W-24,y);if(flip)c.rotate(Math.PI);c.fillStyle='rgba(0,0,0,.45)';c.fillRect(-20,-12,40,24);G.text(`${flip?scores[1]:scores[0]}:${flip?scores[0]:scores[1]}`,0,-9,{size:8,align:'center'});G.text(`${mm}:${String(ss).padStart(2,'0')}`,0,2,{size:6,align:'center',color:'#ffd23f'});c.restore()};
   box(H/2+20,false);if(mode==='two')box(H/2-20,true);else G.text(CPU[lv]?CPU[lv].n:'',8,H/2-14,{k:1,size:10,color:'#bfe6ff'});
