@@ -1240,6 +1240,11 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   </div>
   <div class="ev" id="connWarn" hidden style="background:#5A1E22;color:#FFD9D9;flex-direction:column;align-items:flex-start"></div>
   <div class="ev" id="storeWarn" hidden style="background:#5A1E22;color:#FFD9D9"><b style="color:#fff">저장 안 됨</b><span>이 화면은 기기 저장소를 쓸 수 없어서 설정이 사라져요. GitHub 주소에서 열거나 서버를 연결해 주세요.</span></div>
+  <div class="card" data-atab="mem" id="memAlert" style="display:none;flex-direction:column;gap:8px;border:2px solid var(--red)">
+    <h3 style="font-size:18px;margin:0">🔔 회원 알림</h3>
+    <div class="bring" id="admPend" hidden></div>
+    <div id="memAlertMore" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
   <div class="card" data-atab="mem" style="display:flex;flex-direction:column;gap:8px">
     <h3 style="font-size:20px">날짜별 출석 현황</h3>
     <div id="attAdm" style="display:flex;flex-direction:column;gap:6px"><div class="small">불러오는 중…</div></div>
@@ -1249,7 +1254,6 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
       <button class="btn sm ghost" id="expVcf">연락처(.vcf)</button><button class="btn sm ghost" id="expCsv">엑셀(.csv)</button></div>
       <button class="btn sm red" id="crBoardBtn">🪙 회원 크레딧 현황표 (차감·지급)</button>
       <button class="btn sm gold" id="impBtn">다른 프로그램에서 회원·기간 가져오기 (엑셀·복사 붙여넣기)</button><div id="impLast"></div>
-    <div class="bring" id="admPend" hidden></div>
     <div class="stats" id="admStats"></div>
     <div class="chips" id="admFilt"></div>
     <div class="field"><input id="admSearch" placeholder="이름·초성·번호·전화·메모 (예: ㄱㅁㅈ, 9996)"></div>
@@ -5035,7 +5039,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
     ...set('today',[C('adash'),C('dueBanner'),C('결제 확인'),C('hrCard'),C('보낼 안내')]),
     ...grp('today','sentlog','보낸 안내 기록','문자·카톡으로 보낸 기록 찾기',[C('보낸 안내 기록')],false),
     ...set('today',[C('지금 누가 있나요'),C('무료 체험 신청'),C('회원 의견함')]),
-    ...set('mem',[cards.find(c=>c.querySelector('#admCnt')),C('날짜별 출석 현황'),C('락커 · 캐비넷'),C('만료 · 연장 안내')]),
+    ...set('mem',[C('memAlert'),cards.find(c=>c.querySelector('#admCnt')),C('날짜별 출석 현황'),C('락커 · 캐비넷'),C('만료 · 연장 안내')]),
     ...grp('ops','biz','매출 · 공지','매출 통계, 로그인 팝업 공지, 휴무일, 만료 알림',[C('salesBtn'),C('noticeBtn')],true),
     ...grp('ops','act','회원 활동','오늘의 미션, 승급심사, 스파링 매칭, 맵 대화',[C('misAdm'),C('승급심사'),C('스파링 매칭'),C('맵 대화 관리')],true),
     ...grp('ops','promo','화면 · 홍보','실시간 인원 표시, 체육관 TV, 게스트 화면, 블로그 후기, 입구 QR',[C('실시간 출석 인원 표시'),C('체육관 TV'),C('게스트 둘러보기 내용'),C('블로그 후기 카드'),C('입구 QR 코드')],false),
@@ -5073,7 +5077,7 @@ async function renderADash(){const box=$('#adash');if(!box)return;try{sparAutoPa
   const tiles=[['승인 대기',pend,'mem','pending',pend?'hot':''],['결제 확인',payN,'today','pay',payN?'hot':''],['보낼 안내',dueN,'today','due',dueN?'warn':''],['오늘 출석',today,'mem','all',''],['7일 내 만료',soon,'mem','soon',soon?'warn':''],['유효 회원',valid,'mem','valid',''],['이달 매출',manS(sales)+'원','sales','',''],['공지 팝업',noticesAll().filter(n=>nActive(n)).length,'notice','','']];
   box.innerHTML=tiles.map(([n,v,go,f,cls])=>`<button class="dtile ${cls}" data-go="${go}" data-f="${f}"><b class="num">${v}</b><span>${n}</span></button>`).join('');
   box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go,f=b.dataset.f;if(g==='sales'){openSales();return}if(g==='notice'){openNoticeAdmin();return}
-    if(g==='mem'){admFilter=f||'all';setATab('mem');renderAdmRows();setTimeout(()=>{const c=$('#admPend').hidden?$('#admFilt'):$('#admPend');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+    if(g==='mem'){admFilter=f||'';setATab('mem');renderAdmRows();setTimeout(()=>{const c=$('#memAlert').style.display==='none'?$('#admFilt'):$('#memAlert');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
     setATab('today');setTimeout(()=>{const el=f==='pay'?$('#payRows'):$('#dueRows');el&&el.parentElement.scrollIntoView({behavior:'smooth',block:'start'})},60)});
   const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};const hrN=renderHoldReqs(all)||0;bd('#atb-today',payN+dueN+hrN);bd('#atb-mem',pend);try{const [lv,fx]=await Promise.all([hget('hr/leave'),hget('hr/fix')]);let n=0;[lv,fx].forEach(o=>Object.values(o||{}).forEach(c=>Object.values(c||{}).forEach(v=>{if(v&&v.status==='pending')n++})));bd('#atb-staff',n)}catch(e){}}
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
@@ -5104,7 +5108,8 @@ function admPaint(){if(!ADM.all)return;const all=ADM.all;const q=$('#admSearch')
     for(const [k,v] of src){if(!v)continue;const s=String(v);if(nz(s).includes(qn)||(qd.length>=3&&s.replace(/\D/g,'').includes(qd))){HIT[m.id]=k+': '+s.slice(0,60);return true}}
     return false};
   try{renderAdmFilter(all)}catch(e){}
-  let list=all.filter(m=>admPass(m)&&srch(m));
+  if(!q&&!admFilter){$('#admCnt').textContent=all.length+'명';$('#admRows').innerHTML='<div class="small" style="padding:14px 4px;text-align:center">위에서 <b>전체·유효·만료</b> 같은 버튼을 누르거나 이름을 검색하면 회원 목록이 나와요.<br>한 번 더 누르면 다시 접혀요.</div>';return}
+  let list=all.filter(m=>(q&&!admFilter?true:admPass(m))&&srch(m));
   if(q){const sc=m=>{const n=nz(m.name);return n===qn||m.id===q?0:n.startsWith(qn)||m.id.startsWith(q)?1:HIT[m.id]?3:2};list.sort((a,b)=>sc(a)-sc(b))}
   $('#admCnt').textContent=q?`${list.length}명 찾음 / ${all.length}명`:all.length+'명';
   const shown=q?list:list.slice(0,ADM.lim);$('#admRows').innerHTML=shown.map(m=>`<div class="mrow${m.approvedAt?'':' pend'}" data-d="${esc(m.id)}"><div class="cimg mface" data-mf="${esc(m.id)}">${m.hasFace?'':'사진<br>없음'}</div><div class="mi"><div class="mn"><b>${esc(m.name)}</b><span class="small num">${esc(m.id)}</span>${m.approvedAt?'':'<span class="pill fire">승인 대기</span>'}${impB(m)?`<span class="imp-pill ${impA(m)}">${impA(m)==='create'?'가져옴·새로':'가져옴'} ${esc(impAt(m)?md(impAt(m)):'')}</span>`:''}${isDup(m)?'<span class="memo-pill" style="background:#FDE2E3;color:#8A1F24">중복 가입?</span>':''}${MEMOS[m.id]?`<span class="memo-pill">메모 ${Object.keys(MEMOS[m.id]).length}</span>`:''}</div><div class="ms">${memShort(m)}<span class="num">· 출석 ${m.attend.length}회${m.last===TODAY()?' · <b style="color:var(--green)">오늘 ✓</b>':''}</span></div>${HIT[m.id]?`<div class="ms" style="color:#7A5A00">🔎 ${esc(HIT[m.id])}</div>`:''}</div><div class="mb">${m.approvedAt?'':`<button class="btn sm red" data-ap="${esc(m.id)}">승인</button>`}<button class="btn sm ghost mdet" data-dd="${esc(m.id)}">상세</button><span class="mchev" aria-hidden="true">›</span></div></div>`).join('')||(q?`<p class="small" style="margin:8px 0">'${esc(q)}' 검색 결과가 없어요.</p>`:'<p class="small" style="margin:8px 0">아직 회원이 없어요. QR로 첫 가입을 받아 보세요.</p>');
@@ -6341,7 +6346,7 @@ async function openShot(s){
 }
 
 /* ================= 관장: 회원 상태 필터 ================= */
-let admFilter='all';
+let admFilter='';
 function memGroup(m){const st=memStatus(m);if(st.state==='none')return 'none';if(st.state==='pt')return m.mem.pt.left>0?'active':'expired';if(st.state==='expired')return 'expired';if(st.state==='soon')return 'soon';return 'active'}
 function renderAdmFilter(all){
   const g={all:all.length,active:0,soon:0,expired:0,none:0};all.forEach(m=>{const k=memGroup(m);g[k]++});
@@ -6354,9 +6359,13 @@ function renderAdmFilter(all){
   pb.querySelectorAll('[data-pa]').forEach(b=>b.onclick=async()=>{const m=pl.find(x=>x.id===b.dataset.pa);if(!m)return;b.disabled=true;b.textContent='승인 중';await approveMember(m)});
   const IB=impBatches(all);const lastB=IB[0];const nImp=all.filter(m=>impB(m)).length;
   $('#admFilt').innerHTML=[['pending','승인 대기',pend],['all','전체',g.all],['valid','유효',valid],['soon','만료 임박',g.soon],['expired','만료',g.expired],['none','미등록',g.none],...(nImp?[['imp','가져온 회원',nImp]]:[]),...(lastB&&admFilter.startsWith('imp:')&&admFilter!=='imp:'+lastB.id?[[admFilter,'선택한 가져오기',all.filter(m=>'imp:'+impB(m)===admFilter).length]]:[]),...(lastB?[['imp:'+lastB.id,'방금(마지막) 가져온',lastB.n]]:[])].map(([k,n,c])=>`<button class="chip ${admFilter===k?'on':''}" data-f="${k}">${n} ${c}</button>`).join('');
-  $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=b.dataset.f;ADM.lim=100;renderAdmRows('cache')});
+  $$('#admFilt [data-f]').forEach(b=>b.onclick=()=>{admFilter=admFilter===b.dataset.f?'':b.dataset.f;ADM.lim=100;renderAdmRows('cache')});
+  {const ma=$('#memAlert'),mm=$('#memAlertMore');const soonL=all.filter(m=>memGroup(m)==='soon');
+    mm.innerHTML=soonL.length?`<button class="btn sm ghost" id="maSoon" style="text-align:left">⏳ 7일 안에 만료되는 회원 <b>${soonL.length}명</b> — ${esc(soonL.slice(0,4).map(m=>m.name).join(', '))}${soonL.length>4?' 외':''} <span class="small">보기 ›</span></button>`:'';
+    const sb=$('#maSoon');if(sb)sb.onclick=()=>{admFilter='soon';ADM.lim=100;renderAdmRows('cache');setTimeout(()=>{const r=$('#admFilt');r&&r.scrollIntoView({behavior:'smooth',block:'start'})},60)};
+    ma.style.display=(pend||soonL.length)?'flex':'none'}
 }
-function admPass(m){if(admFilter==='all')return true;if(admFilter==='imp')return !!impB(m);if(admFilter.startsWith('imp:'))return 'imp:'+impB(m)===admFilter;if(admFilter==='pending')return!m.approvedAt;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
+function admPass(m){if(!admFilter)return false;if(admFilter==='all')return true;if(admFilter==='imp')return !!impB(m);if(admFilter.startsWith('imp:'))return 'imp:'+impB(m)===admFilter;if(admFilter==='pending')return!m.approvedAt;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
 
 /* ================= 주N회 요일 고정 ================= */
 const WEEKLY_RULE=n=>`주${n}회권은 등록할 때 정한 요일에만 출석할 수 있어요. 못 온 날을 다른 요일로 옮겨 출석할 수 없어요. (관장님이 승인한 보강만 예외)`;
