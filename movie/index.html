@@ -142,6 +142,21 @@ button:focus-visible,.file:focus-within{outline:2px solid var(--accent);outline-
 .lens td{padding:5px 4px;border-bottom:1px solid var(--line);vertical-align:top}
 .lens td:first-child{font-family:var(--f-mono);color:var(--accent);white-space:nowrap}
 .lens td:nth-child(2){font-family:var(--f-mono);white-space:nowrap}
+.gmodes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sliders{display:grid;gap:8px}
+.sliders .field[hidden]{display:none}
+.gmodes button{border:1px solid var(--line);background:transparent;border-radius:9px;padding:8px 4px;cursor:pointer;display:grid;gap:1px;text-align:center}
+.gmodes b{font-size:14px}
+.gmodes small{font-size:11px;color:var(--muted)}
+.gmodes button[aria-pressed="true"]{border-color:var(--accent);background:rgba(255,207,63,.12)}
+.gmodes button[aria-pressed="true"] b{color:var(--accent)}
+.pill.score{font-weight:700}
+.grid3{position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:6px;
+  background:linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% + .5px),transparent calc(66.66% + .5px)),
+  linear-gradient(180deg,transparent calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.cells{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);pointer-events:none;z-index:1}
+.cells i{transition:background .25s,box-shadow .25s}
+.cells i.bad{background:rgba(255,75,58,.18);box-shadow:inset 0 0 0 2px rgba(255,75,58,.75)}
 .hidevid{position:fixed;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0}
 </style>
 </head>
@@ -151,7 +166,9 @@ button:focus-visible,.file:focus-within{outline:2px solid var(--accent);outline-
     <div class="vf">
       <div class="stage" id="stage">
         <canvas id="cv"></canvas>
-        <div class="hud"><span class="pill" id="statePill">준비</span><span class="pill" id="timePill">0:00 / 0:00</span></div>
+        <div class="grid3" id="grid3" hidden></div>
+        <div class="cells" id="cells" hidden><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="hud"><span class="pill" id="statePill">준비</span><span class="pill score" id="scorePill" hidden>일치 --%</span><span class="pill" id="timePill">0:00 / 0:00</span></div>
         <div class="time"><i id="timeBar"></i></div>
         <div class="shotOv" id="shotOv" hidden><b id="ovName"></b><span id="ovChips"></span></div>
         <div class="count" id="count" hidden></div>
@@ -178,9 +195,32 @@ button:focus-visible,.file:focus-within{outline:2px solid var(--accent);outline-
     <p class="hint" id="recHint">녹화를 누르면 3초 뒤 영상과 녹화가 같이 시작하고, 영상이 끝나면 자동으로 멈춰요.</p>
 
 
-    <div class="field">
-      <div class="row"><span>영상 진하기</span><span class="tag" id="opTxt">40%</span></div>
-      <input type="range" id="op" min="0" max="1" step="0.05" value="0.4">
+    <div class="field" id="gmodeField">
+      <div class="row"><span class="label">가이드 (여러 개 같이 켜져요)</span></div>
+      <div class="gmodes" id="layers">
+        <button data-l="ghost"><b>반투명</b><small>영상 흐리게</small></button>
+        <button data-l="edge"><b>윤곽선</b><small>선만 노랗게</small></button>
+        <button data-l="tone"><b>명암</b><small>어두운 곳 줄무늬</small></button>
+        <button data-l="diff"><b>차이</b><small>다른 곳 빨갛게</small></button>
+      </div>
+      <div class="sliders" id="lsliders">
+        <div class="field" data-l="ghost"><div class="row"><span>반투명 진하기</span><span class="tag">40%</span></div><input type="range" id="op_ghost" min="0.05" max="1" step="0.05" value="0.4" aria-label="반투명 진하기"></div>
+        <div class="field" data-l="edge"><div class="row"><span>윤곽선 진하기</span><span class="tag">90%</span></div><input type="range" id="op_edge" min="0.1" max="1" step="0.05" value="0.9" aria-label="윤곽선 진하기"></div>
+        <div class="field" data-l="tone"><div class="row"><span>줄무늬 진하기</span><span class="tag">70%</span></div><input type="range" id="op_tone" min="0.1" max="1" step="0.05" value="0.7" aria-label="줄무늬 진하기"></div>
+        <div class="field" data-l="tone"><div class="row"><span>명암 기준</span><span class="tag" id="thrTxt">자동</span></div><input type="range" id="thr" min="-0.25" max="0.25" step="0.01" value="0" aria-label="명암 기준"></div>
+        <div class="field" data-l="diff"><div class="row"><span>빨강 진하기</span><span class="tag">90%</span></div><input type="range" id="op_diff" min="0.1" max="1" step="0.05" value="0.9" aria-label="빨강 진하기"></div>
+      </div>
+      <span class="label">보는 방식</span>
+      <div class="seg" id="viewMode">
+        <button data-v="0" aria-pressed="true">겹쳐 보기</button>
+        <button data-v="1" aria-pressed="false">반반</button>
+        <button data-v="2" aria-pressed="false">번갈아</button>
+      </div>
+      <p class="hint" id="gmodeHint"></p>
+    </div>
+    <div class="chips">
+      <button class="chip" id="scoreBtn" aria-pressed="true">일치도·틀린 칸 표시</button>
+      <button class="chip" id="gridBtn" aria-pressed="false">3분할선</button>
     </div>
 
     <div class="field">
@@ -311,7 +351,64 @@ button:focus-visible,.file:focus-within{outline:2px solid var(--accent);outline-
 <script>
 (() => {
 const $ = id => document.getElementById(id);
-const cv=$('cv'), ctx=cv.getContext('2d');
+const cv=$('cv');
+const GLV={gl:null}; let ctx=null;
+(()=>{
+  const gl=cv.getContext('webgl',{premultipliedAlpha:false,antialias:false});
+  if(!gl){ ctx=cv.getContext('2d'); return; }
+  const VSs='attribute vec2 p;varying vec2 v;void main(){v=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
+  const FSs=`precision mediump float;varying vec2 v;
+uniform sampler2D cam,rf;uniform vec4 camTx,refTx;uniform vec2 px;
+uniform float camMir,refMir,hasCam,hasRef,view,lGhost,lEdge,lTone,lDiff,split,blink,refMean,thr,camMean,camStd,refStd;
+vec2 cuv(vec2 q,vec4 t,float m){if(m>.5)q.x=1.-q.x;return q*t.xy+t.zw;}
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+float rl(vec2 u){return lum(texture2D(rf,u).rgb);}
+void main(){
+ vec2 ru=cuv(v,refTx,refMir);vec3 r=texture2D(rf,ru).rgb;
+ vec3 c=hasCam>.5?texture2D(cam,cuv(v,camTx,camMir)).rgb:r*.45;
+ if(hasRef<.5){gl_FragColor=vec4(c,1.);return;}
+ vec3 o=c;
+ if(lDiff>0.){
+  float lc=(lum(c)-camMean)/max(camStd,.03),lr=(lum(r)-refMean)/max(refStd,.03);
+  float d=smoothstep(.35,1.3,abs(lc-lr));
+  o=mix(c,mix(vec3(lum(c))*.45,vec3(1.,.28,.18),d),lDiff);
+ }
+ if(lGhost>0.) o=mix(o,r,lGhost);
+ if(lTone>0.){
+  float T=refMean+thr;float L=rl(ru);
+  float dk=1.-smoothstep(T-.03,T+.03,L);
+  float hatch=step(.5,fract((gl_FragCoord.x+gl_FragCoord.y)/16.));
+  o=mix(o,vec3(.1,.85,1.),dk*(.25+.6*hatch)*lTone);
+  float n=1.-smoothstep(T-.03,T+.03,rl(ru+vec2(px.x,0.)));float m=1.-smoothstep(T-.03,T+.03,rl(ru+vec2(0.,px.y)));
+  o=mix(o,vec3(1.,.3,.75),clamp(abs(dk-n)+abs(dk-m),0.,1.)*lTone);
+ }
+ if(lEdge>0.){
+  float tl=rl(ru+vec2(-px.x,-px.y)),t=rl(ru+vec2(0.,-px.y)),tr=rl(ru+vec2(px.x,-px.y));
+  float l=rl(ru+vec2(-px.x,0.)),rr=rl(ru+vec2(px.x,0.));
+  float bl=rl(ru+vec2(-px.x,px.y)),b=rl(ru+vec2(0.,px.y)),br=rl(ru+vec2(px.x,px.y));
+  float gx=-tl-2.*l-bl+tr+2.*rr+br,gy=-tl-2.*t-tr+bl+2.*b+br;
+  float e=smoothstep(.12,.35,length(vec2(gx,gy)));
+  o=mix(o,vec3(1.,.81,.25),e*lEdge);
+ }
+ if(view>.5&&view<1.5){ if(v.x<split)o=r; if(abs(v.x-split)<.003)o=vec3(1.,.81,.25); }
+ if(view>1.5&&blink>.5) o=r;
+ gl_FragColor=vec4(o,1.);}`;
+  const mk=(t,src)=>{const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);return s;};
+  const pr=gl.createProgram(); gl.attachShader(pr,mk(gl.VERTEX_SHADER,VSs)); gl.attachShader(pr,mk(gl.FRAGMENT_SHADER,FSs)); gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){ GLV.gl=null; return; }
+  gl.useProgram(pr);
+  const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const tex=u=>{ const t=gl.createTexture(); gl.activeTexture(gl.TEXTURE0+u); gl.bindTexture(gl.TEXTURE_2D,t);
+    [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(k=>gl.texParameteri(gl.TEXTURE_2D,k,gl.CLAMP_TO_EDGE));
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array(3)); return t; };
+  GLV.tCam=tex(0); GLV.tRef=tex(1);
+  const U={}; ['cam','rf','camTx','refTx','px','camMir','refMir','hasCam','hasRef','view','lGhost','lEdge','lTone','lDiff','split','blink','refMean','thr','camMean','camStd','refStd'].forEach(n=>U[n]=gl.getUniformLocation(pr,n));
+  gl.uniform1i(U.cam,0); gl.uniform1i(U.rf,1);
+  GLV.gl=gl; GLV.U=U;
+})();
+if(!GLV.gl && !ctx) ctx=cv.getContext('2d');
 const ref=$('ref'), cam=$('cam'), stage=$('stage');
 const S={micOn:true,op:.4, mirror:true, refMirror:false, snd:true, mic:false, cd:true, out:'mine', speed:1,
   start:0, facing:'user', stream:null, rec:null, recording:false, counting:false, chunks:[], blob:null, ext:'mp4',
@@ -336,16 +433,32 @@ new ResizeObserver(resize).observe(stage);
 
 function fmt(t){ t=Math.max(0,t||0); return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'); }
 
+function coverTx(sw,sh,W,H){ const A=W/H,a=sw/sh; return a>A?[A/a,1,(1-A/a)/2,0]:[1,a/A,0,(1-a/A)/2]; }
+function drawGL(){
+  const {gl,U}=GLV, W=cv.width,H=cv.height; gl.viewport(0,0,W,H);
+  const hc=camOK(), hr=refOK();
+  if(hc){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,GLV.tCam); try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,cam); }catch(e){} gl.uniform4fv(U.camTx,coverTx(cam.videoWidth,cam.videoHeight,W,H)); }
+  if(hr){ const t=ref.currentTime; if(t!==GLV.lastT||ref.src!==GLV.lastSrc||!ref.paused){ gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,GLV.tRef); try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,ref); GLV.lastT=t; GLV.lastSrc=ref.src; }catch(e){} }
+    gl.uniform4fv(U.refTx,coverTx(ref.videoWidth,ref.videoHeight,W,H)); gl.uniform2f(U.px,1.6/ref.videoWidth,1.6/ref.videoHeight); }
+  gl.uniform1f(U.hasCam,hc?1:0); gl.uniform1f(U.hasRef,hr?1:0);
+  gl.uniform1f(U.camMir,S.mirror?1:0); gl.uniform1f(U.refMir,S.refMirror?1:0);
+  const L=k=>S.layers[k]?S.opm[k]:0;
+  gl.uniform1f(U.view,S.view); gl.uniform1f(U.lGhost,hc?L('ghost'):(S.layers.ghost?1:0)); gl.uniform1f(U.lEdge,L('edge')); gl.uniform1f(U.lTone,L('tone')); gl.uniform1f(U.lDiff,hc?L('diff'):0);
+  gl.uniform1f(U.split,S.split); gl.uniform1f(U.blink,Math.floor(performance.now()/450)%2);
+  gl.uniform1f(U.refMean,ST.refMean); gl.uniform1f(U.thr,S.thr); gl.uniform1f(U.camMean,ST.camMean); gl.uniform1f(U.camStd,ST.camStd); gl.uniform1f(U.refStd,ST.refStd);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
 function loop(){
   const W=cv.width,H=cv.height;
-  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
-  drawMine(ctx,0,0,W,H);
-  if(refOK()){ ctx.globalAlpha=camOK()?S.op:1; drawRef(ctx,0,0,W,H); ctx.globalAlpha=1; }
+  if(GLV.gl) drawGL();
+  else { ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); drawMine(ctx,0,0,W,H);
+    if(refOK()){ ctx.globalAlpha=camOK()?S.opm.ghost:1; drawRef(ctx,0,0,W,H); ctx.globalAlpha=1; } }
+  scoreTick();
   if(S.recording && S.recCtx){
     const g=S.recCtx, rw=S.recCanvas.width, rh=S.recCanvas.height;
     g.fillStyle='#000'; g.fillRect(0,0,rw,rh);
     if(S.out==='mine') drawMine(g,0,0,rw,rh);
-    else if(S.out==='overlay'){ drawMine(g,0,0,rw,rh); g.globalAlpha=S.op; drawRef(g,0,0,rw,rh); g.globalAlpha=1; }
+    else if(S.out==='overlay'){ drawMine(g,0,0,rw,rh); g.globalAlpha=S.opm.ghost; drawRef(g,0,0,rw,rh); g.globalAlpha=1; }
     else { const h=rh/2; drawRef(g,0,0,rw,h); drawMine(g,0,h,rw,h); g.fillStyle='#ffcf3f'; g.fillRect(0,h-2,rw,4); }
   }
   if(S.hasRef) updateShot(ref.currentTime);
@@ -412,7 +525,75 @@ function ensureAudio(){
 }
 
 /* ---------- 조작 ---------- */
-$('op').addEventListener('input',e=>{S.op=+e.target.value; $('opTxt').textContent=Math.round(S.op*100)+'%';});
+/* ---------- 가이드 방식 ---------- */
+S.layers={ghost:true,edge:true,tone:false,diff:false}; S.view=0;
+S.opm={ghost:.4,edge:.9,tone:.7,diff:.9}; S.split=.5; S.thr=0; S.showScore=true;
+const LHINT={ghost:'반투명: 표정·조명·색감 비교',edge:'윤곽선: 노란 선 안에 몸과 배경을 맞추기',tone:'명암: 파란 줄무늬(어두운 곳) 안을 내 실루엣으로 채우기',diff:'차이: 빨간 곳이 사라질수록 똑같음'};
+function saveG(){ try{ localStorage.setItem('guideCfg',JSON.stringify({layers:S.layers,view:S.view,opm:S.opm})); }catch(e){} }
+function renderG(){
+  [...$('layers').children].forEach(b=>b.setAttribute('aria-pressed',!!S.layers[b.dataset.l]));
+  [...$('lsliders').children].forEach(f=>f.hidden=!S.layers[f.dataset.l]);
+  ['ghost','edge','tone','diff'].forEach(k=>{ const el=$('op_'+k); el.value=S.opm[k]; el.closest('.field').querySelector('.tag').textContent=Math.round(S.opm[k]*100)+'%'; });
+  [...$('viewMode').children].forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===S.view));
+  const on=Object.keys(S.layers).filter(k=>S.layers[k]).map(k=>LHINT[k]);
+  $('gmodeHint').textContent=(on.length?on.join(' · '):'가이드를 하나 이상 켜세요.')+(S.view===1?' · 반반: 화면을 좌우로 끌어 경계 이동':S.view===2?' · 번갈아: 깜빡일 때 움직여 보이는 곳이 다른 곳':'');
+}
+$('layers').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; S.layers[b.dataset.l]=!S.layers[b.dataset.l]; renderG(); saveG(); });
+$('viewMode').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; S.view=+b.dataset.v; renderG(); saveG(); });
+['ghost','edge','tone','diff'].forEach(k=>$('op_'+k).addEventListener('input',e=>{ S.opm[k]=+e.target.value; e.target.closest('.field').querySelector('.tag').textContent=Math.round(S.opm[k]*100)+'%'; saveG(); }));
+$('thr').addEventListener('input',e=>{ S.thr=+e.target.value; $('thrTxt').textContent=S.thr===0?'자동':(S.thr>0?'넓게 +':'좁게 ')+Math.round(Math.abs(S.thr)*100); });
+$('scoreBtn').addEventListener('click',()=>{ S.showScore=!S.showScore; $('scoreBtn').setAttribute('aria-pressed',S.showScore); if(!S.showScore){ $('scorePill').hidden=true; $('cells').hidden=true; } });
+$('gridBtn').addEventListener('click',()=>{ const on=$('grid3').hidden; $('grid3').hidden=!on; $('gridBtn').setAttribute('aria-pressed',on); });
+let splitDrag=false;
+stage.addEventListener('pointerdown',e=>{ if(S.view!==1||!S.hasRef||e.target.closest('.empty')) return; splitDrag=true; try{stage.setPointerCapture(e.pointerId);}catch(_){} moveSplit(e); });
+stage.addEventListener('pointermove',e=>{ if(splitDrag) moveSplit(e); });
+['pointerup','pointercancel'].forEach(n=>stage.addEventListener(n,()=>splitDrag=false));
+function moveSplit(e){ const r=stage.getBoundingClientRect(); S.split=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); }
+try{ const c=JSON.parse(localStorage.getItem('guideCfg')||'null'); if(c){ Object.assign(S.layers,c.layers||{}); S.view=c.view||0; Object.assign(S.opm,c.opm||{}); } }catch(e){}
+if(!GLV.gl){ $('layers').hidden=true; $('viewMode').hidden=true; [...$('lsliders').children].forEach(f=>f.hidden=f.dataset.l!=='ghost'); $('gmodeHint').textContent='이 폰에서는 반투명 가이드만 쓸 수 있어요.'; }
+else renderG();
+
+/* ---------- 일치도·틀린 칸 ---------- */
+const ST={refMean:.4,camMean:.4,camStd:.2,refStd:.2,last:0,score:0};
+const SW=48, sc1=document.createElement('canvas'), sc2=document.createElement('canvas');
+const sg1=sc1.getContext('2d',{willReadFrequently:true}), sg2=sc2.getContext('2d',{willReadFrequently:true});
+function featOf(g,w,h){
+  const d=g.getImageData(0,0,w,h).data, n=w*h, Y=new Float32Array(n); let m=0,m2=0;
+  for(let i=0;i<n;i++){ const y=(.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2])/255; Y[i]=y; m+=y; m2+=y*y; }
+  m/=n; const sd=Math.sqrt(Math.max(0,m2/n-m*m));
+  const E=new Float32Array(n);
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;
+    const gx=-Y[i-w-1]-2*Y[i-1]-Y[i+w-1]+Y[i-w+1]+2*Y[i+1]+Y[i+w+1], gy=-Y[i-w-1]-2*Y[i-w]-Y[i-w+1]+Y[i+w-1]+2*Y[i+w]+Y[i+w+1];
+    E[i]=Math.hypot(gx,gy); }
+  const B=new Float32Array(n); for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ let s=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) s+=E[(y+dy)*w+x+dx]; B[y*w+x]=s/9; }
+  return {Y,E:B,m,sd};
+}
+function simIdx(A,Bf,idx){
+  let ab=0,aa=0,bb=0; for(const i of idx){ ab+=A.E[i]*Bf.E[i]; aa+=A.E[i]**2; bb+=Bf.E[i]**2; } const es=aa&&bb?ab/Math.sqrt(aa*bb):0;
+  let ma=0,mb=0; for(const i of idx){ ma+=A.Y[i]; mb+=Bf.Y[i]; } ma/=idx.length; mb/=idx.length;
+  let xy=0,xx=0,yy=0; for(const i of idx){ const x=A.Y[i]-ma,y=Bf.Y[i]-mb; xy+=x*y; xx+=x*x; yy+=y*y; } const lc=xx&&yy?xy/Math.sqrt(xx*yy):0;
+  return Math.max(0,Math.min(1,((.6*es+.4*Math.max(0,lc))-.28)/.52));
+}
+function scoreTick(){
+  const now=performance.now(); if(now-ST.last<200||!refOK()) return; ST.last=now;
+  const h=Math.max(8,Math.round(SW*cv.height/Math.max(1,cv.width))); sc1.width=sc2.width=SW; sc1.height=sc2.height=h;
+  drawRef(sg2,0,0,SW,h); const R=featOf(sg2,SW,h); ST.refMean=R.m; ST.refStd=R.sd;
+  if(!camOK()){ $('scorePill').hidden=true; $('cells').hidden=true; return; }
+  drawMine(sg1,0,0,SW,h); const C=featOf(sg1,SW,h); ST.camMean=C.m; ST.camStd=C.sd;
+  const all=[...Array(SW*h).keys()]; const tot=simIdx(C,R,all);
+  ST.score=ST.score*.6+tot*100*.4;
+  if(!S.showScore) return;
+  const s=Math.round(ST.score), p=$('scorePill'); p.hidden=false; p.textContent='일치 '+s+'%';
+  p.style.background=s>=80?'var(--good)':s>=55?'var(--accent)':'rgba(255,75,58,.85)'; p.style.color=s>=55?'var(--bg)':'#fff';
+  const cells=$('cells'); cells.hidden=false;
+  const cs=[];
+  for(let cy=0;cy<3;cy++)for(let cx=0;cx<3;cx++){ const idx=[]; const x0=Math.floor(cx*SW/3),x1=Math.floor((cx+1)*SW/3),y0=Math.floor(cy*h/3),y1=Math.floor((cy+1)*h/3);
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++) idx.push(y*SW+x);
+    cs.push([cy*3+cx,simIdx(C,R,idx)]); }
+  // 가장 많이 다른 칸 최대 3개만 표시 (먼저 고칠 곳)
+  const worst=new Set(cs.filter(c=>c[1]<.45).sort((x,y)=>x[1]-y[1]).slice(0,3).map(c=>c[0]));
+  cs.forEach(([i])=>cells.children[i].classList.toggle('bad',worst.has(i)));
+}
 let seekT; $('scrub').addEventListener('input',e=>{ S.start=+e.target.value; $('startTxt').textContent=S.start.toFixed(1)+'초'; if(!ref.paused) ref.pause(); $('playBtn').textContent='▶'; clearTimeout(seekT); seekT=setTimeout(()=>{ref.currentTime=S.start;},40); });
 function seg(id,key,cast){ $(id).addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||S.recording) return; [...$(id).children].forEach(x=>x.setAttribute('aria-pressed',x===b)); S[key]=cast(b.dataset.v); if(key==='speed') ref.playbackRate=S.speed; }); }
 seg('speed','speed',Number); seg('outMode','out',String);
