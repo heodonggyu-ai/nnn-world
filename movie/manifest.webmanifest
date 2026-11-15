@@ -1,0 +1,38 @@
+{
+  "id": "./",
+  "name": "따라찍기 무비",
+  "short_name": "따라찍기",
+  "description": "좋아하는 영상을 카메라 화면에 반투명하게 깔고 똑같이 따라 찍는 촬영 가이드 앱",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f8f9f",
+  "theme_color": "#15130f",
+  "categories": [
+    "photo",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "clap-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "clap-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "clap-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
