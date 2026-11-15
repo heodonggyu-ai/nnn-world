@@ -5370,7 +5370,7 @@ async function setPay(id,st){const x=local.pays[id];if(!x)return;if(x.status!=='
   await DB.addPay(x);clearPayPend(x.mid,x.id);
   if(st==='done'&&x.lk&&x.mid){toast('락커 결제 확인 · 이제 칸을 배정해요',3000);lkAfterPay(x)}
   else if(st==='done'&&x.mid){const m=await DB.get(x.mid);if(m){m.credits+=100;m.earned+=100;await DB.save(m);const rn=await referralOnPay(m);toast(m.name+' 님 결제 확인 · 등록 보너스 100 크레딧'+rn,3500);openMemEditor(m,{item:x.item,paidAt:TODAY(),days:x.days||[],pay:x},async m2=>{if(!m2.approvedAt){m2.approvedAt=TODAY();await DB.savePriv(m2)}renderAdmRows();sendAuto(m2,'pay',x)})}}else toast(st==='done'?'결제 확인 완료':'취소 처리했어요');
-  renderPays()}
+  renderPays();setTimeout(()=>{try{renderDue()}catch(e){}},400)}
 function readImg(input,cb){const f=input.files&&input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/png'))};im.src=r.result};r.readAsDataURL(f)}
 $('#sAsan').onchange=e=>readImg(e.target,d=>{local.meta.pay.asanQR=d;toast('아산페이 QR을 바꿨어요. 설정 저장을 눌러 주세요')});
 $('#sOnnuri').onchange=e=>readImg(e.target,d=>{local.meta.pay.onnuriQR=d;$('#onnuriState').textContent='등록됨 (저장 필요)';toast('온누리 QR을 등록했어요. 설정 저장을 눌러 주세요')});
@@ -6061,7 +6061,7 @@ function openMemEditor(m,pre={},onDone){
       if(mode==='edit'&&cur.segs&&m.mem.segs&&m.mem.segs.length){const L=m.mem.segs[m.mem.segs.length-1];m.mem.segs=m.mem.segs.slice(0,-1).concat([Object.assign({},L,{end:m.mem.end})])}
       if((cur.end||cur.pt)&&cur.start&&m.mem.start===cur.start){if(cur.holds)m.mem.holds=cur.holds;if(cur.hold)m.mem.hold=cur.hold}
       {const lg=el.querySelector('#meLegacy');if(lg)m.legacy=lg.checked}
-      m.memHist=hist;await DB.savePriv(m);
+      m.memHist=hist;await DB.savePriv(m);setTimeout(()=>{try{renderDue()}catch(e){}},400);
       let pr=null;
       if(pOn.checked){const amt=+pAmt.value.replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
         if(pre.pay){pr=pre.pay;Object.assign(pr,{method:pm,amount:amt,saleDate:pd,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||pr.item)+(famOn?' (가족할인)':''),months:st.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0});await DB.addPay(clean(pr));if(local.pays)local.pays[pr.id]=pr}
@@ -6803,7 +6803,8 @@ function dueItems(all){
     if(recent(m.approvedAt)&&!wasSent(m,'welcome'))out.push({m,kind:'welcome'});
     if(mem&&mem.setAt&&recent(mem.paidAt)&&!wasSent(m,'pay'))out.push({m,kind:'pay'});
     if(mem&&mem.hold&&!wasSent(m,'hold'))out.push({m,kind:'hold'});
-    if(mem&&mem.end&&st.state!=='hold'){const L=st.left;if(((L===7&&rc.d7)||(L===3&&rc.d3)||(L===2&&rc.d2)||(L===1&&rc.d1)||(L===0&&rc.d0))&&!wasSent(m,'exp'))out.push({m,kind:'exp',tag:L?`D-${L}`:'오늘 종료'});
+    const payIn=m.payPend&&Date.now()-(+m.payPend.at||0)<14*864e5;
+    if(mem&&mem.end&&st.state!=='hold'&&!payIn){const L=st.left;if(((L===7&&rc.d7)||(L===3&&rc.d3)||(L===2&&rc.d2)||(L===1&&rc.d1)||(L===0&&rc.d0))&&!wasSent(m,'exp'))out.push({m,kind:'exp',tag:L?`D-${L}`:'오늘 종료'});
       const u=(m.unpaid||[]).slice(-1)[0];const unpaidNow=st.state==='expired'&&u&&dDiff(TODAY(),u.d)<=7&&!wasSent(m,'unpaid');
       if(unpaidNow)out.push({m,kind:'unpaid',tag:'만료 후 출석'});
       else if(rc.after&&L<0&&L>=-3&&!wasSent(m,'after'))out.push({m,kind:'after'})}
