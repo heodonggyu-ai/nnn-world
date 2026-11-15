@@ -5172,6 +5172,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     ${m.phone?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="sms:${String(m.phone).replace(/[^\d]/g,'')}">문자 대화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="tel:${String(m.phone).replace(/[^\d]/g,'')}">전화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a></div>`:''}
 
     <button class="btn ghost" id="admVcf">이 회원 연락처 저장(.vcf)</button>
+    <button class="btn ghost" id="admRefund" style="color:var(--red)">💸 환불 처리 · 회원 삭제</button>
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     if(syncing){el.classList.add('syncing');setTimeout(()=>el.classList.remove('syncing'),5000)}
@@ -5193,6 +5194,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     el.querySelector('#admSend').onclick=()=>{close();openSendPicker(m)};
     el.querySelector('#admCps').onclick=()=>{close();admCoupons(m.id)};el.querySelector('#admGrp').onclick=()=>{close();openGrape(m,true,()=>{renderAdmRows();admDetail(m.id)})};
     el.querySelector('#admGuard').onclick=()=>{close();openGuardSheet(m)};
+    el.querySelector('#admRefund').onclick=()=>refundMember(m,()=>{close();renderAdmRows();try{renderDue()}catch(e){}});
     el.querySelector('#admDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (되돌릴 수 없어요)';return}if(await deleteMember(m)){close();renderAdmRows()}};
     el.querySelector('#admVcf').onclick=()=>download(`NNN_${m.id}_${m.name}.vcf`,vcard(m),'text/vcard')});
 }
@@ -6803,7 +6805,7 @@ function dueItems(all){
     if(recent(m.approvedAt)&&!wasSent(m,'welcome'))out.push({m,kind:'welcome'});
     if(mem&&mem.setAt&&recent(mem.paidAt)&&!wasSent(m,'pay'))out.push({m,kind:'pay'});
     if(mem&&mem.hold&&!wasSent(m,'hold'))out.push({m,kind:'hold'});
-    const payIn=m.payPend&&Date.now()-(+m.payPend.at||0)<14*864e5;
+    const payIn=!!m.payPend;
     if(mem&&mem.end&&st.state!=='hold'&&!payIn){const L=st.left;if(((L===7&&rc.d7)||(L===3&&rc.d3)||(L===2&&rc.d2)||(L===1&&rc.d1)||(L===0&&rc.d0))&&!wasSent(m,'exp'))out.push({m,kind:'exp',tag:L?`D-${L}`:'오늘 종료'});
       const u=(m.unpaid||[]).slice(-1)[0];const unpaidNow=st.state==='expired'&&u&&dDiff(TODAY(),u.d)<=7&&!wasSent(m,'unpaid');
       if(unpaidNow)out.push({m,kind:'unpaid',tag:'만료 후 출석'});
@@ -6889,6 +6891,25 @@ async function approveMember(m){{const cur=await DB.get(m.id);if(cur&&cur.approv
     const a=el.querySelector('#apPay');if(a)a.onclick=async()=>{close();local.pays[p.id]=p;await setPay(p.id,'done')};
     const b=el.querySelector('#apMem');if(b)b.onclick=()=>{close();openMemEditor(m,{paidAt:TODAY(),newPay:true},(m2,pr)=>{renderAdmRows();if(pr)sendAuto(m2,'pay',pr);else sendAuto(m2,'welcome')})};
     el.querySelector('#apLater').onclick=()=>{close();sendAuto(m,'welcome')}})}
+async function refundMember(m,done){
+  let last=null;try{const ps=(await DB.pays()).filter(p=>p&&p.mid===m.id&&p.status==='done'&&(+p.amount||0)>0).sort((a,b)=>String(b.saleDate||b.at).localeCompare(String(a.saleDate||a.at)));last=ps[0]||null}catch(e){}
+  const st=memStatus(m);
+  sheet(`<h2>💸 환불 처리</h2><div class="small"><b>${esc(m.name)}</b> ${esc(m.id)} · ${m.mem&&m.mem.end?`${esc(m.mem.item||'')} ${md(m.mem.start)}~${md(m.mem.end)}`:'등록 정보 없음'}${last?` · 마지막 결제 ${won(+last.amount)} (${esc(String(last.saleDate||last.at).slice(0,10))})`:''}</div>
+    <div class="row"><div class="field grow"><label for="rfAmt">환불 금액 (원)</label><input id="rfAmt" inputmode="numeric" placeholder="0" value=""></div><div class="field grow"><label for="rfM">환불 방식</label><select id="rfM">${Object.entries(PAYM).map(([k,v])=>`<option value="${k}" ${last&&last.method===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
+    <div class="field"><label for="rfMemo">사유 (메모)</label><input id="rfMemo" placeholder="예: 이사, 부상, 단순 변심"></div>
+    <label class="check"><input type="checkbox" id="rfDel" checked><span><b>회원 정보도 삭제</b> <span class="small">(앱 계정·사진·출석 기록이 지워져요. 매출 기록은 남아요)</span></span></label>
+    <p class="small" style="margin:0">환불 금액은 오늘 날짜 매출에서 <b>환불</b>로 빠져요. 금액을 비우면 매출 기록 없이 처리돼요.</p>
+    <button class="btn red" id="rfGo">환불 처리</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    const a=el.querySelector('#rfAmt');a.oninput=()=>{const v=+a.value.replace(/\D/g,'')||0;a.value=v?v.toLocaleString():''};
+    const g=el.querySelector('#rfGo');g.onclick=async()=>{const del=el.querySelector('#rfDel').checked;
+      if(g.dataset.sure!=='1'){g.dataset.sure='1';g.textContent=del?'한 번 더 누르면 환불 + 회원 삭제 (되돌릴 수 없어요)':'한 번 더 누르면 환불 처리';return}
+      g.disabled=true;const amt=+a.value.replace(/\D/g,'')||0;const memo=el.querySelector('#rfMemo').value.trim();
+      try{if(amt){await DB.addPay(clean({id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),status:'done',source:'manual',saleDate:TODAY(),kind:'refund',amount:-amt,method:el.querySelector('#rfM').value,item:'환불'+(m.mem&&m.mem.item?' · '+m.mem.item:''),mid:m.id,name:m.name,memo:memo||'환불',at:new Date().toISOString(),doneAt:new Date().toISOString()}))}
+        if(del){if(!(await deleteMember(m))){g.disabled=false;return}}
+        else{m.memHist=(m.memHist||[]).concat([m.mem]).filter(Boolean).slice(-30);m.mem=null;m.refundAt=TODAY();await DB.savePriv(m);if(memo)try{await memoAdd(m.id,'환불: '+memo,'mem')}catch(e){}}
+        toast(`${m.name} 님 환불 처리${amt?' ('+won(amt)+')':''}${del?' · 회원 삭제':' · 등록 정보만 비움'} 완료`,3500);close();done&&done()}catch(e){console.error(e);toast('처리하지 못했어요');g.disabled=false}};
+  });
+}
 async function deleteMember(m){
   if(FB_ON()){try{await gref('members/'+m.id).set(null);await gref('private/'+m.id).set(null);await FDB.del(m.id);await gref('mpin/'+m.id).set(null);try{await gref('roster/'+m.id).set(null)}catch(e){}}catch(e){toast('삭제하지 못했어요');return false}}
   else{delete local.members[m.id];persist()}
