@@ -36,8 +36,8 @@ function matchEnd(m){const G=G0;const [a,b]=m.score;
   if(a>b)advance(G,a,b);else G.over(`${ROUNDS[mi]} ${TEAMS[mi][0]}에게 ${a}:${b} 패배`)}
 function advance(G,a,b){G.add(1500*(mi+1)+(a-b)*200);G.sfx('clear');mi++;if(mi>=TEAMS.length)return G.win('월드 투어 우승!','🏆 8경기 모두 승리');G.reach(mi+1);G.msg(`승리! 다음: ${ROUNDS[mi]}`,2000);nextT=2.6}
 /* ---------- 피파온라인2식 버튼 ---------- */
-const INP={held:{},down:{},up:{}};const KEYS={KeyQ:'Q',KeyW:'W',KeyE:'E',KeyA:'A',KeyS:'S',KeyD:'D',KeyC:'C'};
-const LAB={att:{Q:'조합',W:'스루',E:'대시',A:'로빙',S:'패스',D:'슛',C:'개인기'},def:{Q:'교체',W:'키퍼',E:'대시',A:'팀압박',S:'압박',D:'태클',C:'-'}};
+const INP={held:{},down:{},up:{}};const KEYS={KeyQ:'Q',KeyW:'W',KeyE:'E',KeyA:'A',KeyS:'S',KeyD:'D',KeyC:'C',KeyX:'X',Tab:'X'};
+const LAB={att:{Q:'롱패스',W:'스루',E:'대시',A:'로빙',S:'패스',D:'슛',C:'개인기',X:'교체'},def:{Q:'교체',W:'키퍼',E:'대시',A:'팀압박',S:'압박',D:'태클',C:'-',X:'교체'}};
 let BTN={},mode='';
 function press(k){if(!INP.held[k])INP.down[k]=1;INP.held[k]=1;if(BTN[k])BTN[k].classList.add('on')}
 function release(k){if(INP.held[k])INP.up[k]=1;INP.held[k]=0;if(BTN[k])BTN[k].classList.remove('on')}
@@ -46,16 +46,16 @@ function buildPad(G){const st=document.createElement('style');st.textContent=`.f
   .fo-b{border-radius:16px;border:2px solid #fff3;color:#fff;font-family:'Press Start 2P',monospace;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 rgba(0,0,0,.45);touch-action:none}
   .fo-b small{font-family:Jua,sans-serif;font-size:11px}.fo-b.on{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.45);filter:brightness(1.3)}
   .fo-b[data-k=S]{background:#2f9a44}.fo-b[data-k=W]{background:#2a6adf}.fo-b[data-k=A]{background:#c46bff}.fo-b[data-k=D]{background:#e8453c}.fo-b[data-k=E]{background:#ff9b3d}.fo-b[data-k=Q]{background:#5a5f8a}
-  .fo-b.arm{outline:3px solid #ffd23f}.fo-c{position:absolute;right:-14px;top:-14px;width:50px;height:50px;border-radius:50%;background:#ffd23f;color:#222;font-size:12px;z-index:3}.fo-c small{color:#222}
+  .fo-b.arm{outline:3px solid #ffd23f}.fo-c{position:absolute;right:-14px;top:-14px;width:50px;height:50px;border-radius:50%;background:#ffd23f;color:#222;font-size:12px;z-index:3}.fo-c small{color:#222}.fo-x{top:auto;bottom:-14px;background:#4fe3b2}
   .rt-ab{padding-bottom:0!important}`;document.head.appendChild(st);
   const ab=document.querySelector('.rt-ab');ab.innerHTML='';const pad=document.createElement('div');pad.className='fo-pad';
-  for(const k of ['Q','W','E','A','S','D','C']){const b=document.createElement('button');b.className='fo-b'+(k==='C'?' fo-c':'');b.dataset.k=k;b.innerHTML=`${k}<small></small>`;
-    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.setPointerCapture(e.pointerId);press(k);navigator.vibrate&&navigator.vibrate(6)});const up=()=>release(k);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);(k==='C'&&document.getElementById('rtD')?document.getElementById('rtD'):pad).appendChild(b);BTN[k]=b}
+  for(const k of ['Q','W','E','A','S','D','C','X']){const b=document.createElement('button');b.className='fo-b'+(k==='C'?' fo-c':k==='X'?' fo-c fo-x':'');b.dataset.k=k;b.innerHTML=`${k}<small></small>`;
+    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.setPointerCapture(e.pointerId);press(k);navigator.vibrate&&navigator.vibrate(6)});const up=()=>release(k);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);((k==='C'||k==='X')&&document.getElementById('rtD')?document.getElementById('rtD'):pad).appendChild(b);BTN[k]=b}
   ab.appendChild(pad);setInterval(()=>{if(!M)return;const b=M.ball;const att=M.state==='setpiece'?(M.sp&&M.sp.team===0):(b.owner?b.owner.team===0:b.last===0&&!!b.target);const m=att?'att':'def';
-    if(m!==mode){mode=m;for(const k in BTN)BTN[k].querySelector('small').textContent=LAB[m][k]}BTN.Q.classList.toggle('arm',(M.qArm||0)>0)},100)}
+    if(m!==mode){mode=m;for(const k in BTN)BTN[k].querySelector('small').textContent=LAB[m][k]}BTN.C.classList.toggle('arm',!!INP.held.C&&m==='att')},100)}
 function drawOverlay(G,c){if(!M||!F3)return;const p=M.ctrl;if(!p||M.state==='pens')return;const s=F3.project(p.x,p.y,13);if(s.behind)return;
   const g=p.gauge;if(g){const w=34,x=s.x-w/2,y=s.y-14;c.fillStyle='rgba(0,0,0,.6)';c.fillRect(x-1,y-1,w+2,6);const pw=Math.min(1,g.t/.9);c.fillStyle=pw>.85&&g.k==='D'?'#ff4f7b':'#ffd23f';c.fillRect(x,y,w*pw,4);
-    G.text({S:'패스',W:'스루',A:'로빙',D:'슛'}[g.k]+(g.combo?'+':''),s.x,y-11,{k:1,size:9,align:'center',color:'#fff'})}
+    G.text(g.combo?{S:'2:1 패스',W:'로빙 스루',A:'로빙',D:'감아차기',Q:'롱패스'}[g.k]:{S:'패스',W:'스루',A:'로빙',D:'슛',Q:'롱패스'}[g.k],s.x,y-11,{k:1,size:9,align:'center',color:'#fff'})}
   const sx=s.x-12,sy=s.y-6;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(sx,sy,24,3);c.fillStyle=p.stam>.45?'#4fe3b2':p.stam>.2?'#ffd23f':'#ff4f7b';c.fillRect(sx,sy,24*p.stam,3);
   if(M.state==='setpiece'&&M.sp&&M.sp.team===0){const d=M.sp.taker.dir;const a=F3.project(M.ball.x,M.ball.y,1),b2=F3.project(M.ball.x+d.x*30,M.ball.y+d.y*30,1);c.strokeStyle='#ffd23f';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b2.x,b2.y);c.stroke();c.setLineDash([]);
     const tip={kickoff:'S 패스로 킥오프',corner:'A 크로스 · S 짧은 패스 (◀▶ 방향)',fk:'◀▶ 방향 · S/W/A 패스 · D 슛',pen:'◀▶ 방향 고르고 D 슛',throw:'S/W/A 로 던지기',goalkick:''}[M.sp.kind]||'';if(tip){c.fillStyle='rgba(0,0,0,.55)';c.fillRect(0,H-24,W,22);G.text(tip,W/2,H-20,{k:1,size:11,align:'center',color:'#ffd23f'})}}
@@ -65,7 +65,7 @@ Retro.boot({id:'soccer',title:'NNN 오락실 축구',en:'ARCADE FOOTBALL 11',w:W
   stages:{label:'번째 경기',max:8},
   options:[{k:'speed',label:'경기 속도',ch:[['0.55','아주 느리게'],['0.7','느리게'],['0.85','보통'],['1','빠르게']],def:'0.7',note:'선수·공·패스 전부 같이 느려져요 (경기 시간은 그대로)'},{k:'time',label:'경기 시간',ch:[['150','2분 30초'],['210','3분 30초'],['300','5분']],def:'210'},{k:'map',label:'작은 지도',ch:[['on','보이기'],['off','숨기기']],def:'on'}],
   intro:'피파온라인2 방식 조작! 게이지 패스·스루패스·로빙·크로스·2:1 패스, 파워·칩·감아차기 슛, 헤딩, 압박·슬라이딩·선수 교체, 오프사이드와 반칙·카드까지. 동네 리그부터 월드 투어 결승까지 8경기.',
-  help:'📱 폰을 <b>가로로</b> 돌려서 하세요! 오른쪽으로 공격해요<br><b>공격</b> (누른 시간 = 게이지 세기)<br><b>S</b> 짧은 패스 · <b>W</b> 스루패스 · <b>A</b> 로빙/크로스 · <b>D</b> 슛<br><b>E</b> 누르고 있기 = 대시 (공을 길게 차 놓고 달려요, 체력 소모)<br><b>C</b> 톡 = 개인기 · <b>C</b> 누르고 있기 = 공 붙여서 짧게 드리블<br><b>Q</b>+S 2:1 패스 · <b>Q</b>+W 로빙 스루 · <b>Q</b>+D 칩슛 · <b>C</b>+D 감아차기<br>공중볼 근처에서 D = 헤딩/발리슛<br>패스하면 받는 선수로 바로 바뀌고, 방향키를 안 누르면 알아서 공 쪽으로 가요<br><b>수비</b> 상대에게 붙어 있으면 자동 몸싸움 → 오래 버티면 뺏어요 · <b>S</b> 압박·태클 · <b>D</b> 슬라이딩 · <b>Q</b> 선수 교체 · <b>A</b> 팀원 압박 · <b>W</b> 키퍼 나오기<br>뒤에서 슬라이딩하면 반칙·경고! 박스 안이면 페널티킥<br>폰: Q를 톡 누르고 바로 다음 버튼 = 조합 · PC: 방향키 + Q W E A S D C',
+  help:'📱 폰을 <b>가로로</b> 돌려서 하세요! 오른쪽으로 공격해요<br><b>공격</b> (누른 시간 = 게이지 세기)<br><b>S</b> 땅볼 패스 · <b>Q</b> 롱패스 · <b>W</b> 스루패스 · <b>A</b> 로빙/크로스 · <b>D</b> 슛<br><b>E</b> 누르고 있기 = 대시 (공을 길게 차 놓고 달려요, 체력 소모)<br><b>C</b> 톡 = 개인기 · <b>C</b> 누르고 있기 = 공 붙여서 짧게 드리블<br><b>C 누른 채</b> S = 2:1 패스 · W = 로빙 스루 · D = 감아차기<br><b>X(초록)</b> 선수 바꾸기 (공 없을 때 언제든)<br>공중볼 근처에서 D = 헤딩/발리슛<br>패스하면 받는 선수로 바로 바뀌고, 방향키를 안 누르면 알아서 공 쪽으로 가요<br><b>수비</b> 상대에게 붙어 있으면 자동 몸싸움 → 오래 버티면 뺏어요 · <b>S</b> 압박·태클 · <b>D</b> 슬라이딩 · <b>Q</b> 선수 교체 · <b>A</b> 팀원 압박 · <b>W</b> 키퍼 나오기<br>뒤에서 슬라이딩하면 반칙·경고! 박스 안이면 페널티킥<br>PC: 방향키 + Q W E A S D C, 선수 바꾸기 X',
   setup(G){G0=G;buildPad(G);mi=0;nextT=0;dur=210;newMatch(G,true)},
   init(G){G0=G;mi=G.start-1;nextT=0;dur=+G.opt('time');newMatch(G)},
   update(G,dt){if(nextT>0){nextT-=dt;if(nextT<=0)newMatch(G);return}if(M){const ts=+G.opt('speed')||.7;M.timeScale=ts;M.inp={held:INP.held,down:INP.down,up:INP.up};const st0=M.state;M.update(G,dt*ts);if(st0==='play'&&M.state==='play')M.clock-=dt*(1-ts);INP.down={};INP.up={}}},
