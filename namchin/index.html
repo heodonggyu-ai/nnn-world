@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#140f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="인생샷 남친">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>인생샷 남친 — 여자친구·아내 사진 가이드</title>
+<style>
+:root{--acc:#ff6fa3;--acc2:#ffd84d;--ok:#4dff9a;--bg:#140f14;--panel:#211a21;--line:#352b35;--txt:#f6eef3;--sub:#a597a1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;overflow:hidden}
+button{font-family:inherit}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.screen.show{display:flex}
+#home{overflow-y:auto;display:none}
+#home.show{display:block}
+.hero{padding:calc(22px + env(safe-area-inset-top)) 18px 6px}
+.hero .tag{display:inline-block;background:rgba(255,111,163,.15);color:var(--acc);font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px;margin-bottom:10px}
+.hero h1{margin:0 0 6px;font-size:27px;line-height:1.25;letter-spacing:-.5px}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero p{margin:0;color:var(--sub);font-size:14px;line-height:1.55}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 16px 4px}
+.qbtn{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:left;color:var(--txt)}
+.qbtn b{display:block;font-size:15px;margin:4px 0 2px}
+.qbtn small{color:var(--sub);font-size:12px;line-height:1.4}
+.qbtn .e{font-size:24px}
+.qbtn.main{grid-column:1/-1;background:linear-gradient(135deg,#ff6fa3,#ff9a6b);border:0;color:#1a0d14}
+.qbtn.main small{color:#3a1a26}
+h2.sec{font-size:17px;margin:22px 18px 10px}
+h2.sec small{display:block;font-size:12px;color:var(--sub);font-weight:500;margin-top:3px}
+.scgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 30px}
+.sc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:left;color:var(--txt);position:relative;overflow:hidden}
+.sc .e{font-size:28px}
+.sc b{display:block;font-size:15px;margin:6px 0 3px}
+.sc small{color:var(--sub);font-size:12px;line-height:1.4;display:block}
+.sc .g{margin-top:7px;font-size:11px;color:var(--acc2)}
+/* camera */
+#cam header{display:flex;align-items:center;gap:8px;padding:8px 10px}
+.hbtn{background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:20px;padding:7px 12px;font-size:13px;font-weight:700}
+#cam header .t{flex:1;font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 8px}
+#view{position:relative;background:#000;border-radius:14px;overflow:hidden}
+#view video,#view #still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+#view video.mirror{transform:scaleX(-1)}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(0,0,0,.62);backdrop-filter:blur(6px);padding:7px 13px;border-radius:18px;font-size:14px;font-weight:800;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+#hint.ok{background:rgba(20,140,70,.88)}
+#hint:empty{display:none}
+.badge{position:absolute;background:rgba(0,0,0,.6);padding:4px 9px;border-radius:10px;font-size:12px;font-weight:800}
+#hbadge{right:10px;top:50px;color:var(--acc2)}
+#level{right:10px;bottom:10px;display:none}#level.ok{color:var(--ok)}
+#gname{display:none}
+#zoom{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:none;gap:6px}
+#zoom button{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:16px;padding:4px 10px;font-weight:800;font-size:12px}
+#zoom button.on{background:var(--acc2);color:#111}
+#camMsg{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:#151015}
+#camMsg p{color:var(--sub);font-size:14px;line-height:1.55;margin:0}
+.pbtn{background:var(--acc);color:#1a0d14;border:0;border-radius:14px;padding:13px 20px;font-size:16px;font-weight:800;width:240px}
+.sbtn{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:12px 20px;font-size:15px;font-weight:700;width:240px}
+#ment{margin:8px 10px 6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:9px 12px;display:flex;align-items:center;gap:10px}
+#ment .l{font-size:11px;color:var(--acc);font-weight:800}
+#ment .m{font-size:15px;font-weight:800;line-height:1.35}
+#ment .tx{flex:1}
+#ment button{flex:none;background:#2e242e;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 10px;font-weight:800;font-size:13px}
+#chips{display:flex;gap:6px;padding:0 10px 8px;overflow-x:auto;scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:18px;padding:7px 12px;font-size:13px;font-weight:700}
+.chip.on{background:var(--txt);color:#111;border-color:var(--txt)}
+.chip .star{color:var(--acc2)}
+#controls{display:flex;align-items:center;justify-content:space-around;padding:2px 16px 8px}
+.cbtn{width:56px;height:56px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--txt);font-size:11px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1}
+.cbtn .i{font-size:18px}
+.cbtn.on{border-color:var(--acc2);color:var(--acc2)}
+#shutter{width:76px;height:76px;border-radius:50%;border:4px solid #fff;background:transparent;padding:4px;position:relative}
+#shutter i{display:block;width:100%;height:100%;border-radius:50%;background:#fff;transition:transform .1s}
+#shutter:active i{transform:scale(.88)}
+#shutter.ok{border-color:var(--ok)}
+#shutter span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#111;font-weight:900;font-size:13px}
+/* modals */
+.modal{position:fixed;inset:0;background:var(--bg);display:none;z-index:10;flex-direction:column}
+.modal.show{display:flex}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line)}
+.mhead h2{margin:0;font-size:17px}
+.mbody{flex:1;overflow-y:auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom))}
+.ng{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:14px}
+.ng h3{margin:0 0 4px;font-size:16px}
+.ng p{margin:0 0 10px;font-size:13px;color:var(--sub);line-height:1.5}
+.ng .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ng figure{margin:0}
+.ng canvas{width:100%;aspect-ratio:3/4;display:block;border-radius:10px;border:3px solid}
+.ng .bad canvas{border-color:#ff5a6e}.ng .good canvas{border-color:#38d98a}
+.ng figcaption{font-size:12px;font-weight:800;margin-top:5px;line-height:1.35}
+.ng .bad figcaption{color:#ff8a98}.ng .good figcaption{color:#6ff0ae}
+.ck{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.ck input{width:22px;height:22px;accent-color:var(--acc);flex:none;margin-top:2px}
+.ck b{display:block;font-size:15px;margin-bottom:3px}
+.ck small{color:var(--sub);font-size:13px;line-height:1.45}
+.ckdone{text-align:center;color:var(--acc2);font-weight:800;margin:14px 0}
+.sch h3{margin:16px 0 8px;font-size:15px}
+.sch ul{margin:0;padding-left:18px;color:var(--txt);font-size:14px;line-height:1.7}
+#bgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#bgrid div{position:relative}
+#bgrid img{width:100%;border-radius:10px;display:block}
+#bgrid button{border:0;position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:800;padding:5px 9px;border-radius:10px;text-decoration:none}
+.note{color:var(--sub);font-size:12px;text-align:center;line-height:1.5;margin:12px 0}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen show" id="home">
+  <div class="hero">
+    <span class="tag">📸 "다시 찍어" 졸업 프로젝트</span>
+    <h1>여자친구·아내 사진,<br><em>이제 칭찬받자.</em></h1>
+    <p>장소를 고르면 구도 가이드를 화면에 깔아주고, 얼굴 위치·거리·폰 높이를 실시간으로 알려줘요. 포즈 멘트까지 대신 준비했어요.</p>
+  </div>
+  <div class="quick">
+    <button class="qbtn main" id="goQuick"><span class="e">📷</span><b>바로 촬영 (자동 구도)</b><small>사람을 비추면 거리에 맞는 구도를 골라줘요</small></button>
+    <button class="qbtn" id="goAcademy"><span class="e">🎓</span><b>남친 사진학원</b><small>남자들이 꼭 하는 실수 7가지</small></button>
+    <button class="qbtn" id="goCheck"><span class="e">✅</span><b>찍기 전 체크리스트</b><small>30초면 사진이 달라져요</small></button>
+  </div>
+  <h2 class="sec">어디서 찍어요?<small>장소를 고르면 그 장소에 맞는 구도·포즈·폰 높이를 알려줘요</small></h2>
+  <div class="scgrid" id="scgrid"></div>
+</div>
+
+<!-- CAMERA -->
+<div class="screen" id="cam">
+  <header>
+    <button class="hbtn" id="back">← 홈</button>
+    <div class="t" id="camTitle">바로 촬영</div>
+    <button class="hbtn" id="btnTips">💡 팁</button>
+  </header>
+  <div id="stage">
+    <div id="view">
+      <video id="vid" playsinline muted autoplay></video>
+      <img id="still" alt="">
+      <canvas id="ov"></canvas>
+      <div id="hint"></div>
+      <div class="badge" id="hbadge"></div>
+      <div class="badge" id="gname"></div>
+      <div class="badge" id="level"></div>
+      <div id="zoom"></div>
+      <div id="camMsg">
+        <div style="font-size:40px">📷</div>
+        <p id="camMsgT">카메라를 켜는 중…</p>
+        <button class="pbtn" id="btnRetry">카메라 다시 켜기</button>
+        <button class="sbtn" id="btnPhoto">🖼 찍어둔 사진으로 연습</button>
+      </div>
+    </div>
+  </div>
+  <div id="ment"><div class="tx"><div class="l">💬 그녀에게 이렇게 말해봐</div><div class="m" id="mentT"></div></div><button id="mentNext">다음 ↻</button></div>
+  <div id="chips"></div>
+  <div id="controls">
+    <button class="cbtn on" id="btnAuto"><span class="i">✨</span>자동</button>
+    <button class="cbtn on" id="btnBurst"><span class="i">⚡</span>연사</button>
+    <button id="shutter"><i></i><span id="shutN"></span></button>
+    <button class="cbtn" id="btnFlip"><span class="i">🔄</span>전환</button>
+    <button class="cbtn" id="btnSide"><span class="i">⇋</span>좌우</button>
+  </div>
+</div>
+
+<!-- ACADEMY -->
+<div class="modal" id="academy">
+  <div class="mhead"><h2>🎓 남친 사진학원</h2><button class="hbtn" data-close>닫기</button></div>
+  <div class="mbody"><p class="note" style="margin-top:0">왼쪽이 남자들이 흔히 찍는 사진, 오른쪽이 그녀가 원하는 사진이에요.</p><div id="ngList"></div></div>
+</div>
+
+<!-- CHECKLIST -->
+<div class="modal" id="check">
+  <div class="mhead"><h2>✅ 찍기 전 체크리스트</h2><button class="hbtn" data-close>닫기</button></div>
+  <div class="mbody"><div id="ckList"></div><div class="ckdone" id="ckDone"></div></div>
+</div>
+
+<!-- SCENARIO TIPS -->
+<div class="modal" id="tips">
+  <div class="mhead"><h2 id="tipsT">💡 촬영 팁</h2><button class="hbtn" data-close>닫기</button></div>
+  <div class="mbody sch" id="tipsB"></div>
+</div>
+
+<!-- BURST RESULT -->
+<div class="modal" id="burst">
+  <div class="mhead"><h2>⚡ 찍은 사진</h2><button class="hbtn" data-close>닫기</button></div>
+  <div class="mbody"><p class="note" style="margin-top:0">아이폰: 저장 → 아래 메뉴에서 <b>‘이미지 저장’</b> / 안드로이드: 저장 누르면 갤러리에 저장<br>💡 그녀에게 보여주고 고르게 하면 점수가 올라가요.</p><div id="bgrid"></div>
+    <div style="text-align:center;margin-top:14px"><button class="pbtn" id="shareAll">📥 전부 사진첩에 저장</button></div></div>
+</div>
+
+<input type="file" id="file" accept="image/*" hidden>
+
+<script>
+(()=>{
+const PHI=(1+Math.sqrt(5))/2;
+const $=id=>document.getElementById(id);
+let pSide='L',pSideManual=false,mode='idle',facing='environment',mirror=false,feat=null,stream=null,stillAR=null,aligned=false,level=null;
+const ASP=3/4;
+function curAR(){return mode==='still'&&stillAR?stillAR:ASP}
+
+// ---------- portrait layouts ----------
+function pLayout(id,side){
+  const sx=side==='R'?2/3:1/3,dir=side==='R'?-1:1;
+  const P=(x,eye,u,ext,ex={})=>Object.assign({x,top:eye-.45*u,u,ext,dir},ex);
+  let figs,ex={};
+  switch(id){
+    case 'close':figs=[P(.5,1/3,.55,'bust')];ex.eye=1/3;break;
+    case 'portrait':figs=[P(.5,1/3,.27,'bust')];ex.eye=1/3;break;
+    case 'off':figs=[P(sx,1/3,.25,'bust')];ex.eye=1/3;ex.look=1;break;
+    case 'profile':figs=[P(sx,.36,.28,'bust',{prof:1})];ex.eye=.36;ex.look=1;break;
+    case 'half':figs=[{x:.5,top:.06,u:.196,ext:'half',dir}];ex.cut='half';break;
+    case 'full':figs=[{x:.5,top:.05,u:.118,ext:'full',dir}];ex.cut='full';break;
+    case 'travel':figs=[{x:sx,top:.52,u:.05,ext:'full',dir}];ex.hz=1/3;ex.look=1;break;
+    case 'selfie':figs=[P(.5,.4,.36,'bust')];ex.eye=.4;ex.selfie=1;break;
+    case 'two':figs=[P(.36,1/3,.2,'bust',{dir:1}),P(.64,1/3+.045,.2,'bust',{dir:-1})];break;
+    case 'group':figs=[[.5,.27],[.3,.37],[.7,.37],[.13,.47],[.87,.47]].map(([x,e])=>P(x,e,.1,'bust'));ex.tri=1;break;
+    case 'action':figs=[{x:sx,top:.1,u:.17,ext:'half',dir,act:1}];ex.look=1;break;
+  }
+  const fc=figs.map(g=>[g.x,g.top+.55*g.u]);
+  const faceT=[fc.reduce((a,b)=>a+b[0],0)/fc.length,fc.reduce((a,b)=>a+b[1],0)/fc.length];
+  return Object.assign({figs,faceT,fhT:figs[0].u*.8,side,dir},ex);
+}
+function arrow(c,x1,y1,x2,y2,lw){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();const a=Math.atan2(y2-y1,x2-x1),h=lw*5;
+  c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-h*Math.cos(a-.5),y2-h*Math.sin(a-.5));c.moveTo(x2,y2);c.lineTo(x2-h*Math.cos(a+.5),y2-h*Math.sin(a+.5));c.stroke()}
+function drawPGuide(c,id,W,H,opt){
+  const sp=pLayout(id,opt.side||pSide),col=opt.color||'rgba(255,216,77,.9)',lw=opt.lw||Math.max(1.5,W/260);
+  const fs=Math.max(11,W/26),live=!opt.lw,topY=live?Math.max(fs*1.5,H*.15):fs*1.5,botY=live?H-H*.1:H-10,red='rgba(255,110,110,.95)',grn='rgba(120,255,170,.95)';
+  c.save();c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap='round';c.lineJoin='round';c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=opt.noShadow?0:3;
+  c.font=`700 ${fs}px sans-serif`;
+  const L=(x1,y1,x2,y2)=>{c.beginPath();c.moveTo(x1*W,y1*H);c.lineTo(x2*W,y2*H);c.stroke()};
+  const txt=(t,x,y,cl)=>{c.save();c.fillStyle=cl||col;c.fillText(t,x,y);c.restore()};
+  if(sp.look||id==='two'){c.globalAlpha=.3;[1/3,2/3].forEach(t=>L(t,0,t,1));c.globalAlpha=1}
+  if(sp.eye!=null){c.setLineDash([4*lw,4*lw]);c.globalAlpha=.75;L(0,sp.eye,1,sp.eye);c.globalAlpha=1;c.setLineDash([]);txt('눈높이',8,sp.eye*H-7)}
+  if(sp.hz){c.lineWidth=lw*1.8;L(0,sp.hz,1,sp.hz);c.lineWidth=lw;txt('수평선',8,sp.hz*H-7)}
+  sp.figs.forEach(fg=>drawFigure(c,fg,W,H,false));
+  if(id==='two'){const a=sp.figs[0],b=sp.figs[1];c.setLineDash([3*lw,3*lw]);L(a.x,a.top+.45*a.u,b.x,b.top+.45*b.u);c.setLineDash([]);txt('눈높이 살짝 다르게',W*.3,(b.top+.45*b.u)*H+fs*1.6)}
+  if(sp.tri){const f=sp.figs,p=i=>[f[i].x,f[i].top+.5*f[i].u];c.setLineDash([5*lw,4*lw]);c.beginPath();[0,3,4].forEach((i,k)=>{const q=p(i);k?c.lineTo(q[0]*W,q[1]*H):c.moveTo(q[0]*W,q[1]*H)});c.closePath();c.stroke();c.setLineDash([])}
+  if(sp.look){const fg=sp.figs[0],d=sp.dir,y=(fg.top+.45*fg.u)*H+(id==='travel'?0:0),x0=(fg.x+d*.1)*W,x1=(fg.x+d*.42)*W;
+    c.strokeStyle=grn;c.fillStyle=grn;arrow(c,x0,id==='travel'?(fg.top-.03)*H:y-fs*1.2,x1,id==='travel'?(fg.top-.03)*H:y-fs*1.2,lw);
+    c.textAlign='center';txt(id==='action'?'움직이는 방향 여백':'시선 방향 여백',(x0+x1)/2,(id==='travel'?(fg.top-.03)*H:y-fs*1.2)-8,grn);c.textAlign='start';c.strokeStyle=col;c.fillStyle=col}
+  if(sp.cut==='half'){const fg=sp.figs[0],wy=fg.top+3.0*fg.u;c.strokeStyle=red;c.setLineDash([4*lw,3*lw]);L(.12,wy,.88,wy);c.setLineDash([]);txt('✕ 허리에서 자르지 않기',W*.04,wy*H-6,red);txt('✓ 허벅지 중간에서 자르기',W*.04,botY,grn)}
+  if(sp.cut==='full'){txt('✓ 발끝까지 다 담기',W*.04,botY,grn)}
+  if(id==='close')txt('이마는 잘려도 OK · 턱은 ✕',W*.04,topY);
+  
+  c.restore();
+}
+
+const AW=72,acv=document.createElement('canvas'),actx=acv.getContext('2d',{willReadFrequently:true});
+function getCrop(sw,sh,ar){if(sw/sh>ar){const cw=sh*ar;return{x:(sw-cw)/2,y:0,w:cw,h:sh}}const ch=sw/ar;return{x:0,y:(sh-ch)/2,w:sw,h:ch}}
+function analyze(src,sw,sh,mir){
+  const ar=curAR(),AH=Math.max(24,Math.round(AW/ar));acv.width=AW;acv.height=AH;
+  const cr=getCrop(sw,sh,ar);actx.save();if(mir){actx.translate(AW,0);actx.scale(-1,1)}
+  actx.drawImage(src,cr.x,cr.y,cr.w,cr.h,0,0,AW,AH);actx.restore();
+  const d=actx.getImageData(0,0,AW,AH).data,N=AW*AH;
+  const lum=new Float32Array(N);let mR=0,mG=0,mB=0,mL=0;
+  let skinN=0;const mask=new Uint8Array(N);
+  for(let i=0;i<N;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2];const l=.299*r+.587*g+.114*b;lum[i]=l;mR+=r;mG+=g;mB+=b;mL+=l;
+    const cb=128-.168736*r-.331264*g+.5*b,cr2=128+.5*r-.418688*g-.081312*b;
+    if(cb>=77&&cb<=127&&cr2>=137&&cr2<=173&&l>45&&r>g&&r>b){skinN++;mask[i]=1}}
+  mR/=N;mG/=N;mB/=N;mL/=N;
+  let lv=0;for(let i=0;i<N;i++)lv+=(lum[i]-mL)**2;const std=Math.sqrt(lv/N);
+  // sobel
+  const mag=new Float32Array(N),gxA=new Float32Array(N),gyA=new Float32Array(N);let mm=0;
+  for(let y=1;y<AH-1;y++)for(let x=1;x<AW-1;x++){const i=y*AW+x,
+    a=lum[i-AW-1],b=lum[i-AW],c=lum[i-AW+1],e=lum[i-1],f=lum[i+1],g=lum[i+AW-1],h=lum[i+AW],k=lum[i+AW+1];
+    const gx=(c+2*f+k)-(a+2*e+g),gy=(g+2*h+k)-(a+2*b+c);gxA[i]=gx;gyA[i]=gy;const m=Math.hypot(gx,gy);mag[i]=m;mm+=m}
+  mm/=N;const thr=Math.max(70,mm*1.8);
+  let strong=0,diagN=0,slL=0,slLn=0,bsR=0,bsRn=0,tslL=0,tbsR=0,tLn=0,tRn=0,topD=0,botD=0,bord=0,bordN=0,cen=0,cenN=0;
+  const rowH=new Float32Array(AH),rowCov=new Float32Array(AH);
+  const mb=Math.round(AW*.15),mbY=Math.round(AH*.15);
+  for(let y=1;y<AH-1;y++)for(let x=1;x<AW-1;x++){const i=y*AW+x,m=mag[i];
+    const isB=x<mb||x>=AW-mb||y<mbY||y>=AH-mbY;if(isB){bordN++;if(m>thr)bord++}else{cenN++;if(m>thr)cen++}
+    if(y<AH/2)topD+=m;else botD+=m;
+    if(m<=thr)continue;strong++;
+    const gx=gxA[i],gy=gyA[i],ax=Math.abs(gx),ay=Math.abs(gy);
+    if(ay>2.2*ax){rowH[y]+=m;rowCov[y]++}
+    const ang=Math.atan2(ay,ax)*180/Math.PI; // 0: vertical line, 90: horizontal line
+    const isDiag=ang>22&&ang<68; if(isDiag)diagN++;
+    const slash=gx*gy>0; // "/" line
+    if(y>AH*.45){ if(x<AW/2){slLn++;if(isDiag&&slash)slL++}else{bsRn++;if(isDiag&&!slash)bsR++} }
+    else { if(x<AW/2){tLn++;if(isDiag&&slash)tslL++}else{tRn++;if(isDiag&&!slash)tbsR++} }
+  }
+  // horizon
+  let hy=-1,hc=0;for(let y=3;y<AH-3;y++){const cov=(rowCov[y-1]+rowCov[y]+rowCov[y+1])/AW;if(cov>hc){hc=cov;hy=y}}
+  const hor=hc>.5;
+  // symmetry
+  let sd=0;for(let y=0;y<AH;y++)for(let x=0;x<AW/2;x++)sd+=Math.abs(lum[y*AW+x]-lum[y*AW+AW-1-x]);sd/=(N/2);
+  const sym=Math.max(0,Math.min(1,1-sd/(std*1.1+6)));
+  // saliency
+  const sal=new Float32Array(N);for(let i=0;i<N;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2];
+    sal[i]=Math.abs(lum[i]-mL)/255+Math.hypot(r-mR,g-mG,b-mB)/300+mag[i]/700;}
+  const sorted=Array.from(sal).sort((a,b)=>a-b),st=sorted[Math.floor(N*.9)],sAll=sorted.reduce((a,b)=>a+b,0)/N;
+  let wsum=0,cx=0,cy=0,topM=0,topC=0;
+  for(let i=0;i<N;i++){if(sal[i]<st)continue;const w=sal[i]-st+1e-3,x=(i%AW+.5)/AW,y=(((i/AW)|0)+.5)/AH;wsum+=w;cx+=w*x;cy+=w*y;topM+=sal[i];topC++}
+  cx/=wsum;cy/=wsum;topM/=Math.max(1,topC);
+  let spr=0;for(let i=0;i<N;i++){if(sal[i]<st)continue;const w=sal[i]-st+1e-3,x=(i%AW+.5)/AW,y=(((i/AW)|0)+.5)/AH;spr+=w*((x-cx)**2+(y-cy)**2)}
+  spr=Math.sqrt(spr/wsum);
+  const compact=Math.max(0,Math.min(1,1-(spr-.08)/.22)),contrast=Math.max(0,Math.min(1,(topM/(sAll+1e-3)-1.3)/1.5));
+  const subj=compact*(.4+.6*contrast);
+  // skin blobs (faces)
+  const lab=new Int32Array(N),q=new Int32Array(N),blobs=[];
+  for(let i=0;i<N;i++){if(!mask[i]||lab[i])continue;let h=0,t=0;q[t++]=i;const id=blobs.length+1;lab[i]=id;const b={n:0,sx:0,sy:0,x0:AW,x1:0,y0:AH,y1:0};
+    while(h<t){const j=q[h++],x=j%AW,y=(j/AW)|0;b.n++;b.sx+=x;b.sy+=y;if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y;
+      if(x>0&&mask[j-1]&&!lab[j-1]){lab[j-1]=id;q[t++]=j-1}if(x<AW-1&&mask[j+1]&&!lab[j+1]){lab[j+1]=id;q[t++]=j+1}
+      if(y>0&&mask[j-AW]&&!lab[j-AW]){lab[j-AW]=id;q[t++]=j-AW}if(y<AH-1&&mask[j+AW]&&!lab[j+AW]){lab[j+AW]=id;q[t++]=j+AW}}
+    blobs.push(b)}
+  const sf=skinN/N;let skin=false,skinConf=0,skx=.5,sky=.3,fh=0,faces=[];
+  const big=blobs.filter(b=>b.n>=N*.004).sort((a,b)=>b.n-a.n);
+  if(big.length&&sf<.55){const m=big[0],bw=m.x1-m.x0+1,bh=m.y1-m.y0+1;
+    skin=true;skx=(m.sx/m.n+.5)/AW;sky=(m.sy/m.n+.5)/AH;fh=bh/AH;skinConf=Math.min(1,m.n/(bw*bh)*1.3);
+    faces=big.filter(b=>{const w=b.x1-b.x0+1,h=b.y1-b.y0+1;return b.n>=m.n*.35&&h/w>.6&&h/w<2.4}).slice(0,6).map(b=>[(b.sx/b.n+.5)/AW,(b.sy/b.n+.5)/AH]);
+    if(!faces.length)faces=[[skx,sky]]}
+  return {cx,cy,spr,subj,sym,hor,hy:(hy+.5)/AH,hc,diag:strong?diagN/strong:0,
+    lead:Math.min(slLn?slL/slLn:0,bsRn?bsR/bsRn:0),tri:Math.min(tLn?tslL/tLn:0,tRn?tbsR/tRn:0),
+    density:strong/N,frameRatio:(bord/Math.max(1,bordN)+.005)/(cen/Math.max(1,cenN)+.005),
+    topD,botD,skin,skinConf,skx,sky,fh,faces,std};
+}
+
+function grad(c,w,h,stops,y0=0,y1=h){const g=c.createLinearGradient(0,y0,0,y1);stops.forEach((s,i)=>g.addColorStop(i/(stops.length-1),s));c.fillStyle=g;c.fillRect(0,y0,w,y1-y0)}
+function circ(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill()}
+function poly(c,pts,col){c.fillStyle=col;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill()}
+function rnd(seed){return()=>{seed=(seed*16807)%2147483647;return seed/2147483647}}
+
+
+// ---------- figure with leg/head factor (for academy) ----------
+function drawFigure(c,fg,W,H,fill,col){
+  const px=fg.x*W,U=fg.u*H,T=fg.top*H,d=fg.dir||1,lk=fg.legK||1,hk=fg.headK||1,dark=fg.dark;
+  const Y=v=>v<=3.9?T+v*U:T+(3.9+(v-3.9)*lk)*U;
+  const side=sg=>{const P=[[px+sg*.17*U,T+.95*U],[px+sg*.17*U,T+1.2*U],[px+sg*1.0*U,T+1.6*U]];
+    if(fg.ext==='bust')P.push([px+sg*1.12*U,T+3.8*U]);else P.push([px+sg*.8*U,T+3.0*U],[px+sg*.88*U,Y(3.9)],[px+sg*.72*U,Y(5.6)],[px+sg*.55*U,Y(7.45)]);return P};
+  const path=(pts,close)=>{c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));if(close)c.closePath()};
+  const gx=px+d*1.95*U,gy=T+1.75*U;
+  if(fill){
+    const sk=dark?'#3a2c2a':col.skin,sh=dark?'#1d1a22':col.shirt,pa=dark?'#141218':col.pants;
+    c.fillStyle=sh;path([...side(-1),...side(1).reverse()],1);c.fill();
+    if(fg.ext!=='bust'){c.fillStyle=pa;path([[px-.88*U,Y(3.9)],[px+.88*U,Y(3.9)],[px+.55*U,Y(7.45)],[px+.14*U,Y(7.45)],[px,Y(4.3)],[px-.14*U,Y(7.45)],[px-.55*U,Y(7.45)]],1);c.fill();
+      c.fillStyle='#222';[-1,1].forEach(sg=>{c.beginPath();c.ellipse(px+sg*.36*U,Y(7.5),.26*U,.1*U,0,0,7);c.fill()})}
+    c.fillStyle=sk;c.fillRect(px-.17*U,T+.8*U,.34*U,.45*U);c.beginPath();c.ellipse(px,T+(1-.5*hk)*U,.38*U*hk,.5*U*hk,0,0,7);c.fill();
+    if(fg.prof){c.beginPath();c.moveTo(px+d*.34*U,T+.42*U);c.lineTo(px+d*.5*U,T+.6*U);c.lineTo(px+d*.32*U,T+.66*U);c.fill()}
+    const hy=T+(1-.5*hk)*U;c.fillStyle=dark?'#120e0e':col.hair;c.beginPath();c.ellipse(px-(fg.prof?d*.08*U:0),hy-.2*U*hk,.42*U*hk,.34*U*hk,0,Math.PI,0);c.fill();
+    if(col.long){c.fillRect(px-.44*U*hk,hy-.2*U*hk,.16*U*hk,.9*U*hk);c.fillRect(px+.28*U*hk,hy-.2*U*hk,.16*U*hk,.9*U*hk)}
+    if(!dark){if(!fg.prof){circ(c,px-.14*U*hk,hy-.03*U,Math.max(1,.04*U*hk),'#2b1d17');circ(c,px+.14*U*hk,hy-.03*U,Math.max(1,.04*U*hk),'#2b1d17');
+      c.strokeStyle='#b5536a';c.lineWidth=Math.max(1,.04*U);c.beginPath();c.arc(px,hy+.12*U*hk,.1*U*hk,.2,Math.PI-.2);c.stroke()}
+      else circ(c,px+d*.2*U,T+.46*U,Math.max(1,.04*U),'#2b1d17')}
+    return;
+  }
+  c.beginPath();c.ellipse(px,T+.5*U,.38*U,.5*U,0,0,7);c.stroke();
+  path(side(-1));c.stroke();path(side(1));c.stroke();
+  if(fg.ext==='full'||fg.ext==='half'){[-1,1].forEach(sg=>{path([[px,T+4.3*U],[px+sg*.14*U,T+7.45*U]]);c.stroke()})}
+  if(fg.prof){path([[px+d*.34*U,T+.42*U],[px+d*.5*U,T+.6*U],[px+d*.32*U,T+.66*U]]);c.stroke()}
+  if(fg.act){path([[px+d*.9*U,T+1.7*U],[gx-d*.38*U,gy]]);c.stroke();c.beginPath();c.arc(gx,gy,.38*U,0,7);c.stroke()}
+}
+const GF={skin:'#f0c4a4',hair:'#3a2418',shirt:'#f3e6ea',pants:'#5a6b8c',long:1};
+const BF={skin:'#e2ad88',hair:'#1f1612',shirt:'#3b4a6b',pants:'#2b2f3a'};
+
+// ---------- guides (portrait only) ----------
+const GUIDES={
+ close:{name:'얼굴 클로즈업',h:'눈높이'},portrait:{name:'상반신 정면',h:'가슴 높이'},off:{name:'오프센터 상반신',h:'가슴 높이'},
+ profile:{name:'옆모습',h:'가슴 높이'},half:{name:'허벅지샷',h:'배꼽 높이'},full:{name:'전신 (다리 길게)',h:'무릎 높이 · 쪼그려 앉기'},
+ travel:{name:'여행 인물+배경',h:'허리 높이'},selfie:{name:'셀카',h:'눈보다 살짝 위'},two:{name:'커플 2인',h:'가슴 높이'},group:{name:'단체',h:'가슴 높이'},
+};
+const PT={close:.44,portrait:.22,off:.2,profile:.22,half:.16,full:.095,travel:.042,selfie:.29,two:.16,group:.08};
+
+// ---------- scenarios ----------
+const SC=[
+ {id:'quick',e:'📷',name:'바로 촬영',sub:'거리 보고 자동으로 구도 선택',g:['full','half','off','close','travel','profile','portrait'],
+  m:['편하게 나 보고 웃어줘','하나 둘 셋 말고, 그냥 얘기하면서 찍을게','방금 그 표정 좋았어, 한 번 더!','딴 데 보다가 내 쪽으로 천천히 돌아봐'],
+  t:['사람이 크게 보이면 클로즈업, 작게 보이면 전신 구도로 자동으로 바뀌어요','한 번에 연사로 6장 찍혀요 — 한 장만 찍지 마세요']},
+ {id:'cafe',e:'☕',name:'카페',sub:'창가 자리 · 자연스러운 일상',g:['off','close','half'],
+  m:['창밖 한번 봐줘','컵 두 손으로 잡고 나 봐줘','빨대 물고 딴 데 봐','턱 괴고 살짝 웃어봐','책·메뉴판 보는 척 해줘'],
+  t:['창가 자리 = 최고의 조명. 그녀가 창을 바라보게 앉히세요','테이블 위 컵·디저트를 화면 아래에 살짝 걸치면 분위기가 살아요','배경의 다른 손님이 얼굴 뒤에 겹치지 않게 한 걸음 옆으로']},
+ {id:'ootd',e:'👗',name:'거리 · 전신 OOTD',sub:'옷이 예쁜 날, 다리 길게',g:['full','half'],
+  m:['나 쪽으로 천천히 걸어와봐','한 발 앞으로 내밀어줘','한쪽 다리에 체중 실어봐','가방 끈 잡고 아래 봐줘','머리 넘기면서 걸어'],
+  t:['폰을 무릎 높이로! 쪼그려 앉아서 찍으면 다리가 길어 보여요','발끝을 화면 맨 아래에 붙이고 머리 위는 조금만 남기기','폰을 살짝 뒤로 젖혀(렌즈가 위를 보게) 찍으면 더 길어 보여요','걷는 장면은 연사로 — 다리가 벌어진 순간이 예뻐요']},
+ {id:'travel',e:'✈️',name:'여행 명소',sub:'배경도 그녀도 다 예쁘게',g:['travel','full','profile'],
+  m:['저 멀리 천천히 걸어가봐 (뒷모습)','뒤돌아보면서 웃어줘','난간에 기대서 풍경 봐줘','두 팔 벌리고 하늘 봐!','모자 잡고 먼 곳 봐줘'],
+  t:['사람을 가운데 말고 1/3 선에 — 배경을 살리세요','수평선은 1/3 선에, 꼭 수평으로 (기울면 다 망해요)','명소는 그녀를 앞쪽에, 랜드마크는 반대편 1/3에']},
+ {id:'sunset',e:'🌅',name:'바다 · 노을',sub:'역광에서도 얼굴 살리기',g:['profile','travel','off'],
+  m:['해 쪽으로 옆모습 보여줘','머리카락 바람에 날리게 해봐','눈 감고 바람 느껴봐','바다 쪽으로 걸어가다 뒤돌아봐'],
+  t:['얼굴이 어두우면 화면에서 얼굴을 탭 → 밝기(☀️)를 위로','완전 실루엣(검게)도 노을에선 예뻐요 — 옆모습으로','해를 그녀 머리 뒤에 숨기면 머리카락이 빛나요']},
+ {id:'flower',e:'🌸',name:'꽃 · 벚꽃',sub:'꽃이 그녀를 감싸게',g:['close','half','off'],
+  m:['꽃 냄새 맡는 척 해줘','꽃가지를 얼굴 옆으로','꽃 사이로 빼꼼 봐줘','꽃잎 날리는 거 올려다봐'],
+  t:['렌즈 바로 앞에 꽃을 걸쳐서 흐릿한 꽃 테두리를 만들어보세요','꽃은 위에서, 그녀는 아래에서 — 폰을 가슴 높이로','인물모드를 켜면 배경 꽃이 부드럽게 날아가요']},
+ {id:'food',e:'🍰',name:'식당 · 디저트',sub:'먹는 순간 귀엽게',g:['close','off'],
+  m:['한입 먹는 척 하면서 웃어','포크 들고 나 봐줘','잔 들어서 건배!','맛있는 표정 지어봐'],
+  t:['그녀 쪽 맞은편에 앉아 눈높이로','음식은 화면 아래 1/3에 걸치기','머리 위 조명이면 얼굴에 그림자 — 창가 쪽으로']},
+ {id:'night',e:'🌃',name:'야경',sub:'흔들림 없이 반짝이게',g:['off','travel'],
+  m:['불빛 쪽 봐줘','3초만 가만히 있어줘!','웃으면서 멈춰!'],
+  t:['야간모드 켜고, 숨 참고, 팔꿈치를 몸에 붙이세요','가로등·간판 불빛을 얼굴 쪽에 두기','배경 불빛은 동그랗게 흐릴수록 예뻐요 (인물모드)']},
+ {id:'couple',e:'💑',name:'커플 셀카',sub:'둘 다 잘 나오게',g:['two','selfie'],
+  m:['볼 맞대자','이마 맞대고 웃기','너는 카메라, 나는 너 볼게','하나 둘 셋에 뽀뽀하는 척!'],
+  t:['폰을 눈보다 살짝 위로, 턱은 살짝 당기기','팔 길이가 부족하면 0.5x 광각 + 얼굴은 화면 가운데 (가장자리는 늘어나요)','그녀 얼굴을 렌즈에서 조금 더 멀리 — 얼굴이 작게 나와요 (센스!)'],face:'user'},
+];
+const S=Object.fromEntries(SC.map(s=>[s.id,s]));
+let sc=S.quick,active='full',auto=true,ema={},cand=null,candN=0,mi=0,burstOn=true;
+
+// ---------- home ----------
+$('scgrid').innerHTML=SC.filter(s=>s.id!=='quick').map(s=>`<button class="sc" data-sc="${s.id}"><div class="e">${s.e}</div><b>${s.name}</b><small>${s.sub}</small><div class="g">${s.g.map(g=>GUIDES[g].name).join(' · ')}</div></button>`).join('');
+$('scgrid').onclick=e=>{const b=e.target.closest('[data-sc]');if(b)openCam(b.dataset.sc)};
+$('goQuick').onclick=()=>openCam('quick');
+$('goAcademy').onclick=()=>{buildAcademy();$('academy').classList.add('show')};
+$('goCheck').onclick=()=>{buildCheck();$('check').classList.add('show')};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
+
+function openCam(id){
+  sc=S[id];active=sc.g[0];auto=true;ema={};mi=0;pSideManual=false;$('btnAuto').classList.add('on');
+  $('camTitle').textContent=sc.e+' '+sc.name;facing=sc.face||'environment';
+  $('home').classList.remove('show');$('cam').classList.add('show');renderChips();renderMent();fit();startCam();
+}
+$('back').onclick=()=>{stopCam();mode='idle';$('cam').classList.remove('show');$('home').classList.add('show')};
+$('btnTips').onclick=()=>{$('tipsT').textContent=sc.e+' '+sc.name+' 촬영 팁';
+  $('tipsB').innerHTML=`<h3>📌 이렇게 찍어요</h3><ul>${sc.t.map(t=>`<li>${t}</li>`).join('')}</ul><h3>💬 포즈 멘트</h3><ul>${sc.m.map(t=>`<li>“${t}”</li>`).join('')}</ul><h3>📐 추천 구도 · 폰 높이</h3><ul>${sc.g.map(g=>`<li><b>${GUIDES[g].name}</b> — 📱 ${GUIDES[g].h}</li>`).join('')}</ul>`;
+  $('tips').classList.add('show')};
+function renderMent(){$('mentT').textContent='“'+sc.m[mi%sc.m.length]+'”'}
+$('mentNext').onclick=()=>{mi++;renderMent()};
+
+// ---------- chips ----------
+function renderChips(){
+  const best=lastBest;
+  $('chips').innerHTML=sc.g.map(g=>`<button class="chip${g===active?' on':''}" data-g="${g}">${g===best?'<span class="star">★</span> ':''}${GUIDES[g].name}</button>`).join('');
+  $('gname').textContent=GUIDES[active].name+(auto?' · 자동':'');$('hbadge').textContent='📱 '+GUIDES[active].h;
+}
+let lastBest=null;
+$('chips').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;active=b.dataset.g;auto=false;$('btnAuto').classList.remove('on');renderChips()};
+$('btnAuto').onclick=()=>{auto=!auto;$('btnAuto').classList.toggle('on',auto);if(auto&&lastBest)active=lastBest;renderChips()};
+$('btnBurst').onclick=()=>{burstOn=!burstOn;$('btnBurst').classList.toggle('on',burstOn)};
+$('btnSide').onclick=()=>{pSideManual=true;pSide=pSide==='L'?'R':'L'};
+
+// ---------- layout ----------
+const view=$('view'),stage=$('stage'),ov=$('ov'),vid=$('vid'),still=$('still'),hintEl=$('hint');
+const dpr=Math.min(window.devicePixelRatio||1,2);
+function fit(){const r=stage.getBoundingClientRect();if(!r.width)return;const ar=curAR();
+  let w=r.width-16,h=w/ar;if(h>r.height-4){h=r.height-4;w=h*ar}
+  view.style.width=w+'px';view.style.height=h+'px';ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr)}
+addEventListener('resize',fit);
+
+// ---------- scoring ----------
+function onFeatures(f){
+  feat=f;const s={};const nF=f.faces?f.faces.length:0;
+  for(const k of sc.g){if(!f.skin){s[k]=0;continue}
+    let v=Math.exp(-(Math.log(Math.max(.005,f.fh)/PT[k])**2)/(2*.5*.5));
+    if(k==='portrait')v*=1-Math.min(1,Math.abs(f.skx-.5)*2.2);if(k==='off')v*=Math.abs(f.skx-.5)>.1?1.1:.7;if(k==='profile')v*=.85;
+    if(k==='two')v*=nF===2?1.4:.3;if(k==='travel')v*=f.hor?1.15:.85;s[k]=v}
+  for(const k in s)ema[k]=ema[k]==null?s[k]:ema[k]*.55+s[k]*.45;
+  const best=sc.g.slice().sort((a,b)=>ema[b]-ema[a])[0];
+  if(!pSideManual&&f.skin){if(f.skx<.45)pSide='L';else if(f.skx>.55)pSide='R'}
+  if(f.skin&&auto&&best!==active){if(mode==='still')active=best;else{if(cand===best)candN++;else{cand=best;candN=1}if(candN>=4&&ema[best]>(ema[active]||0)+.08){active=best;cand=null}}}
+  if(best!==lastBest||true){lastBest=f.skin?best:null;renderChips()}
+}
+
+// ---------- hints ----------
+function moveHint(sx,sy,tx,ty){
+  const dx=tx-sx,dy=ty-sy,T=.055;if(Math.abs(dx)<T&&Math.abs(dy)<T)return null;const parts=[];
+  if(mode==='live'&&facing==='environment'){if(Math.abs(dx)>=T)parts.push(dx>0?'← 왼쪽으로':'→ 오른쪽으로');if(Math.abs(dy)>=T)parts.push(dy>0?'↑ 위로':'↓ 아래로');return '폰을 살짝 '+parts.join(' · ')}
+  if(Math.abs(dx)>=T)parts.push(dx>0?'→ 오른쪽':'← 왼쪽');if(Math.abs(dy)>=T)parts.push(dy>0?'↓ 아래':'↑ 위');return '얼굴을 화면 '+parts.join(' · ')+' 쪽으로';
+}
+function computeHint(){
+  const f=feat;aligned=false;if(!f)return{t:mode==='idle'?'':'그녀를 화면에 담아주세요'};
+  if(!f.skin)return{t:active==='two'?'두 사람 얼굴이 보이게':'그녀 얼굴이 보이게 비춰주세요'};
+  const sp=pLayout(active,pSide),tgt=sp.faceT;
+  const fs=active==='two'&&f.faces.length>=2?f.faces.slice(0,2):[[f.skx,f.sky]];
+  const src=[fs.reduce((a,b)=>a+b[0],0)/fs.length,fs.reduce((a,b)=>a+b[1],0)/fs.length];
+  const pos=moveHint(src[0],src[1],tgt[0],tgt[1]);const r=f.fh/sp.fhT,live=mode==='live';
+  const size=r<.62?(live?'한 걸음 앞으로':'더 크게 담기'):r>1.6?(live?'한 걸음 뒤로':'더 작게 담기'):null;
+  let t;if(!pos&&!size){aligned=true;t=active==='full'?'✓ 완벽! 폰 낮게 유지하고 찰칵':active==='selfie'||active==='two'?'✓ 좋아요! 턱 살짝 당기고 찰칵':'✓ 완벽해요! 지금 찍으세요'}
+  else t=[size,pos].filter(Boolean).join(' · ');
+  if(mode==='still'&&!aligned)t='다음엔: '+t.replace('폰을 살짝 ','폰 ');
+  return{t,src,tgt};
+}
+
+// ---------- render ----------
+const oc=ov.getContext('2d');
+function frame(){const W=ov.width,H=ov.height;oc.clearRect(0,0,W,H);
+  if(mode!=='idle'){const h=computeHint();const col=aligned?'rgba(77,255,154,.95)':'rgba(255,216,77,.9)';
+    drawPGuide(oc,active,W,H,{color:col});
+    if(h.src){const [sx,sy]=h.src;oc.save();oc.strokeStyle='rgba(255,140,190,.95)';oc.lineWidth=2*dpr;oc.beginPath();oc.arc(sx*W,sy*H,10*dpr,0,7);oc.stroke();
+      if(!aligned){oc.setLineDash([5*dpr,5*dpr]);oc.beginPath();oc.moveTo(sx*W,sy*H);oc.lineTo(h.tgt[0]*W,h.tgt[1]*H);oc.stroke();oc.setLineDash([]);
+        const p=(Math.sin(performance.now()/180)+1)/2;oc.strokeStyle=col;oc.beginPath();oc.arc(h.tgt[0]*W,h.tgt[1]*H,(12+p*8)*dpr,0,7);oc.stroke()}oc.restore()}
+    if(hintEl.textContent!==(h.t||''))hintEl.textContent=h.t||'';hintEl.classList.toggle('ok',aligned);$('shutter').classList.toggle('ok',aligned)}
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+setInterval(()=>{if(mode==='live'&&vid.videoWidth){try{onFeatures(analyze(vid,vid.videoWidth,vid.videoHeight,mirror))}catch(e){}}},380);
+
+// ---------- level ----------
+function onMotion(e){const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;let ang=Math.atan2(a.x,a.y)*180/Math.PI;ang=((ang%90)+90)%90;if(ang>45)ang-=90;
+  level=level==null?ang:level*.7+ang*.3;const el=$('level');el.style.display='block';const ok=Math.abs(level)<1.2;el.classList.toggle('ok',ok);el.textContent=ok?'수평 ✓':(level>0?'↺ ':'↻ ')+Math.abs(level).toFixed(1)+'°'}
+let motionOn=false;async function enableMotion(){if(motionOn)return;try{if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){const r=await DeviceMotionEvent.requestPermission();if(r!=='granted')return}addEventListener('devicemotion',onMotion);motionOn=true}catch(e){}}
+
+// ---------- camera ----------
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+async function startCam(){
+  $('camMsg').style.display='none';enableMotion();
+  try{stopCam();
+    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1440}}});
+    vid.srcObject=stream;await vid.play();mode='live';stillAR=null;still.style.display='none';vid.style.display='block';
+    mirror=facing==='user';vid.classList.toggle('mirror',mirror);ema={};fit();setupZoom();
+  }catch(e){mode='idle';$('camMsg').style.display='flex';
+    $('camMsgT').innerHTML=location.hostname.endsWith('claude.ai')||location.hostname.includes('claudeusercontent')?'Claude 앱 안에서는 카메라를 쓸 수 없어요.<br>사파리·크롬에서 이 앱 주소로 열어주세요.':'카메라 권한이 필요해요.<br>브라우저 주소창의 ⓘ/설정에서 카메라를 허용해 주세요.'}
+}
+function setupZoom(){const z=$('zoom');z.style.display='none';try{const tr=stream.getVideoTracks()[0],cap=tr.getCapabilities&&tr.getCapabilities();
+  if(!cap||!cap.zoom||facing==='user')return;const opts=[1,2,3].filter(v=>v>=cap.zoom.min&&v<=cap.zoom.max);if(opts.length<2)return;
+  z.innerHTML=opts.map(v=>`<button data-z="${v}">${v}x</button>`).join('');z.style.display='flex';
+  z.onclick=async e=>{const b=e.target.closest('[data-z]');if(!b)return;try{await tr.applyConstraints({advanced:[{zoom:+b.dataset.z}]});z.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}catch(_){}}}catch(e){}}
+$('btnRetry').onclick=startCam;
+$('btnFlip').onclick=()=>{facing=facing==='environment'?'user':'environment';startCam()};
+$('btnPhoto').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);const img=new Image();
+  img.onload=()=>{stopCam();mode='still';stillAR=img.naturalWidth/img.naturalHeight;still.src=url;still.style.display='block';vid.style.display='none';$('camMsg').style.display='none';
+    fit();ema={};auto=true;$('btnAuto').classList.add('on');onFeatures(analyze(img,img.naturalWidth,img.naturalHeight,false))};img.src=url;e.target.value=''};
+
+// ---------- capture (burst) ----------
+function saveFiles(files){
+  try{if(navigator.canShare&&navigator.canShare({files})){return navigator.share({files}).catch(()=>{})}}catch(e){}
+  files.forEach(f=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});
+}
+
+let shots=[];
+function grab(){const cr=getCrop(vid.videoWidth,vid.videoHeight,curAR()),c=document.createElement('canvas');c.width=Math.round(cr.w);c.height=Math.round(cr.h);
+  const x=c.getContext('2d');if(mirror){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(vid,cr.x,cr.y,cr.w,cr.h,0,0,c.width,c.height);
+  return new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',.92))}
+$('shutter').onclick=async()=>{
+  if(mode==='still'){$('file').click();return}if(mode!=='live'||!vid.videoWidth){startCam();return}
+  const n=burstOn?6:1;shots=[];
+  for(let i=0;i<n;i++){$('shutN').textContent=n>1?(i+1):'';view.animate([{opacity:.35},{opacity:1}],{duration:150});shots.push(await grab());if(i<n-1)await new Promise(r=>setTimeout(r,260))}
+  $('shutN').textContent='';showShots()};
+function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const files=shots.map((b,i)=>new File([b],`insaengshot-${ts}-${i+1}.jpg`,{type:'image/jpeg'}));
+  $('bgrid').innerHTML=shots.map((b,i)=>`<div><img data-im="${i}"><button data-sv="${i}">📥 저장</button></div>`).join('');
+  shots.forEach((b,i)=>{const fr=new FileReader();fr.onload=()=>{const im=document.querySelector(`[data-im="${i}"]`);if(im)im.src=fr.result};fr.readAsDataURL(b)});
+  $('bgrid').onclick=e=>{const b=e.target.closest('[data-sv]');if(b)saveFiles([files[+b.dataset.sv]])};
+  $('shareAll').onclick=()=>saveFiles(files);
+  $('burst').classList.add('show')}
+
+// ---------- academy (NG vs OK) ----------
+function bgStreet(c,w,h){grad(c,w,h,['#efe9df','#ddd3c4'],0,h*.8);c.fillStyle='#a39684';c.fillRect(0,h*.8,w,h)}
+function bgTravel(c,w,h){grad(c,w,h,['#7fb3e8','#d8ebfb'],0,h/3);poly(c,[[0,h/3],[w*.2,h*.18],[w*.42,h/3]],'#7d8fa6');poly(c,[[w*.3,h/3],[w*.62,h*.12],[w,h/3]],'#6b7e96');poly(c,[[w*.55,h*.2],[w*.62,h*.12],[w*.69,h*.2]],'#fff');grad(c,w,h,['#3f7fb5','#2a5d8a'],h/3,h*.6);grad(c,w,h,['#8fbf6a','#5f9446'],h*.6,h)}
+function bgSoft(c,w,h){grad(c,w,h,['#f3dfe6','#d9c3cf'])}
+function bgSun(c,w,h){grad(c,w,h,['#ffd6a0','#ff9b7a','#ffe8c0']);circ(c,w*.5,h*.4,46,'#fff6d8')}
+const NG=[
+ {t:'위에서 내려찍기',p:'남자 키 높이에서 찍으면 머리는 크고 다리는 짧아져요. 폰을 무릎 높이로 내리세요.',
+  bad:(c,w,h)=>{bgStreet(c,w,h);drawFigure(c,{x:.5,top:.12,u:.13,ext:'full',legK:.62,headK:1.25},w,h,true,GF)},bl:'✕ 서서 위에서 찍기 — 다리 짧아 보여요',
+  good:(c,w,h)=>{bgStreet(c,w,h);drawFigure(c,{x:.5,top:.04,u:.105,ext:'full',legK:1.14},w,h,true,GF)},gl:'✓ 무릎 높이에서 — 다리 길어 보여요'},
+ {t:'발 잘라먹기',p:'전신은 발끝까지가 기본. 발목이 잘리면 키가 작아 보여요.',
+  bad:(c,w,h)=>{bgStreet(c,w,h);drawFigure(c,{x:.5,top:.12,u:.128,ext:'full'},w,h,true,GF)},bl:'✕ 발목에서 잘림',
+  good:(c,w,h)=>{bgStreet(c,w,h);drawFigure(c,{x:.5,top:.05,u:.118,ext:'full'},w,h,true,GF)},gl:'✓ 발끝을 화면 아래에 붙이기'},
+ {t:'머리 위가 휑~',p:'얼굴을 화면 가운데 두면 머리 위 빈 공간이 커져요. 눈은 위 1/3 선에.',
+  bad:(c,w,h)=>{bgSoft(c,w,h);drawFigure(c,{x:.5,top:.45,u:.17,ext:'bust'},w,h,true,GF)},bl:'✕ 얼굴이 아래로 처짐',
+  good:(c,w,h)=>{bgSoft(c,w,h);drawFigure(c,{x:.5,top:1/3-.45*.27,u:.27,ext:'bust'},w,h,true,GF)},gl:'✓ 눈은 위 1/3 선에'},
+ {t:'관절에서 자르기',p:'무릎·허리·발목에서 자르면 몸이 잘린 느낌이 나요. 허벅지 중간에서 자르세요.',
+  bad:(c,w,h)=>{bgStreet(c,w,h);drawFigure(c,{x:.5,top:.02,u:.168,ext:'full'},w,h,true,GF)},bl:'✕ 무릎에서 딱 잘림',
+  good:(c,w,h)=>{bgStreet(c,w,h);drawFigure(c,{x:.5,top:.06,u:.196,ext:'half'},w,h,true,GF)},gl:'✓ 허벅지 중간에서 자르기'},
+ {t:'여행지에서 정가운데',p:'사람을 크게 가운데 두면 어디 갔는지 모르는 사진이 돼요. 1/3 선에 작게, 배경을 크게.',
+  bad:(c,w,h)=>{bgTravel(c,w,h);drawFigure(c,{x:.5,top:.12,u:.12,ext:'full'},w,h,true,GF)},bl:'✕ 배경을 다 가림',
+  good:(c,w,h)=>{bgTravel(c,w,h);drawFigure(c,{x:1/3,top:.52,u:.05,ext:'full'},w,h,true,GF)},gl:'✓ 1/3 선에 작게 · 배경 살리기'},
+ {t:'기울어진 수평선',p:'바다·건물이 기울면 아무리 예뻐도 어색해요. 화면 아래 수평계가 초록색일 때 찍으세요.',
+  bad:(c,w,h)=>{c.save();c.translate(w/2,h/2);c.rotate(.12);c.scale(1.2,1.2);c.translate(-w/2,-h/2);bgTravel(c,w,h);drawFigure(c,{x:1/3,top:.52,u:.05,ext:'full'},w,h,true,GF);c.restore()},bl:'✕ 수평이 기울었어요',
+  good:(c,w,h)=>{bgTravel(c,w,h);drawFigure(c,{x:1/3,top:.52,u:.05,ext:'full'},w,h,true,GF)},gl:'✓ 수평 맞추기'},
+ {t:'역광에 얼굴이 시커멓게',p:'해를 등지면 얼굴이 어두워져요. 화면의 얼굴을 탭하고 밝기(☀️)를 올리거나, 그녀가 빛을 보게 돌려 세우세요.',
+  bad:(c,w,h)=>{bgSun(c,w,h);drawFigure(c,{x:.5,top:1/3-.45*.27,u:.27,ext:'bust',dark:1},w,h,true,GF)},bl:'✕ 얼굴이 안 보여요',
+  good:(c,w,h)=>{bgSun(c,w,h);c.fillStyle='rgba(255,255,255,.25)';c.fillRect(0,0,w,h);drawFigure(c,{x:.5,top:1/3-.45*.27,u:.27,ext:'bust'},w,h,true,GF)},gl:'✓ 얼굴 탭 → 밝기 올리기'},
+];
+let acBuilt=false;
+function buildAcademy(){if(acBuilt)return;acBuilt=true;
+  $('ngList').innerHTML=NG.map((n,i)=>`<div class="ng"><h3>${i+1}. ${n.t}</h3><p>${n.p}</p><div class="pair"><figure class="bad"><canvas width="300" height="400" data-ng="${i}b"></canvas><figcaption>${n.bl}</figcaption></figure><figure class="good"><canvas width="300" height="400" data-ng="${i}g"></canvas><figcaption>${n.gl}</figcaption></figure></div></div>`).join('');
+  document.querySelectorAll('[data-ng]').forEach(cv=>{const k=cv.dataset.ng,i=parseInt(k),c=cv.getContext('2d');(k.endsWith('b')?NG[i].bad:NG[i].good)(c,300,400)})}
+
+// ---------- checklist ----------
+const CK=[
+ ['렌즈 닦기','옷에 한 번 쓱. 뿌연 사진의 90%는 지문이에요.'],
+ ['카메라 격자(그리드) 켜기','아이폰: 설정 → 카메라 → 격자 켜기 / 갤럭시: 카메라 → ⚙️ 설정 → 수직/수평 안내선 켜기'],
+ ['2x 줌으로 찍기','1x로 가까이 가면 얼굴이 넓어져요. 한두 걸음 물러나서 2x로 찍으면 얼굴이 작고 예쁘게 나와요.'],
+ ['폰 높이 정하기','전신 = 무릎 높이, 상반신 = 가슴 높이, 얼굴 = 눈높이. 절대 남자 눈높이에서 내려찍지 않기!'],
+ ['얼굴 탭해서 초점·밝기','화면에서 그녀 얼굴을 탭 → 초점 맞추고 ☀️ 밝기를 살짝 올리기.'],
+ ['한 장만 찍지 않기','최소 20장. 연사로 찍고 고르세요. 표정은 찍는 사이사이에 나와요.'],
+ ['말 걸면서 찍기','"하나 둘 셋" 대신 대화하면서 찍기. 웃긴 얘기 하나 준비!'],
+ ['찍고 바로 보여주기','"어떤 게 제일 맘에 들어?" — 고르게 해주면 다음 사진도 협조적이에요.'],
+];
+function buildCheck(){let st=[];try{st=JSON.parse(localStorage.getItem('ck')||'[]')}catch(e){}
+  $('ckList').innerHTML=CK.map(([t,s],i)=>`<label class="ck"><input type="checkbox" data-i="${i}" ${st[i]?'checked':''}><div><b>${t}</b><small>${s}</small></div></label>`).join('');
+  const upd=()=>{const v=[...document.querySelectorAll('#ckList input')].map(x=>x.checked);try{localStorage.setItem('ck',JSON.stringify(v))}catch(e){}
+    const n=v.filter(Boolean).length;$('ckDone').textContent=n===CK.length?'🎉 준비 완료! 이제 인생샷 남친 출격':`${n} / ${CK.length} 완료`};
+  $('ckList').onchange=upd;upd()}
+})();
+</script>
+</body>
+</html>
