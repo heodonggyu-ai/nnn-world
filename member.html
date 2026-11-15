@@ -5172,7 +5172,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     ${m.phone?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="sms:${String(m.phone).replace(/[^\d]/g,'')}">문자 대화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="tel:${String(m.phone).replace(/[^\d]/g,'')}">전화</a><a class="btn sm ghost" style="text-align:center;text-decoration:none" href="kakaotalk://">카톡 열기</a></div>`:''}
 
     <button class="btn ghost" id="admVcf">이 회원 연락처 저장(.vcf)</button>
-    <button class="btn ghost" id="admRefund" style="color:var(--red)">💸 환불 처리 · 회원 삭제</button>
+    <button class="btn ghost" id="admRefund" style="color:var(--red)">💸 환불 처리 (만료로 바꾸기)</button>
     <button class="btn ghost" id="admDel" style="color:var(--red)">회원 삭제</button>
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     if(syncing){el.classList.add('syncing');setTimeout(()=>el.classList.remove('syncing'),5000)}
@@ -6063,7 +6063,7 @@ function openMemEditor(m,pre={},onDone){
       if(mode==='edit'&&cur.segs&&m.mem.segs&&m.mem.segs.length){const L=m.mem.segs[m.mem.segs.length-1];m.mem.segs=m.mem.segs.slice(0,-1).concat([Object.assign({},L,{end:m.mem.end})])}
       if((cur.end||cur.pt)&&cur.start&&m.mem.start===cur.start){if(cur.holds)m.mem.holds=cur.holds;if(cur.hold)m.mem.hold=cur.hold}
       {const lg=el.querySelector('#meLegacy');if(lg)m.legacy=lg.checked}
-      m.memHist=hist;await DB.savePriv(m);setTimeout(()=>{try{renderDue()}catch(e){}},400);
+      if(m.mem&&!m.mem.refund)delete m.refundAt;m.memHist=hist;await DB.savePriv(m);setTimeout(()=>{try{renderDue()}catch(e){}},400);
       let pr=null;
       if(pOn.checked){const amt=+pAmt.value.replace(/\D/g,'')||0;const pd=el.querySelector('#mePDate').value||TODAY();
         if(pre.pay){pr=pre.pay;Object.assign(pr,{method:pm,amount:amt,saleDate:pd,famDisc:famOn?(+famBox.dataset.disc||0):0,item:(m.mem.item||pr.item)+(famOn?' (가족할인)':''),months:st.months,weekly:m.mem.weekly,pt:m.mem.pt?m.mem.pt.total:0});await DB.addPay(clean(pr));if(local.pays)local.pays[pr.id]=pr}
@@ -6078,7 +6078,7 @@ function openMemEditor(m,pre={},onDone){
 function memShort(m){const st=memStatus(m);if(st.state==='none')return '<span class="small">미등록</span>';
   if(st.state==='pt')return `<span class="pill">PT ${m.mem.pt.left}회</span>`;
   const c=st.state==='expired'?'#D9343A':st.state==='soon'?'#E9A91F':st.state==='upcoming'?'#2E5AAC':st.state==='hold'?'#66676D':'#2B9B66';
-  return `<span class="pill" style="background:${c};color:#fff">${st.state==='expired'?'만료':st.state==='upcoming'?'시작 전':st.state==='hold'?'정지 중':'D-'+st.left}</span>${m.mem.weekly?' <span class="small">주'+m.mem.weekly+'</span>':''}`}
+  return `<span class="pill" style="background:${c};color:#fff">${st.state==='expired'?(m.mem.refund?'환불·만료':'만료'):st.state==='upcoming'?'시작 전':st.state==='hold'?'정지 중':'D-'+st.left}</span>${m.mem.weekly?' <span class="small">주'+m.mem.weekly+'</span>':''}`}
 function padMemLine(m){const st=memStatus(m);if(!m.approvedAt)return{t:'가입 승인 대기 중 · 관장님께 확인해 주세요',warn:true};if(st.state==='none')return{t:'등록 정보 없음 · 카운터에서 확인해 주세요',warn:true};
   if(st.state==='expired')return{t:`등록 기간 만료 (${md(m.mem.end)}) · 재등록이 필요해요`,warn:true};
   const w=weekInfo(m);const dow=new Date().getDay();let t=st.state==='pt'?`PT ${m.mem.pt.left}회 남음`:`등록 D-${st.left} · ${md(m.mem.end)}까지`;let warn=st.state==='soon';
@@ -6803,9 +6803,9 @@ function dueItems(all){
   all.forEach(m=>{if(m.demo||!m.phone)return;const mem=m.mem;const st=memStatus(m);
     const recent=d=>d&&dDiff(TODAY(),d)<=7;
     if(recent(m.approvedAt)&&!wasSent(m,'welcome'))out.push({m,kind:'welcome'});
-    if(mem&&mem.setAt&&recent(mem.paidAt)&&!wasSent(m,'pay'))out.push({m,kind:'pay'});
+    if(mem&&mem.setAt&&!mem.refund&&recent(mem.paidAt)&&!wasSent(m,'pay'))out.push({m,kind:'pay'});
     if(mem&&mem.hold&&!wasSent(m,'hold'))out.push({m,kind:'hold'});
-    const payIn=!!m.payPend;
+    const payIn=!!m.payPend||!!(mem&&mem.refund);
     if(mem&&mem.end&&st.state!=='hold'&&!payIn){const L=st.left;if(((L===7&&rc.d7)||(L===3&&rc.d3)||(L===2&&rc.d2)||(L===1&&rc.d1)||(L===0&&rc.d0))&&!wasSent(m,'exp'))out.push({m,kind:'exp',tag:L?`D-${L}`:'오늘 종료'});
       const u=(m.unpaid||[]).slice(-1)[0];const unpaidNow=st.state==='expired'&&u&&dDiff(TODAY(),u.d)<=7&&!wasSent(m,'unpaid');
       if(unpaidNow)out.push({m,kind:'unpaid',tag:'만료 후 출석'});
@@ -6897,17 +6897,16 @@ async function refundMember(m,done){
   sheet(`<h2>💸 환불 처리</h2><div class="small"><b>${esc(m.name)}</b> ${esc(m.id)} · ${m.mem&&m.mem.end?`${esc(m.mem.item||'')} ${md(m.mem.start)}~${md(m.mem.end)}`:'등록 정보 없음'}${last?` · 마지막 결제 ${won(+last.amount)} (${esc(String(last.saleDate||last.at).slice(0,10))})`:''}</div>
     <div class="row"><div class="field grow"><label for="rfAmt">환불 금액 (원)</label><input id="rfAmt" inputmode="numeric" placeholder="0" value=""></div><div class="field grow"><label for="rfM">환불 방식</label><select id="rfM">${Object.entries(PAYM).map(([k,v])=>`<option value="${k}" ${last&&last.method===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
     <div class="field"><label for="rfMemo">사유 (메모)</label><input id="rfMemo" placeholder="예: 이사, 부상, 단순 변심"></div>
-    <label class="check"><input type="checkbox" id="rfDel" checked><span><b>회원 정보도 삭제</b> <span class="small">(앱 계정·사진·출석 기록이 지워져요. 매출 기록은 남아요)</span></span></label>
-    <p class="small" style="margin:0">환불 금액은 오늘 날짜 매출에서 <b>환불</b>로 빠져요. 금액을 비우면 매출 기록 없이 처리돼요.</p>
+    <p class="small" style="margin:0">처리하면 등록 기간이 <b>어제 날짜로 끝난 만료 회원</b>이 돼요. 회원 정보·사진·출석·결제 기록은 그대로 남고, 만료 안내 문자 대상에서는 빠져요. 다시 등록하면 평소처럼 쓸 수 있어요.<br>환불 금액은 오늘 날짜 매출에서 <b>환불</b>로 빠져요. 금액을 비우면 매출 기록 없이 처리돼요.</p>
     <button class="btn red" id="rfGo">환불 처리</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
     const a=el.querySelector('#rfAmt');a.oninput=()=>{const v=+a.value.replace(/\D/g,'')||0;a.value=v?v.toLocaleString():''};
-    const g=el.querySelector('#rfGo');g.onclick=async()=>{const del=el.querySelector('#rfDel').checked;
-      if(g.dataset.sure!=='1'){g.dataset.sure='1';g.textContent=del?'한 번 더 누르면 환불 + 회원 삭제 (되돌릴 수 없어요)':'한 번 더 누르면 환불 처리';return}
+    const g=el.querySelector('#rfGo');g.onclick=async()=>{
+      if(g.dataset.sure!=='1'){g.dataset.sure='1';g.textContent='한 번 더 누르면 환불 처리 (만료로 바뀌어요)';return}
       g.disabled=true;const amt=+a.value.replace(/\D/g,'')||0;const memo=el.querySelector('#rfMemo').value.trim();
       try{if(amt){await DB.addPay(clean({id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),status:'done',source:'manual',saleDate:TODAY(),kind:'refund',amount:-amt,method:el.querySelector('#rfM').value,item:'환불'+(m.mem&&m.mem.item?' · '+m.mem.item:''),mid:m.id,name:m.name,memo:memo||'환불',at:new Date().toISOString(),doneAt:new Date().toISOString()}))}
-        if(del){if(!(await deleteMember(m))){g.disabled=false;return}}
-        else{m.memHist=(m.memHist||[]).concat([m.mem]).filter(Boolean).slice(-30);m.mem=null;m.refundAt=TODAY();await DB.savePriv(m);if(memo)try{await memoAdd(m.id,'환불: '+memo,'mem')}catch(e){}}
-        toast(`${m.name} 님 환불 처리${amt?' ('+won(amt)+')':''}${del?' · 회원 삭제':' · 등록 정보만 비움'} 완료`,3500);close();done&&done()}catch(e){console.error(e);toast('처리하지 못했어요');g.disabled=false}};
+        const y=dAdd(TODAY(),-1);if(m.mem){m.memHist=(m.memHist||[]).concat([Object.assign({},m.mem)]).slice(-30);const nm=Object.assign({},m.mem,{end:y,refund:{d:TODAY(),amt,origEnd:m.mem.end||''}});if(nm.start&&nm.start>y)nm.start=y;delete nm.hold;if(nm.pt)nm.pt=Object.assign({},nm.pt,{left:0});m.mem=nm}
+        m.refundAt=TODAY();delete m.payPend;await DB.savePriv(m);try{await memoAdd(m.id,'환불'+(amt?' '+won(amt):'')+(memo?': '+memo:''),'mem')}catch(e){}
+        toast(`${m.name} 님 환불 처리${amt?' ('+won(amt)+')':''} · 만료 회원으로 바꿨어요`,3500);close();done&&done()}catch(e){console.error(e);toast('처리하지 못했어요');g.disabled=false}};
   });
 }
 async function deleteMember(m){
