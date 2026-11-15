@@ -838,6 +838,23 @@ body.alay-b #atabs{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:30;ma
 body.alay-b #atabs button{border:none;background:transparent;color:#bbb;border-radius:10px;font-size:13px;padding:8px 2px}
 body.alay-b #atabs button.on{background:#fff;color:var(--ink)}
 body.alay-b #v-admin{padding-bottom:84px}
+/* 노트북·PC 화면 (관장 메뉴) */
+@media(min-width:1000px){
+body.adminv .app{max-width:1440px;padding-inline:24px}
+body.adminv #v-admin:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+body.adminv #v-admin>*{min-width:0;margin:0}
+body.adminv #v-admin>.row,body.adminv #v-admin>#atabs,body.adminv #v-admin>.adash,body.adminv #v-admin>.bring,body.adminv #v-admin>.ev,body.adminv #v-admin>#memAlert{grid-column:1/-1}
+body.adminv #v-admin>.card:has(#admRows),body.adminv #v-admin>.card:has(#attAdm){grid-column:1/-1}
+body.adminv.alay-b #atabs{position:sticky;top:0;bottom:auto;left:auto;right:auto;border-radius:14px;padding:8px;justify-content:flex-start}
+body.adminv.alay-b #atabs button{flex:0 0 auto;padding:10px 22px;font-size:15px}
+body.adminv.alay-b #v-admin{padding-bottom:24px}
+body.adminv #admRows{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px 12px}
+body.adminv .adash{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+body.adminv .backdrop{align-items:center}
+body.adminv .sheet{max-width:760px;border-radius:22px;max-height:90vh}
+body.adminv #pcHint{display:flex}
+}
+#pcHint{display:none}
 body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 </style>
 
@@ -1202,7 +1219,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 </section>
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
-  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div>
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><span id="pcHint" class="small" style="align-items:center;gap:6px;background:#fff;border-radius:999px;padding:6px 14px">💻 노트북 화면 · 회원 상세는 가운데 창으로 열려요</span><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div>
   <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="staff">코치<i id="atb-staff"></i></button><button data-at="lock">락커<i id="atb-lock"></i></button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
   <div class="adash" data-atab="today" id="adash"></div>
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
@@ -1992,7 +2009,7 @@ function sfx(type){if(!SND)return;try{if(!getAC())return;const o=AC.createOscill
 
 /* ================= 화면 전환 ================= */
 let ME=null;
-function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);document.body.classList.toggle('padmode',id==='v-pad');$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'||id==='v-login'){try{bioRender()}catch(e){}}if(id==='v-world'){try{bioSyncBtn()}catch(e){}}if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
+function show(id){$$('.view').forEach(v=>v.hidden=v.id!==id);document.body.classList.toggle('adminv',id==='v-admin');document.body.classList.toggle('padmode',id==='v-pad');$('#nav').hidden=id!=='v-world';if(id==='v-world')startWorld();else stopWorld();if(id==='v-home'||id==='v-login'){try{bioRender()}catch(e){}}if(id==='v-world'){try{bioSyncBtn()}catch(e){}}if(id==='v-home'){startParade();try{renderBring()}catch(e){}}else stopParade();window.scrollTo(0,0)}
 $$('[data-back]').forEach(b=>b.onclick=()=>show('v-home'));
 $('#hwBanner').hidden=!HW;
 
@@ -5120,6 +5137,7 @@ function admPaint(){if(!ADM.all)return;const all=ADM.all;const q=$('#admSearch')
   $$('#admRows [data-d]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-ap]')||e.target.closest('.mface img'))return;r.classList.add('tap');setTimeout(()=>r.classList.remove('tap'),400);admDetail(r.dataset.d)});
   $$('#admRows [data-ap]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const m=all.find(x=>x.id===b.dataset.ap);if(m){b.disabled=true;await approveMember(m)}});
 }
+$('#admSearch').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;setTimeout(()=>{renderAdmRows('cache').then(()=>{const r=$$('#admRows [data-d]');if(r.length===1)admDetail(r[0].dataset.d)})},150)});
 {let t=0;$('#admSearch').oninput=()=>{clearTimeout(t);t=setTimeout(()=>renderAdmRows('cache'),120)};$('#admSearch').setAttribute('type','search');$('#admSearch').setAttribute('enterkeyhint','search')}
 
 let ADT=0;
