@@ -1,0 +1,1 @@
+{"name": "따라찍기 카메라", "short_name": "따라찍기", "start_url": "./", "display": "standalone", "background_color": "#15130f", "theme_color": "#15130f", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]}
