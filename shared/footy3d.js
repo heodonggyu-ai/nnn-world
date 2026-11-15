@@ -5,7 +5,7 @@ function hex(c){return new THREE.Color(c).getHex()}
 function create(M,o){const THREE=window.THREE,cfg=M.cfg;const W=o.W,H=o.H,HD=o.HD||2;
   const R=o.R||S3.renderer(W,H,HD);const scene=new THREE.Scene();const u=o.height/1.8;
   const st=S3.stadium(scene,{PW:cfg.PW,PH:cfg.PH,margin:cfg.margin,GW:cfg.GWD,GH:cfg.GH,GD:cfg.GWD*.3,boxW:cfg.boxW||cfg.GWD*2.6,boxH:cfg.boxH||cfg.PH*.14,
-    sboxW:cfg.GWD*1.45,sboxH:(cfg.boxH||cfg.PH*.14)*.38,circle:cfg.circle||28,spot:(cfg.boxH||cfg.PH*.14)*.68,walls:cfg.walls,unit:u,stripes:o.stripes||14,night:o.night,shadowExt:o.shadowExt,noNearStand:true});
+    sboxW:cfg.GWD*1.45,sboxH:(cfg.boxH||cfg.PH*.14)*.38,circle:cfg.circle||28,spot:(cfg.boxH||cfg.PH*.14)*.68,walls:cfg.walls,unit:u,stripes:o.stripes||14,night:o.night,shadowExt:o.shadowExt,noNearStand:o.camMode==='side'?'x':true});
   const cam=new THREE.PerspectiveCamera(o.fov||38,W/H,1,M.FH*6);
   const cx=M.FW/2,cz=M.FH/2;
   /* 선수 모델 */
@@ -42,9 +42,11 @@ function create(M,o){const THREE=window.THREE,cfg=M.cfg;const W=o.W,H=o.H,HD=o.H
     const c=M.ctrl;if(c&&M.state!=='goal'){ring.visible=true;ring.position.set(c.x-cx,0,c.y-cz);ring.userData.cone.position.y=o.height*1.25+Math.sin(G.t*6)*o.height*.06}else ring.visible=false;
     /* 카메라 */
     const mode=o.camMode||'broadcast';
-    if(mode==='broadcast'){const lim=M.PH/2-o.camEdge;tgt.set(bx*.8,0,Math.max(-lim,Math.min(lim,bz)));}else tgt.set(bx*.5,0,bz*.72);
-    if(first){look.copy(tgt);first=false}else look.lerp(tgt,Math.min(1,dt*3.2));
-    camPos.set(look.x*(o.camFollowX||.85),o.camH,look.z+o.camD);cam.position.copy(camPos);V.set(look.x,0,look.z-o.camAhead);cam.lookAt(V);
+    if(mode==='side'){/* 옆에서 보는 TV 중계: 공을 길이 방향으로 끝까지 따라가요 */const lead=(b.owner?(b.owner.team===0?-1:1)*o.camLead:0)+b.vy*.18;const lim=M.PH/2+4;tgt.set(bx*.55,0,Math.max(-lim,Math.min(lim,bz+lead)))}
+    else if(mode==='broadcast'){const lim=M.PH/2-o.camEdge;tgt.set(bx*.8,0,Math.max(-lim,Math.min(lim,bz)));}else tgt.set(bx*.5,0,bz*.72);
+    if(first){look.copy(tgt);first=false}else look.lerp(tgt,Math.min(1,dt*(o.camRate||3.2)));
+    if(mode==='side'){cam.position.set(look.x+o.camD,o.camH,look.z);V.set(look.x-o.camAhead,0,look.z);cam.lookAt(V)}
+    else{camPos.set(look.x*(o.camFollowX||.85),o.camH,look.z+o.camD);cam.position.copy(camPos);V.set(look.x,0,look.z-o.camAhead);cam.lookAt(V)}
     if(M.debugCam){const d=M.debugCam;const q=M.ctrl;cam.position.set(q.x-cx+d.x,d.y,q.y-cz+d.z);V.set(q.x-cx,d.ly||4,q.y-cz);cam.lookAt(V)}
     st.follow(look.x,look.z)}
   function render(G,ctx){update(G);R.render(scene,cam);ctx.drawImage(R.domElement,0,0,W,H)}

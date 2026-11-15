@@ -62,7 +62,7 @@ function create(cfg){
       if(M.stT<=0){M.state='play';if(o&&o.team===0&&!o.gk)M.ctrl=o}else return}
     M.clock-=dt;if(cfg.fo2&&M.half===1&&M.clock<=cfg.duration/2){M.half=2;G.sfx('bell');M.msg={s:'하프타임 · 후반 시작',t:2,big:1};kickoff(1);return}
     if(M.clock<=0){M.clock=0;M.state='end';G.sfx('bell');cfg.onEnd&&cfg.onEnd(M);return}
-    for(const p of M.P){p.stun=Math.max(0,p.stun-dt);p.kcd=Math.max(0,p.kcd-dt);p.recv=Math.max(0,(p.recv||0)-dt);if(cfg.fo2){p.stam=clamp(p.stam+(p.sprint&&hyp(p.vx,p.vy)>20?-.16:.045)*dt,0,1);p.sprint=false;if(p.wall)p.wall.t-=dt;if(p.runTo&&(p.runTo.t-=dt)<0)p.runTo=null;p.skill=Math.max(0,(p.skill||0)-dt)}}
+    for(const p of M.P){p.stun=Math.max(0,p.stun-dt);p.kcd=Math.max(0,p.kcd-dt);p.recv=Math.max(0,(p.recv||0)-dt);p.contest=Math.max(0,(p.contest||0)-dt);if(cfg.fo2){p.stam=clamp(p.stam+(p.sprint&&hyp(p.vx,p.vy)>20?-.16:.045)*dt,0,1);p.sprint=false;if(p.wall)p.wall.t-=dt;if(p.runTo&&(p.runTo.t-=dt)<0)p.runTo=null;p.skill=Math.max(0,(p.skill||0)-dt)}}
     if(cfg.fo2)controlFO2(G,dt);else controlMe(G,dt);
     for(const p of M.P)if(!p.off&&(p!==M.ctrl||p.gk))ai(p,G,dt);
     if(cfg.fo2)airBalls(G,dt);
@@ -71,7 +71,7 @@ function create(cfg){
     cam(dt)};
   function cam(dt){const v=cfg.view;if(!v)return;const b=M.ball;const tx=clamp(b.x-v.w/2,0,M.FW-v.w),ty=clamp(b.y-v.h/2+(M.ctrl&&M.ctrl===b.owner?-20:0),0,M.FH-v.h);M.cam.x+=(tx-M.cam.x)*Math.min(1,dt*5);M.cam.y+=(ty-M.cam.y)*Math.min(1,dt*5)}
   M.snapCam=function(){const v=cfg.view;if(!v)return;M.cam.x=clamp(M.ball.x-v.w/2,0,M.FW-v.w);M.cam.y=clamp(M.ball.y-v.h/2,0,M.FH-v.h)};
-  function speedOf(p){let s=(cfg.speed||62)*(p.team===0?1:p.sk.spd)*(p.gk?.9:1)*(M.ball.owner===p?.86:1)*(p.stun?0:1);if(cfg.fo2){if(p.sprint&&p.stam>.05)s*=M.ball.owner===p?1.2:1.33;s*=.72+.28*Math.min(1,p.stam/.45)}return s}
+  function speedOf(p){let s=(p.contest>0?.82:1)*(cfg.speed||62)*(p.team===0?1:p.sk.spd)*(p.gk?.9:1)*(M.ball.owner===p?.86:1)*(p.stun?0:1);if(cfg.fo2){if(p.sprint&&p.stam>.05)s*=M.ball.owner===p?1.2:1.33;s*=.72+.28*Math.min(1,p.stam/.45)}return s}
   function moveP(p,dt,dx,dy,mul){const sp=speedOf(p)*(mul||1);const l=hyp(dx,dy);if(p.slide>0){p.slide-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.93;p.vy*=.93;if(p.slide<=0)p.stun=.35}
     else if(l>.01){const tvx=dx/l*sp,tvy=dy/l*sp;p.vx+=(tvx-p.vx)*Math.min(1,dt*10);p.vy+=(tvy-p.vy)*Math.min(1,dt*10);p.dir={x:dx/l,y:dy/l}}else{p.vx*=.8;p.vy*=.8}
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.x=clamp(p.x,MX-(cfg.walls?-4:10),MX+PW+(cfg.walls?-4:10));p.y=clamp(p.y,MY-(cfg.walls?-4:12),MY+PH+(cfg.walls?-4:12));p.anim+=hyp(p.vx,p.vy)*dt*.25}
@@ -109,7 +109,7 @@ function create(cfg){
     else aiMoveTo(p,h.x,h.y,dt,.9)}
   function ownerAI(p,G,dt){const b=M.ball;const fwd=p.team===0?-1:1;const gy=p.team===0?topY:botY;p.dec-=dt;
     let ax=goalX-p.x,ay=gy-p.y;const dG=hyp(ax,ay);let near=null,nd=1e9;for(const o of M.P)if(o.team!==p.team){const d=hyp(o.x-p.x,o.y-p.y);if(d<nd){nd=d;near=o}}
-    if(p.dec<=0){p.dec=rnd(.25,.55)/(p.sk.think||1);
+    if(p.dec<=0){p.dec=rnd(.25,.55)/(p.sk.think||1)*(cfg.fo2&&p.contest>0?2.2:1);if(cfg.fo2&&p.contest>0&&Math.random()<.45)return;
       if(dG<(cfg.shootRange||100)&&Math.random()<(dG<60?.75:.4)){const aim=rnd(-1,1);shoot(p,rnd(.35,.85),aim,G,false);return}
       if(cfg.fo2){const runner=M.P.find(q=>q.team===p.team&&q.runTo&&!q.off&&q!==p);if(runner&&Math.random()<.55*p.sk.pass+.15){throughTo(p,runner,rnd(.4,.8),false,G);return}
         const wide=Math.abs(p.x-goalX)>PW*.24&&(p.team===0?p.y<MY+PH*.3:p.y>MY+PH*.7);if(wide&&Math.random()<.5){cross(p,rnd(.3,.8),G);return}}
@@ -150,7 +150,7 @@ function create(cfg){
     if(!free&&bounds(G))return;
     if(b.fire&&Math.random()<.8)M.parts.push({x:b.x,y:b.y-b.z,vx:rnd(-20,20),vy:rnd(-20,20),t:.35,col:Math.random()<.5?'#ff9b3d':'#ffd23f'});
     /* 줍기 */
-    if(!b.owner&&b.z<8){let best=null,bd=8;for(const p of M.P){if(p.stun>0||p.kcd>0||p.gk)continue;const d=hyp(p.x-b.x,p.y-b.y);if(d<bd){bd=d;best=p}}
+    if(!b.owner&&b.z<8){let best=null,bd=8;for(const p of M.P){if(p.stun>0||p.kcd>0||p.gk)continue;const d=hyp(p.x-b.x,p.y-b.y)-(cfg.fo2&&b.target===p?4:0);if(d<bd){bd=d;best=p}}
       if(best){const sp=hyp(b.vx,b.vy);if(best.slide>0){/* 태클로 걷어냄 */b.vx=best.vx*1.3;b.vy=best.vy*1.3;b.last=best.team;best.kcd=.2;G.sfx('hit');}
         else if(b.fire&&best.team!==b.last){best.stun=.6;b.vx*=.85;b.vy*=.85}
         else{if(cfg.fo2&&b.offTgt===best){b.offTgt=null;M.msg={s:'오프사이드!',t:1.4};G.sfx('bell');setPiece('fk',1-best.team,best.x,best.y);return}
@@ -186,7 +186,12 @@ function create(cfg){
       if(cfg.fo2&&o.skill>0&&p.slide<=0)continue;
       if(cfg.fo2&&p.slide<=0&&d<6&&hyp(b.x-o.x,b.y-o.y)>7){/* 공이 발에서 떨어진 틈에 끊기 */b.owner=null;b.vx=p.dir.x*45+rnd(-15,15);b.vy=p.dir.y*45+rnd(-15,15);b.last=p.team;o.kcd=.3;G.sfx('punch');if(p.team===0)M.msg={s:'끊어냈다!',t:.6};return}
       if(p.slide>0&&d<10){b.owner=null;b.vx=p.vx*1.2+rnd(-30,30);b.vy=p.vy*1.2+rnd(-30,30);b.last=p.team;o.stun=.55;o.kcd=.4;G.sfx('hit');if(p.team===0){M.energy=Math.min(1,M.energy+.15);G.add(20)}M.shake=3;return}
-      if(d<7){p.steal=(p.steal||0)+dt*(p.team===0?(cfg.fo2?.7:1.5):p.sk.tackle)*(cfg.fo2&&o.sprint?1.6:1);if(p.steal>.45){p.steal=0;b.owner=null;b.vx=p.dir.x*40+rnd(-25,25);b.vy=p.dir.y*40+rnd(-25,25);b.last=p.team;o.kcd=.35;G.sfx('punch');if(p.team===0)M.energy=Math.min(1,M.energy+.1)}}else p.steal=Math.max(0,(p.steal||0)-dt)}}
+      if(cfg.fo2){/* 몸싸움: 공 가진 선수에게 붙어 있으면 자동으로 밀고 당기다가, 오래 버티면 뺏어요 */const pd=hyp(p.x-o.x,p.y-o.y);
+        if(pd<10&&p.slide<=0){p.body=(p.body||0)+dt*(p.team===0?1:.55+p.sk.tackle*.35)*(o.sprint?1.35:1)*(o.closeCtl?.6:1);o.contest=.15;p.contest=.15;
+          if(pd<5.5){const ux=(o.x-p.x)/(pd||1),uy=(o.y-p.y)/(pd||1);o.x+=ux*10*dt;o.y+=uy*10*dt;p.x-=ux*6*dt;p.y-=uy*6*dt}
+          if(p.body>(p.team===0?.85:1.35)){p.body=0;b.owner=p;b.target=null;o.kcd=.45;o.stun=.25;G.sfx('punch');M.shake=2;if(p.team===0){M.ctrl=p;M.msg={s:'몸싸움 승리!',t:.8};G.add(30)}else M.msg={s:'몸싸움에서 밀렸다!',t:.8};return}}
+        else p.body=Math.max(0,(p.body||0)-dt*1.5);continue}
+      if(d<7){p.steal=(p.steal||0)+dt*(p.team===0?1.5:p.sk.tackle);if(p.steal>.45){p.steal=0;b.owner=null;b.vx=p.dir.x*40+rnd(-25,25);b.vy=p.dir.y*40+rnd(-25,25);b.last=p.team;o.kcd=.35;G.sfx('punch');if(p.team===0)M.energy=Math.min(1,M.energy+.1)}}else p.steal=Math.max(0,(p.steal||0)-dt)}}
   function goal(G,team){M.score[team]++;M.goalTeam=team;M.state='goal';M.stT=2.4;M.shake=8;G.sfx('clear');M.msg={s:team===0?'GOAL!!':'실점…',t:2.2,big:1};navigator.vibrate&&navigator.vibrate(150);
     if(team===0){G.add(cfg.goalPts||300);for(let i=0;i<50;i++)M.parts.push({x:M.ball.x,y:M.ball.y,vx:rnd(-120,120),vy:rnd(-140,40),t:1.6,col:['#ff4f7b','#ffd23f','#4fe3b2','#3fd0ff','#fff'][i%5]})}
     cfg.onGoal&&cfg.onGoal(M,team)}
@@ -224,9 +229,10 @@ function create(cfg){
       const t=bestPass(c,ddx,ddy)||bestPass(c);if(t){lobTo(c,t,pw,G);M.msg={s:'롱패스',t:.6}}}
     else if(k==='D'){shootFO2(c,pw,dx,combo?'chip':(M.inp&&M.inp.held.C)?'finesse':'power',G)}}
   M.doAction=doAction;
+  function inDir(k){const sx=(k.right?1:0)-(k.left?1:0),sy=(k.down?1:0)-(k.up?1:0);return cfg.sideView?[sy,-sx]:[sx,sy]}M.inDir=inDir;
   function controlFO2(G,dt){const k=G.keys,b=M.ball,I=M.inp||{held:{},down:{},up:{}};let c=M.ctrl;
     if(b.owner&&b.owner.team===0&&!b.owner.gk)c=M.ctrl=b.owner;if(!c||c.gk||c.off)c=M.ctrl=nearest(0,b.x,b.y,null,true);
-    const mine=b.owner===c,dx=(k.right?1:0)-(k.left?1:0),dy=(k.down?1:0)-(k.up?1:0);const attacking=b.owner?b.owner.team===0:b.last===0;
+    const mine=b.owner===c;const [dx,dy]=inDir(k);const attacking=b.owner?b.owner.team===0:b.last===0;
     const rdt=dt/(M.timeScale||1);if(I.down.Q)M.qArm=.9;M.qArm=Math.max(0,(M.qArm||0)-rdt);const combo=I.held.Q||M.qArm>0;
     if(I.held.E)c.sprint=true;
     if(mine||(attacking&&!b.owner&&b.target===c)){
@@ -236,7 +242,7 @@ function create(cfg){
       if(mine&&I.down.C&&!(I.held.D)&&(c.skillCd||0)<=0&&hyp(c.vx,c.vy)>30){c.skill=.45;c.skillCd=1.1;const s=Math.random()<.5?1:-1;c.vx+=(-c.dir.y)*s*95;c.vy+=(c.dir.x)*s*95;M.msg={s:['헛다리!','마르세유 턴!','드래그 백!'][Math.floor(Math.random()*3)],t:.6};G.sfx('turn')}
       c.skillCd=Math.max(0,(c.skillCd||0)-dt);
       if(!b.owner&&b.z>3&&b.z<14&&hyp(c.x-b.x,c.y-b.y)<8&&(I.down.D||I.down.S)){/* 헤딩·발리 */if(I.down.D){b.owner=c;shootFO2(c,.65,dx,'power',G);M.msg={s:b.z>8?'헤딩슛!':'발리슛!',t:.8}}else{b.owner=c;const t=bestPass(c,dx||c.dir.x,dy||c.dir.y)||bestPass(c);if(t)passTo(c,t,G)}}
-      if(c.stun<=0)moveP(c,dt,dx,dy);else moveP(c,dt,0,0);return}
+      if(c.stun<=0){if(!mine&&b.target===c&&!b.owner&&!dx&&!dy){/* 패스 받는 선수: 손 안 대면 알아서 공 쪽으로 */const t=.3;moveP(c,dt,b.x+b.vx*t-c.x,b.y+b.vy*t-c.y);c.sprint=c.sprint||hyp(b.x-c.x,b.y-c.y)>30}else moveP(c,dt,dx,dy)}else moveP(c,dt,0,0);return}
     /* 수비 */c.gauge=null;
     if(I.down.Q){const order=M.P.filter(q=>q.team===0&&!q.gk&&!q.off).sort((a,bq)=>hyp(a.x-b.x,a.y-b.y)-hyp(bq.x-b.x,bq.y-b.y));const i=order.indexOf(c);M.ctrl=c=order[(i+1)%Math.min(3,order.length)]||c;G.sfx('tick')}
     if(I.held.A){const mate=M.P.filter(q=>q.team===0&&q!==c&&!q.gk&&!q.off).sort((a,bq)=>hyp(a.x-b.x,a.y-b.y)-hyp(bq.x-b.x,bq.y-b.y))[0];if(mate)mate.press=true}
@@ -273,7 +279,7 @@ function create(cfg){
   function spUpdate(G,dt){const sp=M.sp,o=sp.taker,b=M.ball;sp.t+=dt;const I=M.inp||{held:{},down:{},up:{}};const k=G.keys;
     for(const p of M.P){if(p===o||p.off)continue;if(p.wallStand>0){p.wallStand-=dt;continue}if(sp.kind==='pen'&&!p.gk)continue;const h=homePos(p);if(!p.gk)aiMoveTo(p,h.x,h.y,dt,.8)}
     b.x=o.x+o.dir.x*5;b.y=o.y+o.dir.y*5;
-    if(sp.team===0&&!o.gk){M.ctrl=o;const dx=(k.right?1:0)-(k.left?1:0),dy=(k.down?1:0)-(k.up?1:0);if(dx||dy){const a=Math.atan2(o.dir.y,o.dir.x)+(dx?dx*dt*2.2:0);if(dx)o.dir={x:Math.cos(a),y:Math.sin(a)}}
+    if(sp.team===0&&!o.gk){M.ctrl=o;const [dx,dy]=inDir(k);if(dx||dy){const cur=Math.atan2(o.dir.y,o.dir.x),want=Math.atan2(dy,dx);let da=Math.atan2(Math.sin(want-cur),Math.cos(want-cur));const a=cur+Math.max(-dt*2.6,Math.min(dt*2.6,da));o.dir={x:Math.cos(a),y:Math.sin(a)}}
       const rdt=dt/(M.timeScale||1);if(I.down.Q)M.qArm=.9;M.qArm=Math.max(0,(M.qArm||0)-rdt);
       for(const key of ['S','W','A','D'])if(I.down[key])o.gauge={k:key,t:0,combo:I.held.Q||M.qArm>0};
       if(o.gauge){o.gauge.t+=rdt;if(!I.held[o.gauge.k]||o.gauge.t>1.1){const g=o.gauge;o.gauge=null;const pw=clamp(g.t/.9,0,1);M.state='play';b.owner=o;

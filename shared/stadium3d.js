@@ -49,7 +49,7 @@ S3.stadium=function(scene,o){const THREE=T();const u=o.unit||1;const FW=o.PW+o.m
     const pivot=new THREE.Group();pivot.position.set(cx,0,cz);pivot.rotation.y=ry;st.position.set(0,standH/2,-standDepth/2);st.rotation.x=-.55;st.position.y=standH*.42;pivot.add(st);
     const roof=new THREE.Mesh(new THREE.BoxGeometry(len,.6*u,standDepth*.8),new THREE.MeshLambertMaterial({color:0xdde3f0}));roof.position.set(0,standH*1.15,-standDepth*.55);pivot.add(roof);g.add(pivot)};
   const bx=FW/2+back-o.margin,bz=FH/2+back-o.margin;
-  mkStand(FW+back*1.2,0,-bz,0);if(!o.noNearStand)mkStand(FW+back*1.2,0,bz,Math.PI);mkStand(FH+back*1.2,-bx,0,Math.PI/2);mkStand(FH+back*1.2,bx,0,-Math.PI/2);
+  const nn=o.noNearStand===true?'z':o.noNearStand;mkStand(FW+back*1.2,0,-bz,0);if(nn!=='z')mkStand(FW+back*1.2,0,bz,Math.PI);mkStand(FH+back*1.2,-bx,0,Math.PI/2);if(nn!=='x')mkStand(FH+back*1.2,bx,0,-Math.PI/2);
   /* 조명탑 */
   for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const tw=new THREE.Group();tw.position.set(sx*(bx+4*u),0,sz*(bz+4*u));const pole=new THREE.Mesh(new THREE.CylinderGeometry(.4*u,.6*u,standH*2.6,6),new THREE.MeshLambertMaterial({color:0x8890a8}));pole.position.y=standH*1.3;tw.add(pole);
     const panel=new THREE.Mesh(new THREE.BoxGeometry(5*u,3*u,.6*u),new THREE.MeshBasicMaterial({color:0xfffbe0}));panel.position.y=standH*2.6;panel.lookAt(0,0,0);tw.add(panel);g.add(tw)}

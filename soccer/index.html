@@ -15,7 +15,7 @@
 <script src="../shared/footy3d.js"></script>
 <script>
 /* NNN 오락실 축구: 11대11 진짜 경기! 위에서 내려다보는 옛날 오락실 스타일. 동네 리그부터 월드 투어 결승까지 8경기 */
-const W=224,H=304,HUD=16,VW=224,VH=288;
+const W=400,H=225,HUD=16,VW=400,VH=209;
 const TEAMS=[
  ['탕정 조기회','#8a8a8a','#fff',0],['아산 시민구단','#2a6adf','#fff',1],['충남 도대표','#ff9b3d','#222',2],['서울 유나이티드','#111','#ff4f7b',3],
  ['사막 팔콘스','#e8d08a','#8a5a2b',4],['바이킹 FC','#3fd0ff','#fff',5],['삼바 스타즈','#ffd23f','#3fae4a',6],['탱고 마스터즈','#bfe6ff','#222',7]];
@@ -24,12 +24,12 @@ const FORM=[[.5,.98,'gk'],[.14,.8,'def'],[.38,.85,'def'],[.62,.85,'def'],[.86,.8
 let G0,M,mi,nextT,dur,F3,REN;
 function oppSkill(i,G){const t=i/7,d=G.diff;return{spd:(.84+t*.26)*(.88+.12*d),pass:.5+t*.42,shot:.4+t*.45,tackle:(.6+t*1.5)*d,slide:.15+t*.9,keeper:.45+t*.47,think:.8+t*.6}}
 function newMatch(G,silent){const o=TEAMS[mi];
-  M=Footy.create({fo2:true,PW:300,PH:480,margin:20,GWD:44,GH:11,walls:false,energy:false,speed:60,stripe:32,circle:38,boxW:150,boxH:72,shootRange:125,lobDist:115,pressDist:18,rushDist:60,shiftX:.34,shiftY:.4,
+  M=Footy.create({fo2:true,sideView:true,PW:300,PH:480,margin:20,GWD:44,GH:11,walls:false,energy:false,speed:60,stripe:32,circle:38,boxW:150,boxH:72,shootRange:125,lobDist:115,pressDist:18,rushDist:60,shiftX:.34,shiftY:.4,
     view:{w:VW,h:VH},oy:HUD,goalPts:300,formation:FORM,
     mySkill:{spd:1,pass:.8,shot:.72,tackle:1.1,slide:0,keeper:.8,think:1},opSkill:oppSkill(mi,G),
     myCol:{shirt:'#e8231f',shorts:'#fff',gk:'#ffd23f'},opCol:{shirt:o[1],shorts:o[2],gk:'#4fe3b2',hair:'#111'},
     duration:dur,onEnd:m=>matchEnd(m)});
-  M.kickoff(0);M.snapCam();REN=REN||S3.renderer(W,H,2);F3=Footy3D.create(M,{W,H,HD:2,R:REN,height:9,ballR:1.3,fov:34,camH:74,camD:96,camAhead:24,camEdge:40,stripes:16});if(!silent)G.msg(`${ROUNDS[mi]} · vs ${o[0]}`,1800)}
+  M.kickoff(0);M.snapCam();REN=REN||S3.renderer(W,H,2);F3=Footy3D.create(M,{W,H,HD:2,R:REN,height:9,ballR:1.3,fov:30,camMode:'side',camH:68,camD:128,camAhead:26,camLead:22,camRate:6,stripes:16});if(!silent)G.msg(`${ROUNDS[mi]} · vs ${o[0]}`,1800)}
 function matchEnd(m){const G=G0;const [a,b]=m.score;
   if(m.pensResult)return m.pensResult==='win'?advance(G,a,b):G.over(`${ROUNDS[mi]}에서 승부차기 패배`);
   if(a===b){m.startPens(G);return}
@@ -59,24 +59,24 @@ function drawOverlay(G,c){if(!M||!F3)return;const p=M.ctrl;if(!p||M.state==='pen
   const sx=s.x-12,sy=s.y-6;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(sx,sy,24,3);c.fillStyle=p.stam>.45?'#4fe3b2':p.stam>.2?'#ffd23f':'#ff4f7b';c.fillRect(sx,sy,24*p.stam,3);
   if(M.state==='setpiece'&&M.sp&&M.sp.team===0){const d=M.sp.taker.dir;const a=F3.project(M.ball.x,M.ball.y,1),b2=F3.project(M.ball.x+d.x*30,M.ball.y+d.y*30,1);c.strokeStyle='#ffd23f';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b2.x,b2.y);c.stroke();c.setLineDash([]);
     const tip={kickoff:'S 패스로 킥오프',corner:'A 크로스 · S 짧은 패스 (◀▶ 방향)',fk:'◀▶ 방향 · S/W/A 패스 · D 슛',pen:'◀▶ 방향 고르고 D 슛',throw:'S/W/A 로 던지기',goalkick:''}[M.sp.kind]||'';if(tip){c.fillStyle='rgba(0,0,0,.55)';c.fillRect(0,H-24,W,22);G.text(tip,W/2,H-20,{k:1,size:11,align:'center',color:'#ffd23f'})}}
+  for(const q of M.P)if((q.body||0)>.05&&!q.off&&M.ball.owner){const o=M.ball.owner;const t=F3.project(o.x,o.y,16);if(!t.behind){const mine=q.team===0;const lim=mine?1.15:1.35;c.fillStyle='rgba(0,0,0,.6)';c.fillRect(t.x-15,t.y-4,30,5);c.fillStyle=mine?'#4fe3b2':'#ff4f7b';c.fillRect(t.x-14,t.y-3,28*Math.min(1,q.body/lim),3);G.text('몸싸움',t.x,t.y-15,{k:1,size:9,align:'center',color:mine?'#4fe3b2':'#ff4f7b'})}}
   for(const q of M.P)if(q.yc&&!q.off){const t=F3.project(q.x,q.y,15);if(!t.behind){c.fillStyle='#ffd23f';c.fillRect(t.x-2,t.y-4,4,5)}}}
-Retro.boot({id:'soccer',title:'NNN 오락실 축구',en:'ARCADE FOOTBALL 11',w:W,h:H,hd:2,a:false,b:false,noWASD:true,diag:true,
+Retro.boot({id:'soccer',title:'NNN 오락실 축구',en:'ARCADE FOOTBALL 11',w:W,h:H,hd:2,a:false,b:false,noWASD:true,sideReserve:450,diag:true,
   stages:{label:'번째 경기',max:8},
   options:[{k:'speed',label:'경기 속도',ch:[['0.55','아주 느리게'],['0.7','느리게'],['0.85','보통'],['1','빠르게']],def:'0.7',note:'선수·공·패스 전부 같이 느려져요 (경기 시간은 그대로)'},{k:'time',label:'경기 시간',ch:[['150','2분 30초'],['210','3분 30초'],['300','5분']],def:'210'},{k:'map',label:'작은 지도',ch:[['on','보이기'],['off','숨기기']],def:'on'}],
   intro:'피파온라인2 방식 조작! 게이지 패스·스루패스·로빙·크로스·2:1 패스, 파워·칩·감아차기 슛, 헤딩, 압박·슬라이딩·선수 교체, 오프사이드와 반칙·카드까지. 동네 리그부터 월드 투어 결승까지 8경기.',
-  help:'<b>공격</b> (누른 시간 = 게이지 세기)<br><b>S</b> 짧은 패스 · <b>W</b> 스루패스 · <b>A</b> 로빙/크로스 · <b>D</b> 슛<br><b>E</b> 누르고 있기 = 대시 (공을 길게 차 놓고 달려요, 체력 소모)<br><b>C</b> 톡 = 개인기 · <b>C</b> 누르고 있기 = 공 붙여서 짧게 드리블<br><b>Q</b>+S 2:1 패스 · <b>Q</b>+W 로빙 스루 · <b>Q</b>+D 칩슛 · <b>C</b>+D 감아차기<br>공중볼 근처에서 D = 헤딩/발리슛<br><b>수비</b> <b>S</b> 압박·태클 · <b>D</b> 슬라이딩 · <b>Q</b> 선수 교체 · <b>A</b> 팀원 압박 · <b>W</b> 키퍼 나오기<br>뒤에서 슬라이딩하면 반칙·경고! 박스 안이면 페널티킥<br>폰: Q를 톡 누르고 바로 다음 버튼 = 조합 · PC: 방향키 + Q W E A S D C',
+  help:'📱 폰을 <b>가로로</b> 돌려서 하세요! 오른쪽으로 공격해요<br><b>공격</b> (누른 시간 = 게이지 세기)<br><b>S</b> 짧은 패스 · <b>W</b> 스루패스 · <b>A</b> 로빙/크로스 · <b>D</b> 슛<br><b>E</b> 누르고 있기 = 대시 (공을 길게 차 놓고 달려요, 체력 소모)<br><b>C</b> 톡 = 개인기 · <b>C</b> 누르고 있기 = 공 붙여서 짧게 드리블<br><b>Q</b>+S 2:1 패스 · <b>Q</b>+W 로빙 스루 · <b>Q</b>+D 칩슛 · <b>C</b>+D 감아차기<br>공중볼 근처에서 D = 헤딩/발리슛<br>패스하면 받는 선수로 바로 바뀌고, 방향키를 안 누르면 알아서 공 쪽으로 가요<br><b>수비</b> 상대에게 붙어 있으면 자동 몸싸움 → 오래 버티면 뺏어요 · <b>S</b> 압박·태클 · <b>D</b> 슬라이딩 · <b>Q</b> 선수 교체 · <b>A</b> 팀원 압박 · <b>W</b> 키퍼 나오기<br>뒤에서 슬라이딩하면 반칙·경고! 박스 안이면 페널티킥<br>폰: Q를 톡 누르고 바로 다음 버튼 = 조합 · PC: 방향키 + Q W E A S D C',
   setup(G){G0=G;buildPad(G);mi=0;nextT=0;dur=210;newMatch(G,true)},
   init(G){G0=G;mi=G.start-1;nextT=0;dur=+G.opt('time');newMatch(G)},
   update(G,dt){if(nextT>0){nextT-=dt;if(nextT<=0)newMatch(G);return}if(M){const ts=+G.opt('speed')||.7;M.timeScale=ts;M.inp={held:INP.held,down:INP.down,up:INP.up};const st0=M.state;M.update(G,dt*ts);if(st0==='play'&&M.state==='play')M.clock-=dt*(1-ts);INP.down={};INP.up={}}},
   draw(G,c){c.fillStyle='#0b0d1c';c.fillRect(0,0,W,H);if(!M)return;F3.render(G,c);if(M.state==='pens')M.drawPens(G,c,{w:W,h:H});
-    if(G.opt('map')!=='off'&&M.state!=='pens'){const mw=34,mh=52,mx=W-mw-4,my=HUD+4;c.fillStyle='rgba(0,40,10,.6)';c.fillRect(mx,my,mw,mh);c.strokeStyle='rgba(255,255,255,.5)';c.strokeRect(mx+.5,my+.5,mw,mh);
-      for(const p of M.P){c.fillStyle=p.team===0?(p===M.ctrl?'#ffd23f':'#ff4f7b'):'#bfe6ff';c.fillRect(mx+(p.x-M.MX)/M.PW*mw-1,my+(p.y-M.MY)/M.PH*mh-1,2,2)}
-      c.fillStyle='#fff';c.fillRect(mx+(M.ball.x-M.MX)/M.PW*mw-1,my+(M.ball.y-M.MY)/M.PH*mh-1,2,2);
-      c.strokeStyle='rgba(255,255,255,.6)';c.strokeRect(mx+(M.cam.x-M.MX)/M.PW*mw,my+(M.cam.y-M.MY)/M.PH*mh,VW/M.PW*mw,VH/M.PH*mh)}
+    if(G.opt('map')!=='off'&&M.state!=='pens'){const mw=64,mh=40,mx=W-mw-4,my=HUD+3;c.fillStyle='rgba(0,40,10,.55)';c.fillRect(mx,my,mw,mh);c.strokeStyle='rgba(255,255,255,.5)';c.strokeRect(mx+.5,my+.5,mw,mh);c.beginPath();c.moveTo(mx+mw/2,my);c.lineTo(mx+mw/2,my+mh);c.stroke();
+      const mp=(x,y)=>[mx+(1-(y-M.MY)/M.PH)*mw,my+(x-M.MX)/M.PW*mh];for(const p of M.P){if(p.off)continue;const [a,bb]=mp(p.x,p.y);c.fillStyle=p.team===0?(p===M.ctrl?'#ffd23f':'#ff4f7b'):'#bfe6ff';c.fillRect(a-1,bb-1,2.5,2.5)}
+      const [ba,bb2]=mp(M.ball.x,M.ball.y);c.fillStyle='#fff';c.fillRect(ba-1,bb2-1,2.5,2.5)}
     drawOverlay(G,c);
     c.fillStyle='rgba(8,6,20,.92)';c.fillRect(0,0,W,HUD);const min=Math.min(90,Math.floor((1-M.clock/dur)*90));
     G.text(`NNN ${M.score[0]}:${M.score[1]} ${TEAMS[mi]?TEAMS[mi][0]:''}`,4,3,{k:1,size:10});G.text(`${M.half===2?'후반':'전반'} ${min}'`,W-4,4,{k:1,size:9,align:'right',color:'#ffd23f'});
-    if(M.msg)G.text(M.msg.s,W/2,M.msg.big?120:160,{k:1,size:M.msg.big?28:14,align:'center',color:'#ffd23f'});
+    if(M.msg)G.text(M.msg.s,W/2,M.msg.big?H*.36:H*.58,{k:1,size:M.msg.big?28:14,align:'center',color:'#ffd23f'});
     if(M.state==='kickoff'&&G.state==='play')G.text(ROUNDS[mi]||'',W/2,HUD+30,{k:1,size:12,align:'center',color:'#bfe6ff'})}
 });
 </script>

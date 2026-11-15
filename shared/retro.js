@@ -31,7 +31,8 @@
   .rt-btn small{font-family:var(--f-k);font-size:12px;opacity:.9}
   .rt-btn.a{background:#e8453c;margin-bottom:26px}.rt-btn.b{background:#3b6fe0}
   .rt-btn.on{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.45);filter:brightness(1.2)}
-  .rt-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,6,20,.72);z-index:5}
+  .rt-ov{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:rgba(8,6,20,.72);z-index:5;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  .rt-ov .rt-card{margin:auto}
   .rt-card{width:min(340px,100%);background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.6)}
   .rt-card h1{margin:0 0 4px;font-size:26px;font-weight:400;color:var(--sun);text-shadow:0 3px 0 #0006}
   .rt-card .en{font-family:var(--f-px);font-size:9px;color:var(--mute);letter-spacing:1px;margin-bottom:12px}
@@ -142,7 +143,7 @@
     try{const rv=navigator.vibrate&&navigator.vibrate.bind(navigator);if(rv)navigator.vibrate=function(){return optGet('vib')==='off'?false:rv.apply(null,arguments)}}catch(e){}
 
     function fit(){const r=stage.getBoundingClientRect();const land=matchMedia('(orientation:landscape) and (max-height:560px)').matches&&getComputedStyle(root.querySelector('#rtPad')).display!=='none';
-      const availW=r.width-(land?400:12),availH=r.height-8;let s=Math.min(availW/W,availH/H);if(s>=2)s=Math.floor(s*2)/2;
+      const availW=r.width-(land?(cfg.sideReserve||400):12),availH=r.height-8;let s=Math.min(availW/W,availH/H);if(s>=2)s=Math.floor(s*2)/2;
       cv.style.width=Math.floor(W*s)+'px';cv.style.height=Math.floor(H*s)+'px';G.scale=s}
     addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,200));
 
