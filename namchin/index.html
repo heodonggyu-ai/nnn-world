@@ -34,6 +34,9 @@ button{font-family:inherit}
 h2.sec{font-size:17px;margin:22px 18px 10px}
 h2.sec small{display:block;font-size:12px;color:var(--sub);font-weight:500;margin-top:3px}
 .scgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 30px}
+.stscroll{display:flex;gap:10px;overflow-x:auto;padding:0 16px 6px;scrollbar-width:none}.stscroll::-webkit-scrollbar{display:none}
+.stc{flex:none;width:150px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-align:left;color:var(--txt);padding:0}
+.stc canvas{display:block;width:100%;aspect-ratio:3/4}.stc b{display:block;font-size:13px;padding:7px 9px 1px}.stc small{display:block;font-size:11px;color:var(--acc2);padding:0 9px 9px}
 .sc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:left;color:var(--txt);position:relative;overflow:hidden}
 .sc .e{font-size:28px}
 .sc b{display:block;font-size:15px;margin:6px 0 3px}
@@ -124,6 +127,8 @@ h2.sec small{display:block;font-size:12px;color:var(--sub);font-weight:500;margi
     <button class="qbtn" id="goAcademy"><span class="e">🎓</span><b>남친 사진학원</b><small>남자들이 꼭 하는 실수 7가지</small></button>
     <button class="qbtn" id="goCheck"><span class="e">✅</span><b>찍기 전 체크리스트</b><small>30초면 사진이 달라져요</small></button>
   </div>
+  <h2 class="sec">📸 작가·인플루언서 스타일로 찍기<small>요즘 피드에서 잘 나가는 샷과 유명 사진가 기법. 그림을 누르면 그 스타일로 촬영 시작</small></h2>
+  <div class="stscroll" id="stgrid"></div>
   <h2 class="sec">어디서 찍어요?<small>장소를 고르면 그 장소에 맞는 구도·포즈·폰 높이를 알려줘요</small></h2>
   <div class="scgrid" id="scgrid"></div>
 </div>
@@ -191,6 +196,7 @@ h2.sec small{display:block;font-size:12px;color:var(--sub);font-weight:500;margi
 
 <input type="file" id="file" accept="image/*" hidden>
 
+<script src="../photo/styles.js"></script>
 <script>
 (()=>{
 const PHI=(1+Math.sqrt(5))/2;
@@ -393,10 +399,17 @@ const SC=[
   t:['폰을 눈보다 살짝 위로, 턱은 살짝 당기기','팔 길이가 부족하면 0.5x 광각 + 얼굴은 화면 가운데 (가장자리는 늘어나요)','그녀 얼굴을 렌즈에서 조금 더 멀리 — 얼굴이 작게 나와요 (센스!)'],face:'user'},
 ];
 const S=Object.fromEntries(SC.map(s=>[s.id,s]));
+const ST_IDS=['back_walk','look_back','low_long','wide_hip','mirror_selfie','golden_backlight','candid_laugh','window_sil','eye_portrait','detail_hands','jump_sky','symmetry_pastel','frame_arch','through_fg','reflection','hand_landmark','cafe45','env_portrait'];
+const STL=window.PHOTO_STYLES?ST_IDS.map(i=>PHOTO_STYLES.byId[i]).filter(Boolean):[];
+STL.forEach(st=>{const k='st_'+st.id;GUIDES[k]={name:st.name,h:st.phone,style:st};
+  S[k]={id:k,e:'🎨',name:st.name,sub:st.who,g:[k],m:st.ments||['편하게 나 보고 웃어줘','방금 그 표정 좋았어, 한 번 더!','딴 데 보다가 천천히 돌아봐'],t:[st.desc,...st.steps]}});
 let sc=S.quick,active='full',auto=true,ema={},cand=null,candN=0,mi=0,burstOn=true;
 
 // ---------- home ----------
 $('scgrid').innerHTML=SC.filter(s=>s.id!=='quick').map(s=>`<button class="sc" data-sc="${s.id}"><div class="e">${s.e}</div><b>${s.name}</b><small>${s.sub}</small><div class="g">${s.g.map(g=>GUIDES[g].name).join(' · ')}</div></button>`).join('');
+$('stgrid').innerHTML=STL.map(st=>`<button class="stc" data-sc="st_${st.id}"><canvas width="300" height="400"></canvas><b>${st.name}</b><small>✦ ${st.who}</small></button>`).join('');
+$('stgrid').querySelectorAll('.stc').forEach(b=>{const c=b.querySelector('canvas').getContext('2d'),id=b.dataset.sc.slice(3);PHOTO_STYLES.drawScene(id,c,300,400);PHOTO_STYLES.drawGuide(id,c,300,400,{lw:2,sample:1})});
+$('stgrid').onclick=e=>{const b=e.target.closest('[data-sc]');if(b)openCam(b.dataset.sc)};
 $('scgrid').onclick=e=>{const b=e.target.closest('[data-sc]');if(b)openCam(b.dataset.sc)};
 $('goQuick').onclick=()=>openCam('quick');
 $('goAcademy').onclick=()=>{buildAcademy();$('academy').classList.add('show')};
@@ -438,7 +451,7 @@ addEventListener('resize',fit);
 // ---------- scoring ----------
 function onFeatures(f){
   feat=f;const s={};const nF=f.faces?f.faces.length:0;
-  for(const k of sc.g){if(!f.skin){s[k]=0;continue}
+  for(const k of sc.g){if(!f.skin||GUIDES[k].style){s[k]=0;continue}
     let v=Math.exp(-(Math.log(Math.max(.005,f.fh)/PT[k])**2)/(2*.5*.5));
     if(k==='portrait')v*=1-Math.min(1,Math.abs(f.skx-.5)*2.2);if(k==='off')v*=Math.abs(f.skx-.5)>.1?1.1:.7;if(k==='profile')v*=.85;
     if(k==='two')v*=nF===2?1.4:.3;if(k==='travel')v*=f.hor?1.15:.85;s[k]=v}
@@ -457,6 +470,12 @@ function moveHint(sx,sy,tx,ty){
 }
 function computeHint(){
   const f=feat;aligned=false;if(!f)return{t:mode==='idle'?'':'그녀를 화면에 담아주세요'};
+  const stl=GUIDES[active].style;
+  if(stl){const steps=stl.steps,now=performance.now();
+    if(!stl.target)return{t:'📌 '+steps[Math.floor(now/4000)%steps.length]};
+    const useFace=stl.face&&f.skin,src=useFace?[f.skx,f.sky]:[f.cx,f.cy],tgt=stl.target,pos=moveHint(src[0],src[1],tgt[0],tgt[1]);
+    if(!pos){aligned=true;return{t:'✓ 좋아요! 지금 찍으세요',src,tgt}}
+    return{t:Math.floor(now/5000)%2?'📌 '+steps[Math.floor(now/10000)%steps.length]:pos,src,tgt}}
   if(!f.skin)return{t:active==='two'?'두 사람 얼굴이 보이게':'그녀 얼굴이 보이게 비춰주세요'};
   const sp=pLayout(active,pSide),tgt=sp.faceT;
   const fs=active==='two'&&f.faces.length>=2?f.faces.slice(0,2):[[f.skx,f.sky]];
@@ -473,7 +492,7 @@ function computeHint(){
 const oc=ov.getContext('2d');
 function frame(){const W=ov.width,H=ov.height;oc.clearRect(0,0,W,H);
   if(mode!=='idle'){const h=computeHint();const col=aligned?'rgba(77,255,154,.95)':'rgba(255,216,77,.9)';
-    drawPGuide(oc,active,W,H,{color:col});
+    if(GUIDES[active].style)PHOTO_STYLES.drawGuide(GUIDES[active].style.id,oc,W,H,{color:col});else drawPGuide(oc,active,W,H,{color:col});
     if(h.src){const [sx,sy]=h.src;oc.save();oc.strokeStyle='rgba(255,140,190,.95)';oc.lineWidth=2*dpr;oc.beginPath();oc.arc(sx*W,sy*H,10*dpr,0,7);oc.stroke();
       if(!aligned){oc.setLineDash([5*dpr,5*dpr]);oc.beginPath();oc.moveTo(sx*W,sy*H);oc.lineTo(h.tgt[0]*W,h.tgt[1]*H);oc.stroke();oc.setLineDash([]);
         const p=(Math.sin(performance.now()/180)+1)/2;oc.strokeStyle=col;oc.beginPath();oc.arc(h.tgt[0]*W,h.tgt[1]*H,(12+p*8)*dpr,0,7);oc.stroke()}oc.restore()}

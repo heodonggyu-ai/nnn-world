@@ -27,6 +27,9 @@ header h1 span{color:var(--acc)}
 #hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(0,0,0,.62);backdrop-filter:blur(6px);padding:7px 13px;border-radius:18px;font-size:14px;font-weight:700;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;transition:background .2s}
 #hint.ok{background:rgba(20,140,70,.85)}
 #hint:empty{display:none}
+#stip{position:absolute;right:10px;top:52px;background:rgba(0,0,0,.55);padding:4px 9px;border-radius:10px;font-size:12px;color:var(--acc);font-weight:800;display:none}
+.sech{grid-column:1/-1;margin:14px 0 0;font-size:16px}.snote{grid-column:1/-1;margin:0;color:var(--sub);font-size:13px;line-height:1.5}
+.card .who{color:#ffb86b;font-size:11px;font-weight:800;margin-bottom:3px}.card ol{margin:0 0 8px;padding-left:17px;font-size:12px;line-height:1.5;color:var(--txt)}
 #gname{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);padding:4px 9px;border-radius:10px;font-size:12px;color:var(--acc);font-weight:700}
 #level{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.55);padding:4px 9px;border-radius:10px;font-size:12px;font-weight:700;display:none}
 #level.ok{color:var(--ok)}
@@ -95,13 +98,14 @@ header h1 span{color:var(--acc)}
       <canvas id="ov"></canvas>
       <div id="hint"></div>
       <div id="gname"></div>
+      <div id="stip"></div>
       <div id="level"></div>
       <div id="start">
         <div class="big">좋은 구도를<br>화면에 깔고 찍어요</div>
         <p>카메라를 대면 장면을 분석해서<br>어울리는 구도를 추천하고 맞추는 방법을 알려줘요.</p>
         <button class="pbtn" id="btnCam">📷 카메라 켜기</button>
         <button class="sbtn" id="btnPhoto">🖼 사진으로 분석하기</button>
-        <button class="sbtn" id="btnSamples2">📚 구도 샘플 보기</button>
+        <button class="sbtn" id="btnSamples2">🎨 작품·인플루언서 스타일</button>
         <div id="err"></div>
       </div>
     </div>
@@ -135,6 +139,7 @@ header h1 span{color:var(--acc)}
 
 <input type="file" id="file" accept="image/*" hidden>
 
+<script src="styles.js"></script>
 <script>
 (()=>{
 const PHI=(1+Math.sqrt(5))/2;
@@ -169,6 +174,8 @@ const PGUIDES=[
  {id:'action',name:'액션 (복싱·운동)',desc:'몸을 1/3 선에 두고 펀치·움직이는 방향에 공간을 둡니다.',when:'미트·스파링·운동 장면',tip:'주먹이 뻗는 쪽을 비우면 속도감이 살아요.'},
 ];
 PGUIDES.forEach(g=>g.cat='p');GUIDES.push(...PGUIDES);
+const SG=(window.PHOTO_STYLES?PHOTO_STYLES.list:[]).map(st=>({id:'st_'+st.id,cat:'s',name:st.name,desc:st.desc,when:st.who,tip:st.steps[0],style:st}));
+GUIDES.push(...SG);
 const G=Object.fromEntries(GUIDES.map(g=>[g.id,g]));
 
 // ---------- state ----------
@@ -283,6 +290,7 @@ function drawPGuide(c,id,W,H,opt){
 }
 
 function drawGuide(c,id,W,H,opt={}){
+  if(G[id]&&G[id].style){PHOTO_STYLES.drawGuide(G[id].style.id,c,W,H,{color:opt.color,lw:opt.lw,sample:opt.sample});return}
   if(G[id]&&G[id].cat==='p'){drawPGuide(c,id,W,H,opt);return}
   const col=opt.color||'rgba(255,216,77,.9)', lw=opt.lw||Math.max(1.5,W/260);
   c.save();c.strokeStyle=col;c.fillStyle=col;c.lineWidth=lw;c.lineCap='round';c.lineJoin='round';
@@ -348,9 +356,10 @@ addEventListener('resize',fit);
 
 // ---------- chips ----------
 function renderChips(){
-  $('chips').innerHTML=`<button class="chip tab${chipCat==='p'?' t-on':''}" data-cat="p">👤 인물</button><button class="chip tab${chipCat==='g'?' t-on':''}" data-cat="g">🏞 일반</button><span class="sep"></span>`+
+  $('chips').innerHTML=`<button class="chip tab${chipCat==='p'?' t-on':''}" data-cat="p">👤 인물</button><button class="chip tab${chipCat==='g'?' t-on':''}" data-cat="g">🏞 일반</button><button class="chip tab${chipCat==='s'?' t-on':''}" data-cat="s">🎨 작품</button><span class="sep"></span>`+
     GUIDES.filter(g=>g.cat===chipCat).map(g=>`<button class="chip${g.id===active?' on':''}" data-g="${g.id}">${g.name}</button>`).join('');
   $('gname').textContent=G[active].name+(auto&&mode!=='idle'?' · 자동':'');
+  const st=G[active].style;$('stip').style.display=st&&mode!=='idle'?'block':'none';if(st)$('stip').textContent='📱 '+st.phone;
 }
 $('chips').onclick=e=>{const t=e.target.closest('[data-cat]');if(t){chipCat=t.dataset.cat;renderChips();$('chips').scrollLeft=0;return}const b=e.target.closest('[data-g]');if(!b)return;setActive(b.dataset.g,true)};
 $('recs').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;setActive(b.dataset.g,true)};
@@ -461,7 +470,7 @@ let lastRanked=null,lastRecKey='';
 function onFeatures(f){
   feat=f;const {s,R}=scoreAll(f);
   for(const k in s)ema[k]=ema[k]==null?s[k]:ema[k]*.55+s[k]*.45;
-  const ranked=GUIDES.map(g=>({id:g.id,v:ema[g.id],r:R[g.id]})).sort((a,b)=>b.v-a.v);lastRanked=ranked;
+  const ranked=GUIDES.filter(g=>g.cat!=='s').map(g=>({id:g.id,v:ema[g.id],r:R[g.id]})).sort((a,b)=>b.v-a.v);lastRanked=ranked;
   // spiral orientation follows subject
   const p=ov.height>ov.width;const e0=spiralEnd(p,false,false);
   if(!spiralManual){spiralFlip.x=(f.cx<.5)!==(e0[0]<.5);spiralFlip.y=(f.cy<.5)!==(e0[1]<.5);}
@@ -503,6 +512,14 @@ function computeHint(W,H){
     const dy=ty-f.hy;src=[.5,f.hy];tgt=[.5,ty];
     if(Math.abs(dy)<.045){aligned=true;txt='✓ 수평선 위치 좋아요!'}
     else txt=(mode==='live'&&facing==='environment')?(dy>0?'카메라를 살짝 ↑ 위로 (수평선 내리기)':'카메라를 살짝 ↓ 아래로 (수평선 올리기)'):(dy>0?'수평선을 더 아래로':'수평선을 더 위로');
+  } else if(G[id].style){
+    const st=G[id].style,steps=st.steps;
+    if(st.target){
+      const useFace=st.face&&f.skin;src=useFace?[f.skx,f.sky]:[f.cx,f.cy];tgt=st.target;
+      const pos=moveHint(src[0],src[1],tgt[0],tgt[1],useFace?'얼굴':'주인공');
+      if(!pos){aligned=true;txt='✓ 좋아요! 지금 찍으세요'}else txt=pos;
+      if(!aligned&&Math.floor(performance.now()/5000)%2)txt='📌 '+steps[Math.floor(performance.now()/10000)%steps.length];
+    } else txt='📌 '+steps[Math.floor(performance.now()/4000)%steps.length];
   } else if(G[id].cat==='p'){
     if(!f.skin)return{t:id==='group'?'단체 얼굴들이 보이게 담아보세요':'사람(얼굴)을 화면에 담아보세요'};
     const sp=pLayout(id,pSide);tgt=sp.faceT;
@@ -665,9 +682,15 @@ const PCOL=[{shirt:'#3b4a6b',pants:'#2b2f3a',skin:'#e8b896',hair:'#2b1d17'},{shi
 function scenePortrait(c,w,h,id){PBG[id](c,w,h);const sp=pLayout(id,'L');
   const order=sp.figs.map((f,i)=>[f,i]).sort((a,b)=>a[0].top-b[0].top);
   order.forEach(([f,i])=>drawFigure(c,f,w,h,true,PCOL[(i+(id==='portrait'||id==='close'||id==='selfie'||id==='off'||id==='profile'||id==='full'||id==='half'?1:0))%PCOL.length]))}
-let sampleCat='p';
+let sampleCat='s',showGuide=true;
 function buildSamples(){
-  $('stabs').innerHTML=`<button class="chip tab${sampleCat==='p'?' t-on':''}" data-scat="p">👤 인물 구도 ${PGUIDES.length}</button><button class="chip tab${sampleCat==='g'?' t-on':''}" data-scat="g">🏞 풍경·일반 ${GUIDES.length-PGUIDES.length}</button>`;
+  $('stabs').innerHTML=`<button class="chip tab${sampleCat==='p'?' t-on':''}" data-scat="p">👤 인물 구도 ${PGUIDES.length}</button><button class="chip tab${sampleCat==='g'?' t-on':''}" data-scat="g">🏞 일반 ${GUIDES.filter(g=>g.cat==='g').length}</button>`;
+  $('stabs').innerHTML=`<button class="chip tab${sampleCat==='s'?' t-on':''}" data-scat="s">🎨 작품·인플루언서 ${SG.length}</button>`+$('stabs').innerHTML;
+  if(sampleCat==='s'){const C=PHOTO_STYLES.cats;
+    $('grid').innerHTML=`<p class="snote">사진가·인플루언서들이 쓰는 촬영 기법을 그림으로 보여줘요. 그림을 누르면 가이드선을 켜고 끌 수 있어요.</p>`+Object.keys(C).map(k=>`<h3 class="sech">${C[k]}</h3>`+SG.filter(g=>g.style.cat===k).map(g=>{const st=g.style;
+      return `<div class="card scard"><canvas data-s="${g.id}" width="300" height="400"></canvas><div class="ct"><div class="who">✦ ${st.who}</div><h3>${st.name}</h3><p>${st.desc}</p><ol>${st.steps.map(x=>`<li>${x}</li>`).join('')}</ol><div class="tip">📱 ${st.phone}</div><button data-use="${g.id}">이 스타일로 찍기</button></div></div>`}).join('')).join('');
+    document.querySelectorAll('canvas[data-s]').forEach(cv=>{const c=cv.getContext('2d'),id=G[cv.dataset.s].style.id;PHOTO_STYLES.drawScene(id,c,300,400);if(showGuide)PHOTO_STYLES.drawGuide(id,c,300,400,{lw:2,sample:1})});
+    return}
   const list=GUIDES.filter(g=>g.cat===sampleCat);
   $('grid').innerHTML=list.map(g=>`<div class="card"><canvas data-s="${g.id}" width="300" height="400"></canvas><div class="ct"><h3>${g.name}</h3><p>${g.desc}</p><p>📍 ${g.when}</p><div class="tip">💡 ${g.tip}</div><button data-use="${g.id}">이 구도로 찍기</button></div></div>`).join('');
   document.querySelectorAll('canvas[data-s]').forEach(cv=>{const c=cv.getContext('2d'),id=cv.dataset.s;
@@ -675,7 +698,8 @@ function buildSamples(){
     drawGuide(c,id,300,400,{fx:false,fy:false,lw:2,side:'L',color:'rgba(255,216,77,.95)'})});
 }
 buildSamples();
-$('grid').onclick=e=>{const b=e.target.closest('[data-use]');if(!b)return;setActive(b.dataset.use,true);$('samples').classList.remove('show');if(mode==='idle')startCam()};
+$('grid').onclick=e=>{const cv=e.target.closest('canvas[data-s]');if(cv&&G[cv.dataset.s].style){const c=cv.getContext('2d'),id=G[cv.dataset.s].style.id;cv.dataset.off=cv.dataset.off?'':'1';c.clearRect(0,0,300,400);PHOTO_STYLES.drawScene(id,c,300,400);if(!cv.dataset.off)PHOTO_STYLES.drawGuide(id,c,300,400,{lw:2,sample:1});return}
+  const b=e.target.closest('[data-use]');if(!b)return;setActive(b.dataset.use,true);$('samples').classList.remove('show');if(mode==='idle')startCam()};
 $('stabs').onclick=e=>{const b=e.target.closest('[data-scat]');if(!b)return;sampleCat=b.dataset.scat;buildSamples();$('samples').querySelector('.mbody').scrollTop=0};
 $('btnSamples').onclick=$('btnSamples2').onclick=()=>$('samples').classList.add('show');
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
