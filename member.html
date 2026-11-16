@@ -1219,7 +1219,8 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 </section>
 <section class="view" id="v-admin" hidden>
   <div class="row" style="justify-content:space-between"><button class="link" data-back>← 처음으로</button><span class="small" id="modeTxt"></span></div>
-  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><span id="pcHint" class="small" style="align-items:center;gap:6px;background:#fff;border-radius:999px;padding:6px 14px">💻 노트북 화면 · 회원 상세는 가운데 창으로 열려요</span><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div>
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:28px">관장 메뉴</h2><span id="pcHint" class="small" style="align-items:center;gap:6px;background:#fff;border-radius:999px;padding:6px 14px">💻 노트북 화면 · 회원 상세는 가운데 창으로 열려요</span><div class="row" style="gap:8px;align-items:center"><button class="btn sm ghost" id="admRefresh" title="새 가입·결제·출석을 다시 불러와요">🔄 새로고침</button><button class="btn sm gold" id="ownerGo">내 캐릭터로 NNN WORLD 입장</button></div></div>
+  <div id="verBar" hidden style="background:#111;color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b class="grow">✨ 앱 새 버전이 올라왔어요</b><button class="btn sm gold" id="verGo">새 버전 받기</button><span class="small" style="color:#ccc">다시 들어올 때 관장 PIN을 한 번 더 넣어요</span></div>
   <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="staff">코치<i id="atb-staff"></i></button><button data-at="lock">락커<i id="atb-lock"></i></button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
   <div class="adash" data-atab="today" id="adash"></div>
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
@@ -5084,7 +5085,19 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
 }
 
 $('#goAdmin').onclick=()=>pinSheet('관장 메뉴',openAdmin);
-async function openAdmin(){
+const VERCHK={h:null,busy:false};
+async function verHash(){try{const r=await fetch(location.pathname+'?vchk='+Date.now(),{cache:'no-store'});if(!r.ok)return null;const t=await r.text();let h=0;for(let i=0;i<t.length;i+=7)h=(h*31+t.charCodeAt(i))|0;return t.length+':'+h}catch(e){return null}}
+async function verCheck(){if(VERCHK.busy)return false;VERCHK.busy=true;try{const h=await verHash();if(!h)return false;if(!VERCHK.h){VERCHK.h=h;return false}const nw=h!==VERCHK.h;const b=$('#verBar');if(b&&nw)b.hidden=false;return nw}finally{VERCHK.busy=false}}
+async function admRefreshAll(btn){if(btn){if(btn.disabled)return;btn.disabled=true;btn.textContent='⏳ 불러오는 중…'}
+  try{ADM.all=null;ADM.pays=null;ADM.payAt=0;try{LKS.rowLoaded=0}catch(e){}
+    await Promise.allSettled([DB.meta(),renderAdmRows(),renderADash(),Promise.resolve().then(()=>renderPays()),Promise.resolve().then(()=>renderDue()),Promise.resolve().then(()=>renderSalesToday())]);
+    try{const k=localStorage.getItem('nnn_atab');if(k==='staff')renderStaffAdmin();if(k==='mem')renderAttAdmin()}catch(e){}
+    const nw=await verCheck();if(btn)toast(nw?'새로 불러왔어요 · 앱 새 버전도 있어요':'새로 불러왔어요 ('+new Date().toTimeString().slice(0,5)+')',2200)}
+  catch(e){console.error(e);if(btn)toast('불러오지 못했어요. 인터넷 연결을 확인해 주세요')}
+  finally{if(btn){btn.disabled=false;btn.textContent='🔄 새로고침'}}}
+setTimeout(()=>verHash().then(h=>{if(h&&!VERCHK.h)VERCHK.h=h}),2500);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('#v-admin').hidden&&Date.now()-(VERCHK.vis||0)>20000){VERCHK.vis=Date.now();admRefreshAll(null)}});
+async function openAdmin(){{const rb=$('#admRefresh');if(rb&&!rb.dataset.b){rb.dataset.b=1;rb.onclick=()=>admRefreshAll(rb)}const vg=$('#verGo');if(vg&&!vg.dataset.b){vg.dataset.b=1;vg.onclick=()=>{location.href=location.pathname+'?v='+Date.now()}}if(!VERCHK.h)verHash().then(h=>{if(h&&!VERCHK.h)VERCHK.h=h})}
   await DB.meta();const M=local.meta;const PY=M.pay;try{$('#spCr').value=M.sparCr!=null?M.sparCr:200}catch(e){}$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderFeatAdm()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},800);try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{renderPadPinSet()}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
   $('#modeTxt').textContent=FB_ON()?'서버 연결됨 · 모든 기기 공유':'이 기기 저장 모드';
