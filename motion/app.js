@@ -14,7 +14,7 @@
   };
 
   // ---------- 보기 설정 (배경 영상·뼈대 굵기/진하기) ----------
-  const VIEW_DEFAULT = { bg: 58, oW: 100, oA: 85, fW: 100, fA: 95, arrows: true, glow: true, ghost: 22 };
+  const VIEW_DEFAULT = { bg: 58, oW: 100, oA: 85, fW: 100, fA: 95, arrows: true, glow: true, ghost: 22, cap: true, capSize: 100 };
   const VIEW_PRESETS = {
     diff: { bg: 25, oW: 70, oA: 55, fW: 170, fA: 100, arrows: true, glow: true, ghost: 30 },
     video: { bg: 100, oW: 70, oA: 70, fW: 80, fA: 80, arrows: false, glow: false, ghost: 22 },
@@ -346,7 +346,7 @@
     if (hideBtn) hideBtn.onclick = () => {
       S.an.issues = S.an.issues.filter(i => i !== is); S.an.hiddenIssues.push(is);
       const L = S.layers.find(l => l.id === is.layerId); if (L) L.enabled = false;
-      S.editingIssue = null; afterIssueChange(); flashMsg('숨겼어요. 아래 "숨긴 항목"에서 되살릴 수 있어요');
+      S.editingIssue = null; afterIssueChange(); flashMsg('숨겼어요 (아래 숨긴 항목에서 되살리기)');
     };
     wrap.querySelector('[data-act="save"]').onclick = () => {
       const title = get('title').value.trim() || TEMPL[is.type] && TEMPL[is.type].t('') || is.title;
@@ -410,20 +410,20 @@
         <div class="row"></div></div>`;
       const row = el.querySelector('.row');
       if (!whole) {
-        const b = document.createElement('button'); b.className = 'btn small'; b.innerHTML = IC('play') + '이 구간 느리게 보기';
+        const b = document.createElement('button'); b.className = 'btn small'; b.innerHTML = IC('play') + '보기'; b.title = '이 구간 느리게 반복';
         b.onclick = () => loopIssue(is); row.appendChild(b);
       }
       if (layer) {
         const t = document.createElement('button'); t.className = 'btn small' + (layer.enabled ? ' on' : '');
-        const lab = () => t.innerHTML = layer.enabled ? IC('checkbox') + '교정 적용 중' : IC('square') + '교정 끔';
+        const lab = () => t.innerHTML = layer.enabled ? IC('checkbox') + '교정 켬' : IC('square') + '교정 끔';
         lab();
         t.onclick = () => { pushUndo(); layer.enabled = !layer.enabled; S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); t.classList.toggle('on', layer.enabled); lab(); S.dirty = true; };
         row.appendChild(t);
-        const k = document.createElement('button'); k.className = 'btn small'; k.innerHTML = IC('keys') + '이 키 편집';
+        const k = document.createElement('button'); k.className = 'btn small'; k.innerHTML = IC('keys') + '키 편집';
         k.onclick = () => { setEdit(true); S.layerId = layer.id; $('layerSel').value = layer.id; loopIssue(is, true); renderJointList(); };
         row.appendChild(k);
       }
-      const e = document.createElement('button'); e.className = 'btn small'; e.innerHTML = IC('pencil') + '내용 수정';
+      const e = document.createElement('button'); e.className = 'btn small'; e.innerHTML = IC('pencil') + '수정';
       e.onclick = () => { S.editingIssue = is; S.addingIssue = false; renderIssues(); };
       row.appendChild(e);
       box.appendChild(el);
@@ -469,7 +469,7 @@
     const stage = $('stage');
     const W = stage.clientWidth, side = S.mode === 'side';
     const asp = S.data.aspect;
-    const maxH = Math.max(220, window.innerHeight * (S.edit ? 0.46 : 0.62));
+    const maxH = S.edit ? Math.max(200, window.innerHeight * 0.42) : Math.max(260, Math.min(window.innerHeight * 0.66, window.innerHeight - 230)); // 영상+타임라인+버튼이 한 화면에
     let w = side ? (W - 6) / 2 : W, h = w / asp;
     if (h > maxH) { h = maxH; w = h * asp; }
     panelW = Math.floor(w); panelH = Math.floor(h);
@@ -687,7 +687,7 @@
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       if (!side) ctx.fillText('NNN BOXING' + (name ? '  ·  ' + name : ''), U * 0.025, U * 0.025);
       const cur = S.an.issues.filter(i => i.layerId && f >= i.f0 && f <= i.f1 && S.layers.find(l => l.id === i.layerId).enabled);
-      if (cur.length) capPill(ctx, side ? pw + gap + pw / 2 : W / 2, ph - U * 0.085, '⚠ ' + cur[0].title, 'rgba(10,12,15,0.85)', '#ffd4d4', U * 0.024);
+      if (cur.length && V.cap !== false) { const cs = U * 0.024 * (V.capSize || 100) / 100; capPill(ctx, side ? pw + gap + pw / 2 : W / 2, ph - cs * 1.7 - U * 0.04, cur[0].title, 'rgba(10,12,15,0.85)', '#ffd4d4', cs); }
       if (rate < 1) { ctx.font = `700 ${Math.round(U * 0.02)}px Oswald, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffcc33'; ctx.fillText('SLOW ' + rate + 'x', W - U * 0.025, side ? U * 0.075 : U * 0.03); }
     };
     recording = true; btn.disabled = true; $('recOut').classList.add('hide');
@@ -760,11 +760,14 @@
     // 현재 구간 이슈 표시
     const cur = S.an.issues.filter(i => i.layerId && f >= i.f0 && f <= i.f1 && S.layers.find(l => l.id === i.layerId).enabled);
     const now = $('now1');
-    if (cur.length && S.mode !== 'orig') { now.style.display = 'block'; now.textContent = '⚠ ' + cur.map(i => i.title).join(' · '); }
+    if (cur.length && S.mode !== 'orig' && V.cap !== false) {
+      now.style.display = 'block'; now.textContent = cur.map(i => i.title).join(' · ');
+      now.style.fontSize = (12.5 * (V.capSize || 100) / 100).toFixed(1) + 'px';
+    }
     else now.style.display = 'none';
     // 지금 프레임에 키가 있으면 표시
     const isKey = S.layers.some(L => (L.enabled || L.id === S.layerId) && Object.values(L.curves).some(c => c.some(k => k.f === f)));
-    $('timeLbl').innerHTML = `${fmt(f)} · ${f + 1}/${S.data.frames.length}` + (isKey ? ' <span style="color:#3dff8f">◆</span>' : '');
+    $('timeLbl').innerHTML = `${fmt(f)}<small>${f + 1}/${S.data.frames.length}${isKey ? ' <span style="color:#3dff8f">◆</span>' : ''}</small>`;
     const baseTag = { overlay: '원본 + 교정', side: '원본', orig: '원본', fix: '교정' }[S.mode];
     $('tag1').textContent = isKey && S.mode !== 'side' ? baseTag + ' · ◆ 키' : baseTag;
     drawTimeline(f);
@@ -936,7 +939,7 @@
   function redo() { if (!redoStack.length) return; undoStack.push(snap()); restore(redoStack.pop()); flash('↷ 다시 했어요'); }
   function updateUndoUI() {
     const u = $('undoBtn'), r = $('redoBtn');
-    if (u) { u.disabled = !undoStack.length; u.innerHTML = IC('undo') + '되돌리기' + (undoStack.length ? ` (${undoStack.length})` : ''); }
+    if (u) { u.disabled = !undoStack.length; u.innerHTML = IC('undo') + (undoStack.length ? `<span class="cnt">${undoStack.length}</span>` : ''); u.title = '되돌리기'; }
     if (r) r.disabled = !redoStack.length;
   }
   function clearUndo() { undoStack.length = 0; redoStack.length = 0; updateUndoUI(); }
@@ -1130,12 +1133,14 @@
   $('cpCsv').onclick = e => copyOut(exportCsv(), e.currentTarget);
 
   // ---------- 보기 설정 UI ----------
-  const VIEW_INPUTS = { vBg: 'bg', vOW: 'oW', vOA: 'oA', vFW: 'fW', vFA: 'fA', vGhost: 'ghost' };
+  const VIEW_INPUTS = { vBg: 'bg', vOW: 'oW', vOA: 'oA', vFW: 'fW', vFA: 'fA', vGhost: 'ghost', vCapSize: 'capSize' };
   function syncViewUI() {
-    for (const id in VIEW_INPUTS) { const el = $(id); if (!el) continue; el.value = V[VIEW_INPUTS[id]]; const lab = $(id + 'V'); if (lab) lab.textContent = id === 'vOW' || id === 'vFW' ? (V[VIEW_INPUTS[id]] / 100).toFixed(1) + '배' : V[VIEW_INPUTS[id]] + '%'; }
+    for (const id in VIEW_INPUTS) { const el = $(id); if (!el) continue; el.value = V[VIEW_INPUTS[id]]; const lab = $(id + 'V'); if (lab) lab.textContent = id === 'vOW' || id === 'vFW' || id === 'vCapSize' ? (V[VIEW_INPUTS[id]] / 100).toFixed(1) + '배' : V[VIEW_INPUTS[id]] + '%'; }
     $('vArrow').checked = V.arrows; $('vGlow').checked = V.glow;
-    $('bgBtn').innerHTML = V.bg > 0 ? IC('videooff') + '배경 영상 끄기' : IC('video') + '배경 영상 켜기';
+    $('bgBtn').innerHTML = V.bg > 0 ? IC('video') : IC('videooff');
+    $('bgBtn').title = V.bg > 0 ? '배경 영상 끄기' : '배경 영상 켜기';
     $('bgBtn').classList.toggle('on', V.bg > 0);
+    $('vCap').checked = V.cap !== false;
   }
   for (const id in VIEW_INPUTS) {
     const el = $(id); if (!el) continue;
@@ -1143,6 +1148,11 @@
   }
   $('vArrow').onchange = e => { V.arrows = e.target.checked; saveView(); S.dirty = true; };
   $('vGlow').onchange = e => { V.glow = e.target.checked; saveView(); S.dirty = true; };
+  $('vCap').onchange = e => { V.cap = e.target.checked; saveView(); S.dirty = true; };
+  // 보기 설정 시트
+  $('optBtn').onclick = () => $('viewSheet').classList.remove('hide');
+  document.querySelectorAll('#viewSheet [data-close]').forEach(el => el.onclick = () => $('viewSheet').classList.add('hide'));
+  $('thBtn').onclick = () => { const p = $('thPanel'); p.classList.toggle('hide'); $('thBtn').classList.toggle('on', !p.classList.contains('hide')); };
   $('bgBtn').onclick = () => { if (V.bg > 0) { V.lastBg = V.bg; V.bg = 0; } else V.bg = V.lastBg || VIEW_DEFAULT.bg; syncViewUI(); saveView(); S.dirty = true; };
   document.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => {
     const p = b.dataset.preset === 'reset' ? VIEW_DEFAULT : VIEW_PRESETS[b.dataset.preset];

@@ -35,7 +35,7 @@
   $('sendSeg').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     [...$('sendSeg').children].forEach(x => x.classList.toggle('on', x === b));
-    ['card', 'blender', 'higgs'].forEach(v => $('pane-' + v).classList.toggle('hide', v !== b.dataset.v));
+    ['video', 'card', 'blender', 'higgs', 'data'].forEach(v => $('pane-' + v).classList.toggle('hide', v !== b.dataset.v));
   });
 
   // ---------- 분석 끝났을 때 ----------
@@ -348,9 +348,9 @@
     const bar = $('saveBar'); if (!bar) return;
     if (!S.data) { bar.innerHTML = ''; return; }
     if (S.data.demo) { bar.innerHTML = '데모는 저장하지 않아요.'; return; }
-    if (!DB) { bar.innerHTML = IC('bulb') + ' 폰에서 받은 블렌더 스크립트·카드는 카카오톡 <b>나에게 보내기</b>로 PC에 옮기면 돼요.'; return; }
+    if (!DB) { bar.innerHTML = ''; return; }
     if (msg) { bar.innerHTML = msg; return; }
-    if (S.sessionId && !S.unsaved) bar.innerHTML = IC('cloud') + ' 내 계정에 자동 저장됨 · PC에서 같은 계정으로 이 페이지를 열면 첫 화면 <b>저장된 분석</b>에서 불러올 수 있어요.';
+    if (S.sessionId && !S.unsaved) bar.innerHTML = IC('cloud') + ' 자동 저장됨 · PC에서 같은 계정으로 열면 이어서 작업';
     else {
       bar.innerHTML = `<span>${S.sessionId ? '변경 사항 저장 대기 중…' : '아직 저장 안 됨.'}</span>`;
       const b = document.createElement('button'); b.className = 'btn small'; b.innerHTML = IC('save') + '저장';
