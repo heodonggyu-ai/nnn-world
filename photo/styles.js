@@ -478,9 +478,204 @@ const S=[
    rect(c,0,h*.92,w,h*.08,'#15151c');c.save();c.shadowColor='rgba(150,190,255,.95)';c.shadowBlur=18;person(c,w*.5,h*.98,h*.82,{pose:'arms',gloves:1,col:'#111',pants:'#8a0d14',hair:'#0a0a0a'});c.restore()},
  guide(g){g.L(0,.92,1,.92,.6);g.P(.5,.98,.82,{pose:'arms',gloves:1});g.T('아래에서 · 뒤에 조명',.04,.08)}},
 
+/* ===== 🏞 풍경 추가 ===== */
+{id:'lake_mirror',cat:'land',name:'호수 반영 대칭',who:'새벽 호수 풍경 사진의 정석',
+ desc:'바람 없는 날 호수에 산이 거꾸로 비치는 장면. 이때만은 수평선을 정가운데에 둬도 좋아요.',
+ steps:['바람 없는 새벽·해질녘 호숫가','수평선을 화면 정가운데에 (반영일 때만 예외)','폰을 물에 가깝게 낮추면 반영이 커져요'],phone:'물 가까이',
+ scene(c,w,h){const top=cc=>{vg(cc,w,h,['#f3a77e','#fbe3c6'],0,h*.5);poly(cc,[[0,h*.5],[w*.18,h*.28],[w*.36,h*.42],[w*.58,h*.2],[w*.8,h*.38],[w,h*.3],[w,h*.5]],'#5a6a86');poly(cc,[[w*.53,h*.25],[w*.58,h*.2],[w*.63,h*.25]],'#fff');
+   for(let i=0;i<26;i++){const x=w*i/25;poly(cc,[[x-8,h*.5],[x,h*(.42-(i%3)*.02)],[x+8,h*.5]],'#24332c')}};
+   top(c);c.save();c.translate(0,h);c.scale(1,-1);c.globalAlpha=.7;top(c);c.restore();c.strokeStyle='rgba(255,255,255,.25)';for(let i=0;i<8;i++){c.beginPath();c.moveTo(w*.1,h*(.56+i*.05));c.lineTo(w*.9,h*(.56+i*.05));c.stroke()}},
+ guide(g){g.L(0,.5,1,.5,.9);g.T('수평선 = 정가운데',.04,.47);g.T('📱 물 가까이',.04,.95,GRN)}},
+{id:'s_curve',cat:'land',name:'S자 길·강',who:'풍경 작가들의 S-커브',
+ desc:'구불구불한 길이나 강이 화면 아래에서 위로 S자를 그리며 시선을 끌고 들어가요.',
+ steps:['높은 곳(언덕·전망대)에서 내려다보기','S자 선이 화면 아래 가장자리에서 시작하게','선 끝이 위쪽 1/3 근처로 사라지게'],phone:'높은 곳에서',
+ scene(c,w,h){vg(c,w,h,['#9cc8ef','#e8f3fb'],0,h*.22);vg(c,w,h,['#7fae5a','#4f8a3a'],h*.22,h);poly(c,[[0,h*.24],[w*.3,h*.16],[w*.6,h*.22],[w,h*.15],[w,h*.25],[0,h*.27]],'#6c8a9e');
+   const sc=(lw,col)=>{c.strokeStyle=col;c.lineWidth=lw;c.lineCap='round';c.beginPath();c.moveTo(w*.45,h*1.02);c.bezierCurveTo(w*.98,h*.78,w*.02,h*.58,w*.6,h*.4);c.bezierCurveTo(w*.85,h*.3,w*.55,h*.26,w*.48,h*.22);c.stroke()};
+   sc(w*.09,'#d9c9a6');sc(w*.01,'#fff');const r=rnd(4);for(let i=0;i<20;i++)circ(c,r()*w,h*(.3+r()*.7),6+r()*10,'#3c7a32')},
+ guide(g){const{c,W,H}=g;c.beginPath();c.moveTo(.45*W,1.02*H);c.bezierCurveTo(.98*W,.78*H,.02*W,.58*H,.6*W,.4*H);c.bezierCurveTo(.85*W,.3*H,.55*W,.26*H,.48*W,.22*H);c.stroke();g.T('S자 = 시선이 따라 들어감',.04,.08)}},
+{id:'ridge_layers',cat:'land',name:'겹겹이 산 능선',who:'망원 풍경 · 안개 낀 산',
+ desc:'멀리 겹쳐진 산 능선을 줌으로 당기면 수묵화처럼 층층이 흐려져요. 안개·미세먼지 낀 날이 오히려 좋아요.',
+ steps:['2x~3x 줌으로 먼 능선만 잘라내기','하늘은 위쪽에 조금만','해를 마주보는 쪽이면 층이 더 선명해요'],phone:'2x~3x 줌',
+ scene(c,w,h){vg(c,w,h,['#f2dcc8','#e6d2c8']);circ(c,w*.7,h*.22,w*.07,'#fff3e0');const cols=['#c9c3cf','#a7a4b8','#7f80a0','#565c80','#2f3657'];
+   cols.forEach((cl,i)=>{const y0=h*(.32+i*.13),pts=[[0,h]];for(let k=0;k<=20;k++){const x=w*k/20;pts.push([x,y0-Math.sin(k*.7+i*1.7)*h*.04-Math.sin(k*.23+i)*h*.05])}pts.push([w,h]);poly(c,pts,cl)})},
+ guide(g){[.34,.47,.6,.73].forEach(y=>g.L(0,y,1,y-.03,.5));g.T('겹겹이 · 줌으로 당기기',.04,.08)}},
+{id:'lone_tree',cat:'land',name:'외딴 나무 한 그루',who:'미니멀 풍경',
+ desc:'들판의 나무 한 그루를 1/3 선에, 하늘을 넓게. 단순할수록 강해요.',
+ steps:['다른 나무·전봇대가 안 걸리는 각도 찾기','나무를 왼쪽·오른쪽 1/3 선에','지평선은 아래 1/3, 하늘 넓게'],phone:'무릎 높이',target:[2/3,.55],
+ scene(c,w,h){vg(c,w,h,['#5d8fd6','#c9def5','#f6e7cc'],0,h*.72);vg(c,w,h,['#c7b55a','#9b8a3a'],h*.72,h);rect(c,w*2/3-5,h*.5,10,h*.23,'#3a2a1a');
+   [[0,0,.13],[-.08,.03,.09],[.08,.03,.09],[0,-.06,.09]].forEach(([dx,dy,r])=>circ(c,w*(2/3+dx),h*(.47+dy),w*r,'#2f5a2a'))},
+ guide(g){g.thirds();g.ring(2/3,.48,.12);g.T('나무 = 1/3 · 하늘 넓게',.04,.08)}},
+{id:'milky_way',cat:'land',name:'별·은하수',who:'천체 풍경 사진',
+ desc:'불빛 없는 곳에서 하늘을 3/4, 땅의 실루엣(나무·사람)을 아래에 조금. 폰을 고정하고 야간모드 최대로.',
+ steps:['도시 불빛 없는 곳, 달 없는 맑은 밤','폰을 바닥·삼각대에 고정하고 야간모드 최대(10~30초)','아래에 나무·사람 실루엣을 조금 넣기'],phone:'고정 · 야간모드 최대',
+ scene(c,w,h){vg(c,w,h,['#050816','#121a3a','#2a2a4a']);c.save();c.translate(w*.5,h*.45);c.rotate(-.6);glow(c,0,0,w*.6,'rgba(200,190,255,.25)');for(let i=-6;i<=6;i++)glow(c,i*w*.08,(i%2)*8,w*.12,'rgba(255,230,210,.18)');c.restore();
+   const r=rnd(77);for(let i=0;i<260;i++)circ(c,r()*w,r()*h*.8,r()*1.6+.3,`rgba(255,255,255,${.4+r()*.6})`);
+   poly(c,[[0,h*.8],[w*.3,h*.74],[w*.6,h*.79],[w,h*.72],[w,h],[0,h]],'#05060c');rect(c,w*.78,h*.62,5,h*.12,'#05060c');circ(c,w*.79,h*.6,w*.06,'#05060c');person(c,w*.3,h*.75,h*.09,{sil:'#05060c'});glow(c,w*.3,h*.665,w*.02,'rgba(255,240,200,.9)')},
+ guide(g){g.L(0,.76,1,.76,.7);g.L(0,.9,1,.05,.4);g.T('하늘 3/4',.04,.12);g.T('📱 고정 · 야간모드 최대',.04,.95,GRN)}},
+{id:'long_sea',cat:'land',name:'바다 장노출',who:'롱노출 바다 사진',
+ desc:'파도를 매끈한 안개처럼. 아이폰은 라이브 포토로 찍고 "장노출" 효과를 고르면 돼요.',
+ steps:['라이브 포토 켜고 폰을 최대한 고정','바위·부두 기둥을 1/3 교차점에','찍은 후 사진첩 → 라이브 → 장노출'],phone:'고정 · 라이브포토',target:[1/3,.62],
+ scene(c,w,h){vg(c,w,h,['#c8b8d8','#f3d7c4'],0,h*.45);vg(c,w,h,['#a9b7cc','#d9dde6','#eef0f4'],h*.45,h);glow(c,w*.5,h*.6,w*.7,'rgba(255,255,255,.4)');
+   c.fillStyle='#2b2a30';c.beginPath();c.ellipse(w/3,h*.66,w*.13,h*.06,0,Math.PI,0);c.fill();rect(c,w/3-w*.13,h*.66,w*.26,h*.03,'#2b2a30');
+   for(let i=0;i<6;i++)rect(c,w*(.62+i*.06),h*(.5-i*.008),5,h*(.1+i*.01),'#3a3840')},
+ guide(g){g.thirds();g.L(0,.45,1,.45,.7);g.ring(1/3,.63,.1);g.T('📱 라이브 → 장노출',.04,.95,GRN)}},
+{id:'sky_hero',cat:'land',name:'노을 하늘이 주인공',who:'하늘 2/3 공식',
+ desc:'불타는 노을·뭉게구름이 있는 날은 하늘이 주인공. 땅은 아래 1/3에 실루엣으로만.',
+ steps:['구름 있는 날 해 지기 직전~직후 20분','지평선을 아래 1/3 선에','하늘 밝은 곳을 탭해서 색이 진하게'],phone:'허리 높이',
+ scene(c,w,h){vg(c,w,h,['#2b2d6e','#a04a7a','#f2774b','#ffc56b'],0,h*2/3);const r=rnd(31);for(let i=0;i<14;i++){c.fillStyle=`rgba(${200+r()*55|0},${90+r()*80|0},${110+r()*60|0},.55)`;c.beginPath();c.ellipse(r()*w,h*(.1+r()*.45),w*(.15+r()*.2),h*.025,0,0,TAU);c.fill()}
+   rect(c,0,h*2/3,w,h/3,'#140d16');[[.15,.12],[.24,.16],[.82,.14]].forEach(([x,s])=>{rect(c,w*x,h*(2/3-s),4,h*s,'#140d16');for(let k=0;k<5;k++){c.strokeStyle='#140d16';c.lineWidth=4;c.beginPath();c.moveTo(w*x+2,h*(2/3-s));c.lineTo(w*x+2+Math.cos(k*1.3)*w*.07,h*(2/3-s)+Math.sin(k*1.3)*h*.03-6);c.stroke()}})},
+ guide(g){g.L(0,2/3,1,2/3,.9);g.T('하늘 2/3',.04,.12);g.T('땅 1/3 (실루엣)',.04,.85)}},
+{id:'waterfall_scale',cat:'land',name:'세로 폭포 + 사람 크기',who:'자연의 스케일 보여주기',
+ desc:'폭포·절벽처럼 큰 자연은 세로로, 그리고 사람을 작게 넣으면 얼마나 큰지 한눈에 보여요.',
+ steps:['폰을 세로로, 폭포를 가운데 위아래로 꽉','사람은 아래쪽에 작게 (크기 비교용)','빨간·노란 옷이면 작아도 눈에 띄어요'],phone:'세로 · 멀리서',target:[1/3,.86],
+ scene(c,w,h){rect(c,0,0,w,h,'#2e4a36');poly(c,[[0,0],[w*.38,0],[w*.4,h],[0,h]],'#3c5c44');poly(c,[[w,0],[w*.62,0],[w*.6,h],[w,h]],'#34523c');
+   vg(c,w,h,['#e8f4ff','#ffffff','#dfefff'],0,h*.82);rect(c,0,0,w*.38,h*.82,'#3c5c44');rect(c,w*.62,0,w*.38,h*.82,'#34523c');glow(c,w*.5,h*.82,w*.4,'rgba(255,255,255,.7)');rect(c,0,h*.84,w,h*.16,'#3f6f86');
+   c.fillStyle='#55554f';c.beginPath();c.ellipse(w/3,h*.9,w*.12,h*.03,0,0,TAU);c.fill();person(c,w/3,h*.89,h*.07,{col:'#e8323a',pants:'#222'})},
+ guide(g){g.D(1);g.L(.5,0,.5,1,.5);g.D(0);g.ring(1/3,.86,.05);g.T('사람 = 크기 비교',.04,.75)}},
+{id:'forest_rays',cat:'land',name:'숲속 빛내림',who:'안개 낀 숲 사진',
+ desc:'안개 낀 아침, 나무 사이로 빛줄기가 내릴 때. 해는 나무 뒤에 숨기고 빛줄기만 담아요.',
+ steps:['안개·연기 있는 이른 아침 숲','해를 나무 기둥 뒤에 숨기기','빛줄기가 대각선으로 지나가게'],phone:'허리 높이',target:[.6,.8],
+ scene(c,w,h){vg(c,w,h,['#2b3d2a','#1a2a1c']);[[.05,.06],[.2,.05],[.42,.07],[.7,.06],[.88,.05]].forEach(([x,ww])=>rect(c,w*x,0,w*ww,h,'#121a12'));
+   [[.25,.12],[.38,.08],[.52,.1]].forEach(([x,a])=>poly(c,[[w*x,0],[w*(x+.08),0],[w*(x+.45),h],[w*(x+.25),h]],`rgba(255,240,190,${a*2})`));rect(c,0,h*.88,w,h*.12,'#2d3a22');person(c,w*.6,h*.88,h*.1,{sil:'#0c120c'})},
+ guide(g){g.L(.25,0,.5,1,.6);g.L(.52,0,.97,1,.6);g.ring(.6,.82,.05);g.T('해는 나무 뒤에',.04,.08)}},
+{id:'skyline_high',cat:'land',name:'높은 곳 도시 스카이라인',who:'전망대 야경 · 블루아워',
+ desc:'전망대·옥상에서 해 진 직후. 도시는 아래 1/3, 파란 하늘이 위에. 유리창에 폰을 붙이면 반사가 사라져요.',
+ steps:['해 지고 10~30분 블루아워','폰을 유리창에 바짝 붙이기(반사 제거)','도시 스카이라인은 아래 1/3'],phone:'유리창에 붙여서',
+ scene(c,w,h){vg(c,w,h,['#0d1a44','#2a4a8f','#e7a07a'],0,h*.66);const r=rnd(9);let x=0;while(x<w){const bw=w*(.05+r()*.07),bh=h*(.08+r()*.22);rect(c,x,h*.66-bh,bw,bh+h*.34,'#0a1024');for(let k=0;k<12;k++)if(r()>.5)rect(c,x+r()*bw,h*.66-bh+r()*bh,2,3,'#ffd98a');x+=bw}
+   vg(c,w,h,['#0d1636','#050a1a'],h*.8,h);c.strokeStyle='rgba(255,210,120,.6)';c.lineWidth=2;c.beginPath();c.moveTo(0,h*.86);c.quadraticCurveTo(w*.5,h*.8,w,h*.9);c.stroke()},
+ guide(g){g.L(0,2/3,1,2/3,.8);g.T('📱 유리창에 바짝',.04,.08,GRN)}},
+{id:'field_rows',cat:'land',name:'꽃밭·밭 줄무늬',who:'라벤더·튤립 밭 사진',
+ desc:'줄지어 심은 꽃밭의 줄이 한 점으로 모이게. 줄 사이에 사람이 서 있으면 더 좋아요.',
+ steps:['줄 방향과 똑같이 서서 정면으로','폰을 낮춰 줄이 화면 아래에서 시작하게','줄이 모이는 점은 가운데나 1/3'],phone:'무릎 높이',target:[.5,.45],
+ scene(c,w,h){vg(c,w,h,['#9fc6ee','#f3e7f5'],0,h*.45);rect(c,0,h*.45,w,h*.55,'#5d7f3a');for(let i=-8;i<=8;i++){c.strokeStyle=i%2?'#8a5fc2':'#b48ae0';c.lineWidth=w*.05;c.beginPath();c.moveTo(w*.5,h*.45);c.lineTo(w*(.5+i*.14),h*1.05);c.stroke()}
+   person(c,w*.5,h*.6,h*.14,{col:'#fff',pants:'#fff',dress:1,long:1})},
+ guide(g){[-3,-1,1,3].forEach(i=>g.L(.5,.45,.5+i*.2,1,.6));g.T('줄 = 한 점으로',.04,.08)}},
+
+/* ===== ✈️ 여행·일상 (인물 + 배경) ===== */
+{id:'landmark_split',cat:'travel',name:'명소 인증샷 정석',who:'여행 인증샷 기본기',
+ desc:'사람은 왼쪽 1/3, 명소는 오른쪽 1/3. 둘 다 잘 보이고 서로 가리지 않아요.',
+ steps:['사람을 명소에서 옆으로 비켜 세우기','사람은 1/3 선, 명소는 반대쪽 1/3','명소 꼭대기가 잘리지 않게 한 걸음 뒤로'],phone:'허리 높이',target:[1/3,.4],face:1,
+ ments:['명소 가리키면서 나 봐','손으로 명소 잡는 척!','명소 쪽으로 반쯤 돌아봐'],
+ scene(c,w,h){vg(c,w,h,['#8cc4f2','#e6f3ff'],0,h*.75);rect(c,0,h*.75,w,h*.25,'#d9cbb4');c.fillStyle='#8a7a6a';poly(c,[[w*.62,h*.75],[w*.68,h*.12],[w*.74,h*.75]],'#8a7a6a');rect(c,w*.6,h*.4,w*.16,h*.02,'#8a7a6a');rect(c,w*.58,h*.6,w*.2,h*.025,'#8a7a6a');
+   person(c,w/3,h*.95,h*.6,{col:'#f5d0a0',pants:'#2e4a6e',long:1,smile:1,hair:'#3a2418'})},
+ guide(g){g.thirds();g.P(1/3,.95,.6,{});g.ring(.68,.4,.08);g.T('명소',.73,.3)}},
+{id:'back_view_vista',cat:'travel',name:'풍경 바라보는 뒷모습',who:'전망대·바다 앞 감성샷',
+ desc:'난간에 기대 풍경을 바라보는 뒷모습. 사람은 아래 1/3, 풍경이 위 2/3. 얼굴이 안 나와도 분위기가 다 해요.',
+ steps:['그녀를 난간·바위에 기대 풍경을 보게','사람은 화면 아래쪽 1/3 선에','풍경(바다·산·도시)이 위 2/3를 채우게'],phone:'가슴 높이',target:[2/3,.62],
+ ments:['저 멀리 바라봐줘','난간에 팔 올리고 기대봐','머리 한쪽으로 넘겨'],
+ scene(c,w,h){vg(c,w,h,['#7fb8f0','#e0f0ff'],0,h*.4);vg(c,w,h,['#3a86b8','#1f5c88'],h*.4,h*.8);poly(c,[[0,h*.4],[w*.25,h*.33],[w*.45,h*.4]],'#5a7a8a');
+   rect(c,0,h*.8,w,h*.2,'#b9a58a');rect(c,0,h*.78,w,h*.02,'#6a5a48');for(let i=0;i<10;i++)rect(c,w*i/10,h*.78,4,h*.1,'#6a5a48');
+   person(c,w*2/3,h*1.02,h*.5,{back:1,long:1,col:'#f2f2f2',hair:'#3a2418'})},
+ guide(g){g.thirds();g.P(2/3,1.02,.5,{back:1});g.T('풍경 2/3',.04,.12)}},
+{id:'tiny_explorer',cat:'travel',name:'대자연 속 점 하나',who:'아웃도어 여행 사진',
+ desc:'거대한 산·절벽·사막 위에 사람이 점처럼 작게. 빨간·노란 옷이면 작아도 한눈에 보여요.',
+ steps:['멀리 떨어져서(또는 줌) 풍경 전체를','사람은 능선·바위 위 1/3 교차점에','빨강·노랑 같은 튀는 옷 입기'],phone:'멀리서 · 줌',target:[2/3,1/3],
+ scene(c,w,h){vg(c,w,h,['#a8cdef','#eef6ff'],0,h*.5);poly(c,[[0,h],[0,h*.55],[w*.35,h*.42],[w*.67,h*.36],[w,h*.5],[w,h]],'#7a6a5a');poly(c,[[0,h],[0,h*.7],[w*.4,h*.6],[w,h*.75],[w,h]],'#5e5246');
+   poly(c,[[w*.6,h*.36],[w*.67,h*.36],[w*.75,h*.4]],'#efe6da');person(c,w*.67,h*.365,h*.05,{col:'#e8323a',pants:'#222'})},
+ guide(g){g.thirds();g.ring(2/3,.34,.04);g.T('🔴 튀는 옷',.04,.08)}},
+{id:'beach_shore',cat:'travel',name:'해변 물가 따라 걷기',who:'바다 여행 스냅',
+ desc:'파도가 닿는 물가 선이 대각선으로 지나가고, 그 선을 따라 걷는 사람. 발끝에 파도가 닿는 순간을 연사로.',
+ steps:['물가 선이 화면을 대각선으로 지나가게','그녀는 물가를 따라 걷기, 1/3 선에','파도가 발에 닿는 순간 연사'],phone:'허리 높이 · 연사',target:[1/3,.45],
+ ments:['물가 따라 천천히 걸어','파도 피하는 척!','신발 들고 걸어봐'],
+ scene(c,w,h){vg(c,w,h,['#8fd0f0','#e6f7ff'],0,h*.25);poly(c,[[0,h*.25],[w,h*.25],[w,h*.45],[0,h*.95]],'#2f9bc4');poly(c,[[0,h*.95],[w,h*.45],[w,h],[0,h]],'#efdcb6');
+   c.strokeStyle='#fff';c.lineWidth=6;c.beginPath();c.moveTo(0,h*.93);for(let k=0;k<=10;k++)c.lineTo(w*k/10,h*(.93-k*.048)+Math.sin(k*2)*6);c.stroke();
+   person(c,w/3,h*.86,h*.42,{pose:'walk',col:'#fff',pants:'#fff',dress:1,long:1,hair:'#3a2418',look:1})},
+ guide(g){g.L(0,.94,1,.45,.8);g.P(1/3,.86,.42,{pose:'walk'});g.T('물가 = 대각선',.55,.3)}},
+{id:'alley_life',cat:'travel',name:'시장·골목 생활감',who:'여행 스냅 · 골목 산책',
+ desc:'간판·등불·지나가는 사람들 사이로 걸어오는 모습. 그 동네만의 생활감이 여행 분위기를 만들어요.',
+ steps:['간판·등불 많은 골목 한가운데','그녀가 나를 향해 걸어오게','지나가는 사람이 살짝 걸쳐도 OK'],phone:'가슴 높이 · 2x',target:[.5,.4],face:1,
+ ments:['나한테 걸어오면서 웃어','간판 구경하면서 걸어','간식 들고 걸어와'],
+ scene(c,w,h){rect(c,0,0,w,h,'#3a2a24');poly(c,[[0,0],[w*.4,h*.35],[w*.4,h*.75],[0,h]],'#5a3a2e');poly(c,[[w,0],[w*.6,h*.35],[w*.6,h*.75],[w,h]],'#4e3228');vg(c,w,h,['#f6c48a','#e8a060'],h*.35,h*.75);rect(c,0,h*.35,w*.4,0,'#000');
+   const cols=['#e8323a','#f2c14e','#3fa7d6','#7bc96f','#d77fa1'];for(let i=0;i<6;i++){const t=i/6;rect(c,w*(.02+t*.3),h*(.1+t*.25),w*(.14-t*.08),h*(.08-t*.04),cols[i%5]);rect(c,w*(.84-t*.3),h*(.12+t*.25),w*(.14-t*.08),h*(.08-t*.04),cols[(i+2)%5])}
+   for(let i=0;i<5;i++){glow(c,w*(.2+i*.15),h*.18,w*.05,'rgba(255,200,100,.8)');circ(c,w*(.2+i*.15),h*.18,w*.02,'#e8323a')}rect(c,w*.4,h*.75,w*.2,h*.25,'#6a5040');poly(c,[[0,h],[w*.4,h*.75],[w*.6,h*.75],[w,h]],'#6a5040');
+   person(c,w*.5,h*.95,h*.55,{pose:'walk',col:'#2a6f9a',pants:'#e9e1d6',long:1,smile:1,hair:'#1f1612'});c.save();c.globalAlpha=.6;person(c,w*.06,h*1.1,h*.8,{sil:'#2a1c16'});c.restore()},
+ guide(g){[[0,0],[1,0],[0,1],[1,1]].forEach(([x,y])=>g.L(x,y,.5,.5,.35));g.P(.5,.95,.55,{pose:'walk'});g.T('간판·사람 = 분위기',.04,.08)}},
+{id:'window_outside',cat:'travel',name:'카페 창 밖에서 안을',who:'유리창 반사 스냅',
+ desc:'카페 안 창가에 앉은 그녀를 밖에서. 유리에 비친 거리와 안쪽 따뜻한 빛이 겹쳐 영화 같아요.',
+ steps:['그녀는 창가 자리, 나는 밖에서','유리에 비친 거리가 살짝 겹치는 각도로','초점은 화면의 얼굴을 탭'],phone:'가슴 높이 · 밖에서',target:[.55,.42],face:1,
+ ments:['창밖 바라봐줘','컵 들고 나 발견한 척','유리창에 손 대봐'],
+ scene(c,w,h){rect(c,0,0,w,h,'#2a2420');vg(c,w,h,['#f7d8a8','#d9a26a'],h*.12,h*.82);person(c,w*.55,h*1.0,h*.75,{col:'#7a3a3a',hair:'#2b1d17',long:1,pose:'hold',look:1,dir:-1});
+   c.save();c.globalAlpha=.25;rect(c,w*.12,h*.2,w*.15,h*.5,'#9fc6ee');rect(c,w*.7,h*.15,w*.2,h*.6,'#cfe2f5');for(let i=0;i<4;i++)glow(c,w*(.2+i*.2),h*.3,w*.06,'#fff');c.restore();
+   c.fillStyle='#2a2420';c.beginPath();c.rect(0,0,w,h);c.rect(w*.08,h*.12,w*.84,h*.7);c.fill('evenodd');rect(c,w*.49,h*.12,w*.02,h*.7,'#2a2420');rect(c,0,h*.82,w,h*.18,'#3a332c')},
+ guide(g){g.R(.08,.12,.84,.7);g.ring(.55,.42,.08);g.T('유리 반사 + 안의 사람',.04,.08)}},
+{id:'train_window',cat:'travel',name:'기차·버스 창가',who:'여행 이동 감성',
+ desc:'창밖으로 풍경이 흐르는 기차 창가, 옆모습. 이동하는 시간도 여행 사진이 돼요.',
+ steps:['그녀는 창가, 나는 옆자리·맞은편에서','창밖 풍경이 화면 반 이상 보이게','창 쪽 빛에 얼굴이 밝게 — 노출은 얼굴에'],phone:'앉은 눈높이',target:[1/3,.42],face:1,
+ ments:['창밖 바라봐줘','이어폰 끼고 멍때려','창에 머리 기대봐'],
+ scene(c,w,h){rect(c,0,0,w,h,'#2b2e36');vg(c,w,h,['#bfe0ff','#e6f3ff'],h*.15,h*.4);vg(c,w,h,['#8fc46a','#5a9a42'],h*.4,h*.7);const r=rnd(6);c.save();c.globalAlpha=.6;for(let i=0;i<20;i++)rect(c,w*(.3+r()*.6),h*(.4+r()*.25),w*.15,3,'#cfe8b0');c.restore();
+   c.fillStyle='#2b2e36';c.beginPath();c.rect(0,0,w,h);c.roundRect(w*.28,h*.15,w*.66,h*.55,24);c.fill('evenodd');person(c,w/3,h*1.15,h*.95,{look:1,dir:1,long:1,col:'#d9c7a8',hair:'#3a2418'})},
+ guide(g){g.R(.28,.15,.66,.55);g.P(1/3,1.15,.95,{look:1});g.T('창밖 풍경 반 이상',.36,.1)}},
+{id:'bridge_center',cat:'travel',name:'다리·부두 정가운데',who:'다리·부두의 소실점',
+ desc:'다리·부두·잔교 한가운데에 서서 모든 선이 사람 쪽으로 모이게. 사람은 정가운데에 작게.',
+ steps:['다리·부두의 정확히 가운데에 서기','난간·케이블 선이 한 점으로 모이게','그녀는 그 소실점 앞에서 걸어가거나 서 있기'],phone:'가슴 높이 · 정면',target:[.5,.5],
+ scene(c,w,h){vg(c,w,h,['#f4b183','#fde3c8'],0,h*.5);rect(c,0,h*.5,w,h*.5,'#6f8fa8');poly(c,[[w*.05,h],[w*.95,h],[w*.53,h*.5],[w*.47,h*.5]],'#9a7a5a');
+   for(let i=0;i<12;i++){const t=i/12,y=h*.5+h*.5*t*t;rect(c,w*(.47-t*.42),y,w*(.06+t*.84),2,'rgba(60,40,20,.4)')}
+   c.strokeStyle='#e8e2d4';c.lineWidth=4;[[0,0],[w,0]].forEach(([x])=>{for(let k=0;k<5;k++){c.beginPath();c.moveTo(x?w:0,h*(.1+k*.15));c.lineTo(w*(x?.53:.47),h*.5);c.stroke()}});person(c,w*.5,h*.62,h*.16,{back:1,long:1,col:'#fff',pants:'#334'})},
+ guide(g){[[0,.1],[1,.1],[0,1],[1,1]].forEach(([x,y])=>g.L(x,y,.5,.5,.6));g.P(.5,.62,.16,{back:1});g.dot(.5,.5);g.T('모든 선 → 가운데',.04,.08)}},
+{id:'blossom_tunnel',cat:'travel',name:'벚꽃·단풍 터널',who:'봄·가을 여행 시즌샷',
+ desc:'꽃·단풍 나무가 위와 옆을 감싸는 길 한가운데. 자연이 만든 액자 속에 사람이 서요.',
+ steps:['꽃이 길 위로 터널처럼 덮인 곳','꽃이 화면 위·양옆을 감싸게','사람은 길 가운데, 폰은 허리 높이'],phone:'허리 높이',target:[.5,.45],face:1,
+ ments:['꽃잎 날리면 위로 봐봐','꽃가지 살짝 잡아봐','천천히 걸어와'],
+ scene(c,w,h){vg(c,w,h,['#fbe9f0','#f6d4df'],0,h*.6);poly(c,[[w*.15,h],[w*.85,h],[w*.55,h*.55],[w*.45,h*.55]],'#cdb8a4');rect(c,0,h*.55,w*.15,h*.45,'#b9d48a');rect(c,w*.85,h*.55,w*.15,h*.45,'#b9d48a');
+   const r=rnd(19);for(let i=0;i<220;i++){const x=r()*w,y=r()*h*.65,edge=Math.min(x/w,1-x/w,y/h*1.4);if(edge<.28)circ(c,x,y,4+r()*9,['#f7a8c4','#fbc6d8','#ffffff','#f28fb2'][i%4])}
+   for(let i=0;i<4;i++){rect(c,w*(.05+i*.04),h*(.3+i*.04),5,h*.4,'#5a3a3a');rect(c,w*(.95-i*.04),h*(.3+i*.04),5,h*.4,'#5a3a3a')}person(c,w*.5,h*.92,h*.45,{col:'#fff',pants:'#7a9ac4',long:1,smile:1,hair:'#3a2418'})},
+ guide(g){g.shade(0,0,1,.18,.2);g.shade(0,.18,.22,.82,.2);g.shade(.78,.18,.22,.82,.2);g.P(.5,.92,.45,{});g.T('꽃이 감싸게',.3,.12)}},
+{id:'colorful_stairs',cat:'travel',name:'알록달록 마을 계단',who:'감천문화마을 · 산토리니 느낌',
+ desc:'알록달록한 집들 사이 계단. 위에서 내려다보거나 아래에서 올려다보며, 사람은 계단 중간에.',
+ steps:['색깔 집들이 많이 보이는 계단 위쪽에서','계단이 대각선으로 지나가게','사람은 계단 중간 1/3 지점에'],phone:'눈높이',target:[.6,.55],
+ scene(c,w,h){vg(c,w,h,['#7fc3f2','#dff1ff'],0,h*.2);const cols=['#f28b82','#fbbc04','#81c995','#78d9ec','#c58af9','#ffffff','#fdcfe8'];const r=rnd(12);
+   for(let row=0;row<7;row++)for(let k=0;k<6;k++){const x=w*(k/6)+(row%2)*w*.05,y=h*(.15+row*.12);rect(c,x,y,w*.15,h*.11,cols[(row*3+k)%7]);rect(c,x+w*.04,y+h*.03,w*.03,h*.04,'#2a4a6a')}
+   for(let i=0;i<14;i++){const t=i/14;rect(c,w*(.1+t*.6),h*(.95-t*.6),w*.22,h*.03,i%2?'#e6e0d6':'#cfc8bb')}person(c,w*.6,h*.62,h*.18,{col:'#e8323a',pants:'#fff',dress:1,long:1})},
+ guide(g){g.L(.1,1,.75,.32,.7);g.ring(.6,.55,.06);g.T('계단 = 대각선',.04,.08)}},
+{id:'bench_view',cat:'travel',name:'벤치 뒷모습 + 풍경',who:'공원·호숫가 산책',
+ desc:'풍경을 바라보며 벤치에 앉은 뒷모습. 벤치는 아래 1/3 교차점, 풍경이 나머지를 채워요.',
+ steps:['호수·바다·도시가 보이는 벤치','벤치를 아래쪽 1/3 교차점에','둘이면 서로 기대거나 어깨동무'],phone:'가슴 높이',target:[1/3,.62],
+ ments:['벤치에 앉아서 저 멀리 봐','고개 살짝 옆으로 돌려','어깨에 기대봐'],
+ scene(c,w,h){vg(c,w,h,['#ffd1a6','#ffeeda'],0,h*.45);vg(c,w,h,['#7fb6d6','#4f8fb5'],h*.45,h*.7);rect(c,0,h*.7,w,h*.3,'#7fae5a');poly(c,[[w*.6,h*.45],[w*.78,h*.32],[w*.95,h*.45]],'#5b7a8f');
+   person(c,w/3,h*.66+h*.3*.41,h*.3,{pose:'sit',back:1,col:'#3b4a6b',pants:'#2b2f3a',hair:'#2b1d17'});rect(c,w*.18,h*.74,w*.32,h*.025,'#6a4a2a');rect(c,w*.2,h*.76,6,h*.06,'#3a2a1a');rect(c,w*.46,h*.76,6,h*.06,'#3a2a1a')},
+ guide(g){g.thirds();g.ring(1/3,.68,.1);g.T('풍경 = 나머지 전부',.45,.2)}},
+{id:'hotel_morning',cat:'travel',name:'호텔 창가 아침',who:'호캉스 감성샷',
+ desc:'커다란 창 앞, 하얀 침대 위에 커피 들고 앉은 실루엣. 창밖 도시·바다가 배경이 돼요.',
+ steps:['커튼 활짝, 아침 창가 쪽으로','창이 화면 위쪽을 크게 채우게','창 밝은 곳 탭 → 사람은 은은한 실루엣'],phone:'앉은 눈높이',target:[.4,.45],
+ ments:['커피 들고 창밖 봐','침대에 앉아서 기지개 켜','가운 입고 창가에 서봐'],
+ scene(c,w,h){rect(c,0,0,w,h,'#d9d2c8');vg(c,w,h,['#bfe0ff','#fff6e6'],h*.08,h*.6);rect(c,w*.08,h*.35,w*.84,h*.25,'#9fb7cf');for(let i=0;i<8;i++)rect(c,w*(.1+i*.1),h*(.42-(i%3)*.04),w*.07,h*(.18+(i%3)*.04),'#7d93ab');
+   rect(c,0,0,w*.08,h*.62,'#c9bfb3');rect(c,w*.92,0,w*.08,h*.62,'#c9bfb3');rect(c,0,h*.6,w,h*.4,'#f7f5f2');rect(c,0,h*.6,w,h*.03,'#e6e2dc');
+   person(c,w*.4,h*.66+h*.38*.41,h*.38,{pose:'sit',sil:'rgba(60,55,60,.85)',long:1})},
+ guide(g){g.R(.08,.08,.84,.52);g.ring(.4,.45,.08);g.T('창 = 위쪽 크게',.1,.68)}},
+{id:'picnic_top',cat:'travel',name:'피크닉 탑뷰 (사람+음식)',who:'피크닉·한강 감성샷',
+ desc:'돗자리 위에 누운 사람과 음식·소품을 바로 위에서 같이. 사람과 음식이 대각선으로 놓이면 균형이 좋아요.',
+ steps:['폰을 머리 위로 높이 들고 바닥과 평행하게','돗자리가 화면을 거의 채우게','사람은 한쪽, 음식은 반대쪽 대각선'],phone:'머리 위로 · 수평',
+ ments:['팔 벌리고 누워봐','과일 하나 들고 나 봐','책 읽는 척 해봐'],
+ scene(c,w,h){rect(c,0,0,w,h,'#6fae4a');const r=rnd(2);for(let i=0;i<200;i++)rect(c,r()*w,r()*h,2,6,'rgba(40,90,30,.4)');
+   for(let i=0;i<6;i++)for(let j=0;j<8;j++)rect(c,w*(.06+i*.148),h*(.05+j*.112),w*.148,h*.112,(i+j)%2?'#f3f0ea':'#e57373');
+   person(c,w*.35,h*.9,h*.62,{pose:'arms',col:'#fff7d6',pants:'#7a9ac4',long:1,smile:1,hair:'#3a2418'});circ(c,w*.75,h*.25,w*.1,'#fff');circ(c,w*.75,h*.25,w*.07,'#e8574a');circ(c,w*.8,h*.45,w*.06,'#f2c14e');rect(c,w*.62,h*.6,w*.16,h*.1,'#c8a27a')},
+ guide(g){g.R(.06,.05,.89,.9);g.L(.35,.7,.75,.25,.6);g.T('📱 위에서 수평',.04,.98,GRN)}},
+{id:'family_kid',cat:'travel',name:'아이 눈높이 가족 나들이',who:'가족 사진 작가 팁',
+ desc:'폰을 아이 눈높이까지 내리면 아이가 크고 생생하게. 엄마·아빠는 뒤에서 손잡고 따라오게.',
+ steps:['쪼그려 앉아 아이 눈높이로','아이가 나를 향해 뛰어오게, 연사','엄마·아빠는 뒤쪽에 작게'],phone:'아이 눈높이 · 연사',target:[.45,.42],face:1,
+ ments:['아빠한테 뛰어와!','엄마 손 잡고 걸어와','하나 둘 셋 점프!'],
+ scene(c,w,h){vg(c,w,h,['#bfe3ff','#eaf7ff'],0,h*.45);rect(c,0,h*.45,w,h*.55,'#8cc56a');poly(c,[[w*.3,h],[w*.7,h],[w*.55,h*.45],[w*.45,h*.45]],'#d9c9a6');bokeh(c,w,h,10,3,['rgba(80,140,60,.5)'],.3,.5);
+   person(c,w*.6,h*.62,h*.22,{col:'#3b4a6b',pants:'#2b2f3a'});person(c,w*.7,h*.62,h*.2,{col:'#f2c3c3',pants:'#7a9ac4',long:1});person(c,w*.45,h*.98,h*.5,{pose:'walk',col:'#ffd34d',pants:'#e8574a',smile:1,hair:'#2b1d17'})},
+ guide(g){g.L(0,.45,1,.45,.6);g.P(.45,.98,.5,{pose:'walk'});g.T('📱 아이 눈높이',.04,.08,GRN)}},
+{id:'summit',cat:'travel',name:'정상 인증샷',who:'등산·전망 포인트',
+ desc:'정상 바위 위에서 팔 벌린 모습을 아래에서. 하늘과 구름바다가 크게 들어와 시원해요.',
+ steps:['그녀를 바위·정상석 위에, 나는 한 단 아래','폰을 허리 아래에서 위로','지평선(구름바다)은 아래 1/3'],phone:'허리 아래 · 위로',target:[.5,.3],face:1,
+ ments:['두 팔 쫙! 야호!','정상석 잡고 브이','먼 곳 가리켜봐'],
+ scene(c,w,h){vg(c,w,h,['#2f7fd8','#9fd0ff'],0,h*.7);for(let i=0;i<9;i++)circ(c,w*i/8,h*.72,w*.12,'#f4f8ff');rect(c,0,h*.74,w,h*.26,'#eef4fb');
+   poly(c,[[w*.2,h],[w*.32,h*.72],[w*.68,h*.7],[w*.82,h]],'#6a6258');person(c,w*.5,h*.72,h*.5,{pose:'arms',col:'#ff6f3c',pants:'#2b2f3a',smile:1,hair:'#1f1612'})},
+ guide(g){g.L(0,.72,1,.72,.6);g.P(.5,.72,.5,{pose:'arms'});g.T('📱 아래에서 위로',.04,.95,GRN)}},
+{id:'night_lights',cat:'travel',name:'야시장 전구 아래',who:'여행 야경 스냅',
+ desc:'줄전구·등불 아래에서 얼굴은 전구 빛으로 밝게, 뒤 불빛은 동그랗게 흐리게.',
+ steps:['얼굴이 전구 쪽을 보게 세우기(얼굴 밝게)','인물모드 켜고 2x — 뒤 불빛이 동그랗게','얼굴을 탭해서 밝기 맞추기'],phone:'가슴 높이 · 인물모드',target:[1/3,.4],face:1,
+ ments:['전구 쪽 올려다봐','간식 들고 웃어','불빛 사이로 걸어와'],
+ scene(c,w,h){vg(c,w,h,['#0d1430','#1d2550']);const r=rnd(15);for(let i=0;i<18;i++)glow(c,r()*w,h*(.2+r()*.6),w*(.04+r()*.07),['rgba(255,200,100,.55)','rgba(255,120,80,.45)','rgba(255,240,180,.5)'][i%3]);
+   c.strokeStyle='#222';c.lineWidth=2;c.beginPath();c.moveTo(0,h*.1);for(let k=0;k<=8;k++)c.quadraticCurveTo(w*(k/8-.06),h*.18,w*k/8,h*.1);c.stroke();for(let k=0;k<16;k++){glow(c,w*k/15,h*.15,w*.04,'rgba(255,220,140,.9)');circ(c,w*k/15,h*.15,3,'#fff4c8')}
+   person(c,w/3,h*1.0,h*.68,{col:'#c4515b',pants:'#2b2f3a',long:1,smile:1,hair:'#1f1612'});glow(c,w/3,h*.4,w*.15,'rgba(255,200,120,.35)')},
+ guide(g){g.thirds();g.P(1/3,1,.68,{});g.T('뒤 불빛 = 동그란 보케',.5,.3)}},
+
 ];
 
-const CATS={people:'👤 인물·인플루언서',film:'🎬 영화감독 연출',master:'📷 사진 거장',street:'🏙 거리·작가 기법',land:'🏞 풍경',food:'🍰 음식·소품'};
+const CATS={people:'👤 인물·인플루언서',travel:'✈️ 여행·일상 (인물+배경)',film:'🎬 영화감독 연출',master:'📷 사진 거장',street:'🏙 거리·작가 기법',land:'🏞 풍경',food:'🍰 음식·소품'};
 const BY=Object.fromEntries(S.map(s=>[s.id,s]));
 const cache=new Map();
 function drawGuide(id,c,W,H,opt={}){

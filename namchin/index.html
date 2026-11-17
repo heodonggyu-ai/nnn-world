@@ -399,7 +399,7 @@ const SC=[
   t:['폰을 눈보다 살짝 위로, 턱은 살짝 당기기','팔 길이가 부족하면 0.5x 광각 + 얼굴은 화면 가운데 (가장자리는 늘어나요)','그녀 얼굴을 렌즈에서 조금 더 멀리 — 얼굴이 작게 나와요 (센스!)'],face:'user'},
 ];
 const S=Object.fromEntries(SC.map(s=>[s.id,s]));
-const ST_IDS=['back_walk','look_back','low_long','wide_hip','mirror_selfie','golden_backlight','candid_laugh','window_sil','eye_portrait','detail_hands','jump_sky','symmetry_pastel','frame_arch','through_fg','reflection','hand_landmark','cafe45','env_portrait','follow_me','car_window','umbrella_rain','couple_shadow','stairs_sit','wkw_neon','miyazaki_sky','spielberg_sil','malick_magic','park_overhead','avedon_white','lindbergh_bw','parr_flash','kawauchi_airy','tarantino_trunk','kubrick_1pt'];
+const ST_IDS=['back_walk','look_back','low_long','wide_hip','mirror_selfie','golden_backlight','candid_laugh','window_sil','eye_portrait','detail_hands','jump_sky','symmetry_pastel','frame_arch','through_fg','reflection','hand_landmark','cafe45','env_portrait','follow_me','car_window','umbrella_rain','couple_shadow','stairs_sit','wkw_neon','miyazaki_sky','spielberg_sil','malick_magic','park_overhead','avedon_white','lindbergh_bw','parr_flash','kawauchi_airy','tarantino_trunk','kubrick_1pt','landmark_split','back_view_vista','beach_shore','alley_life','window_outside','train_window','bridge_center','blossom_tunnel','colorful_stairs','bench_view','hotel_morning','picnic_top','summit','night_lights','tiny_explorer'];
 const STL=window.PHOTO_STYLES?ST_IDS.map(i=>PHOTO_STYLES.byId[i]).filter(Boolean):[];
 STL.forEach(st=>{const k='st_'+st.id;GUIDES[k]={name:st.name,h:st.phone,style:st};
   S[k]={id:k,e:'🎨',name:st.name,sub:st.who,g:[k],m:st.ments||['편하게 나 보고 웃어줘','방금 그 표정 좋았어, 한 번 더!','딴 데 보다가 천천히 돌아봐'],t:[st.desc,...st.steps]}});
