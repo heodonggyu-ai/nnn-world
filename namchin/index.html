@@ -412,19 +412,32 @@ $('stgrid').querySelectorAll('.stc').forEach(b=>{const c=b.querySelector('canvas
 $('stgrid').onclick=e=>{const b=e.target.closest('[data-sc]');if(b)openCam(b.dataset.sc)};
 $('scgrid').onclick=e=>{const b=e.target.closest('[data-sc]');if(b)openCam(b.dataset.sc)};
 $('goQuick').onclick=()=>openCam('quick');
-$('goAcademy').onclick=()=>{buildAcademy();$('academy').classList.add('show')};
-$('goCheck').onclick=()=>{buildCheck();$('check').classList.add('show')};
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
+$('goAcademy').onclick=()=>{buildAcademy();openModal('academy')};
+$('goCheck').onclick=()=>{buildCheck();openModal('check')};
+
+// ---------- 뒤로가기 / 홈 (폰 뒤로가기 버튼·밀어서 뒤로 지원) ----------
+function openModal(id){$(id).classList.add('show');if(!(history.state&&history.state.m))history.pushState(Object.assign({},history.state,{m:1}),'')}
+function closeModals(){document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'))}
+function closeModalsSilently(){closeModals();if(history.state&&history.state.m)history.replaceState(Object.assign({},history.state,{m:0}),'')}
+function pushCam(){if(!(history.state&&history.state.cam))history.pushState({cam:1},'')}
+addEventListener('popstate',e=>{const st=e.state||{};if(!st.m)closeModals();if(!st.cam&&inCam())goHome(true)});
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{if(history.state&&history.state.m)history.back();else b.closest('.modal').classList.remove('show')});
+
+function inCam(){return $('cam').classList.contains('show')}
+function goHome(fromPop){
+  if(!fromPop&&history.state&&history.state.cam){history.back();return}
+  closeModals();stopCam();mode='idle';feat=null;$('cam').classList.remove('show');$('home').classList.add('show')}
+
 
 function openCam(id){
   sc=S[id];active=sc.g[0];auto=true;ema={};mi=0;pSideManual=false;$('btnAuto').classList.add('on');
   $('camTitle').textContent=sc.e+' '+sc.name;facing=sc.face||'environment';
-  $('home').classList.remove('show');$('cam').classList.add('show');renderChips();renderMent();fit();startCam();
+  $('home').classList.remove('show');$('cam').classList.add('show');pushCam();renderChips();renderMent();fit();startCam();
 }
-$('back').onclick=()=>{stopCam();mode='idle';$('cam').classList.remove('show');$('home').classList.add('show')};
+$('back').onclick=()=>goHome();
 $('btnTips').onclick=()=>{$('tipsT').textContent=sc.e+' '+sc.name+' 촬영 팁';
   $('tipsB').innerHTML=`<h3>📌 이렇게 찍어요</h3><ul>${sc.t.map(t=>`<li>${t}</li>`).join('')}</ul><h3>💬 포즈 멘트</h3><ul>${sc.m.map(t=>`<li>“${t}”</li>`).join('')}</ul><h3>📐 추천 구도 · 폰 높이</h3><ul>${sc.g.map(g=>`<li><b>${GUIDES[g].name}</b> — 📱 ${GUIDES[g].h}</li>`).join('')}</ul>`;
-  $('tips').classList.add('show')};
+  openModal('tips')};
 function renderMent(){$('mentT').textContent='“'+sc.m[mi%sc.m.length]+'”'}
 $('mentNext').onclick=()=>{mi++;renderMent()};
 
@@ -549,7 +562,7 @@ function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]
   shots.forEach((b,i)=>{const fr=new FileReader();fr.onload=()=>{const im=document.querySelector(`[data-im="${i}"]`);if(im)im.src=fr.result};fr.readAsDataURL(b)});
   $('bgrid').onclick=e=>{const b=e.target.closest('[data-sv]');if(b)saveFiles([files[+b.dataset.sv]])};
   $('shareAll').onclick=()=>saveFiles(files);
-  $('burst').classList.add('show')}
+  openModal('burst')}
 
 // ---------- academy (NG vs OK) ----------
 function bgStreet(c,w,h){grad(c,w,h,['#efe9df','#ddd3c4'],0,h*.8);c.fillStyle='#a39684';c.fillRect(0,h*.8,w,h)}

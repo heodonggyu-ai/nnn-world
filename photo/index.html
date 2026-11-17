@@ -85,10 +85,10 @@ header h1 span{color:var(--acc)}
 <body>
 <div id="app">
   <header>
-    <h1>구도 <span>카메라</span></h1>
+    <div style="display:flex;align-items:center;gap:8px"><button class="hbtn" id="btnHome" style="display:none">← 처음</button><h1>구도 <span>카메라</span></h1></div>
     <div style="display:flex;gap:6px">
       <button class="hbtn" id="btnAspect">3:4</button>
-      <button class="hbtn" id="btnSamples">📚 구도 샘플</button>
+      <button class="hbtn" id="btnSamples">📚 샘플</button>
     </div>
   </header>
   <div id="stage">
@@ -576,7 +576,7 @@ async function startCam(){
     if(stream)stream.getTracks().forEach(t=>t.stop());
     stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1440}}});
     vid.srcObject=stream;await vid.play();
-    mode='live';stillAR=null;still.style.display='none';vid.style.display='block';$('start').style.display='none';
+    mode='live';stillAR=null;still.style.display='none';vid.style.display='block';$('start').style.display='none';pushCam();
     mirror=facing==='user';vid.classList.toggle('mirror',mirror);ema={};fit();renderChips();
   }catch(e){
     $('err').innerHTML='이 화면에서는 실시간 카메라를 쓸 수 없어요.<br>‘사진으로 분석하기’로 찍은 사진에 구도를 대볼 수 있어요.';
@@ -597,7 +597,7 @@ $('btnGallery').onclick=()=>$('file').click();
 $('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);
   const img=new Image();img.onload=()=>{
     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-    mode='still';stillAR=img.naturalWidth/img.naturalHeight;still.src=url;still.style.display='block';vid.style.display='none';$('start').style.display='none';
+    pushCam();mode='still';stillAR=img.naturalWidth/img.naturalHeight;still.src=url;still.style.display='block';vid.style.display='none';$('start').style.display='none';
     fit();ema={};auto=true;$('btnAuto').classList.add('on');
     onFeatures(analyze(img,img.naturalWidth,img.naturalHeight,false));renderChips();renderRecs(true);};
   img.src=url;e.target.value=''};
@@ -618,7 +618,7 @@ $('shutter').onclick=()=>{
     const fr=new FileReader();fr.onload=()=>{$('pvimg').src=fr.result};fr.readAsDataURL(b);
     const file=new File([b],`composition-${ts}.jpg`,{type:'image/jpeg'});
     $('pvsave').onclick=()=>saveFiles([file]);
-    $('pv').classList.add('show')},'image/jpeg',.92);
+    openModal('pv')},'image/jpeg',.92);
 };
 
 // ---------- sample scenes ----------
@@ -699,10 +699,27 @@ function buildSamples(){
 }
 buildSamples();
 $('grid').onclick=e=>{const cv=e.target.closest('canvas[data-s]');if(cv&&G[cv.dataset.s].style){const c=cv.getContext('2d'),id=G[cv.dataset.s].style.id;cv.dataset.off=cv.dataset.off?'':'1';c.clearRect(0,0,300,400);PHOTO_STYLES.drawScene(id,c,300,400);if(!cv.dataset.off)PHOTO_STYLES.drawGuide(id,c,300,400,{lw:2,sample:1});return}
-  const b=e.target.closest('[data-use]');if(!b)return;setActive(b.dataset.use,true);$('samples').classList.remove('show');if(mode==='idle')startCam()};
+  const b=e.target.closest('[data-use]');if(!b)return;setActive(b.dataset.use,true);closeModalsSilently();if(mode==='idle')startCam()};
 $('stabs').onclick=e=>{const b=e.target.closest('[data-scat]');if(!b)return;sampleCat=b.dataset.scat;buildSamples();$('samples').querySelector('.mbody').scrollTop=0};
-$('btnSamples').onclick=$('btnSamples2').onclick=()=>$('samples').classList.add('show');
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('.modal').classList.remove('show'));
+$('btnSamples').onclick=$('btnSamples2').onclick=()=>openModal('samples');
+
+// ---------- 뒤로가기 / 홈 (폰 뒤로가기 버튼·밀어서 뒤로 지원) ----------
+function openModal(id){$(id).classList.add('show');if(!(history.state&&history.state.m))history.pushState(Object.assign({},history.state,{m:1}),'')}
+function closeModals(){document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'))}
+function closeModalsSilently(){closeModals();if(history.state&&history.state.m)history.replaceState(Object.assign({},history.state,{m:0}),'')}
+function pushCam(){if(!(history.state&&history.state.cam))history.pushState({cam:1},'')}
+addEventListener('popstate',e=>{const st=e.state||{};if(!st.m)closeModals();if(!st.cam&&inCam())goHome(true)});
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{if(history.state&&history.state.m)history.back();else b.closest('.modal').classList.remove('show')});
+
+function inCam(){return mode!=='idle'}
+function goHome(fromPop){
+  if(!fromPop&&history.state&&history.state.cam){history.back();return}
+  closeModals();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  mode='idle';feat=null;lastRanked=null;stillAR=null;vid.style.display='none';still.style.display='none';$('start').style.display='flex';
+  hintEl.textContent='';$('btnHome').style.display='none';$('recs').innerHTML='<span class="reclbl">카메라를 대면 추천 구도가 여기에 떠요</span>';fit();renderChips()}
+$('btnHome').onclick=()=>goHome();
+setInterval(()=>{$('btnHome').style.display=mode!=='idle'?'':'none'},300);
+
 
 fit();renderChips();
 })();
