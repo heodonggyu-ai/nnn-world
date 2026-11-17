@@ -175,15 +175,16 @@
     const issues = [];
     let uid = 1;
     const addIssue = o => { o.id = 'i' + (uid++); issues.push(o); return o; };
+    const TH = Object.assign({}, DEFAULT_TH, opts.th || {});
 
     events.forEach(ev => {
       // 1) 덜 뻗음 (직선 펀치)
-      if (ev.kind === 'straight' && ev.elbowAt < 155) {
+      if (ev.kind === 'straight' && ev.elbowAt < TH.extendDeg) {
         addIssue({
           type: 'extend', side: ev.side, f0: ev.start, f1: ev.end, peak: ev.peak, ev,
-          sev: ev.elbowAt < 135 ? 3 : 2,
+          sev: ev.elbowAt < TH.extendDeg - 20 ? 3 : 2,
           title: `${ev.name}: 팔을 끝까지 안 뻗음`,
-          detail: `타격 순간 팔꿈치 각도 ${Math.round(ev.elbowAt)}° (목표 160° 이상)`,
+          detail: `타격 순간 팔꿈치 각도 ${Math.round(ev.elbowAt)}° (기준 ${TH.extendDeg}° 이상)`,
           cue: '어깨를 같이 밀어 넣으면서 끝까지 뻗고, 맞는 순간에만 주먹을 짧게 쥐어 주세요. 팔만 뻗지 말고 어깨가 턱을 덮을 만큼 넣습니다.'
         });
       }
@@ -191,10 +192,10 @@
       let worst = -1, wf = ev.peak;
       for (let f = ev.start; f <= ev.end; f++) if (m.chinUp[f] > worst) { worst = m.chinUp[f]; wf = f; }
       const lift = worst - m.chinBase;
-      if (lift > 0.07) {
+      if (lift > TH.chin) {
         addIssue({
           type: 'chin', side: ev.side, f0: ev.start, f1: ev.end, peak: wf, ev, amount: lift,
-          sev: lift > 0.14 ? 3 : 2,
+          sev: lift > TH.chin * 2 ? 3 : 2,
           title: `${ev.name}: 턱이 들림`,
           detail: `평소보다 턱이 ${Math.round(lift * 100)}% (몸통 길이 기준) 들림`,
           cue: '펀치를 낼 때 턱을 당기고 시선은 눈썹 아래로 상대를 보세요. 앞어깨와 턱 사이를 붙이는 느낌.'
@@ -205,12 +206,12 @@
         let maxD = 0;
         for (let f = ev.start; f <= ev.peak; f++) maxD = Math.max(maxD, Math.abs(m.rot[f] - m.rot[ev.start]));
         ev.rotation = maxD;
-        if (maxD < 20) {
+        if (maxD < TH.rotateDeg) {
           addIssue({
             type: 'rotate', side: ev.side, f0: ev.start, f1: ev.end, peak: ev.peak, ev,
-            sev: maxD < 10 ? 3 : 2,
+            sev: maxD < TH.rotateDeg / 2 ? 3 : 2,
             title: `${ev.name}: 몸통 회전 부족`,
-            detail: `어깨 회전 ${Math.round(maxD)}° (권장 25° 이상)`,
+            detail: `어깨 회전 ${Math.round(maxD)}° (기준 ${TH.rotateDeg}° 이상)`,
             cue: '뒷발 뒤꿈치를 바깥으로 돌리며 골반 → 어깨 → 주먹 순서로 회전하세요. 뒷어깨가 앞으로 나와야 체중이 실립니다.'
           });
         }
@@ -218,7 +219,7 @@
     });
 
     // 4) 가드 내려감 (펀치 중이 아닌 손)
-    const TOL = 0.12;
+    const TOL = TH.guardTol;
     for (const s of ['L', 'R']) {
       const busy = new Array(n).fill(false);
       events.filter(e => e.side === s).forEach(e => {
@@ -230,7 +231,7 @@
         let k = f; while (k < n && !low[k] && k - f < 2) k++;
         if (k < n && low[k] && k - f <= 2) for (let q = f; q < k; q++) if (!busy[q]) low[q] = true;
       }
-      const minLen = Math.max(3, Math.round(fps * 0.2));
+      const minLen = Math.max(2, Math.round(fps * TH.guardSec));
       let f = 0;
       while (f < n) {
         if (!low[f]) { f++; continue; }
@@ -277,15 +278,14 @@
       cue: '스탠스가 넓으면 스텝이 느려집니다. 어깨너비보다 반 발 정도만 넓게.'
     });
     const kneeMed = Math.min(median(m.knee.L), median(m.knee.R));
-    if (kneeMed > 172) addIssue({
+    if (kneeMed > TH.kneeDeg) addIssue({
       type: 'knee', f0: 0, f1: n - 1, peak: 0, sev: 1, title: '무릎이 펴져 있음',
       detail: `무릎 각도 약 ${Math.round(kneeMed)}°`,
       cue: '무릎을 살짝 굽혀 스프링처럼 준비하세요. 다리가 펴지면 체중 이동과 회피가 늦어집니다.'
     });
 
     issues.sort((a, b) => a.f0 - b.f0);
-    const penalty = issues.reduce((s, i) => s + (i.sev === 3 ? 12 : i.sev === 2 ? 7 : 3), 0);
-    const score = Math.max(20, 100 - penalty);
+    const score = scoreOf(issues);
     return { m, events, issues, score, lead, rear };
   }
 
@@ -322,11 +322,24 @@
     return { wr: [wx, wy], el: [ex, Math.max(ey, wy + 0.25 * an.m.T)] };
   }
 
+  // 분석 기준 기본값 (관장님 기준으로 바꿀 수 있음)
+  const DEFAULT_TH = { guardTol: 0.12, guardSec: 0.2, extendDeg: 155, chin: 0.07, rotateDeg: 20, kneeDeg: 172 };
+  function scoreOf(issues) {
+    const penalty = issues.filter(i => !i.hidden).reduce((s, i) => s + (i.sev === 3 ? 12 : i.sev === 2 ? 7 : 3), 0);
+    return Math.max(20, 100 - penalty);
+  }
+
   function buildLayers(data, an) {
-    const n = data.frames.length, fps = data.fps, F = data.frames, A = an.m.aspect;
     const layers = [];
+    an.issues.forEach(is => { const L = buildLayerFor(data, an, is); if (L) layers.push(L); });
+    layers.push({ id: 'manual', label: '내 수정 레이어', manual: true, enabled: true, curves: {} });
+    return layers;
+  }
+  // 이슈 하나에 대한 교정 키 레이어 (직접 추가한 고칠 점에도 씀)
+  function buildLayerFor(data, an, is) {
+    const n = data.frames.length, fps = data.fps, F = data.frames, A = an.m.aspect;
     const clampF = f => Math.max(0, Math.min(n - 1, f));
-    an.issues.forEach(is => {
+    {
       const L = { id: 'L' + is.id, label: is.title, issueId: is.id, enabled: true, curves: {} };
       if (is.type === 'guard') {
         const S = SIDES[is.side];
@@ -353,7 +366,8 @@
         const u = [dir[0] / dl, dir[1] / dl];
         const elT = [sh[0] + u[0] * up, sh[1] + u[1] * up];
         const wrT = [sh[0] + u[0] * (up + fo) * 0.98, sh[1] + u[1] * (up + fo) * 0.98];
-        [S.wr, S.el].forEach(j => { addKey(L, j, is.ev.start, 0, 0); addKey(L, j, clampF(is.ev.end), 0, 0); });
+        const ev0 = is.ev ? is.ev.start : is.f0, ev1 = is.ev ? is.ev.end : is.f1;
+        [S.wr, S.el].forEach(j => { addKey(L, j, ev0, 0, 0); addKey(L, j, clampF(ev1), 0, 0); });
         addKey(L, S.el, p, (elT[0] - el[0]) / A, elT[1] - el[1]);
         addKey(L, S.wr, p, (wrT[0] - wr[0]) / A, wrT[1] - wr[1]);
       } else if (is.type === 'chin') {
@@ -361,14 +375,14 @@
         addKey(L, 0, clampF(is.f0 - 1), 0, 0);
         addKey(L, 0, is.peak, 0, dy);
         addKey(L, 0, clampF(is.f1 + 1), 0, 0);
+      } else if (is.type === 'custom') {
+        // 직접 추가한 고칠 점: 빈 레이어 (키는 관장님이 직접)
       } else {
-        return; // 회전·스탠스·무릎은 코칭 코멘트만 (2D 키로 표현 어려움)
+        return null; // 회전·스탠스·무릎은 코칭 코멘트만 (2D 키로 표현 어려움)
       }
       is.layerId = L.id;
-      layers.push(L);
-    });
-    layers.push({ id: 'manual', label: '내 수정 레이어', manual: true, enabled: true, curves: {} });
-    return layers;
+      return L;
+    }
   }
 
   function layerDeltas(layers, f, exceptId) {
@@ -507,6 +521,6 @@
     };
   }
 
-  const API = { blenderData, BL_JOINTS, SIDES, MAIN_JOINTS, FOLLOW, JOINT_NAMES, CONNECTIONS, fillAndSmooth, analyze, buildLayers, evalCurve, addKey, layerDeltas, applyDeltas, correctedPose, makeDemo, angle3, d2, median };
+  const API = { DEFAULT_TH, scoreOf, buildLayerFor, blenderData, BL_JOINTS, SIDES, MAIN_JOINTS, FOLLOW, JOINT_NAMES, CONNECTIONS, fillAndSmooth, analyze, buildLayers, evalCurve, addKey, layerDeltas, applyDeltas, correctedPose, makeDemo, angle3, d2, median };
   if (typeof module !== 'undefined') module.exports = API; else root.Core = API;
 })(this);

@@ -185,9 +185,19 @@
   // ---------- 분석 결과 ----------
   function finish(data) {
     S.data = data;
-    S.an = C.analyze(data, { stance: S.stance });
+    S.an = C.analyze(data, { stance: S.stance, th: S.sessionTh || S.th });
+    S.an.hiddenIssues = [];
     S.layers = C.buildLayers(data, S.an);
     if (S.pendingLayers) { S.layers = S.pendingLayers; S.pendingLayers = null; }
+    if (S.pendingIssues) { // 저장된 분석: 관장님이 고친 항목 그대로 복원
+      const ev = p => S.an.events.find(e => e.peak === p) || null;
+      const rev = arr => arr.map(i => Object.assign({}, i, { ev: i.evPeak != null ? ev(i.evPeak) : null }));
+      S.an.issues = rev(S.pendingIssues.issues || []);
+      S.an.hiddenIssues = rev(S.pendingIssues.hidden || []);
+      S.an.score = C.scoreOf(S.an.issues);
+      S.pendingIssues = null;
+    }
+    S.sessionTh = null; S.editingIssue = null; S.addingIssue = false;
     clearUndo();
     S._corrCache = null; S.t = 0; S.loop = null; S.layerId = 'manual'; S.selJoint = null; S.dirty = true;
     $('loopOff').classList.add('hide');
@@ -217,19 +227,186 @@
 
   const fmt = f => { const s = f / S.data.fps; const m = Math.floor(s / 60); return m + ':' + (s - m * 60).toFixed(1).padStart(4, '0'); };
 
+  // ---------- 분석 기준 (관장님 기준) ----------
+  S.th = Object.assign({}, C.DEFAULT_TH);
+  try { Object.assign(S.th, JSON.parse(localStorage.getItem('nnn_th') || '{}')); } catch (e) { }
+  const TH_UI = [
+    ['guardTol', '가드 허용 높이', 0, 0.4, 0.02, v => `턱 아래 ${Math.round(v * 100)}%까지 OK`],
+    ['guardSec', '가드 내려감 최소 시간', 0.1, 1, 0.05, v => `${v.toFixed(2)}초 이상`],
+    ['extendDeg', '펀치 뻗음 기준', 130, 175, 1, v => `팔꿈치 ${v}° 이상`],
+    ['chin', '턱 들림 민감도', 0.03, 0.25, 0.01, v => `평소보다 ${Math.round(v * 100)}% 이상`],
+    ['rotateDeg', '뒷손 회전 기준', 5, 40, 1, v => `어깨 ${v}° 이상`],
+    ['kneeDeg', '무릎 펴짐 기준', 160, 180, 1, v => v >= 180 ? '검사 안 함' : `${v}° 넘으면 지적`]
+  ];
+  function renderCriteria() {
+    const box = $('thBox'); if (!box) return;
+    box.innerHTML = TH_UI.map(([k, lab, mn, mx, st, f]) =>
+      `<div class="vrow"><span>${lab}</span><input type="range" data-th="${k}" min="${mn}" max="${mx}" step="${st}" value="${S.th[k]}"><b data-thv="${k}">${f(S.th[k])}</b></div>`).join('');
+    box.querySelectorAll('[data-th]').forEach(inp => inp.oninput = () => {
+      const k = inp.dataset.th; S.th[k] = +inp.value;
+      const row = TH_UI.find(r => r[0] === k); box.querySelector(`[data-thv="${k}"]`).textContent = row[5](S.th[k]);
+      try { localStorage.setItem('nnn_th', JSON.stringify(S.th)); } catch (e) { }
+    });
+  }
+  $('thReset').onclick = () => { S.th = Object.assign({}, C.DEFAULT_TH); try { localStorage.setItem('nnn_th', JSON.stringify(S.th)); } catch (e) { } renderCriteria(); };
+  $('thApply').onclick = () => reanalyze();
+  function reanalyze() {
+    if (!S.data) return;
+    const custom = S.an.issues.filter(i => i.custom);
+    const keepLayers = S.layers.filter(l => l.manual || custom.some(i => i.layerId === l.id));
+    S.an = C.analyze(S.data, { stance: S.stance, th: S.th });
+    S.an.hiddenIssues = [];
+    const auto = C.buildLayers(S.data, S.an).filter(l => !l.manual);
+    S.an.issues.push(...custom); S.an.issues.sort((a, b) => a.f0 - b.f0);
+    S.layers = [...auto, ...keepLayers];
+    S.an.score = C.scoreOf(S.an.issues);
+    clearUndo(); S._corrCache = null; S.dirty = true; S.unsaved = true; S.editTs = Date.now();
+    renderSummary(); renderIssues(); fillLayerSel();
+    flashMsg('새 기준으로 다시 분석했어요');
+  }
+  function flashMsg(t) { const el = $('issueMsg'); if (!el) return; el.textContent = t; el.style.display = 'block'; clearTimeout(flashMsg._t); flashMsg._t = setTimeout(() => el.style.display = 'none', 2500); }
+
+  // ---------- 고칠 점 수정 / 추가 / 숨기기 ----------
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const SEV_NAME = { 1: '낮음', 2: '보통', 3: '높음' };
+  const TEMPL = {
+    guard: { t: h => `${h} 가드가 내려감`, c: '주먹은 턱 높이, 팔꿈치는 옆구리를 덮도록 모아 주세요. 치는 손만 나가고 지키는 손은 그대로!' },
+    extend: { t: h => `${h} 펀치: 팔을 끝까지 안 뻗음`, c: '어깨를 같이 밀어 넣으면서 끝까지 뻗고, 맞는 순간에만 주먹을 짧게 쥐어 주세요.' },
+    chin: { t: () => '펀치할 때 턱이 들림', c: '턱을 당기고 시선은 눈썹 아래로 상대를 보세요.' },
+    custom: { t: () => '직접 고칠 점', c: '' }
+  };
+  function afterIssueChange() {
+    S.an.issues.sort((a, b) => a.f0 - b.f0);
+    S.an.score = C.scoreOf(S.an.issues);
+    S._corrCache = null; S.dirty = true; S.unsaved = true; S.editTs = Date.now();
+    renderSummary(); renderIssues(); fillLayerSel();
+  }
+  function regenLayer(is) {
+    const n = S.data.frames.length, m = S.an.m;
+    is.f0 = Math.max(0, Math.min(n - 1, is.f0)); is.f1 = Math.max(is.f0, Math.min(n - 1, is.f1));
+    if (is.type === 'extend') { let b = is.f0; for (let f = is.f0; f <= is.f1; f++) if (m.ext[is.side][f] > m.ext[is.side][b]) b = f; is.peak = b; is.ev = null; }
+    else if (is.type === 'chin') { let b = is.f0; for (let f = is.f0; f <= is.f1; f++) if (m.chinUp[f] > m.chinUp[b]) b = f; is.peak = b; is.amount = Math.max(0.06, m.chinUp[b] - m.chinBase); }
+    else is.peak = Math.round((is.f0 + is.f1) / 2);
+    const old = S.layers.find(l => l.id === is.layerId);
+    const L = C.buildLayerFor(S.data, S.an, is);
+    if (!L) return;
+    L.label = is.title;
+    if (old) { old.curves = L.curves; old.label = is.title; old.enabled = true; }
+    else { const mi = S.layers.findIndex(l => l.manual); S.layers.splice(mi < 0 ? S.layers.length : mi, 0, L); }
+  }
+  function curF() { return Math.round(S.t * S.data.fps); }
+  function issueForm(is, isNew) {
+    const n = S.data.frames.length;
+    const canRegen = ['guard', 'extend', 'chin', 'custom'].includes(is.type);
+    const handSel = (is.type === 'guard' || is.type === 'extend') ?
+      `<label>손 <select data-k="side"><option value="${S.an.lead}"${is.side === S.an.lead ? ' selected' : ''}>앞손</option><option value="${S.an.rear}"${is.side === S.an.rear ? ' selected' : ''}>뒷손</option></select></label>` : '';
+    return `<div class="iform">
+      ${isNew ? `<label>종류 <select data-k="type">
+        <option value="guard"${is.type === 'guard' ? ' selected' : ''}>가드 내려감</option>
+        <option value="extend"${is.type === 'extend' ? ' selected' : ''}>팔 덜 뻗음</option>
+        <option value="chin"${is.type === 'chin' ? ' selected' : ''}>턱 들림</option>
+        <option value="custom"${is.type === 'custom' ? ' selected' : ''}>기타 (키를 직접 작업)</option></select></label>` : ''}
+      ${handSel}
+      <label class="full">제목 <input type="text" data-k="title" value="${esc(is.title)}" maxlength="60"></label>
+      <label class="full">코치 한마디 <textarea data-k="cue" rows="3" maxlength="300">${esc(is.cue)}</textarea></label>
+      <label>중요도 <select data-k="sev">${[1, 2, 3].map(v => `<option value="${v}"${is.sev === v ? ' selected' : ''}>${SEV_NAME[v]}</option>`).join('')}</select></label>
+      <div class="full range">구간
+        <span><b data-show="f0">${fmt(is.f0)}</b> <button class="btn small" data-set="f0">${IC('stepback')}지금 위치를 시작으로</button></span>
+        <span><b data-show="f1">${fmt(is.f1)}</b> <button class="btn small" data-set="f1">${IC('stepfwd')}지금 위치를 끝으로</button></span>
+      </div>
+      ${canRegen && !isNew ? `<label class="full chk"><input type="checkbox" data-k="regen"> 구간을 바꾸면 교정 키를 새 구간에 맞춰 다시 만들기 <small class="muted">(직접 손본 키는 사라져요)</small></label>` : ''}
+      <div class="full btns" style="margin-top:4px">
+        <button class="btn small primary" data-act="save">${IC('check')}${isNew ? '추가' : '저장'}</button>
+        <button class="btn small" data-act="cancel">취소</button>
+        ${isNew ? '' : `<button class="btn small danger" data-act="hide">${IC('trash')}이건 문제 아님 (숨기기)</button>`}
+      </div>
+    </div>`;
+  }
+  function wireForm(wrap, is, isNew) {
+    const draft = { f0: is.f0, f1: is.f1 };
+    const get = k => wrap.querySelector(`[data-k="${k}"]`);
+    wrap.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
+      const k = b.dataset.set; draft[k] = curF();
+      if (draft.f0 > draft.f1) { const t = draft.f0; draft.f0 = draft.f1; draft.f1 = t; }
+      wrap.querySelector('[data-show="f0"]').textContent = fmt(draft.f0);
+      wrap.querySelector('[data-show="f1"]').textContent = fmt(draft.f1);
+      if (get('regen')) get('regen').checked = true;
+    });
+    if (isNew && get('type')) {
+      const upd = () => {
+        const tp = get('type').value, sideSel = get('side');
+        const hand = sideSel && sideSel.value === S.an.rear ? '뒷손' : '앞손';
+        get('title').value = TEMPL[tp].t(hand); get('cue').value = TEMPL[tp].c;
+      };
+      get('type').onchange = () => { is.type = get('type').value; is.side = is.side || S.an.lead; S.addDraft = Object.assign({}, is, draft, { title: '', cue: '' }); renderIssues(); };
+      if (get('side')) get('side').onchange = upd;
+    }
+    wrap.querySelector('[data-act="cancel"]').onclick = () => { S.editingIssue = null; S.addingIssue = false; renderIssues(); };
+    const hideBtn = wrap.querySelector('[data-act="hide"]');
+    if (hideBtn) hideBtn.onclick = () => {
+      S.an.issues = S.an.issues.filter(i => i !== is); S.an.hiddenIssues.push(is);
+      const L = S.layers.find(l => l.id === is.layerId); if (L) L.enabled = false;
+      S.editingIssue = null; afterIssueChange(); flashMsg('숨겼어요. 아래 "숨긴 항목"에서 되살릴 수 있어요');
+    };
+    wrap.querySelector('[data-act="save"]').onclick = () => {
+      const title = get('title').value.trim() || TEMPL[is.type] && TEMPL[is.type].t('') || is.title;
+      const rangeChanged = draft.f0 !== is.f0 || draft.f1 !== is.f1;
+      const newSide = get('side') ? get('side').value : is.side;
+      const sideChanged = newSide !== is.side;
+      Object.assign(is, { title, cue: get('cue').value.trim(), sev: +get('sev').value, f0: draft.f0, f1: draft.f1, side: newSide });
+      if (isNew) {
+        is.id = 'u' + Date.now(); is.custom = true;
+        is.detail = '관장님이 직접 추가';
+        S.an.issues.push(is);
+        pushUndo(); regenLayer(is);
+        S.addingIssue = false; S.addDraft = null;
+        afterIssueChange();
+        const L = S.layers.find(l => l.id === is.layerId);
+        if (L) { setEdit(true); S.layerId = L.id; $('layerSel').value = L.id; loopIssue(is, true); renderJointList(); }
+        flashMsg(is.type === 'custom' ? '추가했어요. 관절을 끌어서 교정 키를 만드세요' : '추가했어요. 교정 키를 자동으로 만들었어요');
+        return;
+      }
+      if (is.detail && !/수정함/.test(is.detail)) is.detail += ' · 관장님 수정함';
+      const L = S.layers.find(l => l.id === is.layerId);
+      if (L) L.label = title;
+      if ((rangeChanged || sideChanged) && get('regen') && get('regen').checked) { pushUndo(); regenLayer(is); }
+      S.editingIssue = null; afterIssueChange(); flashMsg('저장했어요');
+    };
+  }
+  $('addIssueBtn').onclick = () => {
+    if (!S.data) return;
+    const n = S.data.frames.length, f = curF(), w = Math.round(S.data.fps * 0.3);
+    const [a, b] = S.loop ? S.loop : [Math.max(0, f - w), Math.min(n - 1, f + w)];
+    S.addDraft = { type: 'guard', side: S.an.lead, f0: a, f1: b, sev: 2, title: TEMPL.guard.t('앞손'), cue: TEMPL.guard.c };
+    S.addingIssue = true; S.editingIssue = null; renderIssues();
+    $('issues').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   function renderIssues() {
     const an = S.an, box = $('issues');
+    renderCriteria();
     box.innerHTML = '';
-    if (!an.issues.length) box.innerHTML = '<div class="good">' + IC('thumb') + ' 큰 문제가 발견되지 않았어요. 가드·뻗음·회수 모두 안정적입니다.</div>';
+    if (S.addingIssue && S.addDraft) {
+      const d = S.addDraft;
+      if (!d.title) { d.title = TEMPL[d.type].t(d.side === an.rear ? '뒷손' : '앞손'); d.cue = TEMPL[d.type].c; }
+      const el = document.createElement('div'); el.className = 'issue editing';
+      el.innerHTML = `<div class="sev" style="background:var(--accent)"></div><div><h4>${IC('pencil')} 고칠 점 직접 추가</h4>${issueForm(d, true)}</div>`;
+      box.appendChild(el); wireForm(el, d, true);
+    }
+    if (!an.issues.length && !S.addingIssue) box.innerHTML += '<div class="good">' + IC('thumb') + ' 큰 문제가 발견되지 않았어요. 가드·뻗음·회수 모두 안정적입니다.</div>';
     an.issues.forEach(is => {
       const el = document.createElement('div');
-      el.className = 'issue';
+      el.className = 'issue' + (S.editingIssue === is ? ' editing' : '');
       const layer = S.layers.find(l => l.id === is.layerId);
       const whole = is.f0 === 0 && is.f1 === S.data.frames.length - 1;
+      if (S.editingIssue === is) {
+        el.innerHTML = `<div class="sev" style="background:${SEV_COLOR[is.sev]}"></div><div><h4>${IC('pencil')} 고칠 점 수정</h4>${issueForm(is, false)}</div>`;
+        box.appendChild(el); wireForm(el, is, false); return;
+      }
       el.innerHTML = `<div class="sev" style="background:${SEV_COLOR[is.sev]}"></div>
-        <div><h4>${is.title}${layer ? '' : '<span class="badge">코칭 코멘트</span>'}</h4>
-        <div class="meta">${whole ? '영상 전체' : fmt(is.f0) + ' – ' + fmt(is.f1)} · ${is.detail}</div>
-        <div class="cue">${is.cue}</div>
+        <div><h4>${esc(is.title)}${layer ? '' : '<span class="badge">코칭 코멘트</span>'}${is.custom ? '<span class="badge">직접 추가</span>' : ''}</h4>
+        <div class="meta">${whole ? '영상 전체' : fmt(is.f0) + ' – ' + fmt(is.f1)} · ${esc(is.detail || '')} · 중요도 ${SEV_NAME[is.sev]}</div>
+        ${is.cue ? `<div class="cue">${esc(is.cue)}</div>` : ''}
         <div class="row"></div></div>`;
       const row = el.querySelector('.row');
       if (!whole) {
@@ -242,18 +419,36 @@
         lab();
         t.onclick = () => { pushUndo(); layer.enabled = !layer.enabled; S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); t.classList.toggle('on', layer.enabled); lab(); S.dirty = true; };
         row.appendChild(t);
-        const k = document.createElement('button'); k.className = 'btn small'; k.innerHTML = IC('pencil') + '이 키 편집';
-        k.onclick = () => { setEdit(true); S.layerId = layer.id; $('layerSel').value = layer.id; loopIssue(is, true); };
+        const k = document.createElement('button'); k.className = 'btn small'; k.innerHTML = IC('keys') + '이 키 편집';
+        k.onclick = () => { setEdit(true); S.layerId = layer.id; $('layerSel').value = layer.id; loopIssue(is, true); renderJointList(); };
         row.appendChild(k);
       }
+      const e = document.createElement('button'); e.className = 'btn small'; e.innerHTML = IC('pencil') + '내용 수정';
+      e.onclick = () => { S.editingIssue = is; S.addingIssue = false; renderIssues(); };
+      row.appendChild(e);
       box.appendChild(el);
     });
+    // 숨긴 항목
+    const hid = an.hiddenIssues || [];
+    const hb = $('hiddenIssues');
+    if (hb) {
+      hb.innerHTML = hid.length ? `<details><summary>숨긴 항목 ${hid.length}개 (문제 아님으로 표시)</summary>${hid.map((i, k) => `<div class="hrow"><span>${esc(i.title)} <small class="muted">${fmt(i.f0)}–${fmt(i.f1)}</small></span><button class="btn small" data-unhide="${k}">${IC('undo')}되살리기</button></div>`).join('')}</details>` : '';
+      hb.querySelectorAll('[data-unhide]').forEach(b => b.onclick = () => {
+        const is = hid.splice(+b.dataset.unhide, 1)[0]; S.an.issues.push(is);
+        const L = S.layers.find(l => l.id === is.layerId); if (L) L.enabled = true;
+        afterIssueChange();
+      });
+    }
     // 잘 된 동작
     const bad = new Set();
     an.issues.forEach(i => { if (i.ev) bad.add(i.ev); });
     an.events.forEach(ev => { if (an.issues.some(i => i.type === 'guard' && i.ctx === 'other' && i.f0 <= ev.end && i.f1 >= ev.start)) bad.add(ev); });
     const goods = an.events.filter(e => !bad.has(e));
     $('goods').innerHTML = goods.length ? `<div class="good">${IC('thumb')} <b>잘 된 동작</b> — ${goods.map(e => `${e.name} (${fmt(e.peak)})`).join(', ')} : 끝까지 뻗고 반대손 가드도 유지됐어요.</div>` : '';
+  }
+  function serializeIssues() {
+    const ser = arr => (arr || []).map(i => { const o = Object.assign({}, i); o.evPeak = i.ev ? i.ev.peak : null; delete o.ev; return o; });
+    return { issues: ser(S.an.issues), hidden: ser(S.an.hiddenIssues) };
   }
 
   function loopIssue(is, noPlay) {
@@ -955,7 +1150,7 @@
   });
   syncViewUI();
 
-  window.NNN = { S, C, video, corrAt, drawSkel, drawArrows, drawBg, finish, fmt, pause, layout, show, once, markDirty: () => { S._corrCache = null; S.dirty = true; } };
+  window.NNN = { serializeIssues, S, C, video, corrAt, drawSkel, drawArrows, drawBg, finish, fmt, pause, layout, show, once, markDirty: () => { S._corrCache = null; S.dirty = true; } };
 
   // 재생/정지 중 영상 시점 맞추기
   video.addEventListener('seeked', () => { S.dirty = true; });

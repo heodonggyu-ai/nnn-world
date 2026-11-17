@@ -332,7 +332,9 @@
         n, chunks: Math.ceil(n / CH), duration: d.duration,
         punches: Object.entries(cnt).map(([k, v]) => `${k} ${v}`).join(', '),
         issues: S.an.issues.slice(0, 6).map(i => i.title),
-        layers: JSON.parse(JSON.stringify(S.layers))
+        layers: JSON.parse(JSON.stringify(S.layers)),
+        issuesFull: JSON.parse(JSON.stringify(N.serializeIssues())),
+        th: Object.assign({}, S.th)
       });
       S.sessionDate = S.sessionDate || new Date().toISOString();
       S.sessionId = sid; S.chunksSaved = true; S.unsaved = false;
@@ -405,6 +407,8 @@
       S.hasVideo = false; S.sessionId = sid; S.fromSaved = true; S.chunksSaved = true; S.sessionDate = m.date;
       S.memberName = m.name || ''; nameEl.value = S.memberName;
       if (m.layers && m.layers.length) S.pendingLayers = m.layers;
+      if (m.issuesFull) S.pendingIssues = m.issuesFull;
+      if (m.th) S.sessionTh = m.th;
       N.finish(data);
     } catch (e) {
       console.error(e); btn.disabled = false;
