@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NNN 모션 코치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f12; --panel:#15181d; --panel2:#1c2027; --line:#2a2f38; --text:#eef1f5; --muted:#8b93a1;
+  --orig:#ff5d5d; --fix:#3dff8f; --lh:#4fc3ff; --rh:#ffb347; --warn:#ffcc33; --accent:#3dff8f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Noto Sans KR',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button,select,input{font-family:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:14px 14px 60px}
+header{display:flex;align-items:center;gap:12px;padding:6px 0 14px}
+.logo{font-family:Oswald,sans-serif;font-weight:700;font-size:22px;letter-spacing:.5px;line-height:1}
+.logo b{color:var(--accent)}
+.sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+h2{font-size:19px;margin:0 0 6px}
+h3{font-size:15px;margin:0 0 10px;color:#cfd5de}
+p{margin:6px 0;line-height:1.55}
+.muted{color:var(--muted)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.flow div{background:var(--panel2);border-radius:12px;padding:10px 8px;text-align:center;font-size:12.5px;line-height:1.35}
+.flow i{display:block;font-style:normal;font-size:20px;margin-bottom:4px}
+.tips{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:13.5px}
+.tips li{background:var(--panel2);border-radius:10px;padding:8px 11px}
+.tips li::before{content:'✓ ';color:var(--accent);font-weight:700}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:11px 16px;font-size:14.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;user-select:none}
+.btn:hover{border-color:#3a414c}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#06200f;font-weight:700}
+.btn.small{padding:7px 11px;font-size:13px;border-radius:10px}
+.btn.on{background:#13351f;border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.big .btn{flex:1 1 180px;justify-content:center;padding:15px}
+input[type=file]{display:none}
+.opts{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;align-items:center;font-size:13.5px}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:7px 11px;border-radius:8px;font-size:13px;cursor:pointer}
+.seg button.on{background:#2b313b;color:var(--text);font-weight:700}
+select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:13px}
+.bar{height:12px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:14px 0 8px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#1fbf63,var(--accent));transition:width .15s}
+#procPrev{display:block;max-width:100%;max-height:300px;margin:10px auto 0;border-radius:12px;background:#000}
+.sum{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.score{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;font-family:Oswald;font-size:30px;font-weight:700;position:relative;flex:none}
+.score>div{width:68px;height:68px;border-radius:50%;background:var(--panel);display:grid;place-content:center;text-align:center;line-height:1}
+.score small{display:block;font-size:11px;font-family:'Noto Sans KR';color:var(--muted);font-weight:500;text-align:center;margin-top:-4px}
+.sumtxt{flex:1;min-width:200px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-size:12.5px}
+.stagecard{padding:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.stage{position:relative;display:flex;justify-content:center;gap:6px;touch-action:none}
+.stage canvas{display:block;border-radius:12px;background:#08090b;touch-action:none}
+.cvwrap{position:relative}
+.tag{position:absolute;top:8px;left:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.6);pointer-events:none}
+.now{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;max-width:92%;background:rgba(10,12,15,.85);border:1px solid var(--orig);color:#ffd4d4;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:99px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:8px 2px 0;flex-wrap:wrap}
+.legend span::before{content:'';display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle;background:var(--c)}
+.ctrl{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.ctrl .btn{padding:8px 12px}
+.time{font-family:Oswald;font-size:15px;min-width:110px;text-align:center;color:#cfd5de}
+#tl{width:100%;height:70px;display:block;margin-top:8px;border-radius:10px;background:var(--panel2);touch-action:none;cursor:pointer}
+.editbar{display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding:10px;border-radius:12px;background:#10241a;border:1px solid #1f5a36;font-size:13px}
+.editbar.show{display:flex}
+.editbar b{color:var(--accent)}
+#graph{width:100%;height:150px;display:block;border-radius:10px;background:var(--panel2)}
+.issues{display:grid;gap:10px}
+.issue{display:grid;grid-template-columns:5px 1fr;gap:12px;background:var(--panel2);border-radius:12px;padding:12px 12px 12px 0;overflow:hidden}
+.issue .sev{border-radius:0 4px 4px 0}
+.issue h4{margin:0;font-size:14.5px}
+.issue .meta{font-size:12px;color:var(--muted);margin:3px 0 6px}
+.issue .cue{font-size:13.5px;line-height:1.55;background:#0f1216;border-radius:9px;padding:8px 10px;margin:6px 0 8px}
+.issue .cue::before{content:'코치 한마디 · ';color:var(--accent);font-weight:700}
+.issue .row{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:11px;padding:2px 7px;border-radius:99px;background:#2b313b;color:#cfd5de;margin-left:6px;font-weight:500;vertical-align:2px}
+.good{background:#10241a;border:1px solid #1f5a36;border-radius:12px;padding:10px 12px;font-size:13.5px}
+textarea{width:100%;height:120px;background:#0b0d10;color:#b9f5cf;border:1px solid var(--line);border-radius:10px;font-family:ui-monospace,monospace;font-size:11px;padding:8px;margin-top:10px;display:none}
+.err{background:#2a1214;border:1px solid #6b2a2f;color:#ffb3b3;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-top:12px;display:none}
+.hide{display:none!important}
+.kbd{font-size:11.5px;color:var(--muted);margin-top:8px}
+
+.steps{margin:10px 0 0;padding:0;list-style:none;counter-reset:st;display:grid;gap:7px}
+.steps li{counter-increment:st;background:var(--panel2);border-radius:10px;padding:9px 11px 9px 40px;position:relative;font-size:13.5px;line-height:1.55}
+.steps li::before{content:counter(st);position:absolute;left:10px;top:9px;width:21px;height:21px;border-radius:50%;background:#2b313b;color:var(--accent);font-weight:700;font-size:12px;display:grid;place-items:center}
+.path{font-family:ui-monospace,monospace;font-size:12.5px;background:#0b0d10;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:#b9f5cf;white-space:nowrap}
+.flowbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 14px}
+.flowbar div{background:var(--panel2);border-radius:12px;padding:10px;font-size:12.5px;line-height:1.45}
+.flowbar b{display:block;font-size:13.5px;margin-bottom:3px}
+.flowbar small{color:var(--muted)}
+input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;width:160px}
+#cardImg{display:block;width:100%;max-width:440px;margin:12px auto 0;border-radius:14px;border:1px solid var(--line)}
+.prompt{background:#0b0d10;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12.5px;line-height:1.55;color:#cfe;margin-top:8px;white-space:pre-wrap}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+.warnbox{background:#2a2412;border:1px solid #6b5a22;color:#ffe6a3;border-radius:10px;padding:9px 11px;font-size:12.5px;margin-top:10px;line-height:1.5}
+.saved{display:grid;gap:8px;margin-top:10px}
+.saved button.item{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:10px 12px;cursor:pointer;font-size:13.5px}
+.saved .sc{font-family:Oswald;font-size:18px;color:var(--accent)}
+.savebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+@media (max-width:560px){.flowbar{grid-template-columns:1fr}}
+@media (max-width:560px){
+  .flow{grid-template-columns:repeat(2,1fr)}
+  .wrap{padding:10px 10px 50px}
+  .card{padding:14px;border-radius:14px}
+  .time{min-width:90px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="logo">NNN <b>MOTION</b> COACH</div>
+      <div class="sub">폰 영상 → 모션캡처 → 동작 분석 → 교정 애니메이션</div>
+    </div>
+  </header>
+
+  <!-- 1. 시작 -->
+  <section id="start" class="card">
+    <h2>영상 한 개로 자세 교정 애니메이션 만들기</h2>
+    <p class="muted">휴대폰으로 찍은 영상에서 관절 33개를 추적하고, 펀치·가드·턱·회전을 분석한 뒤 고쳐야 할 부분을 키프레임으로 수정해 보여줍니다.</p>
+    <div class="flow">
+      <div><i>📱</i>촬영 / 영상 선택</div>
+      <div><i>🦴</i>관절 모션캡처</div>
+      <div><i>🔎</i>동작 분석</div>
+      <div><i>🎞️</i>교정 키 애니메이션</div>
+    </div>
+    <ul class="tips">
+      <li>머리부터 발끝까지 전신이 화면에 다 나오게 (폰은 세워서, 2~3m 거리)</li>
+      <li>정면보다 <b>대각선 45°</b>에서 찍으면 펀치 뻗음·회전이 잘 잡혀요</li>
+      <li>3~15초 짧게: 가드 → 잽 → 스트레이트 같은 콤비 2~3번</li>
+      <li>밝은 곳, 폰은 고정(거치대). 배경에 다른 사람이 없으면 더 정확해요</li>
+    </ul>
+    <div class="opts">
+      <span>스탠스</span>
+      <div class="seg" id="stanceSeg"><button data-v="orthodox" class="on">오소독스</button><button data-v="southpaw">사우스포</button></div>
+      <span>분석 정밀도</span>
+      <select id="quality">
+        <option value="10,0">빠름 (초당 10프레임)</option>
+        <option value="15,1" selected>보통 (초당 15프레임)</option>
+        <option value="30,1">정밀 (초당 30프레임)</option>
+      </select>
+    </div>
+    <div class="btns big">
+      <label class="btn primary" for="fCam">📷 지금 촬영하기</label>
+      <label class="btn" for="fLib">🎞️ 앨범에서 영상 선택</label>
+      <button class="btn" id="demoBtn">▶ 데모로 먼저 체험</button>
+    </div>
+    <input type="file" id="fCam" accept="video/*" capture="environment">
+    <input type="file" id="fLib" accept="video/*">
+    <div class="err" id="err"></div>
+  </section>
+
+  <section id="savedSec" class="card hide">
+    <h3>📂 저장된 분석 (내 계정에만 보관)</h3>
+    <p class="muted" style="font-size:13px">폰에서 분석한 결과를 PC에서 열어 블렌더 스크립트를 받을 수 있어요.</p>
+    <div class="saved" id="savedList"><div class="muted" style="font-size:13px">불러오는 중…</div></div>
+  </section>
+
+  <!-- 2. 처리 중 -->
+  <section id="proc" class="card hide">
+    <h2>모션캡처 중…</h2>
+    <p class="muted" id="procMsg">AI 모델 불러오는 중</p>
+    <div class="bar"><i id="procBar"></i></div>
+    <canvas id="procPrev"></canvas>
+    <div class="btns"><button class="btn small" id="cancelBtn">취소</button></div>
+  </section>
+
+  <!-- 3. 스튜디오 -->
+  <section id="studio" class="hide">
+    <div class="card">
+      <div class="sum">
+        <div class="score" id="scoreRing"><div><span id="scoreNum">-</span><small>자세 점수</small></div></div>
+        <div class="sumtxt">
+          <h2 id="sumTitle">분석 결과</h2>
+          <div class="muted" id="sumSub" style="font-size:13px"></div>
+          <div class="chips" id="sumChips"></div>
+        </div>
+        <button class="btn small" id="newBtn">↺ 새 영상</button>
+      </div>
+      <div class="savebar" id="saveBar" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card stagecard">
+      <div class="toolbar">
+        <div class="seg" id="modeSeg">
+          <button data-v="overlay" class="on">겹쳐보기</button>
+          <button data-v="side">나란히</button>
+          <button data-v="orig">원본</button>
+          <button data-v="fix">교정만</button>
+        </div>
+        <button class="btn small" id="editBtn">✏️ 키 편집</button>
+      </div>
+      <div class="stage" id="stage">
+        <div class="cvwrap"><canvas id="cv1"></canvas><div class="tag" id="tag1">원본</div><div class="now" id="now1"></div></div>
+        <div class="cvwrap" id="wrap2"><canvas id="cv2"></canvas><div class="tag" style="color:var(--fix)">교정</div></div>
+      </div>
+      <div class="legend">
+        <span style="--c:var(--orig)">내 동작 (원본 모션캡처)</span>
+        <span style="--c:var(--fix)">교정된 동작 (키 애니메이션)</span>
+        <span style="--c:#fff">→ 화살표: 고쳐야 할 방향</span>
+      </div>
+      <div class="ctrl">
+        <button class="btn" id="prevF" title="이전 프레임">⏮</button>
+        <button class="btn primary" id="playBtn" style="min-width:64px;justify-content:center">▶</button>
+        <button class="btn" id="nextF" title="다음 프레임">⏭</button>
+        <div class="time" id="timeLbl">0:00.0</div>
+        <select id="rate"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option></select>
+        <button class="btn small hide" id="loopOff">🔁 구간반복 해제</button>
+      </div>
+      <canvas id="tl"></canvas>
+      <div class="editbar" id="editBar">
+        <span>편집 레이어</span><select id="layerSel"></select>
+        <span>관절: <b id="jointLbl">교정(초록) 관절을 끌어서 수정</b></span>
+        <button class="btn small" id="prevKey">◀ 이전 키</button>
+        <button class="btn small" id="nextKey">다음 키 ▶</button>
+        <button class="btn small" id="delKey">🗑 현재 프레임 키 삭제</button>
+      </div>
+      <div class="kbd" id="kbdHint">단축키: Space 재생/정지 · ←/→ 한 프레임 · 타임라인을 드래그해서 이동</div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar" style="justify-content:space-between">
+        <h3 style="margin:0">그래프</h3>
+        <select id="graphSel">
+          <option value="guard">손 높이 (턱 기준 가드)</option>
+          <option value="elbow">팔꿈치 각도 (뻗음)</option>
+          <option value="curve">보정 커브 (선택 관절)</option>
+        </select>
+      </div>
+      <canvas id="graph"></canvas>
+      <div class="legend" id="graphLegend"></div>
+    </div>
+
+    <div class="card">
+      <h3>고쳐야 할 부분</h3>
+      <div class="issues" id="issues"></div>
+      <div id="goods" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card" id="sendCard">
+      <h3>회원에게 피드백 보내기</h3>
+      <div class="flowbar">
+        <div><b>① 피드백 카드</b>바로 카톡으로 전송<br><small>폰에서 1분 · 비교 이미지 + 코치 한마디</small></div>
+        <div><b>② 블렌더 3D 비교영상</b>내 동작 vs 교정 동작<br><small>PC · 슬로모션·자막 · 키 다듬기</small></div>
+        <div><b>③ 힉스필드 AI 영상</b>회원 본인이 올바른 자세로<br><small>블렌더 레퍼런스 + 회원 사진</small></div>
+      </div>
+      <div class="opts" style="margin-top:0"><span>회원 이름</span><input type="text" id="memberName" placeholder="예: 김민수" maxlength="20"></div>
+      <div class="seg" id="sendSeg" style="margin-top:12px"><button data-v="card" class="on">📇 피드백 카드</button><button data-v="blender">🧊 블렌더 3D</button><button data-v="higgs">🎬 힉스필드 AI</button></div>
+
+      <div id="pane-card" style="margin-top:12px">
+        <div class="opts" style="margin-top:0"><span>카드에 넣을 장면</span><select id="cardIssue"></select></div>
+        <div class="btns"><button class="btn primary" id="makeCard">📇 피드백 카드 만들기</button></div>
+        <img id="cardImg" alt="회원 피드백 카드" class="hide">
+        <div class="btns hide" id="cardBtns">
+          <button class="btn small primary hide" id="shareCard">📤 공유 (카톡)</button>
+          <button class="btn small" id="saveCard">⬇️ 이미지 저장</button>
+          <button class="btn small" id="copyMsg">💬 카톡 메시지 복사</button>
+        </div>
+        <div class="note" id="cardNote"></div>
+      </div>
+
+      <div id="pane-blender" class="hide" style="margin-top:12px">
+        <div class="opts" style="margin-top:0">
+          <span>문제 구간</span><select id="blSlow"><option value="0.5" selected>슬로우 0.5x</option><option value="0.3">슬로우 0.3x</option><option value="1">슬로우 없음</option></select>
+          <span>힉스필드용 화면</span><select id="blRef"><option value="v" selected>세로 9:16</option><option value="h">가로 16:9</option></select>
+        </div>
+        <div class="btns">
+          <button class="btn primary" id="dlBlender">⬇️ 블렌더 스크립트 받기</button>
+          <button class="btn small" id="cpBlender">📋 스크립트 복사</button>
+        </div>
+        <div class="note" id="blNote"></div>
+        <div class="good" style="margin-top:10px">🤖 <b>Claude 데스크톱 앱에 블렌더를 연결했다면</b> (가장 쉬움)<br>블렌더를 켜고 <span class="path">N → MCP for Blender → Connect to Claude</span> → Claude 데스크톱 앱 새 대화에 받은 <b>NNN_블렌더_….txt</b> 파일을 올리고 <b>"이 스크립트를 블렌더에서 실행하고 두 씬 다 렌더해줘"</b> 라고 보내면 끝이에요.</div>
+        <p class="muted" style="font-size:12.5px;margin-top:12px">직접 하려면 ↓</p>
+        <ol class="steps">
+          <li>PC에서 블렌더 4.2 이상 실행 → 상단 탭 <span class="path">Scripting</span></li>
+          <li>받은 파일 열기: 텍스트 에디터 <span class="path">Text → Open…</span> → <b>NNN_블렌더_….txt</b> 선택<br><small class="muted">(복사했다면 <span class="path">Text → New</span> → Ctrl+V)</small></li>
+          <li><span class="path">Text → Run Script</span> (또는 ▶ 버튼 / Alt+P) → 씬 2개가 생겨요</li>
+          <li>화면 맨 위 씬 선택에서 <span class="path">NNN_비교영상</span> → <span class="path">Render → Render Animation</span> (Ctrl+F12)</li>
+          <li>씬을 <span class="path">NNN_힉스필드_레퍼런스</span>로 바꾸고 다시 <span class="path">Render → Render Animation</span></li>
+          <li>영상은 <b>바탕화면 › NNN_motion</b> 폴더에 mp4로 저장돼요 → 비교영상은 회원에게, 레퍼런스는 ③ 힉스필드로</li>
+        </ol>
+        <div class="note">✏️ <b>교정 키 다듬기:</b> 아웃라이너에서 <span class="path">FIX › FIX_오른손목</span> 같은 엠프티 선택 → <span class="path">Graph Editor</span>에서 위치 커브 수정. 빨강(ORIG)은 회원 원본, 초록(FIX)이 교정 동작이에요.</div>
+      </div>
+
+      <div id="pane-higgs" class="hide" style="margin-top:12px">
+        <p style="font-size:13.5px">블렌더에서 렌더한 <b>레퍼런스 영상(교정 동작)</b>에 <b>회원 전신 사진</b>을 입히면, 회원 본인이 올바른 자세로 움직이는 영상이 만들어져요. 동작은 영상에서, 얼굴·몸·옷은 사진에서 가져옵니다.</p>
+        <ol class="steps">
+          <li>회원 사진 찍기: 정면 전신, 글러브 낀 가드 자세, 밝은 곳, 얼굴이 또렷하게 <small class="muted">(사용 전 회원(미성년자는 보호자) 동의 받기)</small></li>
+          <li><b>Claude로 하기:</b> claude.ai <span class="path">설정 → 커넥터 → 사용자 지정 커넥터 추가</span> → URL <span class="path">https://mcp.higgsfield.ai/mcp</span> 연결 후, 대화창에 "Kling Motion Control 3.0으로 회원 영상 만들어줘" → 업로드 창에서 레퍼런스 영상·회원 사진 선택. <b>직접 하려면</b> 아래 3~7번 ↓</li>
+          <li><span class="path">higgsfield.ai</span> 로그인 → 상단 <span class="path">Video</span> 탭</li>
+          <li>모델 선택 → <span class="path">Kling Motion Control 3.0</span></li>
+          <li>모션 레퍼런스 영상 업로드 → <b>NNN_reference_….mp4</b></li>
+          <li>캐릭터 이미지 업로드 → 회원 전신 사진</li>
+          <li><span class="path">Output quality → 1080p</span> · <span class="path">Scene source</span>는 <b>캐릭터 이미지</b>(체육관에서 찍은 사진 배경을 살릴 때)</li>
+          <li><span class="path">Advanced Settings</span> → 아래 프롬프트 붙여넣기 · Orientation은 <b>reference video</b> → <span class="path">Generate</span></li>
+        </ol>
+        <div class="opts"><span>배경</span><select id="hgBg"><option value="gym">체육관</option><option value="ring">링 위</option><option value="photo">사진 배경 그대로</option></select>
+          <button class="btn small" id="cpPrompt">📋 프롬프트 복사</button></div>
+        <div class="prompt" id="hgPrompt"></div>
+        <div class="warnbox">⚠ AI 영상은 동기부여용이에요. 손 위치·각도가 조금 달라질 수 있으니, 정확한 자세 기준은 ② 블렌더 비교영상과 ① 카드로 설명해 주세요.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>데이터 내보내기</h3>
+      <p class="muted" style="font-size:13px">원본·교정 관절 좌표와 키프레임을 복사해서 마야/블렌더 스크립트나 엑셀로 가져갈 수 있어요.</p>
+      <div class="btns" style="margin-top:8px">
+        <button class="btn small" id="cpJson">📋 JSON 복사</button>
+        <button class="btn small" id="cpCsv">📋 CSV 복사</button>
+      </div>
+      <textarea id="outTxt" readonly></textarea>
+    </div>
+  </section>
+</div>
+
+<video id="vid" playsinline webkit-playsinline muted preload="auto" style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1"></video>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+<script src="blender.js"></script>
+<script src="send.js"></script>
+</body>
+</html>
