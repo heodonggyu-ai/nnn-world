@@ -730,7 +730,7 @@
     const arr = JSON.parse(str);
     arr.forEach(a => { const l = S.layers.find(x => x.id === a.id); if (l) { l.enabled = a.enabled; l.curves = a.curves; } });
     S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); S.dirty = true;
-    renderIssues(); updateUndoUI();
+    renderIssues(); updateUndoUI(); renderJointList();
   }
   function pushUndo() {
     if (!S.layers || !S.layers.length) return;
@@ -757,7 +757,7 @@
   function setEdit(on) {
     S.edit = on; $('editBtn').classList.toggle('on', on); $('editBar').classList.toggle('show', on);
     document.body.classList.toggle('editing', on);
-    if (on) autoPickLayer();
+    if (on) { autoPickLayer(); renderJointList(); setJointLabel(); } else { S.jointLock = null; }
     layout();
     if (on) setTimeout(() => $('stage').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     if (on) { pause(); if (S.mode === 'orig') { S.mode = 'overlay'; [...$('modeSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'overlay')); layout(); } }
@@ -772,10 +772,10 @@
     sel.innerHTML = S.layers.map(l => `<option value="${l.id}">${l.manual ? '✋ ' : ''}${l.label}</option>`).join('');
     sel.value = S.layerId;
   }
-  $('layerSel').onchange = e => { S.layerId = e.target.value; S.dirty = true; };
+  $('layerSel').onchange = e => { S.layerId = e.target.value; S.dirty = true; renderJointList(); };
 
   function editCanvas() { return S.mode === 'side' ? cv2 : cv1; }
-  let dragJ = null;
+  let dragJ = null, dragStart = null;
   [cv1, cv2].forEach(cv => {
     cv.addEventListener('pointerdown', e => {
       if (!S.data) return;
@@ -784,24 +784,77 @@
       const f = Math.round(S.t * S.data.fps); seekTo(f / S.data.fps);
       const P = corrAt(f), r = cv.getBoundingClientRect();
       const mx = e.clientX - r.left, my = e.clientY - r.top;
-      let best = null, bd = 34;
-      C.MAIN_JOINTS.forEach(j => { const d = Math.hypot(P[j][0] * panelW - mx, P[j][1] * panelH - my); if (d < bd) { bd = d; best = j; } });
+      let best = null;
+      if (S.jointLock != null) best = S.jointLock; // 목록에서 고른 관절: 화면 아무 데나 끌어도 그 관절이 움직임
+      else {
+        let bd = 34;
+        C.MAIN_JOINTS.forEach(j => { const d = Math.hypot(P[j][0] * panelW - mx, P[j][1] * panelH - my); if (d < bd) { bd = d; best = j; } });
+      }
       if (best == null) return;
       S._pendingSnap = snap();
       S.selJoint = best; dragJ = best;
-      $('jointLbl').textContent = C.JOINT_NAMES[best] + ' (드래그해서 위치 수정)';
+      dragStart = { mx, my, x: P[best][0], y: P[best][1] };
+      setJointLabel();
+      renderJointList();
       cv.setPointerCapture(e.pointerId);
       S.dirty = true;
     });
     cv.addEventListener('pointermove', e => {
       if (dragJ == null || cv !== editCanvas()) return;
       const r = cv.getBoundingClientRect();
-      const x = (e.clientX - r.left) / panelW, y = (e.clientY - r.top) / panelH;
+      // 손가락 위치만큼 상대 이동 (관절이 손가락에 가려도 정확하게)
+      const x = dragStart.x + (e.clientX - r.left - dragStart.mx) / panelW;
+      const y = dragStart.y + (e.clientY - r.top - dragStart.my) / panelH;
       if (S._pendingSnap) { undoStack.push(S._pendingSnap); if (undoStack.length > 60) undoStack.shift(); redoStack.length = 0; S._pendingSnap = null; updateUndoUI(); }
       setJoint(dragJ, Math.round(S.t * S.data.fps), x, y);
     });
-    const up = () => { if (dragJ != null) { dragJ = null; S._corrCache = null; S.dirty = true; } };
+    const up = () => { if (dragJ != null) { dragJ = null; S._corrCache = null; S.dirty = true; renderJointList(); } };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  });
+
+  // ---------- 관절 목록 ----------
+  const JOINT_GROUPS = [
+    ['머리', [0]], ['어깨', [11, 12]], ['팔꿈치', [13, 14]], ['주먹', [15, 16]],
+    ['골반', [23, 24]], ['무릎', [25, 26]], ['발목', [27, 28]]
+  ];
+  function setJointLabel() {
+    const el = $('jointLbl'); if (!el) return;
+    const t = S.selJoint == null ? '목록에서 고르거나 초록 관절을 끌어서 수정'
+      : C.JOINT_NAMES[S.selJoint] + (S.jointLock != null ? ' 선택됨 · 화면 아무 곳이나 끌거나 ↑↓←→' : ' (드래그해서 위치 수정)');
+    el.textContent = t; el.dataset.base = t;
+  }
+  function renderJointList() {
+    const box = $('jointList'); if (!box || !S.data) return;
+    const L = S.layers.find(l => l.id === S.layerId);
+    const hasKey = j => L && L.curves[j] && L.curves[j].length;
+    let h = `<button class="jchip${S.jointLock == null ? ' on' : ''}" data-j="">전체</button>`;
+    JOINT_GROUPS.forEach(([g, js]) => {
+      h += `<span class="jgrp">`;
+      js.forEach(j => {
+        const nm = js.length === 1 ? g : (j % 2 ? '왼' : '오른') + g;
+        h += `<button class="jchip${S.jointLock === j ? ' on' : ''}" data-j="${j}">${nm}${hasKey(j) ? ' <i>◆</i>' : ''}</button>`;
+      });
+      h += `</span>`;
+    });
+    box.innerHTML = h;
+  }
+  $('jointList').addEventListener('click', e => {
+    const b = e.target.closest('.jchip'); if (!b) return;
+    const j = b.dataset.j === '' ? null : +b.dataset.j;
+    S.jointLock = j; S.selJoint = j;
+    pause(); seekTo(Math.round(S.t * S.data.fps) / S.data.fps);
+    setJointLabel(); renderJointList(); S.dirty = true;
+  });
+  // 미세 조정 (한 번 누를 때마다 화면의 0.6%)
+  function nudge(dx, dy) {
+    if (S.selJoint == null) { flash('먼저 관절을 고르세요'); return; }
+    const f = Math.round(S.t * S.data.fps), P = corrAt(f), j = S.selJoint;
+    pause(); pushUndo();
+    setJoint(j, f, P[j][0] + dx / (S.data.aspect || 1) * 0.006, P[j][1] + dy * 0.006);
+    renderJointList();
+  }
+  document.querySelectorAll('[data-nudge]').forEach(b => b.onclick = () => {
+    const [dx, dy] = b.dataset.nudge.split(',').map(Number); nudge(dx, dy);
   });
   function setJoint(j, f, x, y) {
     const L = S.layers.find(l => l.id === S.layerId); if (!L) return;
@@ -838,7 +891,7 @@
   $('nextKey').onclick = () => { const f = Math.round(S.t * S.data.fps); const k = layerKeyFrames().find(x => x > f); if (k != null) { pause(); seekTo(k / S.data.fps); S.dirty = true; } };
   $('delKey').onclick = () => {
     const before = snap();
-    setTimeout(() => { if (snap() !== before) { undoStack.push(before); redoStack.length = 0; updateUndoUI(); flash('🗑 키 삭제 (↶로 되돌리기)'); } }, 0);
+    setTimeout(() => { if (snap() !== before) { undoStack.push(before); redoStack.length = 0; updateUndoUI(); renderJointList(); flash('🗑 키 삭제 (↶로 되돌리기)'); } }, 0);
     const L = S.layers.find(l => l.id === S.layerId); if (!L) return;
     const f = Math.round(S.t * S.data.fps);
     for (const j in L.curves) { if (S.selJoint != null && +j !== S.selJoint) continue; L.curves[j] = L.curves[j].filter(k => k.f !== f); }

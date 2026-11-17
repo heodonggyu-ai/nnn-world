@@ -85,6 +85,14 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 .dock{position:sticky;bottom:0;z-index:6;background:var(--panel);padding:2px 0 6px;margin:0 -2px}
 body.editing .dock{box-shadow:0 -10px 20px rgba(0,0,0,.45);border-top:1px solid #1f5a36}
 .editbar{display:none;flex-direction:column;gap:6px;margin-top:6px;padding:8px 10px;border-radius:12px;background:#10241a;border:1px solid #1f5a36;font-size:13px}
+.jlist{display:flex;flex-wrap:wrap;gap:5px}
+.jgrp{display:inline-flex;gap:3px}
+.jchip{border:1px solid #2b4a37;background:#0f1a14;color:#cfe;border-radius:9px;padding:6px 9px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.jchip.on{background:var(--accent);color:#06200f;border-color:var(--accent);font-weight:700}
+.jchip i{font-style:normal;color:#3dff8f;font-size:10px}
+.jchip.on i{color:#06200f}
+.nudge{display:inline-flex;gap:4px}
+.nudge .btn{min-width:38px;justify-content:center;padding:6px 8px}
 .editbar .erow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 body.editing #tl{height:84px;outline:1px solid #1f5a36}
 .editbar.show{display:flex}
@@ -260,7 +268,16 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           </div>
           <div class="erow">
             <span>레이어</span><select id="layerSel"></select>
-            <span>관절: <b id="jointLbl">초록 관절을 끌어서 수정</b></span>
+          </div>
+          <div class="jlist" id="jointList"></div>
+          <div class="erow">
+            <div class="nudge">
+              <button class="btn small" data-nudge="0,-1">↑</button>
+              <button class="btn small" data-nudge="-1,0">←</button>
+              <button class="btn small" data-nudge="1,0">→</button>
+              <button class="btn small" data-nudge="0,1">↓</button>
+            </div>
+            <span style="font-size:12.5px"><b id="jointLbl">목록에서 고르거나 초록 관절을 끌어서 수정</b></span>
           </div>
         </div>
       </div>
@@ -379,9 +396,9 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
 
 <video id="vid" playsinline webkit-playsinline muted preload="auto" style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1"></video>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
-<script src="core.js?v=20261117-1500"></script>
-<script src="app.js?v=20261117-1500"></script>
-<script src="blender.js?v=20261117-1500"></script>
-<script src="send.js?v=20261117-1500"></script>
+<script src="core.js?v=20261117-1520"></script>
+<script src="app.js?v=20261117-1520"></script>
+<script src="blender.js?v=20261117-1520"></script>
+<script src="send.js?v=20261117-1520"></script>
 </body>
 </html>
