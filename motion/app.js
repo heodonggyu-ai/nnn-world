@@ -376,12 +376,14 @@
     ctx.shadowBlur = 0;
     [15, 16].forEach(j => { ctx.beginPath(); ctx.arc(X(P[j]), Y(P[j]), lw * 2.6, 0, Math.PI * 2); ctx.fill(); });
     if (opts.sel != null && P[opts.sel]) {
-      ctx.globalAlpha = 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(X(P[opts.sel]), Y(P[opts.sel]), 13, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1, Math.min(2, lw * 0.6));
+      ctx.beginPath(); ctx.arc(X(P[opts.sel]), Y(P[opts.sel]), Math.max(5, lw * 3.8), 0, Math.PI * 2); ctx.stroke();
     }
     if (opts.handles) {
       ctx.globalAlpha = 0.9; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2;
-      C.MAIN_JOINTS.forEach(j => { ctx.beginPath(); ctx.arc(X(P[j]), Y(P[j]), 8, 0, Math.PI * 2); ctx.stroke(); });
+      const hr = Math.max(3, lw * 2.3); // 뼈대 굵기에 맞춰 관절 동그라미 크기 조절
+      ctx.lineWidth = Math.max(0.8, Math.min(1.5, lw * 0.4));
+      C.MAIN_JOINTS.forEach(j => { ctx.beginPath(); ctx.arc(X(P[j]), Y(P[j]), hr, 0, Math.PI * 2); ctx.stroke(); });
     }
     ctx.restore();
   }
