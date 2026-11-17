@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NNN 모션 코치</title>
+<link rel="icon" type="image/png" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="모션 코치">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -26,7 +33,17 @@ p{margin:6px 0;line-height:1.55}
 .muted{color:var(--muted)}
 .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
 .flow div{background:var(--panel2);border-radius:12px;padding:10px 8px;text-align:center;font-size:12.5px;line-height:1.35}
-.flow i{display:block;font-style:normal;font-size:20px;margin-bottom:4px}
+.flow i{display:block;font-style:normal;margin-bottom:6px;color:var(--accent)}
+.flow i .ic{width:26px;height:26px}
+.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-0.2em}
+.btn .ic{width:1.2em;height:1.2em}
+summary .ic,h3 .ic{color:var(--accent)}
+.seg button .ic{margin-right:5px}
+.chip .ic{width:1em;height:1em;color:var(--accent);margin-right:3px}
+.good .ic,.note .ic{color:var(--accent)}
+.warnbox .ic{color:#ffcc33}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-mark{width:44px;height:44px;border-radius:12px;flex:none;box-shadow:0 0 0 1px #2a2f38}
 .tips{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:13.5px}
 .tips li{background:var(--panel2);border-radius:10px;padding:8px 11px}
 .tips li::before{content:'✓ ';color:var(--accent);font-weight:700}
@@ -142,9 +159,12 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <div class="logo">NNN <b>MOTION</b> COACH</div>
-      <div class="sub">폰 영상 → 모션캡처 → 동작 분석 → 교정 애니메이션</div>
+    <div class="logo-wrap">
+      <img class="logo-mark" src="icon-192.png" alt="">
+      <div>
+        <div class="logo">NNN <b>MOTION</b> COACH</div>
+        <div class="sub">폰 영상 → 모션캡처 → 동작 분석 → 교정 애니메이션</div>
+      </div>
     </div>
   </header>
 
@@ -153,10 +173,10 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
     <h2>영상 한 개로 자세 교정 애니메이션 만들기</h2>
     <p class="muted">휴대폰으로 찍은 영상에서 관절 33개를 추적하고, 펀치·가드·턱·회전을 분석한 뒤 고쳐야 할 부분을 키프레임으로 수정해 보여줍니다.</p>
     <div class="flow">
-      <div><i>📱</i>촬영 / 영상 선택</div>
-      <div><i>🦴</i>관절 모션캡처</div>
-      <div><i>🔎</i>동작 분석</div>
-      <div><i>🎞️</i>교정 키 애니메이션</div>
+      <div><i><i data-ic="phone"></i></i>촬영 / 영상 선택</div>
+      <div><i><i data-ic="person"></i></i>관절 모션캡처</div>
+      <div><i><i data-ic="scan"></i></i>동작 분석</div>
+      <div><i><i data-ic="keys"></i></i>교정 키 애니메이션</div>
     </div>
     <ul class="tips">
       <li>머리부터 발끝까지 전신이 화면에 다 나오게 (폰은 세워서, 2~3m 거리)</li>
@@ -175,9 +195,9 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
       </select>
     </div>
     <div class="btns big">
-      <label class="btn primary" for="fCam">📷 지금 촬영하기</label>
-      <label class="btn" for="fLib">🎞️ 앨범에서 영상 선택</label>
-      <button class="btn" id="demoBtn">▶ 데모로 먼저 체험</button>
+      <label class="btn primary" for="fCam"><i data-ic="camera"></i>지금 촬영하기</label>
+      <label class="btn" for="fLib"><i data-ic="film"></i>앨범에서 영상 선택</label>
+      <button class="btn" id="demoBtn"><i data-ic="play"></i>데모로 먼저 체험</button>
     </div>
     <input type="file" id="fCam" accept="video/*" capture="environment">
     <input type="file" id="fLib" accept="video/*">
@@ -185,7 +205,7 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
   </section>
 
   <section id="savedSec" class="card hide">
-    <h3>📂 저장된 분석 (내 계정에만 보관)</h3>
+    <h3><i data-ic="folder"></i> 저장된 분석 (내 계정에만 보관)</h3>
     <p class="muted" style="font-size:13px">폰에서 분석한 결과를 PC에서 열어 블렌더 스크립트를 받을 수 있어요.</p>
     <div class="saved" id="savedList"><div class="muted" style="font-size:13px">불러오는 중…</div></div>
   </section>
@@ -209,7 +229,7 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <div class="muted" id="sumSub" style="font-size:13px"></div>
           <div class="chips" id="sumChips"></div>
         </div>
-        <button class="btn small" id="newBtn">↺ 새 영상</button>
+        <button class="btn small" id="newBtn"><i data-ic="reset"></i>새 영상</button>
       </div>
       <div class="savebar" id="saveBar" style="margin-top:10px"></div>
     </div>
@@ -222,16 +242,16 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <button data-v="orig">원본</button>
           <button data-v="fix">교정만</button>
         </div>
-        <button class="btn small" id="editBtn">✏️ 키 편집</button>
-        <button class="btn small" id="bgBtn">🎬 배경 영상 끄기</button>
+        <button class="btn small" id="editBtn"><i data-ic="pencil"></i>키 편집</button>
+        <button class="btn small" id="bgBtn"><i data-ic="videooff"></i>배경 영상 끄기</button>
       </div>
       <details class="viewopt" id="viewOpt">
-        <summary>🎛 보기 설정 <span class="muted">(배경 · 뼈대 굵기 · 진하기)</span></summary>
+        <summary><i data-ic="sliders"></i> 보기 설정 <span class="muted">(배경 · 뼈대 굵기 · 진하기)</span></summary>
         <div class="presets">
-          <button class="btn small" data-preset="diff">🔍 차이 강조</button>
-          <button class="btn small" data-preset="clean">⬛ 배경 없이 비교</button>
-          <button class="btn small" data-preset="video">🎬 영상 위주</button>
-          <button class="btn small" data-preset="reset">↺ 기본값</button>
+          <button class="btn small" data-preset="diff"><i data-ic="zoom"></i>차이 강조</button>
+          <button class="btn small" data-preset="clean"><i data-ic="square"></i>배경 없이 비교</button>
+          <button class="btn small" data-preset="video"><i data-ic="video"></i>영상 위주</button>
+          <button class="btn small" data-preset="reset"><i data-ic="reset"></i>기본값</button>
         </div>
         <div class="vgrid">
           <div class="vrow"><span>배경 영상 밝기</span><input type="range" id="vBg" min="0" max="100" step="5"><b id="vBgV"></b></div>
@@ -250,21 +270,21 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
       <div class="dock" id="dock">
         <canvas id="tl"></canvas>
         <div class="ctrl">
-        <button class="btn" id="prevF" title="이전 프레임">⏮</button>
-        <button class="btn primary" id="playBtn" style="min-width:64px;justify-content:center">▶</button>
-        <button class="btn" id="nextF" title="다음 프레임">⏭</button>
+        <button class="btn" id="prevF" title="이전 프레임"><i data-ic="stepback"></i></button>
+        <button class="btn primary" id="playBtn" style="min-width:64px;justify-content:center"><i data-ic="play"></i></button>
+        <button class="btn" id="nextF" title="다음 프레임"><i data-ic="stepfwd"></i></button>
         <div class="time" id="timeLbl">0:00.0</div>
         <select id="rate"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option></select>
-        <button class="btn small hide" id="loopOff">🔁 구간반복 해제</button>
+        <button class="btn small hide" id="loopOff"><i data-ic="repeat"></i>구간반복 해제</button>
       </div>
         <div class="editbar" id="editBar">
           <div class="erow">
-            <button class="btn small" id="prevKey" title="이전 키">◀◆</button>
-            <button class="btn small" id="nextKey" title="다음 키">◆▶</button>
-            <button class="btn small" id="undoBtn" disabled>↶ 되돌리기</button>
-            <button class="btn small" id="redoBtn" disabled>↷</button>
-            <button class="btn small" id="delKey">🗑 키 삭제</button>
-            <button class="btn small" id="editDone">✓ 편집 끝</button>
+            <button class="btn small" id="prevKey" title="이전 키"><i data-ic="keyprev"></i></button>
+            <button class="btn small" id="nextKey" title="다음 키"><i data-ic="keynext"></i></button>
+            <button class="btn small" id="undoBtn" disabled><i data-ic="undo"></i>되돌리기</button>
+            <button class="btn small" id="redoBtn" disabled title="다시하기"><i data-ic="redo"></i></button>
+            <button class="btn small" id="delKey"><i data-ic="trash"></i>키 삭제</button>
+            <button class="btn small" id="editDone"><i data-ic="check"></i>편집 끝</button>
           </div>
           <div class="erow">
             <span>레이어</span><select id="layerSel"></select>
@@ -272,10 +292,10 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <div class="jlist" id="jointList"></div>
           <div class="erow">
             <div class="nudge">
-              <button class="btn small" data-nudge="0,-1">↑</button>
-              <button class="btn small" data-nudge="-1,0">←</button>
-              <button class="btn small" data-nudge="1,0">→</button>
-              <button class="btn small" data-nudge="0,1">↓</button>
+              <button class="btn small" data-nudge="0,-1" title="위로"><i data-ic="up"></i></button>
+              <button class="btn small" data-nudge="-1,0" title="왼쪽으로"><i data-ic="left"></i></button>
+              <button class="btn small" data-nudge="1,0" title="오른쪽으로"><i data-ic="right"></i></button>
+              <button class="btn small" data-nudge="0,1" title="아래로"><i data-ic="down"></i></button>
             </div>
             <span style="font-size:12.5px"><b id="jointLbl">목록에서 고르거나 초록 관절을 끌어서 수정</b></span>
           </div>
@@ -287,14 +307,14 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
         <span style="--c:#fff">→ 화살표: 고쳐야 할 방향</span>
       </div>
       <div class="recbar">
-        <button class="btn small primary" id="recBtn">🎞 교정 영상으로 저장</button>
+        <button class="btn small primary" id="recBtn"><i data-ic="record"></i>교정 영상으로 저장</button>
         <select id="recRange"><option value="all">전체</option><option value="loop">반복 구간만</option></select>
         <select id="recRate"><option value="1">1x</option><option value="0.5" selected>0.5x 슬로우</option><option value="0.25">0.25x</option></select>
       </div>
       <div class="note" id="recMsg" style="margin-top:6px">지금 보이는 화면(겹쳐보기·나란히·교정만 + 보기 설정) 그대로 영상으로 저장돼요.</div>
       <div id="recOut" class="hide" style="margin-top:10px">
         <video id="recVideo" controls playsinline style="width:100%;max-height:60vh;border-radius:12px;background:#000"></video>
-        <div class="btns" style="margin-top:8px"><button class="btn small primary" id="recShare">📤 공유 · 사진앱 저장</button><button class="btn small" id="recSave">⬇️ 다운로드</button></div>
+        <div class="btns" style="margin-top:8px"><button class="btn small primary" id="recShare"><i data-ic="share"></i>공유 · 사진앱 저장</button><button class="btn small" id="recSave"><i data-ic="download"></i>다운로드</button></div>
       </div>
       <div class="kbd" id="kbdHint">단축키: Space 재생/정지 · ←/→ 한 프레임 · Ctrl+Z 되돌리기 · Ctrl+Shift+Z 다시하기 · 타임라인을 드래그해서 이동</div>
     </div>
@@ -326,16 +346,16 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
         <div><b>③ 힉스필드 AI 영상</b>회원 본인이 올바른 자세로<br><small>블렌더 레퍼런스 + 회원 사진</small></div>
       </div>
       <div class="opts" style="margin-top:0"><span>회원 이름</span><input type="text" id="memberName" placeholder="예: 김민수" maxlength="20"></div>
-      <div class="seg" id="sendSeg" style="margin-top:12px"><button data-v="card" class="on">📇 피드백 카드</button><button data-v="blender">🧊 블렌더 3D</button><button data-v="higgs">🎬 힉스필드 AI</button></div>
+      <div class="seg" id="sendSeg" style="margin-top:12px"><button data-v="card" class="on"><i data-ic="card"></i>피드백 카드</button><button data-v="blender"><i data-ic="cube"></i>블렌더 3D</button><button data-v="higgs"><i data-ic="sparkles"></i>힉스필드 AI</button></div>
 
       <div id="pane-card" style="margin-top:12px">
         <div class="opts" style="margin-top:0"><span>카드에 넣을 장면</span><select id="cardIssue"></select></div>
-        <div class="btns"><button class="btn primary" id="makeCard">📇 피드백 카드 만들기</button></div>
+        <div class="btns"><button class="btn primary" id="makeCard"><i data-ic="card"></i>피드백 카드 만들기</button></div>
         <img id="cardImg" alt="회원 피드백 카드" class="hide">
         <div class="btns hide" id="cardBtns">
-          <button class="btn small primary hide" id="shareCard">📤 공유 (카톡)</button>
-          <button class="btn small" id="saveCard">⬇️ 이미지 저장</button>
-          <button class="btn small" id="copyMsg">💬 카톡 메시지 복사</button>
+          <button class="btn small primary hide" id="shareCard"><i data-ic="share"></i>공유 (카톡)</button>
+          <button class="btn small" id="saveCard"><i data-ic="download"></i>이미지 저장</button>
+          <button class="btn small" id="copyMsg"><i data-ic="chat"></i>카톡 메시지 복사</button>
         </div>
         <div class="note" id="cardNote"></div>
       </div>
@@ -346,11 +366,11 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <span>힉스필드용 화면</span><select id="blRef"><option value="v" selected>세로 9:16</option><option value="h">가로 16:9</option></select>
         </div>
         <div class="btns">
-          <button class="btn primary" id="dlBlender">⬇️ 블렌더 스크립트 받기</button>
-          <button class="btn small" id="cpBlender">📋 스크립트 복사</button>
+          <button class="btn primary" id="dlBlender"><i data-ic="download"></i>블렌더 스크립트 받기</button>
+          <button class="btn small" id="cpBlender"><i data-ic="copy"></i>스크립트 복사</button>
         </div>
         <div class="note" id="blNote"></div>
-        <div class="good" style="margin-top:10px">🤖 <b>Claude 데스크톱 앱에 블렌더를 연결했다면</b> (가장 쉬움)<br>블렌더를 켜고 <span class="path">N → MCP for Blender → Connect to Claude</span> → Claude 데스크톱 앱 새 대화에 받은 <b>NNN_블렌더_….txt</b> 파일을 올리고 <b>"이 스크립트를 블렌더에서 실행하고 두 씬 다 렌더해줘"</b> 라고 보내면 끝이에요.</div>
+        <div class="good" style="margin-top:10px"><i data-ic="bot"></i> <b>Claude 데스크톱 앱에 블렌더를 연결했다면</b> (가장 쉬움)<br>블렌더를 켜고 <span class="path">N → MCP for Blender → Connect to Claude</span> → Claude 데스크톱 앱 새 대화에 받은 <b>NNN_블렌더_….txt</b> 파일을 올리고 <b>"이 스크립트를 블렌더에서 실행하고 두 씬 다 렌더해줘"</b> 라고 보내면 끝이에요.</div>
         <p class="muted" style="font-size:12.5px;margin-top:12px">직접 하려면 ↓</p>
         <ol class="steps">
           <li>PC에서 블렌더 4.2 이상 실행 → 상단 탭 <span class="path">Scripting</span></li>
@@ -360,7 +380,7 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <li>씬을 <span class="path">NNN_힉스필드_레퍼런스</span>로 바꾸고 다시 <span class="path">Render → Render Animation</span></li>
           <li>영상은 <b>바탕화면 › NNN_motion</b> 폴더에 mp4로 저장돼요 → 비교영상은 회원에게, 레퍼런스는 ③ 힉스필드로</li>
         </ol>
-        <div class="note">✏️ <b>교정 키 다듬기:</b> 아웃라이너에서 <span class="path">FIX › FIX_오른손목</span> 같은 엠프티 선택 → <span class="path">Graph Editor</span>에서 위치 커브 수정. 빨강(ORIG)은 회원 원본, 초록(FIX)이 교정 동작이에요.</div>
+        <div class="note"><i data-ic="pencil"></i> <b>교정 키 다듬기:</b> 아웃라이너에서 <span class="path">FIX › FIX_오른손목</span> 같은 엠프티 선택 → <span class="path">Graph Editor</span>에서 위치 커브 수정. 빨강(ORIG)은 회원 원본, 초록(FIX)이 교정 동작이에요.</div>
       </div>
 
       <div id="pane-higgs" class="hide" style="margin-top:12px">
@@ -376,9 +396,9 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <li><span class="path">Advanced Settings</span> → 아래 프롬프트 붙여넣기 · Orientation은 <b>reference video</b> → <span class="path">Generate</span></li>
         </ol>
         <div class="opts"><span>배경</span><select id="hgBg"><option value="gym">체육관</option><option value="ring">링 위</option><option value="photo">사진 배경 그대로</option></select>
-          <button class="btn small" id="cpPrompt">📋 프롬프트 복사</button></div>
+          <button class="btn small" id="cpPrompt"><i data-ic="copy"></i>프롬프트 복사</button></div>
         <div class="prompt" id="hgPrompt"></div>
-        <div class="warnbox">⚠ AI 영상은 동기부여용이에요. 손 위치·각도가 조금 달라질 수 있으니, 정확한 자세 기준은 ② 블렌더 비교영상과 ① 카드로 설명해 주세요.</div>
+        <div class="warnbox"><i data-ic="alert"></i> AI 영상은 동기부여용이에요. 손 위치·각도가 조금 달라질 수 있으니, 정확한 자세 기준은 ② 블렌더 비교영상과 ① 카드로 설명해 주세요.</div>
       </div>
     </div>
 
@@ -386,8 +406,8 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
       <h3>데이터 내보내기</h3>
       <p class="muted" style="font-size:13px">원본·교정 관절 좌표와 키프레임을 복사해서 마야/블렌더 스크립트나 엑셀로 가져갈 수 있어요.</p>
       <div class="btns" style="margin-top:8px">
-        <button class="btn small" id="cpJson">📋 JSON 복사</button>
-        <button class="btn small" id="cpCsv">📋 CSV 복사</button>
+        <button class="btn small" id="cpJson"><i data-ic="copy"></i>JSON 복사</button>
+        <button class="btn small" id="cpCsv"><i data-ic="copy"></i>CSV 복사</button>
       </div>
       <textarea id="outTxt" readonly></textarea>
     </div>
@@ -396,9 +416,10 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
 
 <video id="vid" playsinline webkit-playsinline muted preload="auto" style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1"></video>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
-<script src="core.js?v=20261117-1520"></script>
-<script src="app.js?v=20261117-1520"></script>
-<script src="blender.js?v=20261117-1520"></script>
-<script src="send.js?v=20261117-1520"></script>
+<script src="icons.js?v=20261117-1540"></script>
+<script src="core.js?v=20261117-1540"></script>
+<script src="app.js?v=20261117-1540"></script>
+<script src="blender.js?v=20261117-1540"></script>
+<script src="send.js?v=20261117-1540"></script>
 </body>
 </html>

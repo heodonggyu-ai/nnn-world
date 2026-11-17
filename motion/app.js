@@ -209,8 +209,8 @@
     $('sumSub').textContent = `${d.demo ? '데모 영상 · ' : ''}${d.duration.toFixed(1)}초 · ${d.frames.length}프레임 분석 · ${S.stance === 'southpaw' ? '사우스포' : '오소독스'} · 교정 키 레이어 ${fixable}개 생성`;
     const cnt = {};
     an.events.forEach(e => cnt[e.name] = (cnt[e.name] || 0) + 1);
-    const chips = Object.entries(cnt).map(([k, v]) => `<span class="chip">🥊 ${k} ${v}회</span>`);
-    chips.push(`<span class="chip">⚠️ 교정 포인트 ${an.issues.length}개</span>`);
+    const chips = Object.entries(cnt).map(([k, v]) => `<span class="chip">${IC('bolt')}${k} ${v}회</span>`);
+    chips.push(`<span class="chip">${IC('alert')}교정 포인트 ${an.issues.length}개</span>`);
     if (!an.events.length) chips.push('<span class="chip">펀치가 감지되지 않았어요 — 가드·자세만 분석</span>');
     $('sumChips').innerHTML = chips.join('');
   }
@@ -220,7 +220,7 @@
   function renderIssues() {
     const an = S.an, box = $('issues');
     box.innerHTML = '';
-    if (!an.issues.length) box.innerHTML = '<div class="good">👏 큰 문제가 발견되지 않았어요. 가드·뻗음·회수 모두 안정적입니다.</div>';
+    if (!an.issues.length) box.innerHTML = '<div class="good">' + IC('thumb') + ' 큰 문제가 발견되지 않았어요. 가드·뻗음·회수 모두 안정적입니다.</div>';
     an.issues.forEach(is => {
       const el = document.createElement('div');
       el.className = 'issue';
@@ -233,16 +233,16 @@
         <div class="row"></div></div>`;
       const row = el.querySelector('.row');
       if (!whole) {
-        const b = document.createElement('button'); b.className = 'btn small'; b.textContent = '▶ 이 구간 느리게 보기';
+        const b = document.createElement('button'); b.className = 'btn small'; b.innerHTML = IC('play') + '이 구간 느리게 보기';
         b.onclick = () => loopIssue(is); row.appendChild(b);
       }
       if (layer) {
         const t = document.createElement('button'); t.className = 'btn small' + (layer.enabled ? ' on' : '');
-        const lab = () => t.textContent = layer.enabled ? '✅ 교정 적용 중' : '⬜ 교정 끔';
+        const lab = () => t.innerHTML = layer.enabled ? IC('checkbox') + '교정 적용 중' : IC('square') + '교정 끔';
         lab();
         t.onclick = () => { pushUndo(); layer.enabled = !layer.enabled; S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); t.classList.toggle('on', layer.enabled); lab(); S.dirty = true; };
         row.appendChild(t);
-        const k = document.createElement('button'); k.className = 'btn small'; k.textContent = '✏️ 이 키 편집';
+        const k = document.createElement('button'); k.className = 'btn small'; k.innerHTML = IC('pencil') + '이 키 편집';
         k.onclick = () => { setEdit(true); S.layerId = layer.id; $('layerSel').value = layer.id; loopIssue(is, true); };
         row.appendChild(k);
       }
@@ -253,7 +253,7 @@
     an.issues.forEach(i => { if (i.ev) bad.add(i.ev); });
     an.events.forEach(ev => { if (an.issues.some(i => i.type === 'guard' && i.ctx === 'other' && i.f0 <= ev.end && i.f1 >= ev.start)) bad.add(ev); });
     const goods = an.events.filter(e => !bad.has(e));
-    $('goods').innerHTML = goods.length ? `<div class="good">👍 <b>잘 된 동작</b> — ${goods.map(e => `${e.name} (${fmt(e.peak)})`).join(', ')} : 끝까지 뻗고 반대손 가드도 유지됐어요.</div>` : '';
+    $('goods').innerHTML = goods.length ? `<div class="good">${IC('thumb')} <b>잘 된 동작</b> — ${goods.map(e => `${e.name} (${fmt(e.peak)})`).join(', ')} : 끝까지 뻗고 반대손 가드도 유지됐어요.</div>` : '';
   }
 
   function loopIssue(is, noPlay) {
@@ -291,12 +291,12 @@
   const dur = () => S.data.frames.length / S.data.fps;
   function play() {
     if (!S.data) return;
-    S.playing = true; $('playBtn').textContent = '❚❚';
+    S.playing = true; $('playBtn').innerHTML = IC('pause');
     if (S.hasVideo) { video.playbackRate = S.rate; video.currentTime = S.t; video.play().catch(() => { }); }
     lastTs = 0;
   }
   function pause() {
-    S.playing = false; $('playBtn').textContent = '▶';
+    S.playing = false; $('playBtn').innerHTML = IC('play');
     if (S.hasVideo) video.pause();
   }
   function seekTo(t) {
@@ -516,7 +516,7 @@
           const t = S.hasVideo ? video.currentTime : t0 + (performance.now() - start) / 1000 * rate;
           if (t >= t1 - 0.01 || (S.hasVideo && video.ended)) { frameAt(Math.min(t, t1 - 0.001)); res(); return; }
           frameAt(t);
-          msgEl.textContent = `🔴 녹화 중… ${Math.round((t - t0) / (t1 - t0) * 100)}% (끝날 때까지 이 화면을 켜 두세요)`;
+          msgEl.textContent = `● 녹화 중… ${Math.round((t - t0) / (t1 - t0) * 100)}% (끝날 때까지 이 화면을 켜 두세요)`;
           requestAnimationFrame(step);
         };
         requestAnimationFrame(step);
@@ -533,7 +533,7 @@
       const vEl = $('recVideo'); if (vEl.src) URL.revokeObjectURL(vEl.src);
       vEl.src = URL.createObjectURL(blob);
       $('recOut').classList.remove('hide');
-      msgEl.textContent = `✅ 완성! ${(blob.size / 1048576).toFixed(1)}MB · ${ext.toUpperCase()} · 아래에서 저장하거나 카톡으로 보내세요`;
+      msgEl.innerHTML = `${IC('check')} 완성! ${(blob.size / 1048576).toFixed(1)}MB · ${ext.toUpperCase()} · 아래에서 저장하거나 카톡으로 보내세요`;
       $('recOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (e) {
       console.error(e); msgEl.textContent = '녹화하지 못했어요: ' + (e.message || e);
@@ -544,7 +544,7 @@
   $('recShare').onclick = async () => {
     if (!S._rec) return;
     const ok = window.NNNSend && await window.NNNSend.shareFile(S._rec.filename, S._rec.blob, 'NNN BOXING 교정 영상');
-    if (!ok) $('recMsg').textContent = '이 기기에서는 공유창을 열 수 없어요. ⬇️ 다운로드를 눌러 주세요.';
+    if (!ok) $('recMsg').textContent = '이 기기에서는 공유창을 열 수 없어요. 다운로드 버튼을 눌러 주세요.';
   };
 
   let lastDrawT = -1, lastGraphT = -1;
@@ -741,7 +741,7 @@
   function redo() { if (!redoStack.length) return; undoStack.push(snap()); restore(redoStack.pop()); flash('↷ 다시 했어요'); }
   function updateUndoUI() {
     const u = $('undoBtn'), r = $('redoBtn');
-    if (u) { u.disabled = !undoStack.length; u.textContent = '↶ 되돌리기' + (undoStack.length ? ` (${undoStack.length})` : ''); }
+    if (u) { u.disabled = !undoStack.length; u.innerHTML = IC('undo') + '되돌리기' + (undoStack.length ? ` (${undoStack.length})` : ''); }
     if (r) r.disabled = !redoStack.length;
   }
   function clearUndo() { undoStack.length = 0; redoStack.length = 0; updateUndoUI(); }
@@ -769,7 +769,7 @@
   $('redoBtn').onclick = redo;
   function fillLayerSel() {
     const sel = $('layerSel');
-    sel.innerHTML = S.layers.map(l => `<option value="${l.id}">${l.manual ? '✋ ' : ''}${l.label}</option>`).join('');
+    sel.innerHTML = S.layers.map(l => `<option value="${l.id}">${l.manual ? '[직접] ' : ''}${l.label}</option>`).join('');
     sel.value = S.layerId;
   }
   $('layerSel').onchange = e => { S.layerId = e.target.value; S.dirty = true; renderJointList(); };
@@ -926,10 +926,10 @@
   }
   async function copyOut(txt, btn) {
     const ta = $('outTxt'); ta.value = txt; ta.style.display = 'block';
-    const old = btn.textContent;
-    try { await navigator.clipboard.writeText(txt); btn.textContent = '✅ 복사됨'; }
+    const old = btn.innerHTML;
+    try { await navigator.clipboard.writeText(txt); btn.innerHTML = IC('check') + '복사됨'; }
     catch (e) { ta.focus(); ta.select(); btn.textContent = '아래 칸을 길게 눌러 복사'; }
-    setTimeout(() => btn.textContent = old, 1800);
+    setTimeout(() => btn.innerHTML = old, 1800);
   }
   $('cpJson').onclick = e => copyOut(exportJson(), e.currentTarget);
   $('cpCsv').onclick = e => copyOut(exportCsv(), e.currentTarget);
@@ -939,7 +939,7 @@
   function syncViewUI() {
     for (const id in VIEW_INPUTS) { const el = $(id); if (!el) continue; el.value = V[VIEW_INPUTS[id]]; const lab = $(id + 'V'); if (lab) lab.textContent = id === 'vOW' || id === 'vFW' ? (V[VIEW_INPUTS[id]] / 100).toFixed(1) + '배' : V[VIEW_INPUTS[id]] + '%'; }
     $('vArrow').checked = V.arrows; $('vGlow').checked = V.glow;
-    $('bgBtn').textContent = V.bg > 0 ? '🎬 배경 영상 끄기' : '🎬 배경 영상 켜기';
+    $('bgBtn').innerHTML = V.bg > 0 ? IC('videooff') + '배경 영상 끄기' : IC('video') + '배경 영상 켜기';
     $('bgBtn').classList.toggle('on', V.bg > 0);
   }
   for (const id in VIEW_INPUTS) {

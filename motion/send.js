@@ -190,11 +190,11 @@
       S._card = cv;
       const img = $('cardImg'); img.src = cv.toDataURL('image/jpeg', 0.92); img.classList.remove('hide');
       $('cardBtns').classList.remove('hide');
-      $('cardNote').textContent = '📤 공유를 누르면 카카오톡으로 바로 보낼 수 있어요. (이미지를 길게 눌러 저장해도 돼요)';
+      $('cardNote').textContent = '공유 버튼을 누르면 카카오톡으로 바로 보낼 수 있어요. (이미지를 길게 눌러 저장해도 돼요)';
       N.markDirty();
     } catch (e) {
       console.error(e); $('cardNote').textContent = '카드를 만들지 못했어요: ' + e.message;
-    } finally { btn.disabled = false; btn.textContent = '📇 피드백 카드 다시 만들기'; }
+    } finally { btn.disabled = false; btn.innerHTML = IC('card') + '피드백 카드 다시 만들기'; }
   }
   $('makeCard').onclick = makeCard;
 
@@ -219,13 +219,13 @@
     return an.events.filter(e => !bad.has(e));
   }
   async function copyText(txt, btn, label) {
-    const old = btn.textContent;
-    try { await navigator.clipboard.writeText(txt); btn.textContent = '✅ ' + (label || '복사됨'); }
+    const old = btn.innerHTML;
+    try { await navigator.clipboard.writeText(txt); btn.innerHTML = IC('check') + (label || '복사됨'); }
     catch (e) {
       const ta = $('outTxt'); ta.value = txt; ta.style.display = 'block'; ta.scrollIntoView({ block: 'center' }); ta.select();
       btn.textContent = '아래 칸에서 복사하세요';
     }
-    setTimeout(() => btn.textContent = old, 2000);
+    setTimeout(() => btn.innerHTML = old, 2000);
   }
   $('copyMsg').onclick = e => copyText(kakaoText(), e.currentTarget, '메시지 복사됨');
   $('shareCard').onclick = async () => {
@@ -242,8 +242,8 @@
   };
 
   async function saveFile(filename, data, btn, noteEl) {
-    const old = btn.textContent;
-    const done = () => { btn.textContent = '✅ 저장됨'; setTimeout(() => btn.textContent = old, 2000); return true; };
+    const old = btn.innerHTML;
+    const done = () => { btn.innerHTML = IC('check') + '저장됨'; setTimeout(() => btn.innerHTML = old, 2000); return true; };
     if (!DL) {
       // 일반 웹사이트: 브라우저 다운로드
       try {
@@ -346,12 +346,12 @@
     const bar = $('saveBar'); if (!bar) return;
     if (!S.data) { bar.innerHTML = ''; return; }
     if (S.data.demo) { bar.innerHTML = '데모는 저장하지 않아요.'; return; }
-    if (!DB) { bar.innerHTML = '💡 폰에서 받은 블렌더 스크립트·카드는 카카오톡 <b>나에게 보내기</b>로 PC에 옮기면 돼요.'; return; }
+    if (!DB) { bar.innerHTML = IC('bulb') + ' 폰에서 받은 블렌더 스크립트·카드는 카카오톡 <b>나에게 보내기</b>로 PC에 옮기면 돼요.'; return; }
     if (msg) { bar.innerHTML = msg; return; }
-    if (S.sessionId && !S.unsaved) bar.innerHTML = '☁️ 내 계정에 자동 저장됨 · PC에서 같은 계정으로 이 페이지를 열면 첫 화면 <b>저장된 분석</b>에서 불러올 수 있어요.';
+    if (S.sessionId && !S.unsaved) bar.innerHTML = IC('cloud') + ' 내 계정에 자동 저장됨 · PC에서 같은 계정으로 이 페이지를 열면 첫 화면 <b>저장된 분석</b>에서 불러올 수 있어요.';
     else {
       bar.innerHTML = `<span>${S.sessionId ? '변경 사항 저장 대기 중…' : '아직 저장 안 됨.'}</span>`;
-      const b = document.createElement('button'); b.className = 'btn small'; b.textContent = '💾 저장';
+      const b = document.createElement('button'); b.className = 'btn small'; b.innerHTML = IC('save') + '저장';
       b.onclick = () => saveSession(false); bar.appendChild(b);
     }
   }

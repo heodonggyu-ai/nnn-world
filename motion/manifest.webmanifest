@@ -1,0 +1,15 @@
+{
+  "name": "NNN 모션 코치",
+  "short_name": "모션 코치",
+  "description": "폰 영상 모션캡처 → 동작 분석 → 교정 키 애니메이션",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d0f12",
+  "theme_color": "#0d0f12",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
