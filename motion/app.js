@@ -602,20 +602,28 @@
       ctx.fillText(ev.name.replace('스트레이트', '스트'), X(ev.peak), 30);
     });
     // 키프레임
-    const showLayers = S.edit ? S.layers.filter(l => l.id === S.layerId) : S.layers.filter(l => l.enabled);
-    const keys = new Set();
-    showLayers.forEach(L => { for (const j in L.curves) { if (S.edit && S.selJoint != null && +j !== S.selJoint) continue; L.curves[j].forEach(k => keys.add(k.f)); } });
+    // 모든 레이어의 키는 항상 보여주고, 편집 중인 레이어(·관절) 키는 더 크고 밝게
+    const allKeys = new Set(), selKeys = new Set();
+    S.layers.forEach(L => {
+      if (!L.enabled && L.id !== S.layerId) return;
+      for (const j in L.curves) L.curves[j].forEach(k => {
+        allKeys.add(k.f);
+        if (S.edit && L.id === S.layerId && (S.selJoint == null || +j === S.selJoint)) selKeys.add(k.f);
+      });
+    });
     if (S.edit) { // 프레임 눈금
       ctx.fillStyle = 'rgba(255,255,255,0.12)';
       const stepF = Math.max(1, Math.ceil(n / 120));
       for (let k = 0; k < n; k += stepF) ctx.fillRect(X(k) - 0.5, h - 10, 1, k % (stepF * 5) ? 4 : 8);
     }
-    const ky = S.edit ? h - 30 : 52, ks = S.edit ? 8 : 6;
-    keys.forEach(kf => {
-      const x = X(kf), y = ky;
-      ctx.fillStyle = kf === f ? '#ffffff' : (S.edit ? '#3dff8f' : '#2fbf6c');
-      ctx.beginPath(); ctx.moveTo(x, y - ks); ctx.lineTo(x + ks * 0.8, y); ctx.lineTo(x, y + ks); ctx.lineTo(x - ks * 0.8, y); ctx.closePath(); ctx.fill();
+    const ky = S.edit ? h - 30 : 52;
+    const dia = (x, y, ks) => { ctx.beginPath(); ctx.moveTo(x, y - ks); ctx.lineTo(x + ks * 0.8, y); ctx.lineTo(x, y + ks); ctx.lineTo(x - ks * 0.8, y); ctx.closePath(); ctx.fill(); };
+    allKeys.forEach(kf => {
+      if (selKeys.has(kf)) return;
+      ctx.fillStyle = kf === f ? '#ffffff' : (S.edit ? 'rgba(61,255,143,0.45)' : '#2fbf6c');
+      dia(X(kf), ky, S.edit ? 6 : 6);
     });
+    selKeys.forEach(kf => { ctx.fillStyle = kf === f ? '#ffffff' : '#3dff8f'; dia(X(kf), ky, 9); });
     // 플레이헤드
     ctx.fillStyle = '#fff'; ctx.fillRect(X(f) - 1, 2, 2, h - 4);
   }
@@ -743,6 +751,7 @@
   function setEdit(on) {
     S.edit = on; $('editBtn').classList.toggle('on', on); $('editBar').classList.toggle('show', on);
     document.body.classList.toggle('editing', on);
+    if (on) autoPickLayer();
     layout();
     if (on) setTimeout(() => $('stage').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     if (on) { pause(); if (S.mode === 'orig') { S.mode = 'overlay'; [...$('modeSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'overlay')); layout(); } }
@@ -802,10 +811,22 @@
     S._corrCache = null; S.dirty = true; S.unsaved = true; S.editTs = Date.now();
   }
   function layerKeyFrames() {
-    const L = S.layers.find(l => l.id === S.layerId); if (!L) return [];
+    const L = S.layers.find(l => l.id === S.layerId);
     const s = new Set();
-    for (const j in L.curves) { if (S.selJoint != null && +j !== S.selJoint) continue; L.curves[j].forEach(k => s.add(k.f)); }
+    if (L) for (const j in L.curves) { if (S.selJoint != null && +j !== S.selJoint) continue; L.curves[j].forEach(k => s.add(k.f)); }
+    if (!s.size) S.layers.forEach(l => { if (l.enabled) for (const j in l.curves) l.curves[j].forEach(k => s.add(k.f)); }); // 비어 있으면 전체 키
     return [...s].sort((a, b) => a - b);
+  }
+  // 키 편집을 켤 때, 지금 위치에서 키가 있는 레이어를 자동으로 고름
+  function autoPickLayer() {
+    const cur = S.layers.find(l => l.id === S.layerId);
+    if (cur && Object.keys(cur.curves).length) return;
+    const f = Math.round(S.t * S.data.fps);
+    const withKeys = S.layers.filter(l => l.enabled && Object.keys(l.curves).length);
+    if (!withKeys.length) return;
+    const span = l => { let a = 1e9, b = -1; for (const j in l.curves) l.curves[j].forEach(k => { a = Math.min(a, k.f); b = Math.max(b, k.f); }); return [a, b]; };
+    const hit = withKeys.find(l => { const [a, b] = span(l); return f >= a && f <= b; }) || withKeys[0];
+    S.layerId = hit.id; $('layerSel').value = hit.id;
   }
   $('prevKey').onclick = () => { const f = Math.round(S.t * S.data.fps); const k = layerKeyFrames().filter(x => x < f).pop(); if (k != null) { pause(); seekTo(k / S.data.fps); S.dirty = true; } };
   $('nextKey').onclick = () => { const f = Math.round(S.t * S.data.fps); const k = layerKeyFrames().find(x => x > f); if (k != null) { pause(); seekTo(k / S.data.fps); S.dirty = true; } };

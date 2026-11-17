@@ -81,7 +81,7 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 .ctrl{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
 .ctrl .btn{padding:8px 12px}
 .time{font-family:Oswald;font-size:15px;min-width:110px;text-align:center;color:#cfd5de}
-#tl{width:100%;height:70px;display:block;margin-top:8px;border-radius:10px;background:var(--panel2);touch-action:none;cursor:pointer}
+#tl{width:100%;height:70px;display:block;margin-top:6px;border-radius:10px;background:var(--panel2);touch-action:none;cursor:pointer}
 .dock{position:sticky;bottom:0;z-index:6;background:var(--panel);padding:2px 0 6px;margin:0 -2px}
 body.editing .dock{box-shadow:0 -10px 20px rgba(0,0,0,.45);border-top:1px solid #1f5a36}
 .editbar{display:none;flex-direction:column;gap:6px;margin-top:6px;padding:8px 10px;border-radius:12px;background:#10241a;border:1px solid #1f5a36;font-size:13px}
@@ -240,6 +240,7 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
         <div class="cvwrap" id="wrap2"><canvas id="cv2"></canvas><div class="tag" style="color:var(--fix)">교정</div></div>
       </div>
       <div class="dock" id="dock">
+        <canvas id="tl"></canvas>
         <div class="ctrl">
         <button class="btn" id="prevF" title="이전 프레임">⏮</button>
         <button class="btn primary" id="playBtn" style="min-width:64px;justify-content:center">▶</button>
@@ -248,7 +249,6 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
         <select id="rate"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option></select>
         <button class="btn small hide" id="loopOff">🔁 구간반복 해제</button>
       </div>
-        <canvas id="tl"></canvas>
         <div class="editbar" id="editBar">
           <div class="erow">
             <button class="btn small" id="prevKey" title="이전 키">◀◆</button>
