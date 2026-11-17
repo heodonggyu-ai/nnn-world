@@ -61,6 +61,21 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 .cvwrap{position:relative}
 .tag{position:absolute;top:8px;left:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.6);pointer-events:none}
 .now{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;max-width:92%;background:rgba(10,12,15,.85);border:1px solid var(--orig);color:#ffd4d4;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:99px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none}
+.viewopt{margin:-2px 0 10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.viewopt summary{cursor:pointer;padding:11px 0;font-size:14px;font-weight:700;list-style-position:inside}
+.viewopt summary .muted{font-weight:400;font-size:12px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.vgrid{display:grid;gap:4px}
+.vrow{display:grid;grid-template-columns:150px 1fr 52px;align-items:center;gap:10px;font-size:13px;padding:4px 0}
+.vrow b{text-align:right;font-family:Oswald;font-weight:500;color:#cfd5de}
+.vrow.r span{color:#ff8a8a}.vrow.g span{color:#7dffb3}
+.vrow input[type=range]{width:100%;accent-color:var(--accent)}
+.vchecks{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;padding:8px 0 12px}
+.vchecks input{accent-color:var(--accent);margin-right:5px}
+@media (max-width:560px){.vrow{grid-template-columns:118px 1fr 44px;gap:8px;font-size:12.5px}}
+.recbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.score>div>span{display:block;line-height:1}
+.score small{margin-top:4px!important}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:8px 2px 0;flex-wrap:wrap}
 .legend span::before{content:'';display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle;background:var(--c)}
 .ctrl{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
@@ -196,7 +211,26 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
           <button data-v="fix">교정만</button>
         </div>
         <button class="btn small" id="editBtn">✏️ 키 편집</button>
+        <button class="btn small" id="bgBtn">🎬 배경 영상 끄기</button>
       </div>
+      <details class="viewopt" id="viewOpt">
+        <summary>🎛 보기 설정 <span class="muted">(배경 · 뼈대 굵기 · 진하기)</span></summary>
+        <div class="presets">
+          <button class="btn small" data-preset="diff">🔍 차이 강조</button>
+          <button class="btn small" data-preset="clean">⬛ 배경 없이 비교</button>
+          <button class="btn small" data-preset="video">🎬 영상 위주</button>
+          <button class="btn small" data-preset="reset">↺ 기본값</button>
+        </div>
+        <div class="vgrid">
+          <div class="vrow"><span>배경 영상 밝기</span><input type="range" id="vBg" min="0" max="100" step="5"><b id="vBgV"></b></div>
+          <div class="vrow r"><span>내 동작(빨강) 굵기</span><input type="range" id="vOW" min="30" max="300" step="10"><b id="vOWV"></b></div>
+          <div class="vrow r"><span>내 동작(빨강) 진하기</span><input type="range" id="vOA" min="0" max="100" step="5"><b id="vOAV"></b></div>
+          <div class="vrow g"><span>교정(초록) 굵기</span><input type="range" id="vFW" min="30" max="300" step="10"><b id="vFWV"></b></div>
+          <div class="vrow g"><span>교정(초록) 진하기</span><input type="range" id="vFA" min="0" max="100" step="5"><b id="vFAV"></b></div>
+          <div class="vrow r"><span>교정 화면 속 원본 흔적</span><input type="range" id="vGhost" min="0" max="80" step="5"><b id="vGhostV"></b></div>
+        </div>
+        <div class="vchecks"><label><input type="checkbox" id="vArrow"> 고칠 방향 화살표</label><label><input type="checkbox" id="vGlow"> 교정 뼈대 빛 효과</label></div>
+      </details>
       <div class="stage" id="stage">
         <div class="cvwrap"><canvas id="cv1"></canvas><div class="tag" id="tag1">원본</div><div class="now" id="now1"></div></div>
         <div class="cvwrap" id="wrap2"><canvas id="cv2"></canvas><div class="tag" style="color:var(--fix)">교정</div></div>
@@ -213,6 +247,16 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
         <div class="time" id="timeLbl">0:00.0</div>
         <select id="rate"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option></select>
         <button class="btn small hide" id="loopOff">🔁 구간반복 해제</button>
+      </div>
+      <div class="recbar">
+        <button class="btn small primary" id="recBtn">🎞 교정 영상으로 저장</button>
+        <select id="recRange"><option value="all">전체</option><option value="loop">반복 구간만</option></select>
+        <select id="recRate"><option value="1">1x</option><option value="0.5" selected>0.5x 슬로우</option><option value="0.25">0.25x</option></select>
+      </div>
+      <div class="note" id="recMsg" style="margin-top:6px">지금 보이는 화면(겹쳐보기·나란히·교정만 + 보기 설정) 그대로 영상으로 저장돼요.</div>
+      <div id="recOut" class="hide" style="margin-top:10px">
+        <video id="recVideo" controls playsinline style="width:100%;max-height:60vh;border-radius:12px;background:#000"></video>
+        <div class="btns" style="margin-top:8px"><button class="btn small primary" id="recShare">📤 공유 · 사진앱 저장</button><button class="btn small" id="recSave">⬇️ 다운로드</button></div>
       </div>
       <canvas id="tl"></canvas>
       <div class="editbar" id="editBar">

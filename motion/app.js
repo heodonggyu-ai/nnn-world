@@ -13,6 +13,17 @@
     loop: null, edit: false, layerId: 'manual', selJoint: null, graph: 'guard', hasVideo: false, dirty: true, cancel: false
   };
 
+  // ---------- 보기 설정 (배경 영상·뼈대 굵기/진하기) ----------
+  const VIEW_DEFAULT = { bg: 58, oW: 100, oA: 85, fW: 100, fA: 95, arrows: true, glow: true, ghost: 22 };
+  const VIEW_PRESETS = {
+    diff: { bg: 25, oW: 70, oA: 55, fW: 170, fA: 100, arrows: true, glow: true, ghost: 30 },
+    video: { bg: 100, oW: 70, oA: 70, fW: 80, fA: 80, arrows: false, glow: false, ghost: 22 },
+    clean: { bg: 0, oW: 120, oA: 90, fW: 140, fA: 100, arrows: true, glow: true, ghost: 30 }
+  };
+  let V = Object.assign({}, VIEW_DEFAULT);
+  try { Object.assign(V, JSON.parse(localStorage.getItem('nnn_view') || '{}')); } catch (e) { }
+  function saveView() { try { localStorage.setItem('nnn_view', JSON.stringify(V)); } catch (e) { } }
+
   // ---------- 시작 화면 ----------
   segment('stanceSeg', v => S.stance = v);
   segment('modeSeg', v => { S.mode = v; layout(); });
@@ -392,9 +403,10 @@
   }
 
   function drawBg(ctx, w, h, withVideo) {
-    if (withVideo && S.hasVideo && video.readyState >= 2) {
+    if (withVideo && S.hasVideo && video.readyState >= 2 && V.bg > 0) {
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
       ctx.drawImage(video, 0, 0, w, h);
-      ctx.fillStyle = 'rgba(5,7,10,0.42)'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = `rgba(5,7,10,${(1 - V.bg / 100).toFixed(2)})`; ctx.fillRect(0, 0, w, h);
     } else {
       const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#12161c'); g.addColorStop(1, '#07080a');
       ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
@@ -404,6 +416,131 @@
       for (let y = st; y < h; y += st) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
     }
   }
+
+  // 한 화면(패널) 그리기 — 화면 표시와 영상 저장이 같이 씀
+  function paintPanel(ctx, w, h, kind, orig, corr, lw, editOpts) {
+    const oLw = lw * V.oW / 100, fLw = lw * V.fW / 100, oA = V.oA / 100, fA = V.fA / 100, gA = V.ghost / 100;
+    const fOpts = Object.assign({ glow: V.glow }, editOpts || {});
+    if (kind === 'overlay') {
+      drawBg(ctx, w, h, true);
+      if (oA > 0) drawSkel(ctx, orig, w, h, '#ff5d5d', oLw, oA);
+      if (fA > 0) drawSkel(ctx, corr, w, h, '#3dff8f', fLw, fA, fOpts);
+      if (V.arrows) drawArrows(ctx, orig, corr, w, h);
+    } else if (kind === 'orig') {
+      drawBg(ctx, w, h, true);
+      drawSkel(ctx, orig, w, h, '#ff5d5d', oLw, Math.max(oA, 0.3));
+    } else {
+      drawBg(ctx, w, h, false);
+      if (gA > 0) drawSkel(ctx, orig, w, h, '#ff5d5d', oLw * 0.7, gA);
+      drawSkel(ctx, corr, w, h, '#3dff8f', fLw, Math.max(fA, 0.3), fOpts);
+      if (V.arrows) drawArrows(ctx, orig, corr, w, h);
+    }
+  }
+
+  // ---------- 교정 영상 저장 (화면 녹화) ----------
+  function pickMime() {
+    if (!window.MediaRecorder) return null;
+    for (const m of ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'])
+      if (MediaRecorder.isTypeSupported(m)) return m;
+    return '';
+  }
+  function capPill(ctx, x, y, text, bg, fg, size) {
+    ctx.font = `700 ${size}px "Noto Sans KR", sans-serif`;
+    const tw = ctx.measureText(text).width, ph = size * 1.7, pw = tw + size * 1.3;
+    ctx.fillStyle = bg; ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - pw / 2, y, pw, ph, ph / 2); else ctx.rect(x - pw / 2, y, pw, ph);
+    ctx.fill(); ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y + ph / 2 + 1);
+  }
+  let recording = false;
+  async function recordVideo() {
+    if (!S.data || recording) return;
+    const mime = pickMime();
+    const msgEl = $('recMsg'), btn = $('recBtn');
+    if (mime === null) { msgEl.textContent = '이 브라우저는 영상 저장을 지원하지 않아요. 최신 사파리·크롬에서 해주세요.'; return; }
+    pause(); setEdit(false);
+    const n = S.data.frames.length, fps = S.data.fps, rate = +$('recRate').value;
+    const [fa, fb] = ($('recRange').value === 'loop' && S.loop) ? S.loop : [0, n - 1];
+    const t0 = fa / fps, t1 = (fb + 1) / fps;
+    const side = S.mode === 'side';
+    const asp = S.data.aspect;
+    let ph = asp < 1 ? 1280 : Math.round(1280 / asp), pw = Math.round(ph * asp);
+    if (side && pw * 2 > 1920) { const k = 1920 / (pw * 2); pw = Math.round(pw * k); ph = Math.round(ph * k); }
+    pw -= pw % 2; ph -= ph % 2;
+    const gap = side ? 12 : 0;
+    const cv = document.createElement('canvas'); cv.width = side ? pw * 2 + gap : pw; cv.height = ph;
+    const ctx = cv.getContext('2d');
+    const lw = Math.max(3, Math.max(pw, ph) / 200);
+    const U = Math.max(ph, pw); // 글자 크기 기준
+    const name = ($('memberName') && $('memberName').value.trim()) || '';
+    const frameAt = t => {
+      const { f, orig, corr } = posesAt(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
+      if (side) {
+        paintPanel(ctx, pw, ph, 'orig', orig, corr, lw, {});
+        ctx.save(); ctx.translate(pw + gap, 0); paintPanel(ctx, pw, ph, 'fix', orig, corr, lw, {}); ctx.restore();
+        capPill(ctx, pw / 2, U * 0.025, '지금 내 동작', '#ff5d5d', '#2a0606', U * 0.026);
+        capPill(ctx, pw + gap + pw / 2, U * 0.025, '이렇게 고쳐요', '#3dff8f', '#06200f', U * 0.026);
+      } else paintPanel(ctx, pw, ph, S.mode, orig, corr, lw, {});
+      const W = cv.width;
+      ctx.font = `700 ${Math.round(U * 0.024)}px Oswald, "Noto Sans KR", sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      if (!side) ctx.fillText('NNN BOXING' + (name ? '  ·  ' + name : ''), U * 0.025, U * 0.025);
+      const cur = S.an.issues.filter(i => i.layerId && f >= i.f0 && f <= i.f1 && S.layers.find(l => l.id === i.layerId).enabled);
+      if (cur.length) capPill(ctx, side ? pw + gap + pw / 2 : W / 2, ph - U * 0.085, '⚠ ' + cur[0].title, 'rgba(10,12,15,0.85)', '#ffd4d4', U * 0.024);
+      if (rate < 1) { ctx.font = `700 ${Math.round(U * 0.02)}px Oswald, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffcc33'; ctx.fillText('SLOW ' + rate + 'x', W - U * 0.025, side ? U * 0.075 : U * 0.03); }
+    };
+    recording = true; btn.disabled = true; $('recOut').classList.add('hide');
+    try {
+      await document.fonts.load('700 30px "Noto Sans KR"').catch(() => { });
+      frameAt(t0);
+      const stream = cv.captureStream(30);
+      const rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 8000000 }, mime ? { mimeType: mime } : {}));
+      const chunks = [];
+      rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      const stopped = new Promise(r => rec.onstop = r);
+      if (S.hasVideo) {
+        video.loop = false; video.playbackRate = rate;
+        const p = once(video, 'seeked', 2000); video.currentTime = t0; await p;
+      }
+      rec.start(250);
+      const start = performance.now();
+      if (S.hasVideo) { try { await video.play(); } catch (e) { } }
+      await new Promise(res => {
+        const step = () => {
+          const t = S.hasVideo ? video.currentTime : t0 + (performance.now() - start) / 1000 * rate;
+          if (t >= t1 - 0.01 || (S.hasVideo && video.ended)) { frameAt(Math.min(t, t1 - 0.001)); res(); return; }
+          frameAt(t);
+          msgEl.textContent = `🔴 녹화 중… ${Math.round((t - t0) / (t1 - t0) * 100)}% (끝날 때까지 이 화면을 켜 두세요)`;
+          requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+        setTimeout(res, ((t1 - t0) / rate + 10) * 1000);
+      });
+      if (S.hasVideo) { video.pause(); video.playbackRate = S.rate; }
+      await new Promise(r => setTimeout(r, 300));
+      rec.stop(); await stopped;
+      stream.getTracks().forEach(tr => tr.stop());
+      const type = (mime || chunks[0] && chunks[0].type || 'video/webm').split(';')[0];
+      const blob = new Blob(chunks, { type });
+      const ext = type.includes('mp4') ? 'mp4' : 'webm';
+      S._rec = { blob, filename: `NNN_교정영상_${name || '회원'}.${ext}` };
+      const vEl = $('recVideo'); if (vEl.src) URL.revokeObjectURL(vEl.src);
+      vEl.src = URL.createObjectURL(blob);
+      $('recOut').classList.remove('hide');
+      msgEl.textContent = `✅ 완성! ${(blob.size / 1048576).toFixed(1)}MB · ${ext.toUpperCase()} · 아래에서 저장하거나 카톡으로 보내세요`;
+      $('recOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {
+      console.error(e); msgEl.textContent = '녹화하지 못했어요: ' + (e.message || e);
+    } finally { recording = false; btn.disabled = false; seekTo(t0); S.dirty = true; }
+  }
+  $('recBtn').onclick = recordVideo;
+  $('recSave').onclick = e => { if (S._rec && window.NNNSend) window.NNNSend.saveFile(S._rec.filename, S._rec.blob, e.currentTarget, $('recMsg')); };
+  $('recShare').onclick = async () => {
+    if (!S._rec) return;
+    const ok = window.NNNSend && await window.NNNSend.shareFile(S._rec.filename, S._rec.blob, 'NNN BOXING 교정 영상');
+    if (!ok) $('recMsg').textContent = '이 기기에서는 공유창을 열 수 없어요. ⬇️ 다운로드를 눌러 주세요.';
+  };
 
   let lastDrawT = -1, lastGraphT = -1;
   function draw() {
@@ -415,26 +552,11 @@
     const w = panelW, h = panelH, lw = Math.max(2.2, h / 190);
     const c1 = cv1.getContext('2d'); c1.setTransform(dpr, 0, 0, dpr, 0, 0);
     const editOpts = S.edit ? { handles: true, sel: S.selJoint } : {};
-    if (S.mode === 'overlay') {
-      drawBg(c1, w, h, true);
-      drawSkel(c1, orig, w, h, '#ff5d5d', lw, 0.85);
-      drawSkel(c1, corr, w, h, '#3dff8f', lw, 0.95, Object.assign({ glow: true }, editOpts));
-      drawArrows(c1, orig, corr, w, h);
-    } else if (S.mode === 'orig') {
-      drawBg(c1, w, h, true);
-      drawSkel(c1, orig, w, h, '#ff5d5d', lw, 0.95);
-    } else if (S.mode === 'fix') {
-      drawBg(c1, w, h, false);
-      drawSkel(c1, orig, w, h, '#ff5d5d', lw * 0.7, 0.22);
-      drawSkel(c1, corr, w, h, '#3dff8f', lw, 1, Object.assign({ glow: true }, editOpts));
-    } else {
-      drawBg(c1, w, h, true);
-      drawSkel(c1, orig, w, h, '#ff5d5d', lw, 0.95);
+    if (S.mode === 'side') {
+      paintPanel(c1, w, h, 'orig', orig, corr, lw, {});
       const c2 = cv2.getContext('2d'); c2.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawBg(c2, w, h, false);
-      drawSkel(c2, orig, w, h, '#ff5d5d', lw * 0.7, 0.2);
-      drawSkel(c2, corr, w, h, '#3dff8f', lw, 1, Object.assign({ glow: true }, editOpts));
-    }
+      paintPanel(c2, w, h, 'fix', orig, corr, lw, editOpts);
+    } else paintPanel(c1, w, h, S.mode, orig, corr, lw, editOpts);
     // 현재 구간 이슈 표시
     const cur = S.an.issues.filter(i => i.layerId && f >= i.f0 && f <= i.f1 && S.layers.find(l => l.id === i.layerId).enabled);
     const now = $('now1');
@@ -669,6 +791,27 @@
   }
   $('cpJson').onclick = e => copyOut(exportJson(), e.currentTarget);
   $('cpCsv').onclick = e => copyOut(exportCsv(), e.currentTarget);
+
+  // ---------- 보기 설정 UI ----------
+  const VIEW_INPUTS = { vBg: 'bg', vOW: 'oW', vOA: 'oA', vFW: 'fW', vFA: 'fA', vGhost: 'ghost' };
+  function syncViewUI() {
+    for (const id in VIEW_INPUTS) { const el = $(id); if (!el) continue; el.value = V[VIEW_INPUTS[id]]; const lab = $(id + 'V'); if (lab) lab.textContent = id === 'vOW' || id === 'vFW' ? (V[VIEW_INPUTS[id]] / 100).toFixed(1) + '배' : V[VIEW_INPUTS[id]] + '%'; }
+    $('vArrow').checked = V.arrows; $('vGlow').checked = V.glow;
+    $('bgBtn').textContent = V.bg > 0 ? '🎬 배경 영상 끄기' : '🎬 배경 영상 켜기';
+    $('bgBtn').classList.toggle('on', V.bg > 0);
+  }
+  for (const id in VIEW_INPUTS) {
+    const el = $(id); if (!el) continue;
+    el.addEventListener('input', () => { V[VIEW_INPUTS[id]] = +el.value; if (id === 'vBg' && V.bg > 0) V.lastBg = V.bg; syncViewUI(); saveView(); S.dirty = true; });
+  }
+  $('vArrow').onchange = e => { V.arrows = e.target.checked; saveView(); S.dirty = true; };
+  $('vGlow').onchange = e => { V.glow = e.target.checked; saveView(); S.dirty = true; };
+  $('bgBtn').onclick = () => { if (V.bg > 0) { V.lastBg = V.bg; V.bg = 0; } else V.bg = V.lastBg || VIEW_DEFAULT.bg; syncViewUI(); saveView(); S.dirty = true; };
+  document.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => {
+    const p = b.dataset.preset === 'reset' ? VIEW_DEFAULT : VIEW_PRESETS[b.dataset.preset];
+    Object.assign(V, p); syncViewUI(); saveView(); S.dirty = true;
+  });
+  syncViewUI();
 
   window.NNN = { S, C, video, corrAt, drawSkel, drawArrows, drawBg, finish, fmt, pause, layout, show, once, markDirty: () => { S._corrCache = null; S.dirty = true; } };
 
