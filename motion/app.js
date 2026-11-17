@@ -49,7 +49,7 @@
     pose = new Pose({ locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/' + f });
     pose.setOptions({ modelComplexity: cx, smoothLandmarks: true, enableSegmentation: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     pose.onResults(r => { lastRes = r; });
-    try { await pose.initialize(); } catch (e) { pose = null; throw new Error('AI 관절 인식 모델을 내려받지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'); }
+    try { await pose.initialize(); } catch (e) { pose = null; throw new Error(location.hostname.includes('github.io') || location.hostname.includes('netlify') || location.hostname === 'localhost' ? 'AI 관절 인식 모델을 내려받지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.' : '이 화면(claude.ai)에서는 AI 모델을 불러올 수 없어요. 실제 영상 분석은 웹사이트 버전에서 해주세요: heodonggyu-ai.github.io/nnn-world/motion/'); }
     poseCx = cx;
     return pose;
   }
@@ -90,29 +90,75 @@
       const prev = $('procPrev'); prev.width = cv.width; prev.height = cv.height;
       const pctx = prev.getContext('2d');
       const n = Math.max(2, Math.floor(useD * fps));
-      const frames = [];
-      let found = 0;
-      for (let i = 0; i < n; i++) {
-        if (S.cancel) { show('start'); return; }
-        const t = Math.min(useD - 0.001, i / fps + 0.001);
-        await seek(t);
-        cx2.drawImage(video, 0, 0, cv.width, cv.height);
-        lastRes = null;
-        await ps.send({ image: cv });
-        const r = lastRes;
-        const fr = { t: i / fps, img: null, world: null };
+      const toFrame = (t, r) => {
+        const fr = { t, img: null, world: null };
         if (r && r.poseLandmarks && r.poseWorldLandmarks) {
           fr.img = r.poseLandmarks.map(p => [p.x, p.y, p.visibility || 0]);
           fr.world = r.poseWorldLandmarks.map(p => [p.x, p.y, p.z]);
-          found++;
         }
-        frames.push(fr);
-        pctx.drawImage(cv, 0, 0);
-        if (fr.img) drawSkel(pctx, fr.img, cv.width, cv.height, '#3dff8f', 2.5, 1);
-        bar.style.width = ((i + 1) / n * 100).toFixed(1) + '%';
-        msg.textContent = `관절 추적 중 ${i + 1} / ${n} 프레임` + (dur > MAXD ? ` (앞 ${MAXD}초만 분석)` : '');
+        return fr;
+      };
+      const isBlank = () => {
+        const d = cx2.getImageData(0, 0, cv.width, cv.height).data;
+        let s = 0, c = 0;
+        for (let i = 0; i < d.length; i += 4 * 97) { s += d[i] + d[i + 1] + d[i + 2]; c++; }
+        return s / c < 6;
+      };
+      const showPrev = fr => { pctx.drawImage(cv, 0, 0); if (fr.img) drawSkel(pctx, fr.img, cv.width, cv.height, '#3dff8f', 2.5, 1); };
+      const tail = dur > MAXD ? ` (앞 ${MAXD}초만 분석)` : '';
+      // 아이폰 사파리: 한 번 재생해야 프레임이 그려짐
+      try { await video.play(); } catch (e) { }
+      video.pause();
+      await seek(0.001);
+      cx2.drawImage(video, 0, 0, cv.width, cv.height);
+      let mode = (isBlank() || window.__forcePlay) ? 'play' : 'seek';
+      let frames = [], found = 0;
+      if (mode === 'seek') {
+        for (let i = 0; i < n; i++) {
+          if (S.cancel) { show('start'); return; }
+          const t = Math.min(useD - 0.001, i / fps + 0.001);
+          await seek(t);
+          cx2.drawImage(video, 0, 0, cv.width, cv.height);
+          lastRes = null;
+          await ps.send({ image: cv });
+          const fr = toFrame(i / fps, lastRes);
+          if (fr.img) found++;
+          frames.push(fr); showPrev(fr);
+          bar.style.width = ((i + 1) / n * 100).toFixed(1) + '%';
+          msg.textContent = `관절 추적 중 ${i + 1} / ${n} 프레임` + tail;
+          if (i === Math.min(n - 1, 9) && found === 0 && isBlank()) { mode = 'play'; break; }
+        }
+        if (mode === 'seek' && found < n * 0.3) mode = 'play';
       }
-      if (found < n * 0.3) throw new Error(`사람을 충분히 찾지 못했어요 (${found}/${n} 프레임). 전신이 다 나오게, 밝은 곳에서 다시 찍어 주세요.`);
+      if (mode === 'play') {
+        // 대체 방식(아이폰 등): 프레임마다 아주 잠깐 재생시켜 실제 화면을 받아서 읽음
+        msg.textContent = '다른 방식으로 다시 읽는 중…';
+        bar.style.width = '0%';
+        frames = []; found = 0;
+        const waitFrame = () => new Promise(r => {
+          let ok = false; const go = () => { if (!ok) { ok = true; r(); } };
+          if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(go);
+          video.addEventListener('timeupdate', go, { once: true });
+          setTimeout(go, 400);
+        });
+        for (let i = 0; i < n; i++) {
+          if (S.cancel) { video.pause(); show('start'); return; }
+          const t = Math.min(useD - 0.05, i / fps + 0.001);
+          await seek(t);
+          try { await video.play(); } catch (e) { }
+          await waitFrame();
+          video.pause();
+          cx2.drawImage(video, 0, 0, cv.width, cv.height);
+          lastRes = null;
+          await ps.send({ image: cv });
+          const fr = toFrame(i / fps, lastRes);
+          if (fr.img) found++;
+          frames.push(fr); showPrev(fr);
+          bar.style.width = ((i + 1) / n * 100).toFixed(1) + '%';
+          msg.textContent = `관절 추적 중 ${i + 1} / ${n} 프레임` + tail;
+        }
+      }
+      if (found < n * 0.3) throw new Error(`사람을 충분히 찾지 못했어요 (${found}/${n} 프레임, 영상 ${useD.toFixed(1)}초). 전신이 다 나오게, 밝은 곳에서 다시 찍어 주세요.`);
       const data = { fps, frames, aspect: W / H, width: W, height: H, duration: n / fps, found };
       C.fillAndSmooth(data.frames);
       S.hasVideo = true;
