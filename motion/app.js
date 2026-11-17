@@ -273,7 +273,7 @@
     const stage = $('stage');
     const W = stage.clientWidth, side = S.mode === 'side';
     const asp = S.data.aspect;
-    const maxH = Math.max(260, window.innerHeight * 0.62);
+    const maxH = Math.max(220, window.innerHeight * (S.edit ? 0.46 : 0.62));
     let w = side ? (W - 6) / 2 : W, h = w / asp;
     if (h > maxH) { h = maxH; w = h * asp; }
     panelW = Math.floor(w); panelH = Math.floor(h);
@@ -569,11 +569,17 @@
   }
 
   // ---------- 타임라인 ----------
+  // 키 편집 중 구간반복이 켜져 있으면 그 구간을 확대해서 보여줌
+  function tlRange() {
+    const n = S.data.frames.length;
+    if (S.edit && S.loop) return [S.loop[0], S.loop[1]];
+    return [0, n - 1];
+  }
   function drawTimeline(f) {
     const ctx = tl.getContext('2d'), w = tl.clientWidth, h = tl.clientHeight, n = S.data.frames.length;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    const X = fr => 8 + (w - 16) * fr / (n - 1);
+    const [za, zb] = tlRange(), X = fr => 8 + (w - 16) * (fr - za) / Math.max(1, zb - za);
     if (S.loop) { ctx.fillStyle = 'rgba(61,255,143,0.08)'; ctx.fillRect(X(S.loop[0]), 0, X(S.loop[1]) - X(S.loop[0]), h); }
     // 이슈 밴드
     const rows = {};
@@ -596,10 +602,16 @@
     const showLayers = S.edit ? S.layers.filter(l => l.id === S.layerId) : S.layers.filter(l => l.enabled);
     const keys = new Set();
     showLayers.forEach(L => { for (const j in L.curves) { if (S.edit && S.selJoint != null && +j !== S.selJoint) continue; L.curves[j].forEach(k => keys.add(k.f)); } });
+    if (S.edit) { // 프레임 눈금
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      const stepF = Math.max(1, Math.ceil(n / 120));
+      for (let k = 0; k < n; k += stepF) ctx.fillRect(X(k) - 0.5, h - 10, 1, k % (stepF * 5) ? 4 : 8);
+    }
+    const ky = S.edit ? h - 30 : 52, ks = S.edit ? 8 : 6;
     keys.forEach(kf => {
-      const x = X(kf), y = 52;
+      const x = X(kf), y = ky;
       ctx.fillStyle = kf === f ? '#ffffff' : (S.edit ? '#3dff8f' : '#2fbf6c');
-      ctx.beginPath(); ctx.moveTo(x, y - 6); ctx.lineTo(x + 5, y); ctx.lineTo(x, y + 6); ctx.lineTo(x - 5, y); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x, y - ks); ctx.lineTo(x + ks * 0.8, y); ctx.lineTo(x, y + ks); ctx.lineTo(x - ks * 0.8, y); ctx.closePath(); ctx.fill();
     });
     // 플레이헤드
     ctx.fillStyle = '#fff'; ctx.fillRect(X(f) - 1, 2, 2, h - 4);
@@ -608,7 +620,14 @@
     let drag = false;
     const go = e => {
       const r = tl.getBoundingClientRect(), n = S.data.frames.length;
-      const fr = Math.round((e.clientX - r.left - 8) / (r.width - 16) * (n - 1));
+      const [za, zb] = tlRange();
+      let fr = Math.round(za + (e.clientX - r.left - 8) / (r.width - 16) * (zb - za));
+      if (S.edit) { // 키프레임 근처면 자석처럼 붙기
+        const px = f => 8 + (r.width - 16) * (f - za) / Math.max(1, zb - za);
+        let best = null, bd = 14;
+        layerKeyFrames().forEach(k => { const d = Math.abs(px(k) - (e.clientX - r.left)); if (d < bd) { bd = d; best = k; } });
+        if (best != null) fr = best;
+      }
       seekTo(Math.max(0, Math.min(n - 1, fr)) / S.data.fps); S.dirty = true;
     };
     tl.addEventListener('pointerdown', e => { if (!S.data) return; drag = true; pause(); tl.setPointerCapture(e.pointerId); go(e); });
@@ -690,10 +709,14 @@
   // ---------- 키 편집 ----------
   function setEdit(on) {
     S.edit = on; $('editBtn').classList.toggle('on', on); $('editBar').classList.toggle('show', on);
+    document.body.classList.toggle('editing', on);
+    layout();
+    if (on) setTimeout(() => $('stage').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     if (on) { pause(); if (S.mode === 'orig') { S.mode = 'overlay'; [...$('modeSeg').children].forEach(b => b.classList.toggle('on', b.dataset.v === 'overlay')); layout(); } }
     S.dirty = true;
   }
   $('editBtn').onclick = () => setEdit(!S.edit);
+  $('editDone').onclick = () => setEdit(false);
   function fillLayerSel() {
     const sel = $('layerSel');
     sel.innerHTML = S.layers.map(l => `<option value="${l.id}">${l.manual ? '✋ ' : ''}${l.label}</option>`).join('');

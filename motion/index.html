@@ -82,7 +82,11 @@ select{background:var(--panel2);color:var(--text);border:1px solid var(--line);b
 .ctrl .btn{padding:8px 12px}
 .time{font-family:Oswald;font-size:15px;min-width:110px;text-align:center;color:#cfd5de}
 #tl{width:100%;height:70px;display:block;margin-top:8px;border-radius:10px;background:var(--panel2);touch-action:none;cursor:pointer}
-.editbar{display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding:10px;border-radius:12px;background:#10241a;border:1px solid #1f5a36;font-size:13px}
+.dock{position:sticky;bottom:0;z-index:6;background:var(--panel);padding:2px 0 6px;margin:0 -2px}
+body.editing .dock{box-shadow:0 -10px 20px rgba(0,0,0,.45);border-top:1px solid #1f5a36}
+.editbar{display:none;flex-direction:column;gap:6px;margin-top:6px;padding:8px 10px;border-radius:12px;background:#10241a;border:1px solid #1f5a36;font-size:13px}
+.editbar .erow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+body.editing #tl{height:84px;outline:1px solid #1f5a36}
 .editbar.show{display:flex}
 .editbar b{color:var(--accent)}
 #graph{width:100%;height:150px;display:block;border-radius:10px;background:var(--panel2)}
@@ -235,18 +239,33 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
         <div class="cvwrap"><canvas id="cv1"></canvas><div class="tag" id="tag1">원본</div><div class="now" id="now1"></div></div>
         <div class="cvwrap" id="wrap2"><canvas id="cv2"></canvas><div class="tag" style="color:var(--fix)">교정</div></div>
       </div>
-      <div class="legend">
-        <span style="--c:var(--orig)">내 동작 (원본 모션캡처)</span>
-        <span style="--c:var(--fix)">교정된 동작 (키 애니메이션)</span>
-        <span style="--c:#fff">→ 화살표: 고쳐야 할 방향</span>
-      </div>
-      <div class="ctrl">
+      <div class="dock" id="dock">
+        <div class="ctrl">
         <button class="btn" id="prevF" title="이전 프레임">⏮</button>
         <button class="btn primary" id="playBtn" style="min-width:64px;justify-content:center">▶</button>
         <button class="btn" id="nextF" title="다음 프레임">⏭</button>
         <div class="time" id="timeLbl">0:00.0</div>
         <select id="rate"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="1" selected>1x</option></select>
         <button class="btn small hide" id="loopOff">🔁 구간반복 해제</button>
+      </div>
+        <canvas id="tl"></canvas>
+        <div class="editbar" id="editBar">
+          <div class="erow">
+            <button class="btn small" id="prevKey" title="이전 키">◀◆</button>
+            <button class="btn small" id="nextKey" title="다음 키">◆▶</button>
+            <button class="btn small" id="delKey">🗑 키 삭제</button>
+            <button class="btn small" id="editDone">✓ 편집 끝</button>
+          </div>
+          <div class="erow">
+            <span>레이어</span><select id="layerSel"></select>
+            <span>관절: <b id="jointLbl">초록 관절을 끌어서 수정</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <span style="--c:var(--orig)">내 동작 (원본 모션캡처)</span>
+        <span style="--c:var(--fix)">교정된 동작 (키 애니메이션)</span>
+        <span style="--c:#fff">→ 화살표: 고쳐야 할 방향</span>
       </div>
       <div class="recbar">
         <button class="btn small primary" id="recBtn">🎞 교정 영상으로 저장</button>
@@ -257,14 +276,6 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
       <div id="recOut" class="hide" style="margin-top:10px">
         <video id="recVideo" controls playsinline style="width:100%;max-height:60vh;border-radius:12px;background:#000"></video>
         <div class="btns" style="margin-top:8px"><button class="btn small primary" id="recShare">📤 공유 · 사진앱 저장</button><button class="btn small" id="recSave">⬇️ 다운로드</button></div>
-      </div>
-      <canvas id="tl"></canvas>
-      <div class="editbar" id="editBar">
-        <span>편집 레이어</span><select id="layerSel"></select>
-        <span>관절: <b id="jointLbl">교정(초록) 관절을 끌어서 수정</b></span>
-        <button class="btn small" id="prevKey">◀ 이전 키</button>
-        <button class="btn small" id="nextKey">다음 키 ▶</button>
-        <button class="btn small" id="delKey">🗑 현재 프레임 키 삭제</button>
       </div>
       <div class="kbd" id="kbdHint">단축키: Space 재생/정지 · ←/→ 한 프레임 · 타임라인을 드래그해서 이동</div>
     </div>
