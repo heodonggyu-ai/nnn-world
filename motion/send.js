@@ -412,5 +412,5 @@
     }
   }
 
-  window.NNNSend = { onFinish, kakaoText, blenderScript, saveSession, refresh: renderSaved };
+  window.NNNSend = { onFinish, kakaoText, blenderScript, saveSession, refresh: renderSaved, saveFile, shareFile };
 })();
