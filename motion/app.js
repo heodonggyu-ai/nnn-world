@@ -565,7 +565,11 @@
     const now = $('now1');
     if (cur.length && S.mode !== 'orig') { now.style.display = 'block'; now.textContent = '⚠ ' + cur.map(i => i.title).join(' · '); }
     else now.style.display = 'none';
-    $('timeLbl').textContent = `${fmt(f)} · ${f + 1}/${S.data.frames.length}`;
+    // 지금 프레임에 키가 있으면 표시
+    const isKey = S.layers.some(L => (L.enabled || L.id === S.layerId) && Object.values(L.curves).some(c => c.some(k => k.f === f)));
+    $('timeLbl').innerHTML = `${fmt(f)} · ${f + 1}/${S.data.frames.length}` + (isKey ? ' <span style="color:#3dff8f">◆</span>' : '');
+    const baseTag = { overlay: '원본 + 교정', side: '원본', orig: '원본', fix: '교정' }[S.mode];
+    $('tag1').textContent = isKey && S.mode !== 'side' ? baseTag + ' · ◆ 키' : baseTag;
     drawTimeline(f);
     if (S.dirty || Math.abs(lastGraphT - S.t) > 0.03) { drawGraph(f); lastGraphT = S.t; }
     S.dirty = false;
