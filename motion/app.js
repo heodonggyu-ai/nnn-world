@@ -188,6 +188,7 @@
     S.an = C.analyze(data, { stance: S.stance });
     S.layers = C.buildLayers(data, S.an);
     if (S.pendingLayers) { S.layers = S.pendingLayers; S.pendingLayers = null; }
+    clearUndo();
     S._corrCache = null; S.t = 0; S.loop = null; S.layerId = 'manual'; S.selJoint = null; S.dirty = true;
     $('loopOff').classList.add('hide');
     show('studio');
@@ -239,7 +240,7 @@
         const t = document.createElement('button'); t.className = 'btn small' + (layer.enabled ? ' on' : '');
         const lab = () => t.textContent = layer.enabled ? '✅ 교정 적용 중' : '⬜ 교정 끔';
         lab();
-        t.onclick = () => { layer.enabled = !layer.enabled; S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); t.classList.toggle('on', layer.enabled); lab(); S.dirty = true; };
+        t.onclick = () => { pushUndo(); layer.enabled = !layer.enabled; S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); t.classList.toggle('on', layer.enabled); lab(); S.dirty = true; };
         row.appendChild(t);
         const k = document.createElement('button'); k.className = 'btn small'; k.textContent = '✏️ 이 키 편집';
         k.onclick = () => { setEdit(true); S.layerId = layer.id; $('layerSel').value = layer.id; loopIssue(is, true); };
@@ -313,6 +314,8 @@
     if (e.code === 'Space') { e.preventDefault(); S.playing ? pause() : play(); }
     if (e.code === 'ArrowLeft') { e.preventDefault(); stepFrame(-1); }
     if (e.code === 'ArrowRight') { e.preventDefault(); stepFrame(1); }
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') { e.preventDefault(); redo(); }
   });
 
   let lastTs = 0;
@@ -706,6 +709,36 @@
     return C.SIDES[is.side].wr;
   }
 
+  // ---------- 되돌리기 / 다시하기 ----------
+  const undoStack = [], redoStack = [];
+  const snap = () => JSON.stringify(S.layers.map(l => ({ id: l.id, enabled: l.enabled, curves: l.curves })));
+  function restore(str) {
+    const arr = JSON.parse(str);
+    arr.forEach(a => { const l = S.layers.find(x => x.id === a.id); if (l) { l.enabled = a.enabled; l.curves = a.curves; } });
+    S._corrCache = null; S.unsaved = true; S.editTs = Date.now(); S.dirty = true;
+    renderIssues(); updateUndoUI();
+  }
+  function pushUndo() {
+    if (!S.layers || !S.layers.length) return;
+    undoStack.push(snap()); if (undoStack.length > 60) undoStack.shift();
+    redoStack.length = 0; updateUndoUI();
+  }
+  function undo() { if (!undoStack.length) return; redoStack.push(snap()); restore(undoStack.pop()); flash('↶ 되돌렸어요'); }
+  function redo() { if (!redoStack.length) return; undoStack.push(snap()); restore(redoStack.pop()); flash('↷ 다시 했어요'); }
+  function updateUndoUI() {
+    const u = $('undoBtn'), r = $('redoBtn');
+    if (u) { u.disabled = !undoStack.length; u.textContent = '↶ 되돌리기' + (undoStack.length ? ` (${undoStack.length})` : ''); }
+    if (r) r.disabled = !redoStack.length;
+  }
+  function clearUndo() { undoStack.length = 0; redoStack.length = 0; updateUndoUI(); }
+  let flashTimer = null;
+  function flash(msg) {
+    const el = $('jointLbl'); if (!el) return;
+    const old = el.dataset.base || el.textContent; el.dataset.base = old;
+    el.textContent = msg; clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => { el.textContent = el.dataset.base; }, 1200);
+  }
+
   // ---------- 키 편집 ----------
   function setEdit(on) {
     S.edit = on; $('editBtn').classList.toggle('on', on); $('editBar').classList.toggle('show', on);
@@ -717,6 +750,8 @@
   }
   $('editBtn').onclick = () => setEdit(!S.edit);
   $('editDone').onclick = () => setEdit(false);
+  $('undoBtn').onclick = undo;
+  $('redoBtn').onclick = redo;
   function fillLayerSel() {
     const sel = $('layerSel');
     sel.innerHTML = S.layers.map(l => `<option value="${l.id}">${l.manual ? '✋ ' : ''}${l.label}</option>`).join('');
@@ -737,6 +772,7 @@
       let best = null, bd = 34;
       C.MAIN_JOINTS.forEach(j => { const d = Math.hypot(P[j][0] * panelW - mx, P[j][1] * panelH - my); if (d < bd) { bd = d; best = j; } });
       if (best == null) return;
+      S._pendingSnap = snap();
       S.selJoint = best; dragJ = best;
       $('jointLbl').textContent = C.JOINT_NAMES[best] + ' (드래그해서 위치 수정)';
       cv.setPointerCapture(e.pointerId);
@@ -746,6 +782,7 @@
       if (dragJ == null || cv !== editCanvas()) return;
       const r = cv.getBoundingClientRect();
       const x = (e.clientX - r.left) / panelW, y = (e.clientY - r.top) / panelH;
+      if (S._pendingSnap) { undoStack.push(S._pendingSnap); if (undoStack.length > 60) undoStack.shift(); redoStack.length = 0; S._pendingSnap = null; updateUndoUI(); }
       setJoint(dragJ, Math.round(S.t * S.data.fps), x, y);
     });
     const up = () => { if (dragJ != null) { dragJ = null; S._corrCache = null; S.dirty = true; } };
@@ -773,6 +810,8 @@
   $('prevKey').onclick = () => { const f = Math.round(S.t * S.data.fps); const k = layerKeyFrames().filter(x => x < f).pop(); if (k != null) { pause(); seekTo(k / S.data.fps); S.dirty = true; } };
   $('nextKey').onclick = () => { const f = Math.round(S.t * S.data.fps); const k = layerKeyFrames().find(x => x > f); if (k != null) { pause(); seekTo(k / S.data.fps); S.dirty = true; } };
   $('delKey').onclick = () => {
+    const before = snap();
+    setTimeout(() => { if (snap() !== before) { undoStack.push(before); redoStack.length = 0; updateUndoUI(); flash('🗑 키 삭제 (↶로 되돌리기)'); } }, 0);
     const L = S.layers.find(l => l.id === S.layerId); if (!L) return;
     const f = Math.round(S.t * S.data.fps);
     for (const j in L.curves) { if (S.selJoint != null && +j !== S.selJoint) continue; L.curves[j] = L.curves[j].filter(k => k.f !== f); }
