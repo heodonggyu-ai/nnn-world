@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>탕정 엔엔엔복싱 결제 안내</title>
+<meta property="og:title" content="탕정 엔엔엔복싱 결제 안내"><meta property="og:description" content="계좌이체 · 아산페이 · 온누리상품권 QR">
+<style>
+:root{--ink:#111;--mut:#555;--line:#E3E3E3;--red:#E8262B}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#F4F4F2;color:var(--ink);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:24px;margin:6px 0 0}.sub{color:var(--mut);font-size:14px;margin:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.card h2{font-size:18px;margin:0}.acct{font-size:22px;font-weight:800;letter-spacing:.5px;word-break:break-all}
+.qr{width:100%;max-width:300px;align-self:center;border-radius:12px;background:#fff;border:1px solid var(--line)}
+.btn{appearance:none;border:0;border-radius:12px;background:var(--ink);color:#fff;font-size:16px;font-weight:700;padding:13px 16px;min-height:48px;cursor:pointer;text-align:center;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--ink)}
+.small{font-size:13px;color:var(--mut);line-height:1.5}.center{text-align:center}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s}
+#toast.on{opacity:1}
+</style></head><body><main>
+<div><h1>💳 탕정 엔엔엔복싱 결제 안내</h1><p class="sub">아래 방법 중 편한 걸로 결제해 주세요.</p></div>
+<section class="card" id="bank" hidden><h2>계좌이체</h2><div class="acct" id="acct"></div><div class="small" id="holder"></div><button class="btn" id="copy" type="button">계좌번호 복사</button></section>
+<section class="card"><h2>아산페이</h2><img class="qr" id="asan" src="asan.png" alt="아산페이 결제 QR 코드"><a class="btn ghost" id="asanDl" href="asan.png" download="NNN복싱_아산페이QR.png">QR 이미지 저장</a><div class="small center">아산페이 앱 → QR 결제로 찍어 주세요.</div></section>
+<section class="card" id="onCard" hidden><h2>온누리상품권</h2><img class="qr" id="onnuri" alt="온누리상품권 결제 QR 코드"><a class="btn ghost" id="onDl" download="NNN복싱_온누리QR.png">QR 이미지 저장</a><div class="small center" id="onNote">모바일 온누리 앱 → QR 결제로 찍어 주세요.</div></section>
+<p class="small center">결제하신 뒤 안내받은 번호로 알려 주시면 바로 확인해 드릴게요.<br>문의 010-9226-6321</p>
+</main><div id="toast" role="status"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)};
+function show(P){if(!P)return;
+  if(P.acct){$('#bank').hidden=false;$('#acct').textContent=((P.bank||'')+' '+P.acct).trim();$('#holder').textContent=P.holder?'예금주 '+P.holder:'';
+    $('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(P.acct);toast('계좌번호를 복사했어요')}catch(e){prompt('계좌번호를 길게 눌러 복사하세요',P.acct)}}}
+  if(P.asanQR&&String(P.asanQR).startsWith('data:image')){$('#asan').src=P.asanQR;$('#asanDl').href=P.asanQR}
+  if(P.onnuriQR){$('#onCard').hidden=false;$('#onnuri').src=P.onnuriQR;$('#onDl').href=P.onnuriQR;if(P.onnuriNote)$('#onNote').textContent='모바일 온누리 앱 → QR 결제로 찍어 주세요. '+P.onnuriNote}
+  try{localStorage.setItem('nnn_paycache',JSON.stringify({bank:P.bank,acct:P.acct,holder:P.holder,onnuriQR:P.onnuriQR,onnuriNote:P.onnuriNote,asanQR:P.asanQR}))}catch(e){}}
+try{show(JSON.parse(localStorage.getItem('nnn_paycache')||'null'))}catch(e){}
+(async()=>{try{firebase.initializeApp({apiKey:"AIzaSyDw7t6dzGDMJM-EvNsnE0IcEpluI8OqAMs",authDomain:"nnn-world.firebaseapp.com",databaseURL:"https://nnn-world-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"nnn-world",storageBucket:"nnn-world.firebasestorage.app",messagingSenderId:"511664724682",appId:"1:511664724682:web:41ef735c3d4b4ed03ff233"});await firebase.auth().signInAnonymously();const v=(await firebase.database().ref('meta/pay').get()).val();show(v)}catch(e){console.warn(e)}})();
+</script></body></html>

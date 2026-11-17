@@ -6623,8 +6623,9 @@ function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpl
     if(m.legacy&&!raw.includes('{재안내}')&&!/프로그램을 (교체|바꾸)|새 앱\(NNN WORLD\)/.test(tx)){const nl=tx.indexOf('\n');tx=nl>0?tx.slice(0,nl+1)+LEGACY_NOTE+'\n'+tx.slice(nl+1):LEGACY_NOTE+'\n'+tx}
     if(!tx.includes('?m='+m.id)&&!raw.includes('{로그인주소}')){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}
     const lkl=kind==='pay'&&!raw.includes('{락커}')?lkMsgLine(m):'';if(lkl){const ls=tx.split('\n');let i=ls.findIndex(l=>/^▶\s*결제/.test(l));if(i<0)i=ls.findIndex(l=>/^▶\s*기간/.test(l));ls.splice(i>=0?i+1:1,0,'▶ 락커·캐비넷: '+lkl);tx=ls.join('\n')}}
-  if(['exp','after','unpaid'].includes(kind)&&!tx.includes('payqr=1')){const P=local.meta.pay||{};if(P.asanQR||P.onnuriQR){const ql='▶ 아산페이·온누리 QR 결제: '+appBase()+'?payqr=1';const ls=tx.split('\n');let i=ls.findIndex(l=>/입금\s*계좌/.test(l));ls.splice(i>=0?i+1:ls.length,0,ql);tx=ls.join('\n')}}
+  if(['exp','after','unpaid'].includes(kind)&&!tx.includes('payqr=1')&&!tx.includes('/pay/')){const P=local.meta.pay||{};if(P.asanQR||P.onnuriQR){const ql='▶ 아산페이·온누리 QR·계좌: '+payPageUrl();const ls=tx.split('\n');let i=ls.findIndex(l=>/입금\s*계좌/.test(l));ls.splice(i>=0?i+1:ls.length,0,ql);tx=ls.join('\n')}}
   return tx}
+function payPageUrl(){return appBase().replace(/member\.html.*$/,'')+'pay/'}
 async function payQrFiles(){const P=local.meta.pay||{};const out=[];for(const [src,nm] of [[P.asanQR,'NNN복싱_아산페이QR.png'],[P.onnuriQR,'NNN복싱_온누리QR.png']]){if(!src)continue;try{const b=await (await fetch(src)).blob();out.push(new File([b],nm,{type:b.type||'image/png'}))}catch(e){}}return out}
 const customTpls=()=>Array.isArray(local.meta.tplCustom)?local.meta.tplCustom:[];
 const kindName=k=>String(k).startsWith('c:')?((customTpls().find(x=>x.id===k.slice(2))||{}).name||'직접 만든 안내'):(TPL_NAME[k]||'안내');
