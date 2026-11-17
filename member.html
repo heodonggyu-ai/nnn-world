@@ -6623,7 +6623,9 @@ function msgText(m,kind,pay){if(String(kind).startsWith('c:')){const c=customTpl
     if(m.legacy&&!raw.includes('{재안내}')&&!/프로그램을 (교체|바꾸)|새 앱\(NNN WORLD\)/.test(tx)){const nl=tx.indexOf('\n');tx=nl>0?tx.slice(0,nl+1)+LEGACY_NOTE+'\n'+tx.slice(nl+1):LEGACY_NOTE+'\n'+tx}
     if(!tx.includes('?m='+m.id)&&!raw.includes('{로그인주소}')){const cut=tx.indexOf('\n\n[이용수칙]');const blk='\n'+appInfoBlock(m);tx=cut>0?tx.slice(0,cut)+blk+tx.slice(cut):tx+blk}
     const lkl=kind==='pay'&&!raw.includes('{락커}')?lkMsgLine(m):'';if(lkl){const ls=tx.split('\n');let i=ls.findIndex(l=>/^▶\s*결제/.test(l));if(i<0)i=ls.findIndex(l=>/^▶\s*기간/.test(l));ls.splice(i>=0?i+1:1,0,'▶ 락커·캐비넷: '+lkl);tx=ls.join('\n')}}
+  if(['exp','after','unpaid'].includes(kind)&&!tx.includes('payqr=1')){const P=local.meta.pay||{};if(P.asanQR||P.onnuriQR){const ql='▶ 아산페이·온누리 QR 결제: '+appBase()+'?payqr=1';const ls=tx.split('\n');let i=ls.findIndex(l=>/입금\s*계좌/.test(l));ls.splice(i>=0?i+1:ls.length,0,ql);tx=ls.join('\n')}}
   return tx}
+async function payQrFiles(){const P=local.meta.pay||{};const out=[];for(const [src,nm] of [[P.asanQR,'NNN복싱_아산페이QR.png'],[P.onnuriQR,'NNN복싱_온누리QR.png']]){if(!src)continue;try{const b=await (await fetch(src)).blob();out.push(new File([b],nm,{type:b.type||'image/png'}))}catch(e){}}return out}
 const customTpls=()=>Array.isArray(local.meta.tplCustom)?local.meta.tplCustom:[];
 const kindName=k=>String(k).startsWith('c:')?((customTpls().find(x=>x.id===k.slice(2))||{}).name||'직접 만든 안내'):(TPL_NAME[k]||'안내');
 function sentKey(m,kind){const mem=m.mem||{};
@@ -6641,7 +6643,7 @@ function logSent(m,kind){const L=Array.isArray(m.sentLog)?m.sentLog:(m.sentLog?O
   return L.some(e=>e&&e.kind===kind&&(!since||!e.at||dstr(new Date(e.at))>=since))}
 const wasSent=(m,kind)=>!!(m.sent&&m.sent[sentKey(m,kind).replace(/[.#$\[\]/]/g,'_')])||logSent(m,kind);
 function smsHref(m,text,kind){const num=String((kind?msgPhone(m,kind):m.phone)||'').replace(/[^\d]/g,'');return`sms:${num}${isIOS()?'&':'?'}body=${encodeURIComponent(text)}`}
-async function kakaoShare(text){try{if(navigator.share){await navigator.share({text});return true}}catch(e){if(e&&e.name==='AbortError')return false}copyText(text,'안내문을');return true}
+async function kakaoShare(text,files){try{if(navigator.share){if(files&&files.length&&navigator.canShare&&navigator.canShare({files})){await navigator.share({text,files});return true}await navigator.share({text});return true}}catch(e){if(e&&e.name==='AbortError')return false}copyText(text,'안내문을');return true}
 function openSendSheet(m,kind,pay,txt0){
   const num=String(m.phone||'').replace(/[^\d]/g,'');
   const tg=toGuard(m,kind);
@@ -6855,7 +6857,7 @@ async function renderDue(){
   renderSendLog();
   box.querySelectorAll('[data-sms]').forEach(a=>a.addEventListener('click',()=>{const x=list[+a.dataset.sms];markSent(x.m,x.kind,'sms',msgText(x.m,x.kind)).then(()=>setTimeout(()=>{renderDue();renderSendLog()},600))}));
   box.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=list[+b.dataset.edit];openSendSheet(x.m,x.kind)});
-  box.querySelectorAll('[data-kk]').forEach(b=>b.onclick=async()=>{const x=list[+b.dataset.kk];if(await kakaoShare(msgText(x.m,x.kind))){await markSent(x.m,x.kind,'kakao',msgText(x.m,x.kind));renderDue();renderSendLog()}});
+  box.querySelectorAll('[data-kk]').forEach(b=>b.onclick=async()=>{const x=list[+b.dataset.kk];const fl=['exp','after','unpaid'].includes(x.kind)?await payQrFiles():null;if(await kakaoShare(msgText(x.m,x.kind),fl)){await markSent(x.m,x.kind,'kakao',msgText(x.m,x.kind));renderDue();renderSendLog()}});
   box.querySelectorAll('[data-skip]').forEach(b=>b.onclick=async()=>{const x=list[+b.dataset.skip];if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='완료?';return}await markSent(x.m,x.kind,'manual',msgText(x.m,x.kind));toast('보낸 것으로 처리했어요');renderDue();renderSendLog()});
 }
 function openTplEditor(){
@@ -7691,6 +7693,12 @@ function cbEdit(id){const c=Object.assign({t:'',s:'',d:'',lv:2},id?CB.list[id]:{
   const userMoved=()=>!!ME||$('#v-home').hidden;
   if(new URLSearchParams(location.search).get('shared')){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>{if(!ME)toast('회원번호로 입장하면 받은 영상을 바로 올릴 수 있어요',4500)},1500)}
   if(new URLSearchParams(location.search).get('tv')){openTV();return}
+  if(new URLSearchParams(location.search).get('payqr')){(async()=>{try{await Promise.race([DB.meta(),new Promise(r=>setTimeout(r,5000))])}catch(e){}const P=local.meta.pay||{};
+    sheet(`<h2>💳 탕정 엔엔엔복싱 결제 안내</h2>
+      ${P.acct?`<div class="memsum"><b>계좌이체</b><div class="num" style="font-size:20px;font-weight:900">${esc(P.bank||'')} ${esc(P.acct)}</div><div class="small">예금주 ${esc(P.holder||'')}</div><button class="btn sm" id="pqCopy">계좌번호 복사</button></div>`:''}
+      ${P.asanQR?`<div class="memsum" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><b>아산페이</b><img src="${P.asanQR}" alt="아산페이 결제 QR" style="width:min(260px,70vw);border-radius:12px;background:#fff"><div class="small">아산페이 앱 → QR 결제로 찍어 주세요. 이미지를 길게 눌러 저장할 수 있어요.</div></div>`:''}
+      ${P.onnuriQR?`<div class="memsum" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><b>온누리상품권</b><img src="${P.onnuriQR}" alt="온누리상품권 결제 QR" style="width:min(260px,70vw);border-radius:12px;background:#fff"><div class="small">모바일 온누리 앱 → QR 결제로 찍어 주세요.${P.onnuriNote?' '+esc(P.onnuriNote):''}</div></div>`:''}
+      <div class="small">결제하신 뒤 문자 주신 번호로 알려 주시면 바로 확인해 드릴게요.</div><button class="btn ghost" data-close>닫기</button>`,(el)=>{const c=el.querySelector('#pqCopy');if(c)c.onclick=()=>copyText(P.acct,'계좌번호를')})})()}
   if(new URLSearchParams(location.search).get('terms')){sheet(`<h2>이용약관 · 이용수칙</h2><div class="terms" style="max-height:none">${esc(local.meta.terms)}\n\n[이용수칙]\n${esc(rulesTxt())}</div><button class="btn" data-close>확인</button>`)}
   const sid=lsGet(LS_SESSION);const hashv=location.hash.replace('#','');
   if(new URLSearchParams(location.search).get('guest')&&!sid){try{history.replaceState(null,'',location.pathname)}catch(e){}openGuest();return}
