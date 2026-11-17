@@ -122,6 +122,20 @@ body.editing #tl{height:84px;outline:1px solid #1f5a36}
 .issue .meta{font-size:12px;color:var(--muted);margin:3px 0 6px}
 .issue .cue{font-size:13.5px;line-height:1.55;background:#0f1216;border-radius:9px;padding:8px 10px;margin:6px 0 8px}
 .issue .cue::before{content:'코치 한마디 · ';color:var(--accent);font-weight:700}
+.issue.editing{outline:1px solid var(--accent)}
+.iform{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;font-size:13px}
+.iform label{display:flex;flex-direction:column;gap:4px;color:#cfd5de}
+.iform .full{grid-column:1/-1}
+.iform input[type=text],.iform textarea,.iform select{width:100%;background:#0f1216;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:14px;font-family:inherit}
+.iform textarea{resize:vertical;line-height:1.5;display:block;height:auto;margin:0;color:var(--text)}
+.iform .range{display:flex;flex-direction:column;gap:6px}
+.iform .range span{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.iform .range b{font-family:Oswald;min-width:52px}
+.iform .chk{flex-direction:row;align-items:center;gap:8px}
+.iform .chk input{accent-color:var(--accent)}
+.btn.danger{border-color:#6b2a2f;color:#ffb3b3}
+#hiddenIssues summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0}
+#hiddenIssues .hrow{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel2);border-radius:10px;padding:8px 10px;margin-top:6px;font-size:13px}
 .issue .row{display:flex;gap:6px;flex-wrap:wrap}
 .badge{font-size:11px;padding:2px 7px;border-radius:99px;background:#2b313b;color:#cfd5de;margin-left:6px;font-weight:500;vertical-align:2px}
 .good{background:#10241a;border:1px solid #1f5a36;border-radius:12px;padding:10px 12px;font-size:13.5px}
@@ -333,8 +347,20 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
     </div>
 
     <div class="card">
-      <h3>고쳐야 할 부분</h3>
+      <div class="toolbar" style="justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0">고쳐야 할 부분</h3>
+        <button class="btn small primary" id="addIssueBtn"><i data-ic="pencil"></i>고칠 점 직접 추가</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin:0 0 10px">자동 분석이 관장님 생각과 다르면 <b>내용 수정</b>으로 제목·코치 한마디·중요도·구간을 고치거나, <b>이건 문제 아님</b>으로 숨기세요. 기준 자체를 바꾸려면 아래 <b>분석 기준</b>을 조절하세요.</p>
+      <details class="viewopt" id="thOpt">
+        <summary><i data-ic="sliders"></i> 분석 기준 <span class="muted">(관장님 기준으로 · 다음 분석에도 기억)</span></summary>
+        <div class="vgrid" id="thBox"></div>
+        <div class="btns" style="margin:8px 0 12px"><button class="btn small primary" id="thApply"><i data-ic="reset"></i>이 기준으로 다시 분석</button><button class="btn small" id="thReset">기본값</button></div>
+        <p class="muted" style="font-size:12px;margin:0 0 12px">다시 분석하면 자동으로 찾은 고칠 점이 새로 만들어져요. 직접 추가한 항목과 '내 수정 레이어'의 키는 그대로 남아요.</p>
+      </details>
+      <div class="note" id="issueMsg" style="display:none;color:var(--accent);font-weight:700;margin:0 0 8px"></div>
       <div class="issues" id="issues"></div>
+      <div id="hiddenIssues" style="margin-top:10px"></div>
       <div id="goods" style="margin-top:10px"></div>
     </div>
 
@@ -416,10 +442,10 @@ input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var
 
 <video id="vid" playsinline webkit-playsinline muted preload="auto" style="position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1"></video>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
-<script src="icons.js?v=20261117-1540"></script>
-<script src="core.js?v=20261117-1540"></script>
-<script src="app.js?v=20261117-1540"></script>
-<script src="blender.js?v=20261117-1540"></script>
-<script src="send.js?v=20261117-1540"></script>
+<script src="icons.js?v=20261117-2400"></script>
+<script src="core.js?v=20261117-2400"></script>
+<script src="app.js?v=20261117-2400"></script>
+<script src="blender.js?v=20261117-2400"></script>
+<script src="send.js?v=20261117-2400"></script>
 </body>
 </html>
