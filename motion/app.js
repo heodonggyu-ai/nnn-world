@@ -266,6 +266,10 @@
   }
   function flashMsg(t) { const el = $('issueMsg'); if (!el) return; el.textContent = t; el.style.display = 'block'; clearTimeout(flashMsg._t); flashMsg._t = setTimeout(() => el.style.display = 'none', 2500); }
 
+  // 자막: 관장님이 켠 항목(또는 자막 문구를 쓴 항목)만 표시
+  const capIssues = f => S.an.issues.filter(i => i.capOn && f >= i.f0 && f <= i.f1);
+  const capText = i => (i.caption && i.caption.trim()) || i.title;
+
   // ---------- 고칠 점 수정 / 추가 / 숨기기 ----------
   const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const SEV_NAME = { 1: '낮음', 2: '보통', 3: '높음' };
@@ -309,6 +313,8 @@
       ${handSel}
       <label class="full">제목 <input type="text" data-k="title" value="${esc(is.title)}" maxlength="60"></label>
       <label class="full">코치 한마디 <textarea data-k="cue" rows="3" maxlength="300">${esc(is.cue)}</textarea></label>
+      <label class="full">자막 문구 <input type="text" data-k="caption" value="${esc(is.caption || '')}" maxlength="60" placeholder="비워두면 제목이 자막으로 나와요"></label>
+      <label class="full chk"><input type="checkbox" data-k="capOn"${is.capOn ? ' checked' : ''}> 이 구간 영상에 자막으로 표시</label>
       <label>중요도 <select data-k="sev">${[1, 2, 3].map(v => `<option value="${v}"${is.sev === v ? ' selected' : ''}>${SEV_NAME[v]}</option>`).join('')}</select></label>
       <div class="full range">구간
         <span><b data-show="f0">${fmt(is.f0)}</b> <button class="btn small" data-set="f0">${IC('stepback')}지금 위치를 시작으로</button></span>
@@ -341,6 +347,7 @@
       get('type').onchange = () => { is.type = get('type').value; is.side = is.side || S.an.lead; S.addDraft = Object.assign({}, is, draft, { title: '', cue: '' }); renderIssues(); };
       if (get('side')) get('side').onchange = upd;
     }
+    if (get('caption')) get('caption').addEventListener('input', () => { if (get('caption').value.trim()) get('capOn').checked = true; });
     wrap.querySelector('[data-act="cancel"]').onclick = () => { S.editingIssue = null; S.addingIssue = false; renderIssues(); };
     const hideBtn = wrap.querySelector('[data-act="hide"]');
     if (hideBtn) hideBtn.onclick = () => {
@@ -353,7 +360,8 @@
       const rangeChanged = draft.f0 !== is.f0 || draft.f1 !== is.f1;
       const newSide = get('side') ? get('side').value : is.side;
       const sideChanged = newSide !== is.side;
-      Object.assign(is, { title, cue: get('cue').value.trim(), sev: +get('sev').value, f0: draft.f0, f1: draft.f1, side: newSide });
+      Object.assign(is, { title, cue: get('cue').value.trim(), sev: +get('sev').value, f0: draft.f0, f1: draft.f1, side: newSide,
+        caption: get('caption').value.trim(), capOn: get('capOn').checked });
       if (isNew) {
         is.id = 'u' + Date.now(); is.custom = true;
         is.detail = '관장님이 직접 추가';
@@ -423,6 +431,10 @@
         k.onclick = () => { setEdit(true); S.layerId = layer.id; $('layerSel').value = layer.id; loopIssue(is, true); renderJointList(); };
         row.appendChild(k);
       }
+      const cb = document.createElement('button'); cb.className = 'btn small' + (is.capOn ? ' on' : '');
+      cb.innerHTML = IC('chat') + (is.capOn ? '자막 켬' : '자막'); cb.title = '이 구간 영상에 자막 표시';
+      cb.onclick = () => { is.capOn = !is.capOn; S.unsaved = true; S.editTs = Date.now(); S.dirty = true; renderIssues(); };
+      row.appendChild(cb);
       const e = document.createElement('button'); e.className = 'btn small'; e.innerHTML = IC('pencil') + '수정';
       e.onclick = () => { S.editingIssue = is; S.addingIssue = false; renderIssues(); };
       row.appendChild(e);
@@ -686,8 +698,8 @@
       ctx.font = `700 ${Math.round(U * 0.024)}px Oswald, "Noto Sans KR", sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       if (!side) ctx.fillText('NNN BOXING' + (name ? '  ·  ' + name : ''), U * 0.025, U * 0.025);
-      const cur = S.an.issues.filter(i => i.layerId && f >= i.f0 && f <= i.f1 && S.layers.find(l => l.id === i.layerId).enabled);
-      if (cur.length && V.cap !== false) { const cs = U * 0.024 * (V.capSize || 100) / 100; capPill(ctx, side ? pw + gap + pw / 2 : W / 2, ph - cs * 1.7 - U * 0.04, cur[0].title, 'rgba(10,12,15,0.85)', '#ffd4d4', cs); }
+      const cur = capIssues(f);
+      if (cur.length && V.cap !== false) { const cs = U * 0.024 * (V.capSize || 100) / 100; capPill(ctx, side ? pw + gap + pw / 2 : W / 2, ph - cs * 1.7 - U * 0.04, capText(cur[0]), 'rgba(10,12,15,0.85)', '#ffd4d4', cs); }
       if (rate < 1) { ctx.font = `700 ${Math.round(U * 0.02)}px Oswald, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffcc33'; ctx.fillText('SLOW ' + rate + 'x', W - U * 0.025, side ? U * 0.075 : U * 0.03); }
     };
     recording = true; btn.disabled = true; $('recOut').classList.add('hide');
@@ -758,10 +770,10 @@
       paintPanel(c2, w, h, 'fix', orig, corr, lw, editOpts);
     } else paintPanel(c1, w, h, S.mode, orig, corr, lw, editOpts);
     // 현재 구간 이슈 표시
-    const cur = S.an.issues.filter(i => i.layerId && f >= i.f0 && f <= i.f1 && S.layers.find(l => l.id === i.layerId).enabled);
+    const cur = capIssues(f);
     const now = $('now1');
-    if (cur.length && S.mode !== 'orig' && V.cap !== false) {
-      now.style.display = 'block'; now.textContent = cur.map(i => i.title).join(' · ');
+    if (cur.length && V.cap !== false) {
+      now.style.display = 'block'; now.textContent = cur.map(capText).join(' · ');
       now.style.fontSize = (12.5 * (V.capSize || 100) / 100).toFixed(1) + 'px';
     }
     else now.style.display = 'none';
