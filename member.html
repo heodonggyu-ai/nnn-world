@@ -2705,44 +2705,50 @@ document.addEventListener('click',e=>{const i=e.target.closest&&e.target.closest
 /* ================= 게임장 (관장님이 만든 게임들) ================= */
 const GHUB='https://heodonggyu-ai.github.io/nnn-world/';
 const ARCADE=[
-  {id:'forest',name:'밍뉴의숲',desc:'동네에 숨은 동물 친구들을 찾아 데려와 키워요. 학교·집·엔엔엔복싱에도 들어가요.',href:GHUB+'forest/',img:GHUB+'shared/img/forest-cover.jpg',col:'#3E8A2E',art:'밍뉴의<br>숲',tags:['동물 키우기','친구와 같이']},
-  {id:'combo',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',img:GHUB+'shared/img/combo-cover.jpg',col:'#D9343A',art:'NNN<br>콤보 러시',tags:['복싱','랭킹']},
-  {id:'crash',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:GHUB+'crash/',img:GHUB+'shared/img/crash-cover.jpg',col:'#2E5AAC',art:'꽝!<br>크래시 드라이브',tags:['자동차','3D','미션']},
-  {id:'bomb',name:'폭탄 돌리기',desc:'폰 하나를 돌려가며 암산 문제를 맞히고 폭탄을 넘겨요. 터질 때 들고 있으면 탈락!',href:GHUB+'bomb/',img:GHUB+'shared/img/bomb-cover.jpg',col:'#E8622F',art:'💣<br>폭탄 돌리기',tags:['여럿이 한 폰','암산']},
-  {id:'dice',name:'욕심 주사위',desc:'한 번 더 굴릴까, 멈출까? 1이 나오면 꽝! 혼자면 관장봇과 대결.',href:GHUB+'dice/',img:GHUB+'shared/img/dice-cover.jpg',col:'#2F7A55',art:'🎲<br>욕심 주사위',tags:['주사위','눈치싸움']},
-  {id:'bori',name:'보리보리쌀',desc:'쌀그릇에 손가락을 올리고 "쌀!"에만 쏙 빼요. 가짜 말에 속지 마세요!',href:GHUB+'bori/',img:GHUB+'shared/img/bori-cover.jpg',col:'#C99A2E',art:'🌾<br>보리보리쌀',tags:['반응속도','여럿이 한 폰']},
-  {id:'fps',name:'NNN 아레나',desc:'한들물빛공원 팀 대결 FPS! 5라운드 먼저 이기면 우승.',href:GHUB+'fps/',img:GHUB+'shared/img/fps-cover.jpg',col:'#1B2230',art:'NNN<br>아레나',tags:['FPS','3D']},
-  {id:'kart',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로를 달리는 드리프트 스피드전!',href:GHUB+'kart/',img:GHUB+'shared/img/kart-cover.jpg',col:'#1F6FB0',art:'드리프트<br>카트',tags:['레이싱','3D']},
-  {id:'quiz',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성 퀴즈! 팀 대결도 돼요.',href:GHUB+'quiz/',img:GHUB+'shared/img/quiz-cover.jpg',col:'#FF8A2F',art:'퀴즈왕',tags:['퀴즈','넌센스']},
-  {id:'english',name:'NNN 잉글리시',desc:'단어·표현·문법을 레슨으로! 듣고 따라 말하는 영어 공부.',href:GHUB+'english/',img:GHUB+'shared/img/english-cover.jpg',col:'#36B37E',art:'잉글리시',tags:['영어','공부']},
-  {id:'beat',name:'NNN 샌드백 비트',desc:'노래에 맞춰 샌드백 포인트를 쳐요!',href:GHUB+'beat/',img:GHUB+'shared/img/beat-cover.jpg',col:'#FB923C',art:'샌드백 비트',tags:['리듬게임','복싱']},
-  {id:'ppopgi',name:'NNN 문방구 뽑기',desc:'종이 뽑기판·캡슐 뽑기로 피규어 모으기!',href:GHUB+'ppopgi/',img:GHUB+'shared/img/ppopgi-cover.jpg',col:'#E5463C',art:'문방구 뽑기',tags:['뽑기','도감']},
-  {id:'omok',name:'NNN 오목',desc:'다섯 개 먼저 잇기! 컴퓨터 또는 둘이서.',href:GHUB+'omok/',img:GHUB+'shared/img/omok-cover.jpg',col:'#3B2A14',art:'오목',tags:['오목','보드게임']},
-  {id:'baduk',name:'NNN 바둑',desc:'9·13·19줄, 따내기·패·계가까지.',href:GHUB+'baduk/',img:GHUB+'shared/img/baduk-cover.jpg',col:'#555',art:'바둑',tags:['바둑','보드게임']},
-  {id:'janggi',name:'NNN 장기',desc:'정식 규칙 장기! 장군·외통 알림.',href:GHUB+'janggi/',img:GHUB+'shared/img/janggi-cover.jpg',col:'#1F6F4A',art:'장기',tags:['장기','보드게임']},
-  {id:'alkkagi',name:'NNN 알까기',desc:'튕겨서 판 밖으로! 일타이피 도전.',href:GHUB+'alkkagi/',img:GHUB+'shared/img/alkkagi-cover.jpg',col:'#2E5E4E',art:'알까기',tags:['알까기','보드게임']},
-  {id:'charades',name:'몸으로 말해요',desc:'말은 금지! 몸짓으로만 설명하고 팀이 맞혀요. 스포츠·동물·속담·복싱 등 주제 선택.',href:GHUB+'charades/',img:GHUB+'shared/img/charades-cover.jpg',col:'#FF7A59',art:'🙆<br>몸으로 말해요',tags:['여럿이 한 폰','팀 대결']},
-  {id:'punch',name:'NNN 펀치왕',desc:'번쩍하면 피하고 빈틈에 카운터! 챔피언까지 8명, 그다음은 방어전!',href:GHUB+'punch/',img:GHUB+'shared/img/punch-cover.jpg',col:'#7a2a8a',art:'펀치왕',tags:['레트로','복싱']},
-  {id:'palace',name:'NNN 궁전 탈출',desc:'지하 궁전 6층 탈출! 매달리고, 뛰고, 칼싸움까지.',href:GHUB+'palace/',img:GHUB+'shared/img/palace-cover.jpg',col:'#1d2340',art:'궁전 탈출',tags:['레트로','모험']},
-  {id:'glove',name:'NNN 날아라 글러브',desc:'로프를 당겨 글러브 발사! 샌드백 몬스터를 모두 KO, 20단계.',href:GHUB+'glove/',img:GHUB+'shared/img/glove-cover.jpg',col:'#3a8ad8',art:'날아라 글러브',rank:'점',tags:['레트로','복싱']},
-  {id:'bubble',name:'NNN 비눗방울 대작전',desc:'방울로 몬스터를 가두고 톡! 터뜨려 과일로. 30라운드!',href:GHUB+'bubble/',img:GHUB+'shared/img/bubble-cover.jpg',col:'#ff7aa8',art:'비눗방울',tags:['레트로','플랫폼']},
-  {id:'blocks',name:'NNN 블록 쌓기',desc:'블록을 돌려 줄을 꽉 채우면 사라져요.',href:GHUB+'blocks/',img:GHUB+'shared/img/blocks-cover.jpg',col:'#3a3270',art:'블록 쌓기',tags:['레트로','퍼즐']},
-  {id:'jump',name:'NNN 점프 왕국',desc:'달리고 점프해서 깃발까지! 12월드.',href:GHUB+'jump/',img:GHUB+'shared/img/jump-cover.jpg',col:'#62b8ff',art:'점프 왕국',tags:['레트로','횡스크롤']},
-  {id:'muncher',name:'NNN 글러브 먹보',desc:'미로의 점을 다 먹고 도깨비를 피해요.',href:GHUB+'muncher/',img:GHUB+'shared/img/muncher-cover.jpg',col:'#141a5c',art:'글러브 먹보',tags:['레트로','미로']},
-  {id:'galaxy',name:'NNN 우주 침공',desc:'내려꽂는 외계인 편대를 쏘아 맞혀요.',href:GHUB+'galaxy/',img:GHUB+'shared/img/galaxy-cover.jpg',col:'#05040f',art:'우주 침공',tags:['레트로','슈팅']},
-  {id:'bricks',name:'NNN 벽돌깨기',desc:'공을 튕겨 벽돌을 와장창! 32판!',href:GHUB+'bricks/',img:GHUB+'shared/img/bricks-cover.jpg',col:'#0c1030',art:'벽돌깨기',tags:['레트로','캡슐']},
-  {id:'crossing',name:'NNN 길 건너기',desc:'찻길과 강을 건너 개구리를 집으로!',href:GHUB+'crossing/',img:GHUB+'shared/img/crossing-cover.jpg',col:'#163a8a',art:'길 건너기',tags:['레트로','타이밍']},
-  {id:'snake',name:'NNN 꼬리 뱀',desc:'먹을수록 길어지는 뱀, 꼬리 조심!',href:GHUB+'snake/',img:GHUB+'shared/img/snake-cover.jpg',col:'#16331f',art:'꼬리 뱀',tags:['레트로','한 손으로']},
-  {id:'soccer',name:'NNN 오락실 축구',desc:'피파온라인2식 조작! 스루·로빙·2:1 패스, 칩·감아차기 슛, 오프사이드·반칙까지. 8경기.',href:GHUB+'soccer/',img:GHUB+'shared/img/soccer-cover.jpg',col:'#2f9a44',art:'오락실 축구',rank:'점',tags:['축구','11대11']},
-  {id:'futsal',name:'NNN 미니 풋살',desc:'2대2(+골키퍼) 빠른 풋살. 벽에 튕기는 공, 기를 모아 쏘는 🔥불꽃슛! 컵 3개 × 8강·4강·결승.',href:GHUB+'futsal/',img:GHUB+'shared/img/futsal-cover.jpg',col:'#1d2340',art:'미니 풋살',rank:'점',tags:['축구','2대2']},
-  {id:'pk',name:'NNN 승부차기',desc:'차고 막는 PK 대결! 타이밍 3번으로 구석을 노리고, 키커 몸짓을 읽어 다이빙. 상대 키퍼는 내 버릇을 기억해요. 8팀.',href:GHUB+'pk/',img:GHUB+'shared/img/pk-cover.jpg',col:'#2a1e5a',art:'승부차기',rank:'점',tags:['축구','승부차기']},
-  {id:'skills',name:'NNN 축구 기술 챌린지',desc:'리프팅 → 프리킥(감아차기로 수비벽 넘기기) → 과녁 맞히기 3종목 합계 점수로 랭킹 도전!',href:GHUB+'skills/',img:GHUB+'shared/img/skills-cover.jpg',col:'#6ec8ff',art:'기술 챌린지',rank:'점',tags:['축구','기록 도전']},
-  {id:'fingerball',name:'NNN 손가락 축구',desc:'손가락으로 선수를 끌어 공을 쳐요. 한 폰으로 둘이 마주 보고 대결, 또는 컴퓨터 8단계! 아이템도 나와요.',href:GHUB+'fingerball/',img:GHUB+'shared/img/fingerball-cover.jpg',col:'#36a94c',art:'손가락 축구',rank:'점',tags:['축구','둘이서']}];
-function openArcade(){sheet(`<h2>게임장</h2><p class="small" style="margin:0">관장님이 직접 만든 게임들이에요. 하루 처음 한 판은 <b>+10 크레딧</b>!</p>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">${ARCADE.map(g=>`<button class="qrow" data-ag="${g.id}" style="border:0;text-align:left;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#fff;gap:0">
+  {id:'forest',grp:'online',name:'밍뉴의숲',desc:'동네에 숨은 동물 친구들을 찾아 데려와 키워요. 학교·집·엔엔엔복싱에도 들어가요.',href:GHUB+'forest/',img:GHUB+'shared/img/forest-cover.jpg',col:'#3E8A2E',art:'밍뉴의<br>숲',tags:['동물 키우기','친구와 같이']},
+  {id:'combo',grp:'action',name:'NNN 콤보 러시',desc:'코치 콜에 맞춰 콤보를 치고 체육관 랭킹에 도전해요.',href:'https://nnn-combo.netlify.app',img:GHUB+'shared/img/combo-cover.jpg',col:'#D9343A',art:'NNN<br>콤보 러시',tags:['복싱','랭킹']},
+  {id:'crash',grp:'action',name:'꽝! 크래시 드라이브',desc:'자동차를 쾅쾅 부딪치고 미션을 깨서 별을 모아요. 큰 충돌은 슬로모션!',href:GHUB+'crash/',img:GHUB+'shared/img/crash-cover.jpg',col:'#2E5AAC',art:'꽝!<br>크래시 드라이브',tags:['자동차','3D','미션']},
+  {id:'bomb',grp:'party',name:'폭탄 돌리기',desc:'폰 하나를 돌려가며 암산 문제를 맞히고 폭탄을 넘겨요. 터질 때 들고 있으면 탈락!',href:GHUB+'bomb/',img:GHUB+'shared/img/bomb-cover.jpg',col:'#E8622F',art:'💣<br>폭탄 돌리기',tags:['여럿이 한 폰','암산']},
+  {id:'dice',grp:'party',name:'욕심 주사위',desc:'한 번 더 굴릴까, 멈출까? 1이 나오면 꽝! 혼자면 관장봇과 대결.',href:GHUB+'dice/',img:GHUB+'shared/img/dice-cover.jpg',col:'#2F7A55',art:'🎲<br>욕심 주사위',tags:['주사위','눈치싸움']},
+  {id:'bori',grp:'party',name:'보리보리쌀',desc:'쌀그릇에 손가락을 올리고 "쌀!"에만 쏙 빼요. 가짜 말에 속지 마세요!',href:GHUB+'bori/',img:GHUB+'shared/img/bori-cover.jpg',col:'#C99A2E',art:'🌾<br>보리보리쌀',tags:['반응속도','여럿이 한 폰']},
+  {id:'fps',grp:'action online',name:'NNN 아레나',desc:'한들물빛공원 팀 대결 FPS! 5라운드 먼저 이기면 우승.',href:GHUB+'fps/',img:GHUB+'shared/img/fps-cover.jpg',col:'#1B2230',art:'NNN<br>아레나',tags:['FPS','3D']},
+  {id:'kart',grp:'action',name:'NNN 드리프트 카트',desc:'한들물빛도시 동네 도로를 달리는 드리프트 스피드전!',href:GHUB+'kart/',img:GHUB+'shared/img/kart-cover.jpg',col:'#1F6FB0',art:'드리프트<br>카트',tags:['레이싱','3D']},
+  {id:'quiz',grp:'party study',name:'NNN 퀴즈왕',desc:'상식·넌센스·과자 초성 퀴즈! 팀 대결도 돼요.',href:GHUB+'quiz/',img:GHUB+'shared/img/quiz-cover.jpg',col:'#FF8A2F',art:'퀴즈왕',tags:['퀴즈','넌센스']},
+  {id:'english',grp:'study',name:'NNN 잉글리시',desc:'단어·표현·문법을 레슨으로! 듣고 따라 말하는 영어 공부.',href:GHUB+'english/',img:GHUB+'shared/img/english-cover.jpg',col:'#36B37E',art:'잉글리시',tags:['영어','공부']},
+  {id:'beat',grp:'action',name:'NNN 샌드백 비트',desc:'노래에 맞춰 샌드백 포인트를 쳐요!',href:GHUB+'beat/',img:GHUB+'shared/img/beat-cover.jpg',col:'#FB923C',art:'샌드백 비트',tags:['리듬게임','복싱']},
+  {id:'ppopgi',grp:'party',name:'NNN 문방구 뽑기',desc:'종이 뽑기판·캡슐 뽑기로 피규어 모으기!',href:GHUB+'ppopgi/',img:GHUB+'shared/img/ppopgi-cover.jpg',col:'#E5463C',art:'문방구 뽑기',tags:['뽑기','도감']},
+  {id:'omok',grp:'board',name:'NNN 오목',desc:'다섯 개 먼저 잇기! 컴퓨터 또는 둘이서.',href:GHUB+'omok/',img:GHUB+'shared/img/omok-cover.jpg',col:'#3B2A14',art:'오목',tags:['오목','보드게임']},
+  {id:'baduk',grp:'board',name:'NNN 바둑',desc:'9·13·19줄, 따내기·패·계가까지.',href:GHUB+'baduk/',img:GHUB+'shared/img/baduk-cover.jpg',col:'#555',art:'바둑',tags:['바둑','보드게임']},
+  {id:'janggi',grp:'board',name:'NNN 장기',desc:'정식 규칙 장기! 장군·외통 알림.',href:GHUB+'janggi/',img:GHUB+'shared/img/janggi-cover.jpg',col:'#1F6F4A',art:'장기',tags:['장기','보드게임']},
+  {id:'alkkagi',grp:'board party',name:'NNN 알까기',desc:'튕겨서 판 밖으로! 일타이피 도전.',href:GHUB+'alkkagi/',img:GHUB+'shared/img/alkkagi-cover.jpg',col:'#2E5E4E',art:'알까기',tags:['알까기','보드게임']},
+  {id:'charades',grp:'party',name:'몸으로 말해요',desc:'말은 금지! 몸짓으로만 설명하고 팀이 맞혀요. 스포츠·동물·속담·복싱 등 주제 선택.',href:GHUB+'charades/',img:GHUB+'shared/img/charades-cover.jpg',col:'#FF7A59',art:'🙆<br>몸으로 말해요',tags:['여럿이 한 폰','팀 대결']},
+  {id:'punch',grp:'retro',name:'NNN 펀치왕',desc:'번쩍하면 피하고 빈틈에 카운터! 챔피언까지 8명, 그다음은 방어전!',href:GHUB+'punch/',img:GHUB+'shared/img/punch-cover.jpg',col:'#7a2a8a',art:'펀치왕',tags:['레트로','복싱']},
+  {id:'palace',grp:'retro',name:'NNN 궁전 탈출',desc:'지하 궁전 6층 탈출! 매달리고, 뛰고, 칼싸움까지.',href:GHUB+'palace/',img:GHUB+'shared/img/palace-cover.jpg',col:'#1d2340',art:'궁전 탈출',tags:['레트로','모험']},
+  {id:'glove',grp:'retro',name:'NNN 날아라 글러브',desc:'로프를 당겨 글러브 발사! 샌드백 몬스터를 모두 KO, 20단계.',href:GHUB+'glove/',img:GHUB+'shared/img/glove-cover.jpg',col:'#3a8ad8',art:'날아라 글러브',rank:'점',tags:['레트로','복싱']},
+  {id:'bubble',grp:'retro',name:'NNN 비눗방울 대작전',desc:'방울로 몬스터를 가두고 톡! 터뜨려 과일로. 30라운드!',href:GHUB+'bubble/',img:GHUB+'shared/img/bubble-cover.jpg',col:'#ff7aa8',art:'비눗방울',tags:['레트로','플랫폼']},
+  {id:'blocks',grp:'retro',name:'NNN 블록 쌓기',desc:'블록을 돌려 줄을 꽉 채우면 사라져요.',href:GHUB+'blocks/',img:GHUB+'shared/img/blocks-cover.jpg',col:'#3a3270',art:'블록 쌓기',tags:['레트로','퍼즐']},
+  {id:'jump',grp:'retro',name:'NNN 점프 왕국',desc:'달리고 점프해서 깃발까지! 12월드.',href:GHUB+'jump/',img:GHUB+'shared/img/jump-cover.jpg',col:'#62b8ff',art:'점프 왕국',tags:['레트로','횡스크롤']},
+  {id:'muncher',grp:'retro',name:'NNN 글러브 먹보',desc:'미로의 점을 다 먹고 도깨비를 피해요.',href:GHUB+'muncher/',img:GHUB+'shared/img/muncher-cover.jpg',col:'#141a5c',art:'글러브 먹보',tags:['레트로','미로']},
+  {id:'galaxy',grp:'retro',name:'NNN 우주 침공',desc:'내려꽂는 외계인 편대를 쏘아 맞혀요.',href:GHUB+'galaxy/',img:GHUB+'shared/img/galaxy-cover.jpg',col:'#05040f',art:'우주 침공',tags:['레트로','슈팅']},
+  {id:'bricks',grp:'retro',name:'NNN 벽돌깨기',desc:'공을 튕겨 벽돌을 와장창! 32판!',href:GHUB+'bricks/',img:GHUB+'shared/img/bricks-cover.jpg',col:'#0c1030',art:'벽돌깨기',tags:['레트로','캡슐']},
+  {id:'crossing',grp:'retro',name:'NNN 길 건너기',desc:'찻길과 강을 건너 개구리를 집으로!',href:GHUB+'crossing/',img:GHUB+'shared/img/crossing-cover.jpg',col:'#163a8a',art:'길 건너기',tags:['레트로','타이밍']},
+  {id:'snake',grp:'retro',name:'NNN 꼬리 뱀',desc:'먹을수록 길어지는 뱀, 꼬리 조심!',href:GHUB+'snake/',img:GHUB+'shared/img/snake-cover.jpg',col:'#16331f',art:'꼬리 뱀',tags:['레트로','한 손으로']},
+  {id:'soccer',grp:'soccer',name:'NNN 오락실 축구',desc:'피파온라인2식 조작! 스루·로빙·2:1 패스, 칩·감아차기 슛, 오프사이드·반칙까지. 8경기.',href:GHUB+'soccer/',img:GHUB+'shared/img/soccer-cover.jpg',col:'#2f9a44',art:'오락실 축구',rank:'점',tags:['축구','11대11']},
+  {id:'futsal',grp:'soccer',name:'NNN 미니 풋살',desc:'2대2(+골키퍼) 빠른 풋살. 벽에 튕기는 공, 기를 모아 쏘는 🔥불꽃슛! 컵 3개 × 8강·4강·결승.',href:GHUB+'futsal/',img:GHUB+'shared/img/futsal-cover.jpg',col:'#1d2340',art:'미니 풋살',rank:'점',tags:['축구','2대2']},
+  {id:'pk',grp:'soccer',name:'NNN 승부차기',desc:'차고 막는 PK 대결! 타이밍 3번으로 구석을 노리고, 키커 몸짓을 읽어 다이빙. 상대 키퍼는 내 버릇을 기억해요. 8팀.',href:GHUB+'pk/',img:GHUB+'shared/img/pk-cover.jpg',col:'#2a1e5a',art:'승부차기',rank:'점',tags:['축구','승부차기']},
+  {id:'skills',grp:'soccer',name:'NNN 축구 기술 챌린지',desc:'리프팅 → 프리킥(감아차기로 수비벽 넘기기) → 과녁 맞히기 3종목 합계 점수로 랭킹 도전!',href:GHUB+'skills/',img:GHUB+'shared/img/skills-cover.jpg',col:'#6ec8ff',art:'기술 챌린지',rank:'점',tags:['축구','기록 도전']},
+  {id:'fingerball',grp:'soccer',name:'NNN 손가락 축구',desc:'손가락으로 선수를 끌어 공을 쳐요. 한 폰으로 둘이 마주 보고 대결, 또는 컴퓨터 8단계! 아이템도 나와요.',href:GHUB+'fingerball/',img:GHUB+'shared/img/fingerball-cover.jpg',col:'#36a94c',art:'손가락 축구',rank:'점',tags:['축구','둘이서']}];
+const ARC_GRPS=[['all','전체'],['retro','👾 레트로'],['soccer','⚽ 축구'],['action','🏎️ 3D·액션'],['party','🎉 여럿이 한 폰'],['study','📚 공부·퀴즈'],['board','♟️ 보드게임'],['online','👥 친구랑 온라인']];
+function openArcade(){let AG=(()=>{try{return localStorage.getItem('nnn_arcgrp')||'all'}catch(e){return 'all'}})();if(!ARC_GRPS.some(x=>x[0]===AG))AG='all';
+  const cnt=k=>k==='all'?ARCADE.length:ARCADE.filter(g=>(g.grp||'').split(' ').includes(k)).length;
+  sheet(`<h2>게임장</h2><p class="small" style="margin:0">관장님이 직접 만든 게임들이에요. 하루 처음 한 판은 <b>+10 크레딧</b>!</p>
+  <div id="arcChips" role="tablist" aria-label="게임 종류" style="display:flex;flex-shrink:0;min-height:46px;align-items:center;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none">${ARC_GRPS.filter(([k])=>cnt(k)).map(([k,n])=>`<button type="button" role="tab" data-agp="${k}" aria-selected="${k===AG}" style="flex:0 0 auto;border:2px solid var(--ink);border-radius:999px;padding:8px 14px;font-weight:800;font-size:14px;white-space:nowrap;background:${k===AG?'var(--ink)':'#fff'};color:${k===AG?'#fff':'var(--ink)'}">${n} <span class="num" style="opacity:.7">${cnt(k)}</span></button>`).join('')}</div>
+  <div id="arcGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">${ARCADE.map(g=>`<button class="qrow" data-ag="${g.id}" data-grp="${esc(g.grp||'')}" style="border:0;text-align:left;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:#fff;gap:0">
     <div style="aspect-ratio:4/3;background:${g.col};${g.img?`background-image:url('${g.img}');background-size:cover;background-position:center;`:''}display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:15px;line-height:1.1;text-align:center;padding:8px;text-shadow:0 1px 3px rgba(0,0,0,.6)">${g.img?'':(g.art||'')}</div>
     <div style="padding:8px 10px 10px;min-width:0"><b style="font-family:var(--display);font-weight:400;font-size:16px;display:block;line-height:1.2">${esc(g.name)}</b><div class="small" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px">${esc(g.desc)}</div></div></button>`).join('')}</div>
-  <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{el.querySelectorAll('[data-ag]').forEach(b=>b.onclick=()=>{close();playArcade(ARCADE.find(g=>g.id===b.dataset.ag))})})}
+  <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{el.querySelectorAll('[data-ag]').forEach(b=>b.onclick=()=>{close();playArcade(ARCADE.find(g=>g.id===b.dataset.ag))});
+    const apply=()=>{el.querySelectorAll('#arcGrid [data-ag]').forEach(b=>{b.hidden=!(AG==='all'||b.dataset.grp.split(' ').includes(AG))});el.querySelectorAll('[data-agp]').forEach(c=>{const on=c.dataset.agp===AG;c.setAttribute('aria-selected',String(on));c.style.background=on?'var(--ink)':'#fff';c.style.color=on?'#fff':'var(--ink)'})};
+    el.querySelectorAll('[data-agp]').forEach(c=>c.onclick=()=>{AG=c.dataset.agp;try{localStorage.setItem('nnn_arcgrp',AG)}catch(e){}apply()});apply()})}
 function playArcade(g){if(!g)return;stopWorld();let r=$('#arcRoot');if(r)r.remove();r=document.createElement('div');r.id='arcRoot';
   r.innerHTML=`<div class="arch"><b>${esc(g.name)}</b><button id="arcNew" aria-label="새 창으로 열기">새 창</button><button id="arcX">맵으로</button></div><iframe src="${g.href}" title="${esc(g.name)}" allow="fullscreen; autoplay; accelerometer; gyroscope; microphone" allowfullscreen></iframe>`;
   document.body.appendChild(r);
