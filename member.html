@@ -2761,8 +2761,9 @@ async function whoData(){let live=LIVE.data,on=WC.on;if(!LIVE.off||isStaff(ME||{
 async function whoNames(ids){const out={};const inCoach=!$('#v-coach').hidden;if(inCoach||(ME&&isCoachRec(ME))){try{const ros=await COACH.roster()||{};ids.forEach(id=>{if(ros[id])out[id]=ros[id].name})}catch(e){}return out}if(!isStaff(ME||{})&&$('#v-admin').hidden)return out;
   await Promise.all(ids.map(async id=>{if(/^c\d+$/.test(id)||id===OWNER_ID)return;try{const m=await DB.get(id);if(m)out[id]=m.name}catch(e){}}));return out}
 function whoRow(x,nm,kind,staffView){const role=x.owner?'관장님':x.coach?'코치':'';const name=staffView&&nm[x.id]?nm[x.id]:(x.owner?'관장님':x.nick||'회원');
-  return `<div class="qrow" style="align-items:center">${staffView&&!role?`<div class="cimg" data-wf="${esc(x.id)}" style="width:40px;height:40px;font-size:9px">사진</div>`:`<canvas width="80" height="88" data-wa="${esc(x.id)}" style="width:40px;height:44px;flex:0 0 auto"></canvas>`}
-    <div class="grow"><b>${esc(name)}</b>${role&&!x.owner?` <span class="pill" style="background:#2E5AAC;color:#fff">${role}</span>`:''}${staffView&&!role?` <span class="small num">${esc(x.id)}</span>`:''}<div class="small">${kind==='gym'?(x.until?'출근 중':`${hhmm(x.at)} 출석 · ${agoTxt(x.at)}`):`앱 접속 중${x.lv?' · Lv.'+x.lv:''}`}</div></div></div>`}
+  const clk=staffView&&!role&&!/^c\d+$/.test(x.id)&&x.id!==OWNER_ID;
+  return `<div class="qrow" style="align-items:center${clk?';cursor:pointer':''}" ${clk?`data-whom="${esc(x.id)}" role="button" tabindex="0" aria-label="${esc(name)} 회원 정보 열기"`:''}>${staffView&&!role?`<div class="cimg" data-wf="${esc(x.id)}" style="width:40px;height:40px;font-size:9px">사진</div>`:`<canvas width="80" height="88" data-wa="${esc(x.id)}" style="width:40px;height:44px;flex:0 0 auto"></canvas>`}
+    <div class="grow"><b>${esc(name)}</b>${role&&!x.owner?` <span class="pill" style="background:#2E5AAC;color:#fff">${role}</span>`:''}${staffView&&!role?` <span class="small num">${esc(x.id)}</span>`:''}<div class="small">${kind==='gym'?(x.until?'출근 중':`${hhmm(x.at)} 출석 · ${agoTxt(x.at)}`):`앱 접속 중${x.lv?' · Lv.'+x.lv:''}`}</div></div>${clk?'<span class="small" aria-hidden="true">›</span>':''}</div>`}
 function whoHTML(d,nm,staffView){const inGym=new Set(d.gym.map(x=>x.id));const appOnly=d.app.filter(x=>!inGym.has(x.id));
   return `<div class="label">체육관에 있는 사람 <b class="num">${d.gym.filter(x=>!x.owner&&!x.coach).length}</b>명${d.gym.some(x=>x.owner||x.coach)?' + 관장·코치':''}</div>
     ${d.gym.length?d.gym.map(x=>whoRow(x,nm,'gym',staffView)).join(''):'<div class="small">지금 체육관에 출석한 사람이 없어요</div>'}
@@ -2772,7 +2773,8 @@ function whoHTML(d,nm,staffView){const inGym=new Set(d.gym.map(x=>x.id));const a
 function whoPaint(root,d,staffView){root.querySelectorAll('[data-wa]').forEach(cv=>{const x=d.gym.concat(d.app).find(y=>y.id===cv.dataset.wa);try{avatarTo(cv,(x&&x.eq)||{char:'boxer'},{h:46,noFx:true})}catch(e){}});if(staffView)root.querySelectorAll('[data-wf]').forEach(el=>faceInto(el,el.dataset.wf))}
 async function openWho(){const d=await whoData();const sv=isStaff(ME||{});const nm=sv?await whoNames(d.gym.concat(d.app).map(x=>x.id)):{};
   sheet(`<h2>지금 누가 있나요?</h2><div id="whoBox" style="display:flex;flex-direction:column;gap:6px">${whoHTML(d,nm,sv)}</div>${sv?'':'<p class="small" style="margin:0">회원 이름은 가려서 보여요. 캐릭터를 맵에서 누르면 인사할 수 있어요.</p>'}<button class="btn ghost" data-close>닫기</button>`,(el)=>whoPaint(el,d,sv))}
-async function renderWhoAdmin(){const box=$('#whoAdm');if(!box)return;const d=await whoData();const nm=await whoNames(d.gym.concat(d.app).map(x=>x.id));box.innerHTML=whoHTML(d,nm,true);whoPaint(box,d,true)}
+async function renderWhoAdmin(){const box=$('#whoAdm');if(!box)return;const d=await whoData();const nm=await whoNames(d.gym.concat(d.app).map(x=>x.id));box.innerHTML=whoHTML(d,nm,true);whoPaint(box,d,true);
+  box.querySelectorAll('[data-whom]').forEach(r=>{const go=()=>admDetail(r.dataset.whom);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}})}
 setInterval(()=>{const v=$('#v-admin');if(v&&!v.hidden&&$('#whoAdm')&&!$('#whoAdm').closest('[data-atab]').hidden)renderWhoAdmin()},30000);
 
 /* ================= 인사 주고받기 ================= */
