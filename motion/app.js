@@ -633,6 +633,15 @@
   function paintPanel(ctx, w, h, kind, orig, corr, lw, editOpts) {
     const oLw = lw * V.oW / 100, fLw = lw * V.fW / 100, oA = V.oA / 100, fA = V.fA / 100, gA = V.ghost / 100;
     const fOpts = Object.assign({ glow: V.glow }, editOpts || {});
+    if (kind === 'raw') { // 원본 영상 그대로
+      if (S.hasVideo && video.readyState >= 2) ctx.drawImage(video, 0, 0, w, h); else drawBg(ctx, w, h, false);
+      return;
+    }
+    if (kind === 'green') { // 교정 뼈대만
+      drawBg(ctx, w, h, false);
+      drawSkel(ctx, corr, w, h, '#3dff8f', fLw, Math.max(fA, 0.3), fOpts);
+      return;
+    }
     if (kind === 'overlay') {
       drawBg(ctx, w, h, true);
       if (oA > 0) drawSkel(ctx, orig, w, h, '#ff5d5d', oLw, oA);
@@ -674,7 +683,15 @@
     const n = S.data.frames.length, fps = S.data.fps, rate = +$('recRate').value;
     const [fa, fb] = ($('recRange').value === 'loop' && S.loop) ? S.loop : [0, n - 1];
     const t0 = fa / fps, t1 = (fb + 1) / fps;
-    const side = S.mode === 'side';
+    const story = $('recStyle').value === 'story';
+    // 4단계 편집: 원본 → 빨강(내 동작) → 초록(교정) → 원본+빨강+초록
+    const SEGS = story ? [
+      { kind: 'raw', title: '① 원본 영상', sub: '찍은 영상 그대로', col: '#ffffff', fg: '#111' },
+      { kind: 'orig', title: '② 내 동작', sub: '빨간 뼈대 = 지금 내 자세', col: '#ff5d5d', fg: '#2a0606' },
+      { kind: 'green', title: '③ 교정 동작', sub: '초록 뼈대 = 이렇게 고쳐요', col: '#3dff8f', fg: '#06200f' },
+      { kind: 'overlay', title: '④ 비교', sub: '원본 + 내 동작 + 교정', col: '#ffcc33', fg: '#2a2106' }
+    ].filter(sg => sg.kind !== 'raw' || S.hasVideo) : [{ kind: S.mode }];
+    const side = !story && S.mode === 'side';
     const asp = S.data.aspect;
     let ph = asp < 1 ? 1280 : Math.round(1280 / asp), pw = Math.round(ph * asp);
     if (side && pw * 2 > 1920) { const k = 1920 / (pw * 2); pw = Math.round(pw * k); ph = Math.round(ph * k); }
@@ -685,7 +702,8 @@
     const lw = Math.max(3, Math.max(pw, ph) / 200);
     const U = Math.max(ph, pw); // 글자 크기 기준
     const name = ($('memberName') && $('memberName').value.trim()) || '';
-    const frameAt = t => {
+    const W = cv.width;
+    const frameAt = (t, sg) => {
       const { f, orig, corr } = posesAt(t);
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
       if (side) {
@@ -693,43 +711,74 @@
         ctx.save(); ctx.translate(pw + gap, 0); paintPanel(ctx, pw, ph, 'fix', orig, corr, lw, {}); ctx.restore();
         capPill(ctx, pw / 2, U * 0.025, '지금 내 동작', '#ff5d5d', '#2a0606', U * 0.026);
         capPill(ctx, pw + gap + pw / 2, U * 0.025, '이렇게 고쳐요', '#3dff8f', '#06200f', U * 0.026);
-      } else paintPanel(ctx, pw, ph, S.mode, orig, corr, lw, {});
-      const W = cv.width;
-      ctx.font = `700 ${Math.round(U * 0.024)}px Oswald, "Noto Sans KR", sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      } else paintPanel(ctx, pw, ph, sg.kind, orig, corr, lw, {});
+      ctx.font = `700 ${Math.round(U * 0.022)}px Oswald, "Noto Sans KR", sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
       if (!side) ctx.fillText('NNN BOXING' + (name ? '  ·  ' + name : ''), U * 0.025, U * 0.025);
-      const cur = capIssues(f);
+      if (story) capPill(ctx, W / 2, U * 0.06, sg.title, sg.col, sg.fg, U * 0.024);
+      const cur = sg.kind === 'raw' ? [] : capIssues(f);
       if (cur.length && V.cap !== false) { const cs = U * 0.024 * (V.capSize || 100) / 100; capPill(ctx, side ? pw + gap + pw / 2 : W / 2, ph - cs * 1.7 - U * 0.04, capText(cur[0]), 'rgba(10,12,15,0.85)', '#ffd4d4', cs); }
       if (rate < 1) { ctx.font = `700 ${Math.round(U * 0.02)}px Oswald, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffcc33'; ctx.fillText('SLOW ' + rate + 'x', W - U * 0.025, side ? U * 0.075 : U * 0.03); }
     };
+    // 단계 사이 제목 화면
+    const titleCard = sg => {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      const g = ctx.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#12161c'); g.addColorStop(1, '#050608');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, ph);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = sg.col; ctx.font = `900 ${Math.round(U * 0.06)}px "Noto Sans KR", sans-serif`;
+      ctx.fillText(sg.title, W / 2, ph * 0.46);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.font = `500 ${Math.round(U * 0.028)}px "Noto Sans KR", sans-serif`;
+      ctx.fillText(sg.sub, W / 2, ph * 0.46 + U * 0.07);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `700 ${Math.round(U * 0.02)}px Oswald, sans-serif`;
+      ctx.fillText('NNN BOXING' + (name ? '  ·  ' + name : ''), W / 2, ph * 0.9);
+    };
+    const holdTitle = (sg, ms) => new Promise(res => {
+      const st = performance.now();
+      const step = () => { titleCard(sg); if (performance.now() - st >= ms) res(); else requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+    const segDur = (t1 - t0) / rate, titleMs = story ? 1100 : 0;
+    const total = SEGS.length * (segDur + titleMs / 1000);
+    let done = 0;
     recording = true; btn.disabled = true; $('recOut').classList.add('hide');
     try {
       await document.fonts.load('700 30px "Noto Sans KR"').catch(() => { });
-      frameAt(t0);
+      await document.fonts.load('900 30px "Noto Sans KR"').catch(() => { });
+      if (story) titleCard(SEGS[0]); else frameAt(t0, SEGS[0]);
       const stream = cv.captureStream(30);
       const rec = new MediaRecorder(stream, Object.assign({ videoBitsPerSecond: 8000000 }, mime ? { mimeType: mime } : {}));
       const chunks = [];
       rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
       const stopped = new Promise(r => rec.onstop = r);
-      if (S.hasVideo) {
-        video.loop = false; video.playbackRate = rate;
-        const p = once(video, 'seeked', 2000); video.currentTime = t0; await p;
-      }
       rec.start(250);
-      const start = performance.now();
-      if (S.hasVideo) { try { await video.play(); } catch (e) { } }
-      await new Promise(res => {
-        const step = () => {
-          const t = S.hasVideo ? video.currentTime : t0 + (performance.now() - start) / 1000 * rate;
-          if (t >= t1 - 0.01 || (S.hasVideo && video.ended)) { frameAt(Math.min(t, t1 - 0.001)); res(); return; }
-          frameAt(t);
-          msgEl.textContent = `● 녹화 중… ${Math.round((t - t0) / (t1 - t0) * 100)}% (끝날 때까지 이 화면을 켜 두세요)`;
+      for (let k = 0; k < SEGS.length; k++) {
+        const sg = SEGS[k];
+        if (S.hasVideo) { video.loop = false; video.pause(); video.playbackRate = rate; }
+        const seekP = S.hasVideo ? (() => { const p = once(video, 'seeked', 2000); video.currentTime = t0; return p; })() : Promise.resolve();
+        if (story) { msgEl.textContent = `● 녹화 중… ${sg.title}`; await holdTitle(sg, titleMs); }
+        await seekP;
+        done += titleMs / 1000;
+        const start = performance.now();
+        if (S.hasVideo) { try { await video.play(); } catch (e) { } }
+        await new Promise(res => {
+          let fin = false; const end = () => { if (!fin) { fin = true; res(); } };
+          const step = () => {
+            if (fin) return;
+            const t = S.hasVideo ? video.currentTime : t0 + (performance.now() - start) / 1000 * rate;
+            if (t >= t1 - 0.01 || (S.hasVideo && video.ended)) { frameAt(Math.min(t, t1 - 0.001), sg); end(); return; }
+            frameAt(t, sg);
+            const pct = Math.round((done + (t - t0) / rate) / total * 100);
+            msgEl.textContent = `● 녹화 중… ${story ? sg.title + ' · ' : ''}${Math.min(99, pct)}% (끝날 때까지 이 화면을 켜 두세요)`;
+            requestAnimationFrame(step);
+          };
           requestAnimationFrame(step);
-        };
-        requestAnimationFrame(step);
-        setTimeout(res, ((t1 - t0) / rate + 10) * 1000);
-      });
-      if (S.hasVideo) { video.pause(); video.playbackRate = S.rate; }
+          setTimeout(end, (segDur + 10) * 1000);
+        });
+        done += segDur;
+        if (S.hasVideo) video.pause();
+      }
+      if (S.hasVideo) video.playbackRate = S.rate;
       await new Promise(r => setTimeout(r, 300));
       rec.stop(); await stopped;
       stream.getTracks().forEach(tr => tr.stop());
@@ -744,7 +793,7 @@
       $('recOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (e) {
       console.error(e); msgEl.textContent = '녹화하지 못했어요: ' + (e.message || e);
-    } finally { recording = false; btn.disabled = false; seekTo(t0); S.dirty = true; }
+    } finally { recording = false; btn.disabled = false; if (S.hasVideo) video.playbackRate = S.rate; seekTo(t0); S.dirty = true; }
   }
   $('recBtn').onclick = recordVideo;
   $('recSave').onclick = e => { if (S._rec && window.NNNSend) window.NNNSend.saveFile(S._rec.filename, S._rec.blob, e.currentTarget, $('recMsg')); };
