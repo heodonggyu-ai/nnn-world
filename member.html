@@ -844,7 +844,7 @@ body.adminv .app{max-width:1440px;padding-inline:24px}
 body.adminv #v-admin:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 body.adminv #v-admin>*{min-width:0;margin:0}
 body.adminv #v-admin>.row,body.adminv #v-admin>#atabs,body.adminv #v-admin>.adash,body.adminv #v-admin>.bring,body.adminv #v-admin>.ev,body.adminv #v-admin>#memAlert{grid-column:1/-1}
-body.adminv #v-admin>.card:has(#admRows),body.adminv #v-admin>.card:has(#attAdm){grid-column:1/-1}
+body.adminv #v-admin>.card:has(#admRows),body.adminv #v-admin>.card:has(#attAdm),body.adminv #v-admin>.agrp:has(#admRows),body.adminv #v-admin>.agrp:has(#attAdm){grid-column:1/-1}
 body.adminv.alay-b #atabs{position:sticky;top:0;bottom:auto;left:auto;right:auto;border-radius:14px;padding:8px;justify-content:flex-start}
 body.adminv.alay-b #atabs button{flex:0 0 auto;padding:10px 22px;font-size:15px}
 body.adminv.alay-b #v-admin{padding-bottom:24px}
@@ -5065,13 +5065,16 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
     list.forEach(c=>{c.dataset.atab=tab;body.appendChild(c)});d.addEventListener('toggle',()=>{try{localStorage.setItem('nnn_ag_'+key,d.open?'1':'0')}catch(e){}});return [d]};
   const fold=(c,tab,key)=>{if(c.id==='salesBtn'||c.id==='noticeBtn')return c;const d=document.createElement('details');d.className='agrp one';d.dataset.atab=tab;const k=key+':'+title(c);
     const sub=((c.querySelector('p.small,.small')||{}).textContent||'').trim().slice(0,90);d.innerHTML=`<summary><div><b>${esc(title(c))}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></summary><div class="agbody"></div>`;
-    try{d.open=localStorage.getItem('nnn_ag_'+k)==='1'}catch(e){}d.addEventListener('toggle',()=>{try{localStorage.setItem('nnn_ag_'+k,d.open?'1':'0')}catch(e){}});d.querySelector('.agbody').appendChild(c);return d};
+    try{d.open=localStorage.getItem('nnn_ag_'+k)==='1'}catch(e){}d.addEventListener('toggle',()=>{try{localStorage.setItem('nnn_ag_'+k,d.open?'1':'0')}catch(e){}});d.querySelector('.agbody').appendChild(c);{const h=c.querySelector('h3'),bt=d.querySelector('summary b');if(h&&bt){const up=()=>{const t=h.textContent.replace(/\s+/g,' ').trim();if(t)bt.textContent=t};try{new MutationObserver(up).observe(h,{subtree:true,childList:true,characterData:true})}catch(e){}}}return d};
   const set=(tab,list)=>list.filter(Boolean).map(c=>{c.dataset.atab=tab;return c});
+  const setF=(tab,list)=>list.filter(Boolean).map(c=>{c.dataset.atab=tab;return acc?fold(c,tab,tab):c});
   const order=[
-    ...set('today',[C('adash'),C('dueBanner'),C('결제 확인'),C('hrCard'),C('보낼 안내')]),
+    ...set('today',[C('adash'),C('dueBanner'),C('결제 확인')]),
+    ...setF('today',[C('hrCard'),C('보낼 안내')]),
     ...grp('today','sentlog','보낸 안내 기록','문자·카톡으로 보낸 기록 찾기',[C('보낸 안내 기록')],false),
-    ...set('today',[C('지금 누가 있나요'),C('무료 체험 신청'),C('회원 의견함')]),
-    ...set('mem',[C('memAlert'),cards.find(c=>c.querySelector('#admCnt')),C('날짜별 출석 현황'),C('락커 · 캐비넷'),C('만료 · 연장 안내')]),
+    ...setF('today',[C('지금 누가 있나요'),C('무료 체험 신청'),C('회원 의견함')]),
+    ...set('mem',[C('memAlert')]),
+    ...setF('mem',[cards.find(c=>c.querySelector('#admCnt')),C('날짜별 출석 현황'),C('락커 · 캐비넷'),C('만료 · 연장 안내')]),
     ...grp('ops','biz','매출 · 공지','매출 통계, 로그인 팝업 공지, 휴무일, 만료 알림',[C('salesBtn'),C('noticeBtn')],true),
     ...grp('ops','act','회원 활동','오늘의 미션, 승급심사, 스파링 매칭, 맵 대화',[C('misAdm'),C('승급심사'),C('스파링 매칭'),C('맵 대화 관리')],true),
     ...grp('ops','promo','화면 · 홍보','실시간 인원 표시, 체육관 TV, 게스트 화면, 블로그 후기, 입구 QR',[C('실시간 출석 인원 표시'),C('체육관 TV'),C('게스트 둘러보기 내용'),C('블로그 후기 카드'),C('입구 QR 코드')],false),
@@ -5121,8 +5124,9 @@ async function renderADash(){const box=$('#adash');if(!box)return;try{sparAutoPa
   const tiles=[['승인 대기',pend,'mem','pending',pend?'hot':''],['결제 확인',payN,'today','pay',payN?'hot':''],['보낼 안내',dueN,'today','due',dueN?'warn':''],['오늘 출석',today,'mem','all',''],['7일 내 만료',soon,'mem','soon',soon?'warn':''],['유효 회원',valid,'mem','valid',''],['이달 매출',manS(sales)+'원','sales','',''],['공지 팝업',noticesAll().filter(n=>nActive(n)).length,'notice','','']];
   box.innerHTML=tiles.map(([n,v,go,f,cls])=>`<button class="dtile ${cls}" data-go="${go}" data-f="${f}"><b class="num">${v}</b><span>${n}</span></button>`).join('');
   box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go,f=b.dataset.f;if(g==='sales'){openSales();return}if(g==='notice'){openNoticeAdmin();return}
-    if(g==='mem'){admFilter=f||'';setATab('mem');renderAdmRows();setTimeout(()=>{const c=$('#memAlert').style.display==='none'?$('#admFilt'):$('#memAlert');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
-    setATab('today');setTimeout(()=>{const el=f==='pay'?$('#payRows'):$('#dueRows');el&&el.parentElement.scrollIntoView({behavior:'smooth',block:'start'})},60)});
+    const opF=el=>{const d=el&&el.closest('details');if(d)d.open=true};
+    if(g==='mem'){admFilter=f||'';setATab('mem');renderAdmRows();setTimeout(()=>{if(f||$('#memAlert').style.display==='none')opF($('#admFilt'));const c=$('#memAlert').style.display==='none'||f?$('#admFilt'):$('#memAlert');c&&c.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
+    setATab('today');setTimeout(()=>{const el=f==='pay'?$('#payRows'):$('#dueRows');if(f==='pay'){const pb=$('#payBody');if(pb&&pb.hidden)$('#payTog').click()}else opF(el);el&&el.parentElement.scrollIntoView({behavior:'smooth',block:'start'})},60)});
   const bd=(id,n)=>{const e=$(id);if(e){e.textContent=n?n:'';e.hidden=!n}};const hrN=renderHoldReqs(all)||0;bd('#atb-today',payN+dueN+hrN);bd('#atb-mem',pend);try{const [lv,fx]=await Promise.all([hget('hr/leave'),hget('hr/fix')]);let n=0;[lv,fx].forEach(o=>Object.values(o||{}).forEach(c=>Object.values(c||{}).forEach(v=>{if(v&&v.status==='pending')n++})));bd('#atb-staff',n)}catch(e){}}
 function drawQR(){const box=$('#qrbox');box.innerHTML='';const u=$('#sUrl').value.trim();if(!u)return;try{new QRCode(box,{text:u+(u.includes('?')?'&':'?')+'join=1',width:180,height:180,colorDark:'#1D2433',colorLight:'#ffffff'})}catch(e){box.textContent='QR을 만들지 못했어요'}}
 $('#sUrl').oninput=drawQR;
