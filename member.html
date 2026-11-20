@@ -3542,9 +3542,9 @@ document.addEventListener('click',e=>{const im=e.target.closest&&e.target.closes
   zoomImg(im.src,cap)},true);
 
 /* ================= 락커 · 캐비넷 ================= */
-const LK_DEF={L:{name:'락커',n:45,price:10000},C:{name:'캐비넷',n:45,price:20000}};
+const LK_DEF={L:{name:'락커',n:50,price:10000},C:{name:'캐비넷',n:45,price:20000}};
 const LKS={type:'L',data:{},q:''};
-function lkCfg(){const c=local.meta.lockerCfg||{};return{L:Object.assign({},LK_DEF.L,c.L||{}),C:Object.assign({},LK_DEF.C,c.C||{})}}
+function lkCfg(){const c=local.meta.lockerCfg||{};const cl=Object.assign({},c.L||{});if(+cl.n===45)cl.n=50;return{L:Object.assign({},LK_DEF.L,cl),C:Object.assign({},LK_DEF.C,c.C||{})}}
 const lkKey=(ty,no)=>ty+no;
 const lkName=(ty,no)=>`${lkCfg()[ty].name} ${no}번`;
 function lkState(r){if(!r)return 'e';if(r.off)return 'o';if(!r.mid)return 'e';const d=dDiff(r.end,TODAY());return d<0?'x':d<=7?'s':'u'}
