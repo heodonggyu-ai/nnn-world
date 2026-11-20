@@ -1563,10 +1563,18 @@ const DB={
   async get(id){if(isLocal(id))return mig(local.members[id])||null;
     try{const pub=(await gref('members/'+id).get()).val();if(!pub)return null;let prv=null;try{prv=(await gref('private/'+id).get()).val()}catch(e){}return joinM(pub,prv)}catch(e){return null}},
   async save(m){m.rev=(m.rev||0)+1;if(isLocal(m.id)){local.members[m.id]=m;persist();return}
-    try{let pub=clean(splitM(m).pub);
-      if(m._b){try{const srv=(await Promise.race([gref('members/'+m.id).get(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('t')),4000))])).val();
-        if(srv&&_J(srv)!==_J(m._b)){const mg=mergePub(m._b,pub,srv);mg.rev=Math.max(+srv.rev||0,+pub.rev||0)+1;delete mg.nick;mg.nick=pub.nick;Object.keys(mg).forEach(k=>{if(k!=='nick')m[k]=mg[k]});pub=mg;try{if(Array.isArray(m.attend))m.attend=m.attend.filter(x=>typeof x==='string')}catch(e){}}}catch(e){}}
-      await gref('members/'+m.id).set(pub);try{m._b=clean(pub)}catch(e){}}catch(e){toast('저장이 안 됐어요. 잠시 후 다시 해 주세요')}},
+    try{const pub0=clean(splitM(m).pub);const base=m._b;let out=pub0;
+      /* 원자적 저장(transaction): 패드·회원폰·관장폰이 동시에 저장해도 복권·크레딧 등 서로의 변경이 지워지지 않게 서버 최신값 위에 합쳐서 씀 */
+      const tx=gref('members/'+m.id).transaction(cur=>{
+        if(!cur||!base||_J(cur)===_J(base)){out=pub0;return pub0}
+        const mg=mergePub(base,pub0,cur);mg.rev=Math.max(+cur.rev||0,+pub0.rev||0)+1;delete mg.nick;mg.nick=pub0.nick;
+        try{if(Array.isArray(mg.attend))mg.attend=mg.attend.filter(x=>typeof x==='string')}catch(e){}
+        out=clean(mg);return out});
+      const r=await withTO(tx,15000);
+      if(r==='__err')throw new Error('tx');
+      if(r&&r!=='__to'&&r.snapshot){const v=r.snapshot.val();if(v)out=v}
+      Object.keys(out).forEach(k=>{if(k!=='nick')m[k]=out[k]});try{if(Array.isArray(m.attend))m.attend=m.attend.filter(x=>typeof x==='string')}catch(e){}
+      try{m._b=clean(out)}catch(e){}}catch(e){toast('저장이 안 됐어요. 잠시 후 다시 해 주세요')}},
   async savePriv(m){if(isLocal(m.id)){local.members[m.id]=m;persist();return}try{await gref('private/'+m.id).set(clean(splitM(m).prv))}catch(e){toast('회원 정보 저장 실패')}},
   async all(){if(!FB_ON())return Object.values(local.members).map(mig);
     try{const pub=(await gref('members').get()).val()||{};let prv={};if(IS_ADMIN){try{prv=(await gref('private').get()).val()||{}}catch(e){}}
