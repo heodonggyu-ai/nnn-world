@@ -1,0 +1,8 @@
+{
+  "appId": "com.nnnboxing.mingnyutoon",
+  "appName": "밍뉴툰 스튜디오",
+  "webDir": "www",
+  "backgroundColor": "#fbf8ff",
+  "ios": { "contentInset": "never", "scrollEnabled": false, "backgroundColor": "#fbf8ff" },
+  "android": { "backgroundColor": "#fbf8ff" }
+}

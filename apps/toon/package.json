@@ -1,0 +1,21 @@
+{
+  "name": "mingnyutoon-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "밍뉴툰 스튜디오 - iOS/Android 앱 (Capacitor)",
+  "scripts": {
+    "sync": "npx cap sync",
+    "assets": "npx @capacitor/assets generate --iconBackgroundColor '#ffffff' --splashBackgroundColor '#fbf8ff' --splashBackgroundColorDark '#1c1b24'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2"
+  }
+}

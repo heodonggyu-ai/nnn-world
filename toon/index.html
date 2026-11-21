@@ -1927,7 +1927,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && ST.
 let DL = null;
 async function initDownloads() { try { if (window.claude && window.claude.use) DL = await window.claude.use('downloads'); } catch (e) { DL = null; } }
 function safeName(s) { return (s || '그림').replace(/[\\/:*?"<>|]/g, '').slice(0, 40) || '그림'; }
-const HOSTED = /github\.io$|netlify\.app$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) || location.protocol === 'file:';
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const HOSTED = !NATIVE && (/github\.io$|netlify\.app$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) || location.protocol === 'file:');
 function hostSave(files, msg) { // files: [{name, blob}]
   const box = $('#saveImgs'); box.innerHTML = '';
   files.forEach(f => { if (/^image\//.test(f.blob.type)) { const i = new Image(); i.src = URL.createObjectURL(f.blob); box.appendChild(i); } });
@@ -1938,7 +1939,15 @@ function hostSave(files, msg) { // files: [{name, blob}]
   if (canShare) $('#svShare').onclick = async () => { try { await navigator.share({ files: fl }); toast('📥 저장했어요!'); $('#saveView').classList.remove('on'); } catch (e) { if (e.name !== 'AbortError') toast('공유가 안 되면 ⬇ 다운로드를 눌러요'); } };
   $('#svDl').onclick = () => { files.forEach((f, k) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(f.blob); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }, k * 400)); toast('📥 다운로드했어요!'); };
 }
+async function nativeSave(files, title) {
+  try {
+    const P = window.Capacitor.Plugins, uris = [];
+    for (const f of files) { const b64 = (await blobToDataURL(f.blob)).split(',')[1]; const r = await P.Filesystem.writeFile({ path: f.name.replace(/[\\/:*?"<>|]/g, '_'), data: b64, directory: 'CACHE' }); uris.push(r.uri); }
+    await P.Share.share({ title: title || '밍뉴툰 저장', files: uris }); return true;
+  } catch (e) { if (!/cancel/i.test(String(e && (e.message || e)))) { console.error(e); toast('저장 중 문제가 생겼어요 😢'); } return false; }
+}
 async function saveFile(filename, blob, imgs) {
+  if (NATIVE) return nativeSave([{ name: filename, blob }]);
   if (HOSTED) { hostSave([{ name: filename, blob }]); return true; }
   if (DL) { try { await DL.save({ filename, data: blob }); toast('📥 저장했어요!'); return true; } catch (e) { if (e && e.code === 'declined') { toast('저장을 취소했어요'); return false; } if (e && e.code === 'rate_limited') { toast('잠깐만요, 다시 눌러 주세요'); return false; } } }
   if (imgs) { showSaveView('이미지를 <b>꾹 길게 눌러서</b> 사진에 저장하세요', imgs); return false; }
@@ -1950,12 +1959,13 @@ async function exportPage(i) { const c = renderPageCanvas(ST.doc.pages[i]); cons
 async function longCanvases() { const D = ST.doc, per = Math.max(1, Math.floor(12800 / D.h)); const out = []; for (let s = 0; s < D.pages.length; s += per) { const n = Math.min(per, D.pages.length - s); const c = mkCanvas(D.w, D.h * n), x = c.getContext('2d'); for (let k = 0; k < n; k++) { x.save(); x.translate(0, k * D.h); compositePage(D.pages[s + k], x, {}); x.restore(); } out.push(c); } return out; }
 async function exportLong() {
   toast('📜 이어 붙이는 중...'); const cs = await longCanvases(); const blobs = []; for (const c of cs) blobs.push(await toBlob(c));
-  if (HOSTED) hostSave(blobs.map((b, i) => ({ name: `${safeName(ST.doc.title)}${blobs.length > 1 ? '_' + (i + 1) : ''}.png`, blob: b })), '웹툰을 길게 이어 붙였어요!');
+  if (NATIVE) nativeSave(blobs.map((b, i) => ({ name: `${safeName(ST.doc.title)}${blobs.length > 1 ? '_' + (i + 1) : ''}.png`, blob: b })));
+  else if (HOSTED) hostSave(blobs.map((b, i) => ({ name: `${safeName(ST.doc.title)}${blobs.length > 1 ? '_' + (i + 1) : ''}.png`, blob: b })), '웹툰을 길게 이어 붙였어요!');
   else if (DL) { for (let i = 0; i < blobs.length; i++) { const ok = await saveFile(`${safeName(ST.doc.title)}${blobs.length > 1 ? '_' + (i + 1) : ''}.png`, blobs[i]); if (!ok) break; } }
   else showSaveView('웹툰 이미지를 <b>꾹 길게 눌러서</b> 저장하세요', blobs);
   markMission('export');
 }
-async function exportEach() { const blobs = []; for (let i = 0; i < ST.doc.pages.length; i++) blobs.push(await toBlob(renderPageCanvas(ST.doc.pages[i]))); if (HOSTED) hostSave(blobs.map((b, i) => ({ name: `${safeName(ST.doc.title)}_${i + 1}.png`, blob: b })), `화면 ${blobs.length}개를 준비했어요!`); else if (DL) { for (let i = 0; i < blobs.length; i++) { const ok = await saveFile(`${safeName(ST.doc.title)}_${i + 1}.png`, blobs[i]); if (!ok) break; } } else showSaveView('하나씩 <b>꾹 눌러서</b> 저장하세요', blobs); }
+async function exportEach() { const blobs = []; for (let i = 0; i < ST.doc.pages.length; i++) blobs.push(await toBlob(renderPageCanvas(ST.doc.pages[i]))); if (NATIVE) nativeSave(blobs.map((b, i) => ({ name: `${safeName(ST.doc.title)}_${i + 1}.png`, blob: b }))); else if (HOSTED) hostSave(blobs.map((b, i) => ({ name: `${safeName(ST.doc.title)}_${i + 1}.png`, blob: b })), `화면 ${blobs.length}개를 준비했어요!`); else if (DL) { for (let i = 0; i < blobs.length; i++) { const ok = await saveFile(`${safeName(ST.doc.title)}_${i + 1}.png`, blobs[i]); if (!ok) break; } } else showSaveView('하나씩 <b>꾹 눌러서</b> 저장하세요', blobs); }
 const blobToDataURL = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
 async function exportBackup(d) {
   toast('📦 백업 파일 만드는 중...'); const rec = d.pages ? (d.pages[0] && d.pages[0].layers[0] && d.pages[0].layers[0].canvas ? await serializeDoc(d) : d) : d;
