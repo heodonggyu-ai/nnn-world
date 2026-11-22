@@ -83,6 +83,7 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
   <div class="count hidden" id="count"></div><div class="flash" id="flash"></div>
   <div class="msg" id="msg">${I('camera')}<p id="msgT">카메라를 켜는 중…</p><button class="btn pri" id="mRetry">카메라 다시 켜기</button><button class="btn glass" id="mPhoto">${I('image')}찍어둔 사진으로 연습</button></div></div></div>
  <div class="say-cam hidden" id="sayCam"><div class="tx"><small>이렇게 말해보세요</small><b id="sayT"></b></div><button id="sayN" aria-label="다른 멘트">${I('next')}</button></div>
+ ${C.modes?`<div class="modes" id="modes"></div>`:''}
  <div class="cstrip" id="cstrip"></div>
  <div class="toggles" id="toggles"></div>
  <div class="ctrl"><button class="last" id="cLast" aria-label="찍은 사진">${I('image')}</button><button class="shot" id="shutter" aria-label="촬영"><i></i><span id="shotN"></span></button><button class="round" id="cFlip" aria-label="카메라 전환">${I('flip')}</button></div>
@@ -195,7 +196,12 @@ function renderStrip(){$('#cstrip').innerHTML=pool.map(id=>`<button class="gth${
 $('#cstrip').onclick=e=>{if(e.target.closest('[data-more]')){openPicker();return}const b=e.target.closest('[data-g]');if(b)setActive(b.dataset.g,true)};
 function setActive(id,manual){if(!BY[id])return;if(!pool.includes(id)){pool.unshift(id);renderStrip()}if(manual&&auto){auto=false;renderToggles()}active=id;$$('#cstrip .gth').forEach(b=>b.classList.toggle('on',b.dataset.g===id));renderActive();
   const el=$(`#cstrip [data-g="${id}"]`);el&&el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}
-function renderActive(){const it=BY[active];$('#cName').textContent=it?it.name:'';$('#cAuto').classList.toggle('hidden',!auto);$('#bPhone').innerHTML=I('phone')+(it&&it.phone||'자유');
+function renderModes(){const m=$('#modes');if(!m)return;const ids=C.modes.filter(i=>BY[i]);
+  m.innerHTML=(autoPool.length?`<button class="md${auto?' on':''}" data-m="auto">${I('spark')}자동</button>`:'')+ids.map(id=>`<button class="md${!auto&&id===active?' on':''}${auto&&id===active?' cur':''}" data-m="${id}">${BY[id].name}</button>`).join('');
+  const on=m.querySelector('.on')||m.querySelector('.cur');on&&on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}
+$('#modes')&&($('#modes').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;const k=b.dataset.m;
+  if(k==='auto'){auto=!auto;if(auto&&feat)rankNow();renderToggles();renderActive();toast(auto?'장면에 맞는 구도를 자동으로 골라요':'자동 추천을 껐어요')}else setActive(k,true);navigator.vibrate&&navigator.vibrate(8)});
+function renderActive(){renderModes();const it=BY[active];$('#cName').textContent=it?it.name:'';$('#cAuto').classList.toggle('hidden',!auto);$('#bPhone').innerHTML=I('phone')+(it&&it.phone||'자유');
   const m=(ments&&ments.length?ments:(it&&it.ments&&it.ments.length?it.ments:(C.defaultMents||[])));$('#sayCam').classList.toggle('hidden',!m.length||C.showMents===false);if(m.length)$('#sayT').textContent='“'+m[mi%m.length]+'”'}
 $('#sayN').onclick=()=>{mi++;renderActive()};
 $('#cPick').onclick=()=>openPicker();
@@ -207,7 +213,7 @@ function openPicker(){const cats=CATS;let pc=BY[active]?BY[active].cat:cats[0];
   rt();$('#pT').onclick=e=>{const b=e.target.closest('[data-c]');if(b){pc=b.dataset.c;rt()}};$('#pG').onclick=e=>{const b=e.target.closest('[data-id]');if(b){setActive(b.dataset.id,true);closeSheet()}}}
 
 /* 토글 */
-function renderToggles(){const T=[];if(autoPool.length)T.push(`<button class="tg${auto?' on':''}" data-t="auto">${I('spark')}자동 추천</button>`);
+function renderToggles(){const T=[];if(autoPool.length&&!C.modes)T.push(`<button class="tg${auto?' on':''}" data-t="auto">${I('spark')}자동 추천</button>`);
   T.push(`<button class="tg${burst>1?' on':''}" data-t="burst">${I('bolt')}${burst>1?'연사 '+burst:'연사'}</button>`,`<button class="tg${timer?' on':''}" data-t="timer">${I('timer')}${timer?timer+'초':'타이머'}</button>`,`<button class="tg" data-t="side">${I('swap')}좌우</button>`,`<button class="tg" data-t="photo">${I('image')}사진 분석</button>`);
   $('#toggles').innerHTML=T.join('')}
 $('#toggles').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;
