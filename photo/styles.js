@@ -11,39 +11,8 @@ function glow(c,x,y,r,col){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColo
 function rnd(s){return()=>{s=(s*16807)%2147483647;return s/2147483647}}
 function bokeh(c,w,h,n,seed,cols,y0=0,y1=1){const r=rnd(seed);for(let i=0;i<n;i++)glow(c,r()*w,(y0+r()*(y1-y0))*h,6+r()*w*.08,cols[i%cols.length])}
 
-/* ---- 사람 그리기 (h = 키, fy = 발 위치) ---- */
-const ST={lk:[[-.05,-.25],[-.06,0]],rk:[[.05,-.25],[.06,0]]};
-const POSES={
-  stand:{...ST,la:[[-.14,-.63],[-.13,-.46]],ra:[[.14,-.63],[.13,-.46]]},
-  walk:{lk:[[-.07,-.24],[-.13,0]],rk:[[.05,-.24],[.11,-.02]],la:[[-.13,-.63],[-.08,-.48]],ra:[[.15,-.62],[.21,-.49]]},
-  jump:{lk:[[-.14,-.37],[-.07,-.2]],rk:[[.12,-.31],[.21,-.2]],la:[[-.2,-.96],[-.26,-1.12]],ra:[[.2,-.96],[.26,-1.12]]},
-  punch:{lk:[[-.1,-.24],[-.16,0]],rk:[[.08,-.25],[.14,0]],la:[[.02,-.67],[.09,-.83]],ra:[[.27,-.79],[.45,-.79]]},
-  arms:{...ST,la:[[-.22,-.87],[-.33,-.99]],ra:[[.22,-.87],[.33,-.99]]},
-  hold:{...ST,la:[[-.12,-.62],[-.02,-.67]],ra:[[.12,-.62],[.02,-.67]]},
-  sit:{lk:[[-.2,-.45],[.04,-.41]],rk:[[.2,-.45],[-.04,-.41]],la:[[-.15,-.62],[-.18,-.47]],ra:[[.15,-.62],[.18,-.47]]},
-  phone:{...ST,la:[[-.14,-.63],[-.13,-.46]],ra:[[.15,-.7],[.07,-.88]]},
-};
-function person(c,x,fy,h,o={}){
-  const d=o.dir||1,P=POSES[o.pose||'stand'],X=v=>x+v*h*d,Y=v=>fy+v*h;
-  const one=o.sil||o.ghost,sk=one||o.skin||'#efc19f',cl=one||o.col||'#3b4a6b',pa=one||o.pants||'#2b2f3a',ha=one||o.hair||'#2b1d17';
-  c.save();c.lineCap='round';c.lineJoin='round';
-  c.strokeStyle=pa;c.lineWidth=h*.075;
-  [[-.045,P.lk],[.045,P.rk]].forEach(([hx,k])=>{c.beginPath();c.moveTo(X(hx),Y(-.47));c.lineTo(X(k[0][0]),Y(k[0][1]));c.lineTo(X(k[1][0]),Y(k[1][1]));c.stroke()});
-  if(o.dress)poly(c,[[X(-.12),Y(-.83)],[X(.12),Y(-.83)],[X(.17),Y(-.3)],[X(-.17),Y(-.3)]],cl);
-  else poly(c,[[X(-.12),Y(-.83)],[X(.12),Y(-.83)],[X(.085),Y(-.44)],[X(-.085),Y(-.44)]],cl);
-  c.strokeStyle=cl;c.lineWidth=h*.055;
-  [[-.11,P.la],[.11,P.ra]].forEach(([sx,a])=>{c.beginPath();c.moveTo(X(sx),Y(-.8));c.lineTo(X(a[0][0]),Y(a[0][1]));c.lineTo(X(a[1][0]),Y(a[1][1]));c.stroke();
-    if(o.gloves)circ(c,X(a[1][0]),Y(a[1][1]),h*.045,one||'#d8262e');else circ(c,X(a[1][0]),Y(a[1][1]),h*.026,sk)});
-  if(o.pose==='phone')rect(c,X(.03)-h*.03,Y(-.95),h*.06,h*.1,one||'#111');
-  const hr=h*.07,hx=X(o.look?.01:0),hy=Y(-.93);
-  circ(c,hx,hy,hr,sk);
-  if(o.back){circ(c,hx,hy,hr*1.05,ha);if(o.long)rect(c,hx-hr*1.05,hy,hr*2.1,hr*1.6,ha)}
-  else{c.fillStyle=ha;c.beginPath();c.arc(hx-(o.look?d*hr*.25:0),hy-hr*.15,hr*1.05,Math.PI,0);c.fill();
-    if(o.long){rect(c,hx-hr*1.1,hy-hr*.2,hr*.4,hr*1.7,ha);rect(c,hx+hr*.7,hy-hr*.2,hr*.4,hr*1.7,ha)}
-    if(!one&&h>70){const e=o.look?[[d*hr*.35]]:[[-hr*.35],[hr*.35]];e.forEach(([ex])=>circ(c,hx+ex,hy+hr*.05,Math.max(1,hr*.1),'#2b1d17'));
-      if(o.smile){c.strokeStyle='#b5536a';c.lineWidth=Math.max(1,hr*.12);c.beginPath();c.arc(hx+(o.look?d*hr*.3:0),hy+hr*.35,hr*.3,.2,Math.PI-.2);c.stroke()}}}
-  c.restore();
-}
+/* ---- 사람: kit.js의 고품질 렌더러 사용 ---- */
+const person=(...a)=>KIT.person(...a);
 
 /* ---- 가이드 그리기 도구 ---- */
 function G(c,W,H,col,lw,sample){
@@ -52,7 +21,7 @@ function G(c,W,H,col,lw,sample){
   g.D=on=>c.setLineDash(on?[lw*4,lw*3]:[]);
   g.dot=(x,y,r)=>{c.beginPath();c.arc(x*W,y*H,r||lw*3.2,0,TAU);c.fill()};
   g.ring=(x,y,r)=>{c.beginPath();c.arc(x*W,y*H,r*Math.min(W,H),0,TAU);c.stroke();g.dot(x,y)};
-  g.T=(t,x,y,cl,al)=>{if(!sample)y=Math.min(Math.max(y,.17),.9);c.save();c.font=`800 ${Math.max(11,W/25)}px sans-serif`;c.textAlign=al||'start';c.fillStyle=cl||col;c.fillText(t,x*W,y*H);c.restore()};
+  g.T=(t,x,y,cl,al)=>{if(!sample)y=Math.min(Math.max(y,.17),.9);c.save();c.font=`800 ${Math.max(11,W/25)}px Pretendard,sans-serif`;c.textAlign=al||'start';c.fillStyle=cl||col;c.fillText(t,x*W,y*H);c.restore()};
   g.R=(x,y,w,h)=>c.strokeRect(x*W,y*H,w*W,h*H);
   g.E=(x,y,rx,ry)=>{c.beginPath();c.ellipse(x*W,y*H,rx*W,ry*H,0,0,TAU);c.stroke()};
   g.thirds=(a=.28)=>{[1/3,2/3].forEach(t=>{g.L(t,0,t,1,a);g.L(0,t,1,t,a)})};
@@ -675,7 +644,7 @@ const S=[
 
 ];
 
-const CATS={people:'👤 인물·인플루언서',travel:'✈️ 여행·일상 (인물+배경)',film:'🎬 영화감독 연출',master:'📷 사진 거장',street:'🏙 거리·작가 기법',land:'🏞 풍경',food:'🍰 음식·소품'};
+const CATS={people:'인물',couple:'커플·가족',travel:'여행·일상',film:'영화 연출',master:'사진 거장',street:'거리',land:'풍경',food:'음식·소품'};
 const BY=Object.fromEntries(S.map(s=>[s.id,s]));
 const cache=new Map();
 function drawGuide(id,c,W,H,opt={}){
@@ -685,6 +654,7 @@ function drawGuide(id,c,W,H,opt={}){
     x.shadowColor='rgba(0,0,0,.55)';x.shadowBlur=3;s.guide(G(x,W,H,col,lw,opt.sample));if(cache.size>40)cache.clear();cache.set(key,cv)}
   c.drawImage(cv,0,0);
 }
-function drawScene(id,c,w,h){const s=BY[id];if(s){c.save();s.scene(c,w,h);c.restore()}}
-window.PHOTO_STYLES={list:S,byId:BY,cats:CATS,drawGuide,drawScene,person};
+function drawScene(id,c,w,h,opt={}){const s=BY[id];if(s){c.save();s.scene(c,w,h);c.restore();if(opt.post!==false)KIT.post(c,w,h,s.post||{})}}
+function add(arr){arr.forEach(s=>{if(s.draw){const d=s.draw,gd=s.gd||[];s.scene=(c,w,h)=>KIT.runScene(d,c,w,h);s.guide=g=>KIT.runGuide(gd,g)}if(!BY[s.id]){S.push(s);BY[s.id]=s}})}
+window.PHOTO_STYLES={list:S,byId:BY,cats:CATS,drawGuide,drawScene,person,add};
 })();
