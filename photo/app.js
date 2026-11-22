@@ -42,6 +42,7 @@ const P={
  fork:'<path d="M7 3.5V10a2 2 0 004 0V3.5M9 12v8.5M16 20.5V3.5c-2 1-3 3.5-3 7h3"/>',
  moon:'<path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z"/>',
  couple:'<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 20a5.5 5.5 0 0111 0M10.5 20a5.5 5.5 0 0111 0"/>',
+ home:'<path d="M4 11l8-6.5 8 6.5v8.5a1 1 0 01-1 1h-4.5v-6h-5v6H5a1 1 0 01-1-1z"/>',
  palette:'<path d="M12 3.5a8.5 8.5 0 100 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.5 1.6-1.5h2.2a3.9 3.9 0 003.9-3.9C20.5 6.8 16.7 3.5 12 3.5z"/><circle cx="7.8" cy="11" r="1.2"/><circle cx="10.5" cy="7.3" r="1.2"/><circle cx="15" cy="7.6" r="1.2"/>',
  paw:'<circle cx="12" cy="15.5" r="3.8"/><circle cx="6.5" cy="10.5" r="1.8"/><circle cx="17.5" cy="10.5" r="1.8"/><circle cx="9.5" cy="6.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/>',
  glove:'<path d="M7 10V7a5 5 0 0110 0v5a6 6 0 01-6 6H9.5A3.5 3.5 0 016 14.5V12a2 2 0 012-2h3"/><path d="M8 18v2.5h8V17"/>',
@@ -64,8 +65,21 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return
 
 /* ---------- 레이아웃 ---------- */
 document.body.insertAdjacentHTML('beforeend',`
-<main id="home">
+<main id="home"${C.tabsHome?' class="tabbed"':''}>
  <header class="top"><div class="brand">${C.logo}<span>${C.name}</span></div><div class="acts"><button class="ibtn" id="hFav" aria-label="즐겨찾기">${I('heart')}<span class="dot hidden"></span></button><button class="ibtn" id="hHelp" aria-label="사용법">${I('info')}</button></div></header>
+ ${C.tabsHome?`<section class="view-home" data-v="home">
+  <div class="vfc" id="goCam" role="button" tabindex="0" aria-label="카메라 켜기"><canvas id="vfCv" width="708" height="760"></canvas>
+   <span class="dchip a">${I('spark')}장면: <b id="dScene"></b></span><span class="dchip b">추천 구도: <b id="dComp"></b></span><span class="dchip c">${I('palette')}<b id="dLook"></b></span>
+   <div class="vfa"><button class="vp on" data-go="auto">${I('spark')}자동 추천</button><button class="vp" data-go="look">${I('palette')}색감</button><button class="vp" data-go="analyze">${I('compass')}분석</button></div></div>
+  <h2 class="sec">무엇을 찍나요?</h2><div class="crow" id="crow"></div>
+  <h2 class="sec">오늘의 색감</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요</p><div class="lrow" id="lrow"></div>
+ </section>
+ <section class="view-looks hidden" data-v="looks"><h2 class="sec">색감 ${window.LOOKS?LOOKS.list.filter(l=>l.id!=='none').length:''}종</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요. 농도는 카메라에서 조절해요</p><div class="cchips light" id="lgG"></div><div class="lgrid" id="lgL"></div></section>
+ <section class="view-edit hidden" data-v="edit"><h2 class="sec">사진 보정</h2><p class="secsub">사진첩에 있던 사진에 어울리는 색감을 추천받아 입혀요</p>
+  <div class="ebig"><canvas id="eCv" width="708" height="520"></canvas><span class="dsplit"><i>원본</i><i>보정</i></span></div>
+  <button class="btn pri wide" id="ePick">${I('image')}사진첩에서 사진 고르기</button>
+  <button class="erow" id="eAna"><span class="ei">${I('compass')}</span><span><b>찍은 사진 구도 분석</b><small>사진을 올리면 맞는 구도와 고칠 점을 알려줘요</small></span>${I('next')}</button></section>
+ <div class="view-refs hidden" data-v="refs">`:''}
  ${C.features?`<section class="demo" id="goCam" role="button" tabindex="0" aria-label="카메라 켜기"><div class="dv"><canvas id="demoCv" width="640" height="340"></canvas><span class="dsplit"><i>원본</i><i>색감</i></span>
    <span class="dchip a">${I('spark')}장면 인식 · <b id="dScene"></b></span><span class="dchip b">${I('grid')}추천 구도 · <b id="dComp"></b></span><span class="dchip c">${I('palette')}<b id="dLook"></b></span></div>
   <div class="dt"><h1>${C.heroTitle}</h1><p>${C.heroSub}</p></div></section>
@@ -80,7 +94,9 @@ document.body.insertAdjacentHTML('beforeend',`
  <nav class="tabs" id="tabs"></nav>
  <div class="grid" id="grid"></div>
  <p class="foot">${C.foot||'샘플 그림은 각 촬영 기법을 설명하려고 직접 그린 일러스트예요.'}</p>
+ ${C.tabsHome?'</div>':''}
 </main>
+${C.tabsHome?`<nav class="ftab" id="ftab">${[['home','home','홈'],['refs','grid','구도'],['cam','camera',''],['looks','palette','색감'],['edit','image','보정']].map(([k,ic,n])=>k==='cam'?`<button class="cm" data-t="cam" aria-label="카메라 켜기">${I('camera')}</button>`:`<button data-t="${k}"${k==='home'?' class="on"':''}>${I(ic)}<span>${n}</span></button>`).join('')}</nav>`:''}
 ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('camera')}${C.heroCTA||'카메라 켜기'}</button>${C.photoAnalyze!==false?`<button class="btn glass" id="dPhoto" aria-label="사진 분석">${I('image')}</button>`:''}</div>`:''}
 <section id="cam" class="hidden" aria-label="촬영">
  <div class="ctop"><button class="cbtn" id="cBack" aria-label="홈으로">${I('back')}</button><button class="gpick" id="cPick"><em id="cAuto" class="hidden">자동</em><span id="cName"></span>${I('chev')}</button><button class="cbtn" id="cAspect">3:4</button><button class="cbtn" id="cInfo" aria-label="촬영 방법">${I('info')}</button></div>
@@ -99,10 +115,37 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
 <section class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div class="sh"><h3 id="shT"></h3><button class="xbtn" id="shX" aria-label="닫기">${I('close')}</button></div><div class="sb" id="shB"></div><div class="sf hidden" id="shF"></div></section>
 <div class="toast" id="toast"></div>
 <input type="file" id="file" accept="image/*" hidden><input type="file" id="file2" accept="image/*" hidden>`);
+/* ---------- 탭형 홈 ---------- */
+let curV='home';
+function showV(v){if(!C.tabsHome)return;curV=v;$$('#home [data-v]').forEach(s=>s.classList.toggle('hidden',s.dataset.v!==v));$$('#ftab [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===v));scrollTo(0,0)}
 
 const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1900)};
 
 /* ---------- 홈: 히어로 ---------- */
+if(C.tabsHome)(function(){const P=()=>C.startPool?C.startPool():null;
+  const D=C.demos.filter(d=>BY[d.id]),d=D[Math.floor(Math.random()*D.length)],cv=$('#vfCv'),c=cv.getContext('2d'),W=cv.width,H=cv.height,k=Math.max(W/300,H/400);
+  const t=document.createElement('canvas');t.width=W;t.height=H;const x=t.getContext('2d');x.setTransform(k,0,0,k,(W-300*k)/2,-(400*k-H)*.2);PC.drawThumb(d.id,x,300,400,{guide:true});
+  let o=t;try{if(window.LOOKS)o=LOOKS.apply(t,d.look,.9)}catch(e){}c.drawImage(o,0,0);
+  $('#dScene').textContent=d.scene;$('#dComp').textContent=BY[d.id].name;$('#dLook').textContent=window.LOOKS&&LOOKS.byId[d.look]?LOOKS.byId[d.look].name:'';
+  $('.vfa').onclick=e=>{const b=e.target.closest('[data-go]');if(!b)return;e.stopPropagation();const g=b.dataset.go;if(g==='auto')openCam(P());else if(g==='look')openCam(P(),{look:1});else openCam(P(),{photo:1})};
+  /* 분류 줄 */
+  const cov=k=>{const pre=((C.catGrid||{}).covers||{})[k];return pre&&BY[pre]?pre:ITEMS.find(i=>i.cat===k).id};
+  $('#crow').innerHTML=CATS.map(k=>`<button class="ct" data-c="${k}"><span class="cti"><img data-id="${cov(k)}" data-plain="1" alt=""></span><b>${k==='basic'?'기본':PC.cats[k]}</b></button>`).join('');$$('#crow img[data-id]').forEach(i=>io.observe(i));
+  $('#crow').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);q='';$('#q').value='';renderTabs();renderGrid();showV('refs');setTimeout(()=>{const t=$('#gSub').previousElementSibling;scrollTo({top:t.getBoundingClientRect().top+scrollY-8})},30)};
+  /* 색감 견본 */
+  if(window.LOOKS){const s=document.createElement('canvas');s.width=150;s.height=200;PC.drawThumb(C.lookSample||'st_hat_brim_shadow',s.getContext('2d'),150,200,{guide:false});const TH={};LOOKS.list.forEach(l=>{try{TH[l.id]=LOOKS.apply(s,l.id,1).toDataURL('image/jpeg',.82)}catch(e){}});
+    const card=l=>`<button class="lk-c" data-lk="${l.id}"><img src="${TH[l.id]||''}" alt=""><b>${l.name}</b><small>${l.d||''}</small></button>`;
+    $('#lrow').innerHTML=(C.todayLooks||['fuji_cneg','kodak_portra','teal_orange','leica_mono','wkw','kodak_gold']).filter(i=>LOOKS.byId[i]).map(i=>card(LOOKS.byId[i])).join('');
+    let lg='film';const paintL=()=>{$('#lgG').innerHTML=Object.entries(LOOKS.groups).map(([k,n])=>`<button class="cc${lg===k?' on':''}" data-lg="${k}">${n}</button>`).join('');$('#lgL').innerHTML=LOOKS.list.filter(l=>l.g===lg&&l.id!=='none').map(card).join('')};paintL();
+    $('#lgG').onclick=e=>{const b=e.target.closest('[data-lg]');if(b){lg=b.dataset.lg;paintL()}};
+    const pickL=e=>{const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);if(lookStr<.3){lookStr=1;LS.set('lookStr',1)}toast(LOOKS.byId[look].name+' 색감으로 찍어요');openCam(P())};$('#lrow').onclick=pickL;$('#lgL').onclick=pickL;
+    /* 보정 탭 그림 */
+    const e2=$('#eCv'),ec=e2.getContext('2d'),et=document.createElement('canvas');et.width=e2.width;et.height=e2.height;const ex=et.getContext('2d'),kk=Math.max(et.width/300,et.height/400);ex.setTransform(kk,0,0,kk,(et.width-300*kk)/2,-(400*kk-et.height)*.25);PC.drawThumb('st_hat_brim_shadow',ex,300,400,{guide:false});
+    ec.drawImage(et,0,0);try{const eo=LOOKS.apply(et,'kodak_portra',1);ec.drawImage(eo,e2.width/2,0,e2.width/2,e2.height,e2.width/2,0,e2.width/2,e2.height)}catch(e){}}
+  $('#ePick').onclick=()=>$('#file2').click();$('#eAna').onclick=()=>openCam(P(),{photo:1});
+  $('#file2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;shots=[f];origs=[{b:f,look:'none',str:1}];openEditor(0)};
+  $('#ftab').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;if(t==='cam'){openCam(P());return}showV(t)};
+})();
 if(C.features)(function demo(){const D=C.demos.filter(d=>BY[d.id]),d=D[Math.floor(Math.random()*D.length)],cv=$('#demoCv'),c=cv.getContext('2d'),W=cv.width,H=cv.height,k=W/300;
   const t=document.createElement('canvas');t.width=W;t.height=H;const x=t.getContext('2d');x.setTransform(k,0,0,k,0,-(400*k-H)*.22);PC.drawThumb(d.id,x,300,400,{guide:true});
   c.drawImage(t,0,0);try{if(window.LOOKS){const o=LOOKS.apply(t,d.look,.95);c.drawImage(o,W/2,0,W/2,H,W/2,0,W/2,H)}}catch(e){}
@@ -151,7 +194,7 @@ if(C.catGrid){const cov=k=>{const pre=(C.catGrid.covers||{})[k];return pre&&BY[p
   $$('#cgrid img[data-id]').forEach(i=>io.observe(i));
   $('#cgrid').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);q='';$('#q').value='';renderTabs();renderGrid();
     const t=$('#gSub').previousElementSibling;window.scrollTo({top:t.getBoundingClientRect().top+scrollY-8,behavior:'smooth'});setTimeout(()=>{const on=$('#tabs .on');on&&on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})},450)}}
-$('#hFav').onclick=()=>{cat='fav';renderTabs();renderGrid();$('#tabs').scrollIntoView({behavior:'smooth'})};
+$('#hFav').onclick=()=>{cat='fav';renderTabs();renderGrid();showV('refs');$('#tabs').scrollIntoView({behavior:'smooth'})};
 function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFav();$$(`[data-f="${id}"]`).forEach(f=>{f.classList.toggle('on',favs.has(id));f.innerHTML=I('heart',favs.has(id)?'fill':'')});renderTabs();if(cat==='fav')renderGrid();toast(favs.has(id)?'즐겨찾기에 담았어요':'즐겨찾기에서 뺐어요')}
 $('#grid').onclick=e=>{const f=e.target.closest('[data-f]');if(f){e.stopPropagation();toggleFav(f.dataset.f);return}const b=e.target.closest('[data-id]');if(b)openDetail(b.dataset.id,{from:'home'})};
 renderTabs();renderGrid();

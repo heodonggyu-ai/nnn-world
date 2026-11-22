@@ -37,7 +37,9 @@ const POSES={
   pocket:{...ST,la:[[-.15,-.62],[-.09,-.5]],ra:[[.15,-.62],[.09,-.5]]},
   crouch:{lk:[[-.15,-.25],[-.08,0]],rk:[[.16,-.28],[.1,0]],la:[[-.16,-.58],[-.12,-.33]],ra:[[.16,-.58],[.12,-.33]],drop:.18},
 };
+let PSTYLE='illust',SILC='#262b42';
 function person(c,x,fy,h,o={}){
+  if(PSTYLE==='sil'&&!o.sil&&!o.ghost)o=Object.assign({},o,{sil:o.rim?'#ece8f2':SILC});
   const d=o.dir||1,P=POSES[o.pose||'stand']||POSES.stand,dr=(P.drop||0);
   const X=v=>x+v*h*d,Y=v=>fy+(v<=-.44?v+dr:v)*h;
   const one=o.sil||o.ghost,sk=one||o.skin||'#f1c7a8',cl=one||o.col||'#3b4a6b',pa=one||o.pants||'#2b2f3a',ha=one||o.hair||'#2b1d17',sh=one||o.shoes||'#1d1d24';
@@ -73,7 +75,7 @@ function person(c,x,fy,h,o={}){
     c.fillStyle=ha;c.beginPath();c.ellipse(hx-(o.look?d*rx*.18:0),hy-ry*.28,rx*1.1,ry*.82,0,Math.PI,0);c.fill();
     c.beginPath();c.moveTo(hx-rx*1.08,hy-ry*.3);c.quadraticCurveTo(hx-rx*.2,hy-ry*.05,hx+rx*.4,hy-ry*.42);c.quadraticCurveTo(hx+rx*.9,hy-ry*.2,hx+rx*1.08,hy-ry*.3);c.lineTo(hx+rx*1.08,hy-ry*.5);c.lineTo(hx-rx*1.08,hy-ry*.5);c.fill();
     if(hs==='bun')circ(c,hx,hy-ry*1.05,rx*.5,ha);
-    if(!one&&h>48){const e=o.look?[d*rx*.42]:[-rx*.38,rx*.38],er=Math.max(1,rx*.12);
+    if(!one&&h>48&&PSTYLE!=='flat'){const e=o.look?[d*rx*.42]:[-rx*.38,rx*.38],er=Math.max(1,rx*.12);
       e.forEach(ex=>{ell(c,hx+ex,hy+ry*.08,er,er*1.25,'#2b1d17');if(h>110)circ(c,hx+ex+er*.35,hy+ry*.02,er*.35,'#fff')});
       c.globalAlpha=.35;e.forEach(ex=>circ(c,hx+ex*1.15,hy+ry*.38,rx*.18,'#ff8a8a'));c.globalAlpha=1;
       c.strokeStyle='#b5536a';c.lineWidth=Math.max(1,rx*.1);c.beginPath();const mx=hx+(o.look?d*rx*.38:0);
@@ -195,5 +197,5 @@ function G(c,W,H,col,lw,sample){
 function runScene(list,c,w,h){list.forEach(op=>{const f=ops[op[0]];if(f)f(c,w,h,...op.slice(1))})}
 function runGuide(list,g){list.forEach(op=>{const n=op[0],a=op.slice(1);if(n==='thirds')g.thirds(a[0]);else if(n==='D')g.D(a[0]);else if(g[n])g[n](...a)})}
 
-window.KIT={TAU,lg,vg,circ,ell,poly,rect,rr,glow,rnd,shade,bokeh,person,lying,post,ops,G,GRN,RED,runScene,runGuide,SKY,POSES};
+window.KIT={setPStyle:(v,c)=>{PSTYLE=v;if(c)SILC=c},getPStyle:()=>PSTYLE,TAU,lg,vg,circ,ell,poly,rect,rr,glow,rnd,shade,bokeh,person,lying,post,ops,G,GRN,RED,runScene,runGuide,SKY,POSES};
 })();
