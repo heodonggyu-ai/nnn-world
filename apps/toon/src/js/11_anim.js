@@ -270,7 +270,7 @@ function rAnim() {
   $('#aKey').onclick = () => { if (curLayer().kind !== 'part') { toast('파트 레이어를 먼저 골라요'); return; } closeSheets(); openKeyEditor(); };
   $('#aGif').onclick = () => { closeSheets(); exportGIF(false); }; $('#aGifT').onclick = () => { closeSheets(); exportGIF(true); };
   $('#aSprite').onclick = () => { closeSheets(); exportSprite(); }; $('#aPng').onclick = () => { closeSheets(); exportPage(0); };
-  const ex = $('#aEx'); ANIM_EXAMPLES.forEach(E => { const b = document.createElement('button'); b.className = 'gb'; b.innerHTML = `<i>${E.em}</i>${E.name}<small style="color:#aaa;font-size:10.5px">${E.kind === 'key' ? '🔑 키프레임' : '🎞 한 장씩'}</small>`; b.onclick = () => confirmBox(`'${E.name}' 예제를 새 작품으로 열까요?`, '열기', () => { closeSheets(); leaveEditor(() => startExample(E.id)); }); ex.appendChild(b); });
+  const ex = $('#aEx'); ANIM_EXAMPLES.forEach(E => { const b = document.createElement('button'); b.className = 'gb'; b.innerHTML = `<i>${E.em}</i>${E.name}<small style="color:#aaa;font-size:10.5px">${LVN[EX_LV[E.id] || 2]} · ${E.kind === 'key' ? '키프레임' : '한 장씩'}</small>`; b.onclick = () => confirmBox(`'${E.name}' 예제를 새 작품으로 열까요?`, '열기', () => { closeSheets(); leaveEditor(() => startExample(E.id)); }); ex.appendChild(b); });
 }
 
 /* ---------- GIF encoder ---------- */

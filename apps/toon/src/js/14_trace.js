@@ -61,7 +61,109 @@ const TRACE_LESSONS = [
   { id: 't_flag', em: '🚩', name: '펄럭이는 깃발 (애니)', kind: 'anim', size: [480, 480], frames: 8, fps: 10, desc: '물결이 깃대에서 끝으로 전해져요 (따라오기 법칙).',
     frame: (x, f) => flagFrame(x, f),
     steps: ['깃대는 그대로, <b>깃발 물결</b>만 조금씩 오른쪽으로 밀려요. 1번부터 따라 그려요.', '물결은 깃대 쪽이 작고 <b>끝으로 갈수록 커져요</b>. 이게 "따라오기와 겹치기"!', '▶ 재생! 바람 부는 느낌이 나나요? 깃발에 그림이나 글자를 넣어도 멋져요 🚩'] },
+  /* ---------- 그림 초급 ---------- */
+  { id: 't_straw', em: '🍓', name: '방긋 딸기', kind: 'art', lv: 1, size: [1000, 1000], desc: '통통한 모양 하나에 잎사귀를 얹으면 완성!',
+    cons: x => { ln(x, 500, 200, 500, 900); ln(x, 220, 560, 780, 560); },
+    items: [x => { x.beginPath(); x.moveTo(500, 330); x.bezierCurveTo(660, 280, 800, 380, 770, 560); x.bezierCurveTo(740, 730, 580, 850, 500, 880); x.bezierCurveTo(420, 850, 260, 730, 230, 560); x.bezierCurveTo(200, 380, 340, 280, 500, 330); x.stroke(); },
+      x => { x.beginPath(); x.moveTo(330, 335); x.quadraticCurveTo(380, 250, 440, 305); x.quadraticCurveTo(465, 225, 500, 292); x.quadraticCurveTo(535, 225, 560, 305); x.quadraticCurveTo(620, 250, 670, 335); x.quadraticCurveTo(585, 360, 500, 335); x.quadraticCurveTo(415, 360, 330, 335); x.stroke(); x.beginPath(); x.moveTo(500, 292); x.quadraticCurveTo(495, 230, 525, 195); x.stroke(); },
+      x => { [[360, 440], [640, 440], [300, 610], [700, 610], [395, 745], [605, 745], [500, 830], [500, 410]].forEach(([a, b], i) => el(x, a, b, 9, 15, i % 2 ? .3 : -.3)); },
+      x => { el(x, 445, 555, 19, 27); el(x, 555, 555, 19, 27); x.beginPath(); x.arc(500, 600, 34, .25, Math.PI - .25); x.stroke(); el(x, 392, 610, 26, 14); el(x, 608, 610, 26, 14); },
+      x => { x.beginPath(); x.arc(390, 470, 80, Math.PI * 1.05, Math.PI * 1.42); x.stroke(); el(x, 318, 555, 7, 11); }],
+    steps: ['위가 넓고 아래가 뾰족한 <b>딸기 몸</b>을 그려요. 옆구리를 통통하게 부풀리면 귀여워요!', '꼭지에 물결 모양 <b>잎사귀</b>, 가운데에 살짝 휜 <b>줄기</b>를 쏙.', '<b>씨앗</b>은 작은 타원으로 콕콕. 줄을 맞추지 말고 흩어지게 그리면 더 자연스러워요.', '가로 점선 근처에 <b>눈 · 입 · 볼</b>! 얼굴은 몸 가운데보다 살짝 위가 귀여워요.', '왼쪽 위에 <b>반짝이 선</b>을 그려 동그란 느낌을 내요. 빨강·초록으로 색칠하면 완성!'] },
+  { id: 't_star', em: '⭐', name: '반짝 별 친구', kind: 'art', lv: 1, size: [1000, 1000], desc: '꼭짓점 다섯 개만 이으면 친구가 생겨요.',
+    cons: x => { el(x, 500, 540, 330, 330); el(x, 500, 540, 150, 150); },
+    items: [x => { x.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 150 : 330; const X = 500 + Math.cos(a) * r, Y = 540 + Math.sin(a) * r; k ? x.lineTo(X, Y) : x.moveTo(X, Y); } x.closePath(); x.stroke(); },
+      x => { el(x, 455, 545, 20, 28); el(x, 545, 545, 20, 28); },
+      x => { x.beginPath(); x.arc(500, 590, 30, .2, Math.PI - .2); x.stroke(); el(x, 410, 596, 24, 13); el(x, 590, 596, 24, 13); },
+      x => { const sp = (X, Y, r) => { x.beginPath(); x.moveTo(X, Y - r); x.quadraticCurveTo(X, Y, X + r, Y); x.quadraticCurveTo(X, Y, X, Y + r); x.quadraticCurveTo(X, Y, X - r, Y); x.quadraticCurveTo(X, Y, X, Y - r); x.stroke(); }; sp(190, 230, 50); sp(820, 250, 38); sp(840, 800, 46); sp(170, 790, 30); }],
+    steps: ['바깥 큰 원에 <b>뾰족한 점 5개</b>, 안쪽 작은 원에 <b>오목한 점 5개</b>. 번갈아 이으면 별!', '별 가운데에 <b>눈</b> 두 개. 눈 사이를 넉넉히 벌리면 더 순해 보여요.', '<b>웃는 입</b>과 <b>볼터치</b>를 그려요.', '주변에 <b>반짝이</b>를 크기가 다르게 그려요. 큰 것 하나, 작은 것 여러 개가 예뻐요!'] },
+  /* ---------- 그림 고급 ---------- */
+  { id: 't_hand', em: '✋', name: '쫙 편 손', kind: 'art', lv: 3, size: [1000, 1000], desc: '손바닥은 네모, 손가락은 원기둥 3마디.',
+    cons: x => { x.strokeRect(372, 480, 280, 290); x.beginPath(); x.arc(512, 520, 300, Math.PI * 1.2, Math.PI * 1.8); x.stroke(); },
+    items: [x => { x.beginPath(); x.moveTo(372, 482); x.quadraticCurveTo(356, 650, 425, 772); x.quadraticCurveTo(545, 812, 642, 752); x.quadraticCurveTo(676, 620, 652, 486); x.stroke(); },
+      x => { x.save(); x.translate(388, 655); x.rotate(-.95); x.beginPath(); x.moveTo(-36, 0); x.lineTo(-36, -170); x.arc(0, -170, 36, Math.PI, 0); x.lineTo(36, 0); x.stroke(); x.restore(); },
+      x => { handFingers(x, (w, len) => { x.beginPath(); x.moveTo(-w / 2, 0); x.lineTo(-w / 2, -len + w / 2); x.arc(0, -len + w / 2, w / 2, Math.PI, 0); x.lineTo(w / 2, 0); x.stroke(); }); },
+      x => { handFingers(x, (w, len) => { [.36, .67].forEach(f => { x.beginPath(); x.moveTo(-w * .32, -len * f); x.quadraticCurveTo(0, -len * f + 7, w * .32, -len * f); x.stroke(); }); }); x.save(); x.translate(388, 655); x.rotate(-.95); x.beginPath(); x.moveTo(-24, -105); x.quadraticCurveTo(0, -98, 24, -105); x.stroke(); x.restore(); },
+      x => { handFingers(x, (w, len) => { x.beginPath(); roundRectPath(x, -w * .27, -len + 10, w * .54, w * .55, w * .2); x.stroke(); }); x.save(); x.translate(388, 655); x.rotate(-.95); x.beginPath(); roundRectPath(x, -10, -196, 20, 34, 8); x.stroke(); x.restore(); x.beginPath(); x.moveTo(410, 545); x.quadraticCurveTo(445, 660, 470, 760); x.stroke(); x.beginPath(); x.moveTo(405, 575); x.quadraticCurveTo(520, 612, 625, 590); x.stroke(); x.beginPath(); x.moveTo(645, 528); x.quadraticCurveTo(560, 548, 470, 528); x.stroke(); }],
+    steps: ['먼저 <b>손바닥</b>. 손바닥은 거의 <b>네모</b>예요. 아래쪽만 둥글게 그려요.', '<b>엄지</b>는 손바닥 옆 아래에서 비스듬히 나와요. 생각보다 아래쪽에 붙어 있어요!', '<b>손가락 4개</b>는 끝이 둥근 기둥. 점선 호를 보면 <b>가운데 손가락이 가장 길어요</b>. 새끼손가락은 확 짧게.', '손가락은 <b>3마디</b>, 엄지는 <b>2마디</b>. 마디 선을 살짝 휘게 그려요.', '마지막으로 <b>손톱</b>과 <b>손금 3줄</b>. 손금은 짧고 가볍게 그려야 자연스러워요.'] },
+  { id: 't_34', em: '🧑', name: '3/4 각도 얼굴', kind: 'art', lv: 3, size: [1000, 1000], desc: '살짝 돌아본 얼굴 — 웹툰에서 가장 많이 쓰는 각도.',
+    cons: x => { el(x, 500, 440, 230, 230); x.beginPath(); x.ellipse(500, 440, 115, 230, 0, -Math.PI / 2, Math.PI / 2); x.stroke(); x.beginPath(); x.ellipse(500, 505, 230, 36, 0, 0, Math.PI); x.stroke(); },
+    items: [x => { x.beginPath(); x.arc(500, 440, 230, Math.PI * .96, Math.PI * 2.06); x.stroke(); x.beginPath(); x.moveTo(272, 470); x.bezierCurveTo(292, 640, 470, 772, 588, 772); x.bezierCurveTo(652, 762, 700, 682, 714, 600); x.stroke(); },
+      x => { el(x, 438, 528, 50, 62); el(x, 446, 538, 24, 34); el(x, 638, 528, 29, 56); el(x, 644, 538, 13, 30); ln(x, 380, 452, 488, 444); ln(x, 612, 452, 672, 460); },
+      x => { ln(x, 610, 548, 642, 622, 600, 630); x.beginPath(); x.moveTo(528, 690); x.quadraticCurveTo(580, 708, 624, 684); x.stroke(); },
+      x => { x.beginPath(); x.ellipse(292, 528, 30, 58, .12, 0, Math.PI * 2); x.stroke(); ln(x, 388, 712, 392, 900); ln(x, 604, 766, 612, 900); },
+      x => { x.beginPath(); x.moveTo(262, 540); x.bezierCurveTo(222, 300, 380, 178, 522, 196); x.bezierCurveTo(664, 210, 744, 310, 738, 480); x.stroke(); x.beginPath(); x.moveTo(318, 332); x.quadraticCurveTo(448, 432, 512, 318); x.quadraticCurveTo(604, 440, 712, 352); x.stroke(); }],
+    steps: ['점선 원이 머리예요. 세로 점선이 <b>오른쪽으로 휘어</b> 있죠? 얼굴이 오른쪽을 보고 있다는 뜻이에요. <b>머리와 턱선</b>을 그려요.', '<b>가까운 눈은 크게, 먼 눈은 좁게!</b> 먼 눈은 세로로 길쭉한 타원이 돼요. 이게 3/4 각도의 핵심.', '<b>코</b>는 세로 점선 바로 옆으로 튀어나오게, <b>입</b>도 점선 쪽으로 치우치게 그려요.', '<b>귀</b>는 보이는 쪽(왼쪽)에만, 눈 높이에. 그리고 <b>목</b> 두 줄.', '<b>머리카락</b>은 머리 동그라미보다 조금 크게 덮어요. 앞머리는 뾰족뾰족 리듬감 있게!'] },
+  { id: 't_room', em: '🏠', name: '1점 투시 방', kind: 'art', lv: 3, size: [1000, 1000], desc: '모든 선이 한 점으로 모이면 공간이 생겨요.',
+    cons: x => { ln(x, 40, 430, 960, 430); el(x, 500, 430, 10, 10); gLabel(x, '소실점', 520, 415, GC); },
+    items: [x => x.strokeRect(330, 300, 340, 260),
+      x => { ln(x, 40, 40, 330, 300); ln(x, 960, 40, 670, 300); ln(x, 40, 960, 330, 560); ln(x, 960, 960, 670, 560); },
+      x => { const wy = (X, t) => { const top = 40 + (X - 40) * 260 / 290, bot = 960 - (X - 40) * 400 / 290; return top + (bot - top) * t; }; const P = [[130, wy(130, .25)], [250, wy(250, .25)], [250, wy(250, .58)], [130, wy(130, .58)]]; x.beginPath(); P.forEach((p, i) => i ? x.lineTo(...p) : x.moveTo(...p)); x.closePath(); x.stroke(); ln(x, 190, wy(190, .25), 190, wy(190, .58)); ln(x, 130, wy(130, .415), 250, wy(250, .415)); },
+      x => { x.strokeRect(540, 380, 90, 180); el(x, 615, 472, 6, 6); },
+      x => { [390, 445, 555, 610].forEach(b => ln(x, b, 560, 500 + (b - 500) * 530 / 130, 960)); [660, 790].forEach(y => { const d = (y - 560) * 290 / 400; ln(x, 330 - d, y, 670 + d, y); }); },
+      x => { x.strokeRect(560, 700, 210, 66); ln(x, 560, 700, 545, 633, 707, 633, 770, 700); ln(x, 574, 766, 574, 860); ln(x, 756, 766, 756, 860); }],
+    steps: ['가로 점선이 <b>눈높이(지평선)</b>, 가운데 점이 <b>소실점</b>이에요. 먼저 정면 <b>벽 네모</b>를 그려요.', '화면 네 모서리에서 벽 모서리로 <b>사선 4개</b>. 천장·바닥·양옆 벽이 생겨요!', '왼쪽 벽에 <b>창문</b>. 창문 위아래 선도 소실점 쪽으로 기울어져요.', '정면 벽에는 <b>문</b>. 정면은 기울이지 않고 반듯하게!', '<b>바닥 타일</b>: 세로 선은 소실점에서 퍼져 나오고, 가로 선은 반듯하게. 앞으로 올수록 간격이 넓어져요.', '<b>책상</b>도 윗면 옆선을 소실점 쪽으로! 이제 그림 속에 들어갈 수 있을 것 같죠?'] },
+  /* ---------- 웹툰 초급 ---------- */
+  { id: 't_4cut', em: '🗒️', name: '4컷 만화', kind: 'toon', lv: 1, size: [800, 1280], desc: '기 · 승 · 전 · 결, 네 칸이면 이야기 하나!',
+    panels: [[60, 330], [360, 630], [660, 930], [960, 1230]].map(([a, b]) => ({ pts: [[40, a], [760, a], [760, b], [40, b]], border: 'solid' })),
+    objects: [{ kind: 'bubble', shape: 'oval', x: 560, y: 140, w: 260, h: 104, text: '공 받아~!', tail: { x: -110, y: 50 } }, { kind: 'bubble', shape: 'oval', x: 580, y: 1060, w: 250, h: 96, text: '아야야…', tail: { x: -120, y: 50 } }],
+    items: [x => { kid(x, 200, 165, 40); ln(x, 200, 235, 262, 196); ln(x, 200, 235, 150, 268); el(x, 292, 184, 22, 22); },
+      x => { kid(x, 600, 470, 40, 'up'); el(x, 380, 430, 22, 22); [[300, 520, 345, 465], [280, 480, 330, 448]].forEach(p => ln(x, ...p)); },
+      x => { kid(x, 400, 820, 44, 'x'); el(x, 430, 735, 22, 22); [[380, 720, 360, 696], [470, 724, 492, 700], [430, 700, 432, 676]].forEach(p => ln(x, ...p)); x.font = '64px Jua'; x.strokeText('쿵!', 540, 760); },
+      x => { kid(x, 400, 1110, 48, 'dizzy'); const sp = (X, Y, r) => { x.beginPath(); x.moveTo(X, Y - r); x.quadraticCurveTo(X, Y, X + r, Y); x.quadraticCurveTo(X, Y, X, Y + r); x.quadraticCurveTo(X, Y, X - r, Y); x.quadraticCurveTo(X, Y, X, Y - r); x.stroke(); }; sp(320, 1030, 20); sp(480, 1020, 24); sp(400, 1000, 16); }],
+    steps: ['칸과 말풍선은 준비돼 있어요! <b>1컷(기)</b>: 이야기 시작. 친구가 공을 던지려고 해요.', '<b>2컷(승)</b>: 일이 커져요. 공이 날아가고, 다른 친구가 위를 봐요. 짧은 <b>움직임 선</b>으로 속도를!', '<b>3컷(전)</b>: 반전! 공이 머리에 쿵. 충격 선과 <b>효과음</b>을 크게 써요.', '<b>4컷(결)</b>: 마무리 웃음 포인트. 어지러운 눈과 별로 끝! 이렇게 기승전결만 있으면 만화가 돼요.'] },
+  /* ---------- 웹툰 고급 ---------- */
+  { id: 't_action', em: '💥', name: '액션 장면', kind: 'toon', lv: 3, size: [800, 1280], desc: '기울어진 칸 · 집중선 · 효과음으로 박진감!',
+    panels: [{ pts: [[40, 60], [760, 60], [760, 560], [40, 660]], border: 'solid' }, { pts: [[40, 700], [380, 660], [380, 1220], [40, 1220]], border: 'solid' }, { pts: [[420, 655], [760, 615], [760, 1220], [420, 1220]], border: 'solid' }],
+    objects: [{ kind: 'bubble', shape: 'shout', x: 600, y: 150, w: 240, h: 140, text: '간다!!', tail: { x: -100, y: 90 } }],
+    items: [x => { x.save(); x.beginPath(); x.moveTo(40, 60); x.lineTo(760, 60); x.lineTo(760, 560); x.lineTo(40, 660); x.closePath(); x.clip(); x.lineWidth = 3; for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2 + (k % 2) * .05; ln(x, 400 + Math.cos(a) * 190, 380 + Math.sin(a) * 160, 400 + Math.cos(a) * 640, 380 + Math.sin(a) * 640); } x.restore(); },
+      x => { el(x, 400, 300, 48, 48); x.beginPath(); x.moveTo(398, 348); x.quadraticCurveTo(372, 400, 380, 462); x.stroke(); ln(x, 395, 372, 488, 330, 548, 336); el(x, 566, 336, 22, 22); ln(x, 395, 372, 312, 410, 262, 390); ln(x, 380, 462, 452, 500, 432, 582); ln(x, 380, 462, 300, 532, 236, 552); },
+      x => { x.beginPath(); x.moveTo(80, 940); x.lineTo(186, 912); x.lineTo(200, 958); x.quadraticCurveTo(140, 978, 86, 966); x.closePath(); x.stroke(); x.beginPath(); x.moveTo(236, 916); x.lineTo(338, 936); x.lineTo(332, 978); x.quadraticCurveTo(280, 986, 236, 962); x.closePath(); x.stroke(); el(x, 160, 942, 13, 15); el(x, 278, 950, 13, 15); x.lineWidth = 12; ln(x, 70, 880, 196, 900); ln(x, 238, 896, 350, 874); x.lineWidth = 5; x.beginPath(); x.moveTo(330, 820); x.quadraticCurveTo(352, 860, 330, 880); x.quadraticCurveTo(308, 860, 330, 820); x.stroke(); },
+      x => { x.save(); x.beginPath(); x.moveTo(420, 655); x.lineTo(760, 615); x.lineTo(760, 1220); x.lineTo(420, 1220); x.closePath(); x.clip(); x.lineWidth = 3; for (let k = 0; k < 14; k++) { const y = 680 + k * 38; ln(x, 420, y, 420 + 90 + (k * 53 % 140), y); } x.restore(); el(x, 560, 900, 42, 42); x.beginPath(); for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, r = k % 2 ? 60 : 120; const X = 660 + Math.cos(a) * r, Y = 880 + Math.sin(a) * r; k ? x.lineTo(X, Y) : x.moveTo(X, Y); } x.closePath(); x.stroke(); },
+      x => { x.save(); x.translate(590, 1100); x.rotate(-.18); x.font = '150px Jua'; x.lineWidth = 9; x.strokeText('쾅!', -110, 40); x.restore(); }],
+    steps: ['액션 장면은 <b>칸을 기울이면</b> 화면부터 흔들려 보여요. 1컷에 <b>집중선</b>을 그려 시선을 가운데로 모아요.', '1컷 가운데에 <b>점프하는 인물</b>. 몸을 활처럼 휘게, 팔다리는 앞뒤로 크게 벌려요. 대각선 자세가 힘차 보여요!', '2컷은 <b>눈 클로즈업</b>. 눈꼬리를 날카롭게, 눈썹은 굵고 비스듬히, 땀방울 하나!', '3컷에 <b>속도선</b>과 <b>충격 별</b>. 주먹(동그라미)이 별 한가운데로 들어가요.', '마지막으로 <b>효과음 "쾅!"</b>을 크게, 기울여서. 칸 밖으로 튀어나갈 만큼 커도 좋아요!'] },
+  /* ---------- 애니 중급·고급 ---------- */
+  { id: 't_tail', em: '🐈', name: '꼬리 흔드는 고양이 (애니)', kind: 'anim', lv: 2, size: [480, 480], frames: 8, fps: 8, desc: '꼬리 끝이 한 박자 늦게 따라와요 (따라오기 법칙).',
+    frame: (x, f) => tailFrame(x, f),
+    steps: ['몸과 머리는 매 장 그대로예요. <b>꼬리만</b> 1번부터 따라 그려요.', '꼬리 <b>뿌리가 먼저</b> 움직이고 <b>끝은 한 박자 늦게</b> 따라와요. 그래서 꼬리가 S자로 휘어요!', '▶ 재생! 꼬리가 채찍처럼 부드럽게 흔들리나요? 이게 "따라오기와 겹치기" 법칙이에요.'] },
+  { id: 't_run', em: '🏃', name: '달리기 (애니)', kind: 'anim', lv: 3, size: [480, 480], frames: 8, fps: 12, desc: '걷기보다 크게! 두 발이 모두 뜨는 순간이 있어요.',
+    frame: (x, f) => runFrame(x, f),
+    steps: ['걷기와 순서는 같지만 <b>몸을 앞으로 기울이고</b>, 팔은 <b>90도로 굽혀요</b>. 1번부터 따라 그려요.', '4번과 8번을 보세요. <b>두 발이 모두 땅에서 떨어진</b> 순간! 걷기와 달리기의 가장 큰 차이예요.', '2번은 몸이 가장 <b>낮게</b>(충격 흡수), 4번은 가장 <b>높게</b>. 위아래로 출렁이는 게 힘을 보여줘요.', '▶ 재생(12장/초)! 빠르게 달리는 느낌이 나면 성공. 진짜 애니메이터의 연습이에요!'] },
 ];
+function handFingers(x, fn) { [[420, 486, 238, 62, -.12], [493, 481, 278, 64, -.03], [564, 483, 250, 62, .05], [628, 492, 184, 56, .16]].forEach(([cx, by, len, w, a]) => { x.save(); x.translate(cx, by); x.rotate(a); fn(w, len); x.restore(); }); }
+function kid(x, cx, hy, r, face) {
+  el(x, cx, hy, r, r); const by = hy + r; ln(x, cx, by, cx, by + r * 1.7); ln(x, cx, by + r * 1.7, cx - r * .6, by + r * 2.6); ln(x, cx, by + r * 1.7, cx + r * .6, by + r * 2.6);
+  if (face !== undefined) { ln(x, cx, by + r * .5, cx - r * .9, by + r * 1.1); ln(x, cx, by + r * .5, cx + r * .9, by + r * 1.1); }
+  const e = r * .38;
+  if (face === 'up') { el(x, cx - e, hy - r * .2, r * .09, r * .14); el(x, cx + e, hy - r * .2, r * .09, r * .14); el(x, cx, hy + r * .4, r * .12, r * .14); }
+  else if (face === 'x') { [-1, 1].forEach(s => { ln(x, cx + s * e - 7, hy - 7, cx + s * e + 7, hy + 7); ln(x, cx + s * e + 7, hy - 7, cx + s * e - 7, hy + 7); }); x.beginPath(); x.arc(cx, hy + r * .5, r * .2, Math.PI + .3, -.3); x.stroke(); }
+  else if (face === 'dizzy') { [-1, 1].forEach(s => { x.beginPath(); for (let t = 0; t < 12; t++) { const a = t * .7, rr = 2 + t * 1.1; const X = cx + s * e + Math.cos(a) * rr, Y = hy + Math.sin(a) * rr; t ? x.lineTo(X, Y) : x.moveTo(X, Y); } x.stroke(); }); x.beginPath(); x.moveTo(cx - 12, hy + r * .5); x.quadraticCurveTo(cx, hy + r * .38, cx + 12, hy + r * .5); x.stroke(); }
+  else { el(x, cx - e, hy, r * .09, r * .14); el(x, cx + e, hy, r * .09, r * .14); x.beginPath(); x.arc(cx, hy + r * .3, r * .25, .3, Math.PI - .3); x.stroke(); }
+}
+function tailFrame(x, f) {
+  x.save(); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = GC; x.lineWidth = 3; x.setLineDash([10, 8]); ln(x, 60, 400, 420, 400); x.setLineDash([]);
+  x.strokeStyle = GB; x.lineWidth = 6; x.beginPath(); x.ellipse(220, 310, 82, 92, 0, 0, Math.PI * 2); x.stroke();
+  x.beginPath(); x.ellipse(220, 185, 66, 58, 0, 0, Math.PI * 2); x.stroke(); ln(x, 168, 150, 166, 98, 204, 130); ln(x, 272, 150, 274, 98, 236, 130);
+  el(x, 196, 182, 7, 10); el(x, 244, 182, 7, 10); x.beginPath(); x.arc(220, 206, 10, .3, Math.PI - .3); x.stroke(); ln(x, 180, 396, 180, 360); ln(x, 260, 396, 260, 360);
+  const ph = f / 8 * Math.PI * 2; let px = 290, py = 360, ang = -Math.PI * .15; const pts = [[px, py]];
+  for (let i = 0; i < 7; i++) { ang += (-.32) + .42 * (i + 1) / 7 * Math.sin(ph - i * .7); px += Math.cos(ang) * 24; py += Math.sin(ang) * 24; pts.push([px, py]); }
+  x.lineWidth = 12; x.beginPath(); x.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; x.quadraticCurveTo(pts[i][0], pts[i][1], mx, my); } x.stroke();
+  gLabel(x, `${f + 1}번`, 16, 40); x.restore();
+}
+function runFrame(x, f) {
+  const ph = f / 8 * Math.PI * 2; const hip = { x: 230, y: 250 + 16 * Math.cos(ph * 2 + .4) };
+  const leg = (s) => { const a = 46 * Math.cos(ph + s) * Math.PI / 180; const k = (20 + Math.max(0, -Math.sin(ph + s)) * 90) * Math.PI / 180; const knee = { x: hip.x + Math.sin(a) * 64, y: hip.y + Math.cos(a) * 64 }; const ft = { x: knee.x + Math.sin(a - k) * 64, y: knee.y + Math.cos(a - k) * 64 }; ln(x, hip.x, hip.y, knee.x, knee.y, ft.x, ft.y); };
+  const sh = { x: hip.x + 26, y: hip.y - 86 };
+  const arm = (s) => { const a = -50 * Math.cos(ph + s) * Math.PI / 180; const e2 = { x: sh.x + Math.sin(a) * 44, y: sh.y + Math.cos(a) * 44 }; const hd = { x: e2.x + Math.sin(a + 1.6) * 38, y: e2.y + Math.cos(a + 1.6) * 38 }; ln(x, sh.x, sh.y, e2.x, e2.y, hd.x, hd.y); };
+  x.save(); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = GC; x.lineWidth = 3; x.setLineDash([10, 8]); ln(x, 40, 392, 440, 392); x.setLineDash([]);
+  x.lineWidth = 6; x.strokeStyle = '#9ec3ff'; leg(Math.PI); arm(Math.PI); x.strokeStyle = GB; ln(x, hip.x, hip.y, sh.x, sh.y); el(x, sh.x + 14, sh.y - 34, 28, 28); leg(0); arm(0);
+  const names = ['접촉', '누르기', '밀기', '공중!', '접촉 (반대)', '누르기', '밀기', '공중!'];
+  gLabel(x, `${f + 1}번 · ${names[f]}`, 16, 40); x.restore();
+}
+const LVN = ['', '초급', '중급', '고급'];
+const TRACE_LV = { t_cat: 1, t_lizard: 1, t_face: 2, t_side: 2, t_faces: 2, t_sd: 2, t_toon: 2, t_walk: 3, t_flag: 2 };
+TRACE_LESSONS.forEach(e => { if (!e.lv) e.lv = TRACE_LV[e.id] || 2; });
+const EX_LV = { ball_done: 1, ball_diy: 1, ball_frames: 1, blink: 1, heart: 1, pop: 2, wave: 2, spin: 2, shake: 2, slime: 3 };
 function walkFrame(x, f) {
   const ph = f / 8 * Math.PI * 2; const hip = { x: 240, y: 262 + 9 * Math.cos(ph * 2 - .6) };
   const leg = (s) => { const a = 30 * Math.cos(ph + s) * Math.PI / 180; const k = Math.max(0, -Math.sin(ph + s)) * 50 * Math.PI / 180; const knee = { x: hip.x + Math.sin(a) * 62, y: hip.y + Math.cos(a) * 62 }; const ft = { x: knee.x + Math.sin(a - k) * 62, y: knee.y + Math.cos(a - k) * 62 }; ln(x, hip.x, hip.y, knee.x, knee.y, ft.x, ft.y); ln(x, ft.x, ft.y, ft.x + 18, ft.y); };
@@ -151,17 +253,54 @@ async function traceVideoModal(file) {
 function renderTrace() {
   const el = $('#tab-trace');
   el.innerHTML = `<div class="tipcard"><b>✏️ 따라 그리기</b><br>좋아하는 그림을 따라 그리는 건 화가들도 하는 최고의 연습법이에요! 반투명 그림을 깔고 그 위에 그려요. <b>깔아 둔 그림은 저장할 때 빠지고 내 그림만 남아요.</b></div>
+  <div class="sec-title">따라 그리기 교본 <small style="font-family:var(--fb);font-size:12.5px;color:#8c8376">한 단계씩 분홍 선을 따라가요</small></div>
+  <div class="tr-seg" id="trSeg"></div><div id="trBook"></div>
   <div class="sec-title">내가 고른 그림 따라 그리기</div>
   <div class="tipcard" style="font-size:13.5px">좋아하는 웹툰·만화 장면을 <b>화면 캡처</b>하거나 그림 사진을 찍어서 불러와요.
   <div class="trace-btns"><button class="btn sm" data-ti="art">🖌 그림으로</button><button class="btn sm lav" data-ti="toon">📱 웹툰 화면으로</button><button class="btn sm sec" data-ti="anim">🎞 애니로</button></div></div>
   <div class="sec-title">영상 따라 그리기 (애니)</div>
   <div class="tipcard" style="font-size:13.5px">점프하는 모습, 강아지·고양이가 걷는 모습을 <b>영상으로 찍어서</b> 불러오면 한 장씩 나눠 줘요. 따라 그리면 진짜처럼 움직이는 애니 완성!
   <div class="trace-btns"><button class="btn sm" id="trVid">🎬 영상 불러오기</button></div></div>
-  <div class="sec-title">따라 그리기 교본 <small style="font-family:var(--fb);font-size:12.5px;color:#77738a">한 단계씩 분홍 선을 따라가요</small></div>
-  <div class="lesson-grid" id="trGrid"></div>
+
   <div class="tipcard" style="margin-top:14px;font-size:13.5px"><b>💡 따라 그리기 잘하는 법</b><br>① <b>큰 모양부터</b>: 머리 동그라미, 몸통 → 작은 것은 나중에<br>② 선은 짧게 여러 번보다 <b>길게 한 번에</b>. 손떨림 보정을 5쯤으로!<br>③ 가끔 📚에서 📐 가이드를 끄고 내 그림만 보며 비교해요<br>④ 따라 그린 다음엔 <b>안 보고 한 번 더</b> 그려 보면 실력이 쑥쑥!</div>
   <div class="tipcard" style="font-size:13.5px"><b>🤝 그림 예절</b><br>다른 사람 그림을 따라 그린 건 <b>연습용</b>이에요. SNS에 올릴 땐 "○○ 작가님 그림 따라 그렸어요"처럼 꼭 원래 작가를 밝히고, 내 작품이라고 하지 않아요.</div><div style="height:20px"></div>`;
   el.querySelectorAll('[data-ti]').forEach(b => b.onclick = () => pickTraceImage(b.dataset.ti));
   $('#trVid').onclick = pickTraceVideo;
-  const g = $('#trGrid'); TRACE_LESSONS.forEach(E => { const b = document.createElement('button'); b.className = 'lesson-card' + (LS.get('learn', {})['trace:' + E.id] ? ' done' : ''); b.innerHTML = `<span class="em">${E.em}</span><b>${E.name}</b><small>${E.desc}</small><small style="color:#a78bfa">${E.kind === 'anim' ? '🎞 애니' : E.kind === 'toon' ? '📱 웹툰' : '🖌 그림'} · ${E.steps.length}단계</small>`; b.onclick = () => startTrace(E.id); g.appendChild(b); });
+  renderTraceBook();
+}
+
+const TH = {};
+function traceThumb(E) {
+  if (TH[E.id]) return TH[E.id];
+  const [W, H] = E.size; const tw = 300, th = Math.round(tw * Math.min(H / W, 1.3)); const c = mkCanvas(tw, th); const x = c.getContext('2d');
+  x.fillStyle = '#fffdf9'; x.fillRect(0, 0, tw, th); const s = Math.min(tw / W, th / H) * .92; x.translate((tw - W * s) / 2, (th - H * s) / 2); x.scale(s, s);
+  const ink = () => { x.setLineDash([]); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#2a2433'; x.fillStyle = '#2a2433'; x.lineWidth = 7; x.globalAlpha = 1; };
+  if (E.kind === 'anim') { x.save(); x.globalAlpha = .28; E.frame(x, 3); x.restore(); x.fillStyle = '#fffdf9'; x.fillRect(0, 0, W, 60); x.save(); E.frame(x, 0); x.restore(); }
+  else {
+    if (E.panels) E.panels.forEach(pn => { x.save(); ink(); x.lineWidth = 6; x.beginPath(); pn.pts.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath(); x.stroke(); x.restore(); });
+    if (E.objects) E.objects.forEach(o => { x.save(); ink(); x.lineWidth = 5; x.fillStyle = '#fff'; x.beginPath(); x.ellipse(o.x, o.y, o.w / 2, o.h / 2, 0, 0, Math.PI * 2); x.fill(); x.stroke(); x.fillStyle = '#2a2433'; x.font = '30px Jua'; x.textAlign = 'center'; x.fillText(o.text || '', o.x, o.y + 10); x.restore(); });
+    E.items.forEach(fn => { x.save(); ink(); try { fn(x); } catch (e) { } x.restore(); });
+  }
+  return (TH[E.id] = c.toDataURL('image/png'));
+}
+function renderTraceBook() {
+  const cat = LS.get('trCat', 'art'); const done = LS.get('learn', {});
+  const CATS = [['art', '그림'], ['toon', '웹툰'], ['anim', '애니']];
+  const list = c => c === 'anim' ? TRACE_LESSONS.filter(e => e.kind === 'anim').map(e => ({ E: e, t: 'trace' })).concat(ANIM_EXAMPLES.map(e => ({ E: e, t: 'example', lv: EX_LV[e.id] || 2 }))) : TRACE_LESSONS.filter(e => e.kind === c).map(e => ({ E: e, t: 'trace' }));
+  $('#trSeg').innerHTML = CATS.map(([k, n]) => `<button data-c="${k}" class="${k === cat ? 'on' : ''}">${n}<i>${list(k).length}</i></button>`).join('');
+  $('#trSeg').querySelectorAll('button').forEach(b => b.onclick = () => { LS.set('trCat', b.dataset.c); renderTraceBook(); });
+  const items = list(cat); const SUB = ['', '처음 시작해요', '조금 더 자세히', '작가처럼 도전'];
+  let h = '';
+  [1, 2, 3].forEach(lv => {
+    const g = items.filter(it => (it.lv || it.E.lv) === lv); if (!g.length) return;
+    h += `<div class="tr-lv"><span class="lvb lv${lv}">${LVN[lv]}</span><b>${SUB[lv]}</b><i>${g.length}개</i></div><div class="tr-grid">`;
+    g.forEach(({ E, t }) => {
+      const isDone = done[t + ':' + E.id]; const nSteps = (E.steps || []).length;
+      const th = t === 'trace' ? `<img src="${traceThumb(E)}" alt="">` : `<div class="tr-em">${E.em}</div>`;
+      h += `<button class="tr-card ${isDone ? 'done' : ''}" data-t="${t}" data-id="${E.id}"><div class="tr-th">${th}${t === 'example' ? `<span class="tr-tag">${E.kind === 'key' ? '키프레임' : '한 장씩'}</span>` : ''}</div><div class="tr-meta"><b>${E.name.replace(' (애니)', '')}</b><small>${E.desc}</small><em>${nSteps ? nSteps + '단계' : ''}${E.frames ? ' · ' + E.frames + '장' : ''}</em></div></button>`;
+    });
+    h += '</div>';
+  });
+  $('#trBook').innerHTML = h;
+  $('#trBook').querySelectorAll('.tr-card').forEach(b => b.onclick = () => b.dataset.t === 'trace' ? startTrace(b.dataset.id) : startExample(b.dataset.id));
 }
