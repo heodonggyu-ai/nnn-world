@@ -80,9 +80,10 @@ document.body.insertAdjacentHTML('beforeend',`
   <h2 class="sec">오늘의 색감</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요</p><div class="lrow" id="lrow"></div>
  </section>
  <section class="view-looks hidden" data-v="looks"><h2 class="sec">색감 ${window.LOOKS?LOOKS.list.filter(l=>l.id!=='none').length:''}종</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요. 농도는 카메라에서 조절해요</p><div class="cchips light" id="lgG"></div><div class="lgrid" id="lgL"></div></section>
- <section class="view-edit hidden" data-v="edit"><h2 class="sec">사진 보정</h2><p class="secsub">사진첩에 있던 사진에 어울리는 색감을 추천받아 입혀요</p>
+ <section class="view-edit hidden" data-v="edit"><h2 class="sec">사진 편집</h2><p class="secsub">사진첩 사진을 골라 색감·자르기·지우기·AI 인물 편집을 해요</p>
   <div class="ebig"><canvas id="eCv" width="708" height="520"></canvas><span class="dsplit"><i>원본</i><i>보정</i></span></div>
   <button class="btn pri wide" id="ePick">${I('image')}사진첩에서 사진 고르기</button>
+  <div class="etools" id="eTools">${[['erase','close','물체 지우기','칠하면 배경으로 채워요'],['person','user','AI 배경 흐림','인물 모드·컬러 팝'],['crop','grid','자르기·수평','비율·회전·반전'],['add','image','사람·글자 넣기','다른 사진의 사람 합성'],['look','palette','색감 입히기','추천 색감 156종'],['adj','spark','직접 조정','밝기·색온도 등 8가지']].map(([k,ic,n,s])=>`<button class="etool" data-et="${k}"><span class="ei">${I(ic)}</span><b>${n}</b><small>${s}</small></button>`).join('')}</div>
   <button class="erow" id="eAna"><span class="ei">${I('compass')}</span><span><b>찍은 사진 구도 분석</b><small>사진을 올리면 맞는 구도와 고칠 점을 알려줘요</small></span>${I('next')}</button></section>
  <div class="view-refs hidden" data-v="refs">`:''}
  ${C.features?`<section class="demo" id="goCam" role="button" tabindex="0" aria-label="카메라 켜기"><div class="dv"><canvas id="demoCv" width="640" height="340"></canvas><span class="dsplit"><i>원본</i><i>색감</i></span>
@@ -154,8 +155,8 @@ if(C.tabsHome)(function(){const P=()=>C.startPool?C.startPool():null;
     const paintEdit=()=>{const e2=$('#eCv'),ec=e2.getContext('2d'),et=document.createElement('canvas');et.width=e2.width;et.height=e2.height;const ex=et.getContext('2d'),kk=Math.max(et.width/300,et.height/400);ex.setTransform(kk,0,0,kk,(et.width-300*kk)/2,-(400*kk-et.height)*.25);PC.drawThumb(ED_ID,ex,300,400,{guide:false});
     ec.drawImage(et,0,0);try{const eo=LOOKS.apply(et,'kodak_portra',1);ec.drawImage(eo,e2.width/2,0,e2.width/2,e2.height,e2.width/2,0,e2.width/2,e2.height)}catch(e){}};paintEdit();
     let rt=null;window._homePhoto=id=>{if(![d.id,LS_ID,ED_ID].includes(id))return;clearTimeout(rt);rt=setTimeout(()=>{paintDemo();if(id===LS_ID){mkTH();$$('#lrow [data-lk] img,#lgL [data-lk] img').forEach(im=>{const b=im.closest('[data-lk]');if(TH[b.dataset.lk])im.src=TH[b.dataset.lk]})}if(id===ED_ID)paintEdit()},120)};}
-  $('#ePick').onclick=()=>$('#file2').click();$('#eAna').onclick=()=>openCam(P(),{photo:1});
-  $('#file2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;shots=[f];origs=[{b:f,look:'none',str:1}];openEditor(0)};
+  let eTool=null;$('#ePick').onclick=()=>{eTool=null;$('#file2').click()};$('#eTools').onclick=e=>{const b=e.target.closest('[data-et]');if(b){eTool=b.dataset.et;$('#file2').click()}};$('#eAna').onclick=()=>openCam(P(),{photo:1});
+  $('#file2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;shots=[f];origs=[{b:f,look:'none',str:1}];openEditor(0,eTool)};
   renderMyFav();$('#myFav').onclick=e=>{const g=e.target.closest('[data-go]');if(g){showV(g.dataset.go);return}const c=e.target.closest('[data-fc]');if(c){const {f,u}=myCompIds();openCam({ids:[...f,...u],first:c.dataset.fc,tab:'fav'});return}if(e.target.closest('#favLook')&&window._pickL)window._pickL(e)};
   $('#ftab').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;if(t==='cam'){openCam(P());return}showV(t)};
 })();
@@ -344,7 +345,7 @@ $('#shutter').onclick=async()=>{if(S.mode==='still'){$('#file').click();return}i
 $('#cLast').onclick=()=>{shots.length?showShots():$('#file').click()};
 function saveFiles(files){try{if(navigator.canShare&&navigator.canShare({files}))return navigator.share({files}).catch(()=>{})}catch(e){}files.forEach(f=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});toast('저장했어요')}
 function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'),files=shots.map((b,i)=>new File([b],`${C.filePrefix||'photo'}-${ts}-${i+1}.jpg`,{type:'image/jpeg'}));
-  openSheet(shots.length>1?`찍은 사진 ${shots.length}장`:'찍은 사진',`<div class="shots">${shots.map((b,i)=>`<figure><img id="sh${i}" alt="찍은 사진 ${i+1}">${LK&&origs[i]?`<button class="lk" data-e="${i}">${I('palette')}색감</button>`:''}<button data-s="${i}">${I('download')}저장</button></figure>`).join('')}</div><p class="note">아이폰은 저장을 누른 뒤 아래 메뉴에서 ‘이미지 저장’을 고르면 사진첩에 들어가요. 안드로이드는 갤러리에 바로 저장돼요.${C.reviewTip?'<br>'+C.reviewTip:''}</p>`,
+  openSheet(shots.length>1?`찍은 사진 ${shots.length}장`:'찍은 사진',`<div class="shots">${shots.map((b,i)=>`<figure><img id="sh${i}" alt="찍은 사진 ${i+1}">${LK&&origs[i]?`<button class="lk" data-e="${i}">${I('palette')}편집</button>`:''}<button data-s="${i}">${I('download')}저장</button></figure>`).join('')}</div><p class="note">아이폰은 저장을 누른 뒤 아래 메뉴에서 ‘이미지 저장’을 고르면 사진첩에 들어가요. 안드로이드는 갤러리에 바로 저장돼요.${C.reviewTip?'<br>'+C.reviewTip:''}</p>`,
    `<button class="btn pri wide" id="saveAll">${I('download')}${shots.length>1?'전부 사진첩에 저장':'사진첩에 저장'}</button>`,{dark:true});
   shots.forEach((b,i)=>{const fr=new FileReader();fr.onload=()=>{const im=$('#sh'+i);if(im)im.src=fr.result};fr.readAsDataURL(b)});
   $('#shB').onclick=e=>{const ed=e.target.closest('[data-e]');if(ed){openEditor(+ed.dataset.e);return}const b=e.target.closest('[data-s]');if(b)saveFiles([files[+b.dataset.s]])};$('#saveAll').onclick=()=>saveFiles(files)}
@@ -374,16 +375,9 @@ function glLoop(){requestAnimationFrame(glLoop);if(!glr)return;const on=hasLook(
   try{const src=S.mode==='still'?still:vid,sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight;glr.render(src,curLook(),{sw,sh,crop:PC.getCrop(sw,sh,curAR()),mirror:S.mirror&&S.mode!=='still',str:curStr(),seed:(performance.now()/90|0)%97})}catch(e){}}
 if(glr)requestAnimationFrame(glLoop);
 /* 찍은 사진 색감 바꾸기 */
-function openEditor(i){const o=origs[i];if(!o)return;const img=new Image(),url=URL.createObjectURL(o.b);let sel=o.look,str=o.str,g='rec',TH=null,er=null,REC=LOOKS.recommend({scene:'general'});const EA=Object.assign({},LOOKS.ADJ0,o.adj||{});const EL=()=>LOOKS.withAdj(sel,EA),ES=()=>sel==='none'?1:str;
-  openSheet('색감 바꾸기',`<div class="ed-ph"><canvas id="edC"></canvas></div><div class="cchips ed" id="edG"></div><div class="cstrip ed" id="edS"></div><div class="adjp ed hidden" id="edA"></div><div class="lkr ed"><span id="edN"></span><b class="lkp">농도 <i id="edP"></i></b><input type="range" id="edR" min="0" max="100" aria-label="색감 농도"></div>`,
-    `<div class="row"><button class="btn ghost" id="edBack">${I('back')}돌아가기</button><button class="btn pri wide" id="edOk">${I('check')}이 색감으로</button></div>`,{dark:true});
-  const paint=()=>{lookChips($('#edG'),g);const isA=g==='adj';$('#edS').classList.toggle('hidden',isA);$('#edA').classList.toggle('hidden',!isA);if(isA)adjPanel($('#edA'),EA,()=>{if(er)er.render(img,EL(),{str:ES()})});else lookThumbs($('#edS'),g,sel,TH,REC);const l=LOOKS.byId[sel];$('#edN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#edR').value=Math.round(str*100);$('#edR').disabled=sel==='none';$('#edP').textContent=sel==='none'?'':Math.round(str*100)+'%';if(er)er.render(img,EL(),{str:ES()})};
-  img.onload=()=>{const cv=$('#edC');if(!cv)return;const k=Math.min(1,900/Math.max(img.width,img.height));cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);try{er=new Renderer2(cv)}catch(e){}
-    const sm=document.createElement('canvas');sm.width=96;sm.height=Math.round(96*img.height/img.width);sm.getContext('2d').drawImage(img,0,0,sm.width,sm.height);try{const f=PC.analyze(img,img.width,img.height,false,img.width/img.height);REC=LOOKS.recommend(lookCtx(f,PC.scene(f,{facing:'environment',flat:0})))}catch(e){}try{TH=LOOKS.thumbs(sm,sm.width,sm.height)}catch(e){}paint()};img.src=url;
-  $('#edG').onclick=e=>{const b=e.target.closest('[data-lg]');if(b){g=b.dataset.lg;paint()}};$('#edS').onclick=e=>{const b=e.target.closest('[data-lk]');if(b){sel=b.dataset.lk;paint()}};
-  $('#edR').oninput=e=>{str=e.target.value/100;$('#edP').textContent=Math.round(str*100)+'%';if(er)er.render(img,EL(),{str:ES()})};$('#edBack').onclick=showShots;
-  $('#edOk').onclick=async()=>{const c=document.createElement('canvas'),kk=Math.min(1,4096/Math.max(img.width,img.height));c.width=Math.round(img.width*kk);c.height=Math.round(img.height*kk);c.getContext('2d').drawImage(img,0,0,c.width,c.height);let out=c;if(sel!=='none'||!LOOKS.adjZero(EA)){try{out=LOOKS.apply(c,EL(),ES())}catch(e){}}
-    shots[i]=await new Promise(r=>out.toBlob(r,'image/jpeg',.92));origs[i]={b:o.b,look:sel,str,adj:Object.assign({},EA)};toast('색감을 바꿨어요');showShots()}}
+function openEditor(i,tool){const o=origs[i];if(!o)return;if(!window.PhotoEditor){toast('편집기를 불러오지 못했어요');return}
+  PhotoEditor.init({I,toast,LOOKS,PC,lookChips,lookThumbs,adjPanel,lookCtx});hideSheetSilently();
+  PhotoEditor.open({blob:o.b,look:o.look,str:o.str,adj:o.adj,tool,onCancel:()=>showShots(),onSave:(blob,base,st)=>{shots[i]=blob;origs[i]={b:base,look:st.look,str:st.str,adj:st.adj};toast('편집을 저장했어요');showShots()}})}
 function Renderer2(cv){return new LOOKS.Renderer(cv)}
 window.APP={openSheet,closeSheet,openCam,openDetail,I,toast,BY};
 })();

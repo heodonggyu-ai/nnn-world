@@ -181,3 +181,7 @@ body:has(#ftab) .toast{bottom:calc(100px + env(safe-area-inset-bottom))}
 #cam.wide .cchips,#cam.wide .cstrip{display:none}
 #cam .hint{max-width:72%}
 body:has(#cam:not(.hidden)) .toast{bottom:auto;top:calc(env(safe-area-inset-top) + 64px);transform:translate(-50%,-10px)}body:has(#cam:not(.hidden)) .toast.on{transform:translate(-50%,0)}
+.etools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.etool{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:3px;color:var(--ink)}
+.etool .ei{width:36px;height:36px;border-radius:11px;background:var(--ink);color:#fff;display:grid;place-items:center;margin-bottom:4px}.etool .ei .ic{width:19px;height:19px}
+.etool b{font-size:14.5px}.etool small{font-size:11.5px;color:var(--sub)}

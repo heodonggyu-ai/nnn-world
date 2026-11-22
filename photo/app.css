@@ -267,3 +267,35 @@ body:has(#cam:not(.hidden)) .dock{display:none}
 .adr i{font-style:normal;font-size:11px;text-align:right;color:rgba(255,255,255,.55)}
 .adreset{grid-column:1/-1;justify-self:start;height:30px}
 .adjp.ed{padding:8px 0 2px;max-height:none}
+/* ===== 사진 편집기 ===== */
+html.pe-open,html.pe-open body{overflow:hidden}
+.pe{position:fixed;inset:0;z-index:50;background:#0B0F1C;color:#fff;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.pe-top{display:flex;align-items:center;gap:8px;padding:8px 10px;height:54px;flex:none}
+.pe-top b{flex:1;text-align:center;font-size:16px}
+.pe-tb{width:40px;height:40px;border-radius:50%;border:0;background:#161C2E;color:#fff;display:grid;place-items:center}
+.pe-ok{height:40px;padding:0 16px;border-radius:999px;border:0;background:#fff;color:#141B34;font-weight:800;display:inline-flex;align-items:center;gap:5px}
+.pe-ok .ic{width:17px;height:17px}
+.pe-stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center}
+.pe-wrap{position:relative}
+.pe-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.pe-busy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(11,15,28,.55);font-weight:700;font-size:14px}
+.pe-busy i{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:pespin .8s linear infinite}
+@keyframes pespin{to{transform:rotate(360deg)}}
+.pe-cmp{position:absolute;right:12px;bottom:10px;height:32px;padding:0 12px;border-radius:999px;border:0;background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:700;user-select:none;-webkit-user-select:none;touch-action:none}
+.pe-panel{flex:none;min-height:150px;max-height:40vh;overflow-y:auto;padding:6px 0 4px}
+.pe-panel .cchips{padding:6px 12px 0}
+.pe-panel .lkr{padding:6px 14px}
+.pe-panel .adr.wide{display:grid;grid-template-columns:62px 1fr 46px;padding:6px 16px;font-size:12.5px}
+.pe-tip{margin:0;font-size:12px;color:rgba(255,255,255,.6);flex:1}
+.pe-tip.big{display:flex;gap:8px;align-items:flex-start;padding:10px 16px;font-size:13.5px;color:rgba(255,255,255,.85);line-height:1.5}
+.pe-tip.big .ic{width:18px;height:18px;flex:none;margin-top:2px}
+.pe-panel>.pe-tip{padding:6px 16px}
+.pe-row{display:flex;align-items:center;gap:8px;padding:6px 14px}
+.pe-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:6px 12px}.pe-grid.two{grid-template-columns:1fr 1fr}
+.pe-act{border:0;border-radius:14px;background:#161C2E;color:#fff;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.pe-act .ic{width:22px;height:22px}.pe-act b{font-size:12.5px}.pe-act small{font-size:10.5px;color:rgba(255,255,255,.55)}
+.pe-tabs{flex:none;display:flex;justify-content:space-around;padding:6px 4px 8px;border-top:1px solid #262E45}
+.pe-tabs button{border:0;background:none;color:rgba(255,255,255,.55);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;width:58px}
+.pe-tabs button .ic{width:22px;height:22px}.pe-tabs button.on{color:#fff}
+.cc.sw{width:32px;padding:0;background:var(--c)!important;border:2px solid rgba(255,255,255,.6)}
+html.pe-open .toast{bottom:auto;top:calc(env(safe-area-inset-top) + 62px);z-index:70}
