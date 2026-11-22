@@ -1,0 +1,77 @@
+/* 구도 카메라 전용 — 로고(흰 바탕 · 남색 선 · 황금 나선)에 맞춘 심플한 화면 */
+:root{--r-lg:22px;--r-md:14px;--r-sm:10px;--gold:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2 -2 165.8 104'%3E%3Cg fill='none' stroke='%23fff' stroke-linecap='round'%3E%3Cpath stroke-opacity='.38' stroke-width='.5' d='M0 0H161.8V100H0ZM100 0V100M100 61.8H161.8M123.6 61.8V100M100 76.4H123.6M114.6 61.8V76.4M114.6 70.8H123.6M118 70.8V76.4'/%3E%3Cpath stroke-opacity='.92' stroke-width='1.1' d='M0 100A100 100 0 0 1 100 0A61.8 61.8 0 0 1 161.8 61.8A38.2 38.2 0 0 1 123.6 100A23.6 23.6 0 0 1 100 76.4A14.6 14.6 0 0 1 114.6 61.8A9 9 0 0 1 123.6 70.8A5.6 5.6 0 0 1 118 76.4A3.4 3.4 0 0 1 114.6 73A2.2 2.2 0 0 1 116.8 70.8'/%3E%3C/g%3E%3C/svg%3E")}
+html,body{letter-spacing:-.015em}
+.ic{stroke-width:1.55}
+
+/* 머리줄 */
+.brand{font-weight:700;font-size:18px;gap:11px}
+.brand img{width:32px;height:32px;border-radius:9px;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(20,27,52,.08);display:block}
+.ibtn{border-color:var(--line);box-shadow:none}
+
+/* 첫 화면: 그림 위에 금빛 대신 흰 나선, 글은 그림 아래 흰 바탕에 */
+.hero{height:auto;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:8px}
+.hero canvas{position:relative;z-index:0;display:block;width:100%;height:clamp(230px,42vh,330px);object-fit:cover;border-radius:15px}
+.hero::after{display:none}
+.vf{inset:auto;top:22px;left:22px;right:22px;height:calc(clamp(230px,42vh,330px) - 28px)}
+.vf i{width:20px;height:20px;border-width:1.6px;border-color:#fff;border-radius:0!important}
+.vf b{inset:16px 14px;width:auto;height:auto;margin:0;border:0;border-radius:0;background:var(--gold) center/contain no-repeat;opacity:.95}
+.vf b::before,.vf b::after{display:none}
+.hero .in{position:static;padding:20px 14px 12px}
+.hero .sample{color:var(--sub);font-weight:500;margin-bottom:12px}
+.hero .sample::before{width:5px;height:5px;background:var(--ink)}
+.hero h1{text-shadow:none;font-weight:700;font-size:clamp(25px,7vw,30px);letter-spacing:-.045em;line-height:1.25}
+.hero p{color:var(--sub);max-width:34ch;margin-bottom:20px}
+.hero .btns{gap:8px}
+.hero .btns .btn{flex:1 1 140px}
+.btn{font-weight:600;height:52px}
+.btn.pri{background:var(--ink);color:#fff}
+.btn.glass{background:var(--card);color:var(--ink);border:1px solid var(--line);backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* 갤러리 */
+h2.sec{font-weight:700;font-size:19px;margin-top:34px}
+.search{border-radius:12px;height:48px}
+.tab{font-weight:500;height:36px;border-color:var(--line)}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tab.on small{color:rgba(255,255,255,.6)}
+.grid{gap:20px 12px}
+.card .ph{border-radius:var(--r-md);box-shadow:0 0 0 1px rgba(20,27,52,.06)}
+.card b{font-weight:600;font-size:14.5px}
+.card .fav{background:rgba(255,255,255,.88);color:var(--ink);backdrop-filter:none;-webkit-backdrop-filter:none;width:30px;height:30px}
+.card .fav.on{color:var(--ink)}
+.card .fav.on .ic{fill:currentColor}
+.foot{color:color-mix(in srgb,var(--sub) 80%,transparent)}
+
+/* 시트 */
+.scrim{background:rgba(11,15,28,.42)}
+.sheet{border-radius:22px 22px 0 0}
+.sheet .sh h3,.dt-title{font-weight:700}
+.dt-ph{border-radius:var(--r-md)}
+.steps li::before{background:transparent;border:1.4px solid var(--ink);color:var(--ink);font-weight:600;font-size:12px;width:23px;height:23px}
+.chip{font-weight:500;background:transparent;border:1px solid var(--line)}
+.say{background:var(--bg);border-left:2px solid var(--ink);border-radius:4px var(--r-sm) var(--r-sm) 4px}
+.favbtn.on{color:var(--ink);border-color:var(--ink)}
+.favbtn.on .ic{fill:currentColor}
+.toast{background:var(--ink);color:#fff;font-weight:500}
+
+/* 카메라: 깊은 남색, 강조는 흰색 */
+.ctop .cbtn,.gpick,.round,.tg,.say-cam{background:var(--camCard)}
+.gpick{font-weight:600}
+.gpick em{background:#fff;color:var(--ink)}
+.view{border-radius:16px}
+.hint{background:rgba(11,15,28,.7);font-weight:600}
+.badge{background:rgba(11,15,28,.6);font-weight:600}
+.zoom button{background:rgba(11,15,28,.6)}
+.zoom button.on{background:#fff;color:var(--ink)}
+.gth.on .t{outline-color:#fff}
+.tg{font-weight:600;color:rgba(255,255,255,.78)}
+.tg.on{background:#fff;color:var(--ink)}
+.shot{border-width:3px}
+.msg{background:var(--cam)}
+.msg .btn.pri{background:#fff;color:var(--ink)}
+.msg .btn.glass{background:var(--camCard);color:#fff;border-color:var(--camLine)}
+.sheet.dark .btn.pri{background:#fff;color:var(--ink)}
+.sheet.dark .btn.ghost{border-color:var(--camLine);color:#fff}
+.sheet.dark .switch.on i{background:#fff}
+.sheet.dark .switch.on i::after{background:var(--ink)}
+.sheet.dark .steps li::before{border-color:#fff;color:#fff}
+.ptabs .tab.on{background:#fff;color:var(--ink)}
