@@ -113,5 +113,13 @@ const WHY={selfie:'셀카',portrait:'인물',couple:'두 사람',group:'단체',
 function recommend(o={}){const out=[],add=(ids,why)=>(ids||[]).forEach(id=>{if(byId[id]&&!out.some(x=>x.id===id))out.push({id,why})});
   if(o.dark&&o.scene!=='night')add(['cinestill','wkw'],'어두운 장면');if(o.warm)add(['kodak_gold','br2049','lalaland'],'노을빛');
   add((RS[o.scene]||[]).slice(0,4),WHY[o.scene]||'');add((RC[o.cat]||[]).slice(0,3),o.catName?o.catName+' 구도':'');add(RS[o.scene],WHY[o.scene]||'');add(RS.general,'');return out.slice(0,9)}
-window.LOOKS={list:L,groups:G,byId,Renderer,apply,thumbs,recommend};
+/* 직접 조정: 밝기·대비·채도·색온도·색조(-1~1), 페이드·입자·비네팅(0~1) */
+const ADJ0={bright:0,contrast:0,sat:0,warm:0,tint:0,fade:0,grain:0,vig:0};const AC={};
+const adjZero=a=>!a||Object.keys(ADJ0).every(k=>!a[k]);
+function withAdj(id,a){const base=byId[id]||byId.none;if(adjZero(a))return base;const key=id+'|'+Object.keys(ADJ0).map(k=>((a[k]||0)*100|0)).join(',');if(AC[key])return AC[key];
+  const p=Object.assign({},base.p||{}),w=p.wb||[1,1,1];p.exp=(p.exp||1)*(1+(a.bright||0)*.35);p.con=(p.con||0)+(a.contrast||0)*.6;p.sat=(p.sat==null?1:p.sat)*(1+(a.sat||0));
+  p.wb=[w[0]*(1+(a.warm||0)*.12),w[1]*(1-(a.tint||0)*.08),w[2]*(1-(a.warm||0)*.12)];p.fade=(p.fade||0)+(a.fade||0)*.2;p.grain=(p.grain||0)+(a.grain||0)*.6;p.vig=(p.vig||0)+(a.vig||0)*.7;
+  const keys=Object.keys(AC);if(keys.length>60)keys.forEach(k=>delete AC[k]);return AC[key]={id:'_adj',name:base.name,p}}
+const ADJ_UI=[['bright','밝기',-1,1],['contrast','대비',-1,1],['sat','채도',-1,1],['warm','색온도',-1,1],['tint','색조',-1,1],['fade','페이드',0,1],['grain','입자',0,1],['vig','비네팅',0,1]];
+window.LOOKS={list:L,groups:G,byId,Renderer,apply,thumbs,recommend,withAdj,ADJ0,ADJ_UI,adjZero};
 })();
