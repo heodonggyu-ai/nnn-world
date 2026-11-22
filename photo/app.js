@@ -57,8 +57,8 @@ const CATS=(C.cats||Object.keys(PC.cats)).filter(k=>ITEMS.some(i=>i.cat===k));
 
 /* ---------- 썸네일 캐시 ---------- */
 const TH=new Map();
-function thumbURL(id){if(TH.has(id))return TH.get(id);const c=document.createElement('canvas');c.width=300;c.height=400;PC.drawThumb(id,c.getContext('2d'),300,400);const u=c.toDataURL('image/jpeg',.84);TH.set(id,u);return u}
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;io.unobserve(el);requestAnimationFrame(()=>{el.src=thumbURL(el.dataset.id)})}),{rootMargin:'300px'});
+function thumbURL(id,plain){const k=id+(plain?'|p':'');if(TH.has(k))return TH.get(k);const c=document.createElement('canvas');c.width=300;c.height=400;PC.drawThumb(id,c.getContext('2d'),300,400,{guide:!plain});const u=c.toDataURL('image/jpeg',.84);TH.set(k,u);return u}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;io.unobserve(el);requestAnimationFrame(()=>{el.src=thumbURL(el.dataset.id,el.dataset.plain)})}),{rootMargin:'300px'});
 
 /* ---------- 레이아웃 ---------- */
 document.body.insertAdjacentHTML('beforeend',`
@@ -100,10 +100,13 @@ $('#goPhoto')&&($('#goPhoto').onclick=()=>{openCam(C.startPool?C.startPool():nul
 $('#hHelp').onclick=()=>openSheet(C.helpTitle||'사용법',`<div class="dt-desc">${C.help}</div>`);
 
 /* ---------- 홈: 장소·추가 메뉴 ---------- */
-if(C.scenarios){$('#places').innerHTML=C.scenarios.map(s=>`<button class="place" data-sc="${s.id}"><span class="pi">${I(s.icon)}</span><b>${s.name}</b><small>${s.sub}</small></button>`).join('');
+if(C.scenarios){const cover=s=>s.cover||s.g.find(i=>i.startsWith('st_')&&BY[i])||s.g[0];
+  $('#places').innerHTML=C.scenarios.map(s=>`<button class="place" data-sc="${s.id}"><img data-id="${cover(s)}" data-plain="1" alt=""><span class="pi">${I(s.icon)}</span><span class="pn">구도 ${s.g.filter(i=>BY[i]).length}</span><span class="pt"><b>${s.name}</b><small>${s.sub}</small></span></button>`).join('');
+  $$('#places img[data-id]').forEach(i=>io.observe(i));
   $('#places').onclick=e=>{const b=e.target.closest('[data-sc]');if(!b)return;const s=C.scenarios.find(x=>x.id===b.dataset.sc);openCam({ids:s.g,title:s.name,ments:s.m,tips:s.t,face:s.face,auto:s.auto})}}
-if(C.extras){$('#extras').innerHTML=C.extras.map((x,i)=>`<button class="extra" data-x="${i}">${I(x.icon)}<b>${x.title}</b><small>${x.sub}</small></button>`).join('');$('#extras').onclick=e=>{const b=e.target.closest('[data-x]');if(b)C.extras[+b.dataset.x].open({openSheet,I})}}
-
+function paintExtras(){if(!C.extras)return;C.extras.forEach((x,i)=>{const el=document.querySelector(`#extras [data-art="${i}"]`);if(el&&x.art)x.art(el,{I,thumbURL})})}
+if(C.extras){$('#extras').innerHTML=C.extras.map((x,i)=>`<button class="extra${x.tint?' tint':''}" data-x="${i}"><span class="tx">${I(x.icon)}<b>${x.title}</b><small>${x.sub}</small><span class="go">${x.cta||'보기'}${I('next')}</span></span>${x.art?`<span class="art" data-art="${i}"></span>`:''}</button>`).join('');
+  paintExtras();$('#extras').onclick=e=>{const b=e.target.closest('[data-x]');if(b)C.extras[+b.dataset.x].open({openSheet,I,refresh:paintExtras})}}
 /* ---------- 홈: 갤러리 ---------- */
 let cat=LS.get('cat','all'),q='';
 function list(){let L=ITEMS;if(cat==='fav')L=L.filter(i=>favs.has(i.id));else if(cat!=='all')L=L.filter(i=>i.cat===cat);

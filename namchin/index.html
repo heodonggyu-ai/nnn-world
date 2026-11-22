@@ -29,6 +29,11 @@
 .ck input:checked::after{content:"";width:10px;height:6px;border:2.5px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
 .ck b{display:block;font-size:15px;margin-bottom:3px}
 .ck small{color:var(--sub);font-size:13px;line-height:1.5}
+.mini{position:relative;width:60px;height:80px;border-radius:10px;overflow:hidden;border:2.5px solid;display:block}
+.mini canvas{width:100%;height:100%;display:block}
+.mini.bad{border-color:#FF5A6E;transform:rotate(-5deg)}.mini.good{border-color:#2FC77A;transform:rotate(4deg) translateY(-4px)}
+.mini i{position:absolute;right:3px;bottom:3px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:900;color:#fff}
+.mini.bad i{background:#FF5A6E}.mini.good i{background:#2FC77A}
 .ckdone{text-align:center;font-weight:800;margin:14px 0 4px}
 </style>
 </head>
@@ -79,30 +84,36 @@ window.APP_CONFIG={
   startPool:()=>({ids:['full','half','off','close','profile','portrait','travel','two'],auto:true,title:'바로 촬영'}),
   scenarioTitle:'어디서 찍어요?',scenarioSub:'장소를 고르면 어울리는 구도와 포즈 멘트를 준비해요',
   scenarios:[
-   {id:'cafe',icon:'cafe',name:'카페',sub:'창가 자리 일상',g:['off','close','half','st_laugh_cover','st_coffee_walk','st_window_outside','st_detail_hands'],auto:1,
+   {id:'cafe',cover:'st_window_outside',icon:'cafe',name:'카페',sub:'창가 자리 일상',g:['off','close','half','st_laugh_cover','st_coffee_walk','st_window_outside','st_detail_hands'],auto:1,
     m:['창밖 한번 봐줘','컵 두 손으로 잡고 나 봐줘','빨대 물고 딴 데 봐','턱 괴고 살짝 웃어봐'],t:['창가 자리 = 최고의 조명. 그녀가 창을 바라보게 앉히세요','테이블 위 컵·디저트를 화면 아래에 살짝 걸치기','배경 손님이 얼굴 뒤에 겹치지 않게 한 걸음 옆으로']},
-   {id:'ootd',icon:'shirt',name:'전신 OOTD',sub:'다리 길게',g:['full','half','st_low_long','st_wall_lean','st_coat_walk','st_crouch_street','st_mirror_selfie','st_wide_hip'],auto:1,
+   {id:'ootd',cover:'st_low_long',icon:'shirt',name:'전신 OOTD',sub:'다리 길게',g:['full','half','st_low_long','st_wall_lean','st_coat_walk','st_crouch_street','st_mirror_selfie','st_wide_hip'],auto:1,
     m:['나 쪽으로 천천히 걸어와봐','한 발 앞으로 내밀어줘','한쪽 다리에 체중 실어봐','가방 끈 잡고 아래 봐줘'],t:['폰을 무릎 높이로! 쪼그려 앉아서 찍으면 다리가 길어 보여요','발끝을 화면 맨 아래에, 머리 위는 조금만','걷는 장면은 연사로 — 다리가 벌어진 순간이 예뻐요']},
-   {id:'travel',icon:'plane',name:'여행 명소',sub:'배경도 그녀도',g:['travel','st_landmark_split','st_back_view_vista','st_back_walk','st_look_back','st_follow_me','st_alley_life'],
+   {id:'travel',cover:'st_follow_me',icon:'plane',name:'여행 명소',sub:'배경도 그녀도',g:['travel','st_landmark_split','st_back_view_vista','st_back_walk','st_look_back','st_follow_me','st_alley_life'],
     m:['저 멀리 천천히 걸어가봐','뒤돌아보면서 웃어줘','난간에 기대서 풍경 봐줘','두 팔 벌리고 하늘 봐!'],t:['사람을 가운데 말고 1/3 선에 — 배경을 살리세요','수평선은 1/3 선에, 꼭 수평으로','명소는 그녀 반대쪽 1/3에']},
-   {id:'sunset',icon:'sun',name:'바다·노을',sub:'역광에도 얼굴 살리기',g:['profile','st_golden_backlight','st_couple_sunset_sil','st_window_sil','st_hair_flip'],
+   {id:'sunset',cover:'st_golden_backlight',icon:'sun',name:'바다·노을',sub:'역광에도 얼굴 살리기',g:['profile','st_golden_backlight','st_couple_sunset_sil','st_window_sil','st_hair_flip'],
     m:['해 쪽으로 옆모습 보여줘','머리카락 바람에 날리게 해봐','눈 감고 바람 느껴봐'],t:['얼굴이 어두우면 화면에서 얼굴을 탭 → 밝기 올리기','노을에선 까만 실루엣도 예뻐요 — 옆모습으로','해를 그녀 머리 뒤에 숨기면 머리카락이 빛나요']},
-   {id:'flower',icon:'flower',name:'꽃·벚꽃',sub:'꽃이 감싸게',g:['close','st_bouquet_hold','st_twirl_dress','st_blossom_tunnel','st_tulip_low','st_sunflower_field'],
+   {id:'flower',cover:'st_blossom_tunnel',icon:'flower',name:'꽃·벚꽃',sub:'꽃이 감싸게',g:['close','st_bouquet_hold','st_twirl_dress','st_blossom_tunnel','st_tulip_low','st_sunflower_field'],
     m:['꽃 냄새 맡는 척 해줘','꽃가지를 얼굴 옆으로','꽃잎 날리는 거 올려다봐'],t:['렌즈 바로 앞에 꽃을 걸쳐 흐린 테두리 만들기','인물모드를 켜면 배경 꽃이 부드럽게 흐려져요']},
-   {id:'food',icon:'fork',name:'맛집·디저트',sub:'먹는 순간 귀엽게',g:['close','off','st_bite_hold','st_drink_sky','st_hand_landmark','st_cafe45'],
+   {id:'food',cover:'st_drink_sky',icon:'fork',name:'맛집·디저트',sub:'먹는 순간 귀엽게',g:['close','off','st_bite_hold','st_drink_sky','st_hand_landmark','st_cafe45'],
     m:['한입 먹는 척 하면서 웃어','포크 들고 나 봐줘','잔 들어서 건배!'],t:['맞은편에 앉아 눈높이로','음식은 화면 아래 1/3에 걸치기','머리 위 조명이면 얼굴에 그림자 — 창가 쪽으로']},
-   {id:'night',icon:'moon',name:'야경',sub:'흔들림 없이',g:['off','st_night_lights','st_neon_sign','st_wkw_neon','st_rooftop_city','st_umbrella_rain'],
+   {id:'night',cover:'st_wkw_neon',icon:'moon',name:'야경',sub:'흔들림 없이',g:['off','st_night_lights','st_neon_sign','st_wkw_neon','st_rooftop_city','st_umbrella_rain'],
     m:['불빛 쪽 봐줘','3초만 가만히 있어줘!','웃으면서 멈춰!'],t:['야간모드 켜고, 숨 참고, 팔꿈치를 몸에 붙이기','가로등·간판 불빛을 얼굴 쪽에 두기']},
-   {id:'couple',icon:'couple',name:'커플샷',sub:'둘 다 잘 나오게',g:['two','selfie','st_forehead_touch','st_cheek_kiss','st_walk_back_couple','st_hands_close','st_couple_shadow','st_piggyback'],
+   {id:'couple',cover:'st_forehead_touch',icon:'couple',name:'커플샷',sub:'둘 다 잘 나오게',g:['two','selfie','st_forehead_touch','st_cheek_kiss','st_walk_back_couple','st_hands_close','st_couple_shadow','st_piggyback'],
     m:['볼 맞대자','이마 맞대고 웃기','너는 카메라, 나는 너 볼게'],t:['셀카는 폰을 눈보다 살짝 위로, 턱은 살짝 당기기','둘이 다 나오려면 타이머 + 연사','그녀 얼굴을 렌즈에서 조금 더 멀리 — 얼굴이 작게 나와요']},
   ],
   extras:[
-   {icon:'book',title:'남친 사진학원',sub:'남자들이 꼭 하는 실수 7가지',open(A){
+   {icon:'book',title:'남친 사진학원',sub:'남자들이 꼭 하는 실수 7가지, 고친 사진과 나란히 비교해요',cta:'7개 수업 보기',tint:1,
+    art(el){el.innerHTML='<span class="mini bad"><canvas width="150" height="200"></canvas><i>✕</i></span><span class="mini good"><canvas width="150" height="200"></canvas><i>✓</i></span>';const cs=el.querySelectorAll('canvas');
+      [[NG[0].bad,cs[0]],[NG[0].good,cs[1]]].forEach(([f,cv])=>{const c=cv.getContext('2d');c.scale(.5,.5);f(c,300,400);K.post(c,300,400)})},
+    open(A){
      A.openSheet('남친 사진학원',`<p class="dt-desc">왼쪽은 남자들이 흔히 찍는 사진, 오른쪽은 그녀가 원하는 사진이에요.</p>`+NG.map((n,i)=>`<div class="ng"><h4>${n.t}</h4><p>${n.p}</p><div class="pair"><figure class="bad"><canvas width="300" height="400" data-ng="${i}b"></canvas><figcaption>${A.I('close')}${n.bl}</figcaption></figure><figure class="good"><canvas width="300" height="400" data-ng="${i}g"></canvas><figcaption>${A.I('check')}${n.gl}</figcaption></figure></div></div>`).join(''));
      document.querySelectorAll('[data-ng]').forEach(cv=>{const k=cv.dataset.ng,i=parseInt(k),c=cv.getContext('2d');(k.endsWith('b')?NG[i].bad:NG[i].good)(c,300,400);K.post(c,300,400)})}},
-   {icon:'list',title:'찍기 전 체크리스트',sub:'30초면 사진이 달라져요',open(A){let st=[];try{st=JSON.parse(localStorage.getItem(LSK)||'[]')}catch(e){}
+   {icon:'list',title:'찍기 전 체크리스트',sub:'렌즈 닦기부터 폰 높이까지, 30초면 사진이 달라져요',cta:'체크하러 가기',
+    art(el){let st=[];try{st=JSON.parse(localStorage.getItem(LSK)||'[]')}catch(e){}const n=st.filter(Boolean).length,T=CK.length,R=36,L=2*Math.PI*R;
+      el.innerHTML=`<svg class="ring" viewBox="0 0 96 96" width="92" height="92"><circle cx="48" cy="48" r="${R}" fill="none" stroke="var(--line)" stroke-width="9"/><circle cx="48" cy="48" r="${R}" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L*(1-n/T)}" transform="rotate(-90 48 48)"/><text x="48" y="46" text-anchor="middle" font-size="22" font-weight="800" fill="var(--ink)">${n}/${T}</text><text x="48" y="64" text-anchor="middle" font-size="11" font-weight="600" fill="var(--sub)">${n===T?'준비 완료':'완료'}</text></svg>`},
+    open(A){let st=[];try{st=JSON.parse(localStorage.getItem(LSK)||'[]')}catch(e){}
      A.openSheet('찍기 전 체크리스트',CK.map(([t,s],i)=>`<label class="ck"><input type="checkbox" data-i="${i}" ${st[i]?'checked':''}><div><b>${t}</b><small>${s}</small></div></label>`).join('')+'<div class="ckdone" id="ckD"></div>');
-     const upd=()=>{const v=[...document.querySelectorAll('.ck input')].map(x=>x.checked);try{localStorage.setItem(LSK,JSON.stringify(v))}catch(e){}const n=v.filter(Boolean).length;document.getElementById('ckD').textContent=n===CK.length?'준비 완료. 이제 찍으러 가요':`${n} / ${CK.length} 완료`};
+     const upd=()=>{const v=[...document.querySelectorAll('.ck input')].map(x=>x.checked);try{localStorage.setItem(LSK,JSON.stringify(v))}catch(e){}const n=v.filter(Boolean).length;document.getElementById('ckD').textContent=n===CK.length?'준비 완료. 이제 찍으러 가요':`${n} / ${CK.length} 완료`;A.refresh&&A.refresh()};
      document.getElementById('shB').onchange=upd;upd()}},
   ],
   defaultMents:['편하게 나 보고 웃어줘','방금 그 표정 좋았어, 한 번 더!','딴 데 보다가 천천히 돌아봐','하나 둘 셋 말고, 그냥 얘기하면서 찍을게'],
