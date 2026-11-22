@@ -1,0 +1,19 @@
+<svg viewBox="0 0 160 118" xmlns="http://www.w3.org/2000/svg">
+<defs><filter id="cnSh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#0b4d8f" flood-opacity=".32"/></filter>
+<radialGradient id="cnBall" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#ffc83d"/><stop offset="1" stop-color="#ff8a1f"/></radialGradient></defs>
+<g filter="url(#cnSh)" transform="rotate(-9 80 92)">
+ <rect x="6" y="70" width="150" height="50" rx="7" fill="#2d2a3a"/>
+ <g fill="#fff" opacity=".9">
+  <rect x="14" y="74" width="7" height="5" rx="1.5"/><rect x="30" y="74" width="7" height="5" rx="1.5"/><rect x="46" y="74" width="7" height="5" rx="1.5"/><rect x="62" y="74" width="7" height="5" rx="1.5"/><rect x="78" y="74" width="7" height="5" rx="1.5"/><rect x="94" y="74" width="7" height="5" rx="1.5"/><rect x="110" y="74" width="7" height="5" rx="1.5"/><rect x="126" y="74" width="7" height="5" rx="1.5"/><rect x="142" y="74" width="7" height="5" rx="1.5"/>
+  <rect x="14" y="111" width="7" height="5" rx="1.5"/><rect x="30" y="111" width="7" height="5" rx="1.5"/><rect x="46" y="111" width="7" height="5" rx="1.5"/><rect x="62" y="111" width="7" height="5" rx="1.5"/><rect x="78" y="111" width="7" height="5" rx="1.5"/><rect x="94" y="111" width="7" height="5" rx="1.5"/><rect x="110" y="111" width="7" height="5" rx="1.5"/><rect x="126" y="111" width="7" height="5" rx="1.5"/><rect x="142" y="111" width="7" height="5" rx="1.5"/>
+ </g>
+ <rect x="12" y="82" width="42" height="26" rx="4" fill="#e8f5ff"/><rect x="60" y="82" width="42" height="26" rx="4" fill="#fff0f6"/><rect x="108" y="82" width="42" height="26" rx="4" fill="#f1ebff"/>
+ <circle cx="26" cy="91" r="5" fill="#ffc83d"/><path d="M14 104h38" stroke="#bcd" stroke-width="1.5"/>
+ <circle cx="81" cy="98" r="5" fill="#ffc83d"/><path d="M62 104h38" stroke="#dbc" stroke-width="1.5"/>
+ <ellipse cx="136" cy="101.5" rx="6.5" ry="3.8" fill="#ffc83d"/><path d="M110 104h38" stroke="#cbe" stroke-width="1.5"/>
+</g>
+<path d="M18 56 Q50 -8 84 50 Q104 12 126 50" fill="none" stroke="#fff" stroke-width="2.4" stroke-dasharray="1 6" stroke-linecap="round" opacity=".9"/>
+<circle cx="34" cy="26" r="8" fill="#fff" opacity=".35"/><circle cx="52" cy="17" r="8" fill="#fff" opacity=".45"/><circle cx="68" cy="26" r="8" fill="#fff" opacity=".55"/>
+<g class="cn-ball"><circle cx="110" cy="30" r="13" fill="url(#cnBall)" stroke="#2d2a3a" stroke-width="2.4"/><path d="M103 24 q4 -5 9 -4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/></g>
+<g transform="translate(140 22)"><circle r="13" fill="#fff"/><path d="M-4 -6.5v13l10.5-6.5z" fill="#4fa8f5"/></g>
+</svg>
