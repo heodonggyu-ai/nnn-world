@@ -42,6 +42,7 @@ const P={
  fork:'<path d="M7 3.5V10a2 2 0 004 0V3.5M9 12v8.5M16 20.5V3.5c-2 1-3 3.5-3 7h3"/>',
  moon:'<path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z"/>',
  couple:'<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 20a5.5 5.5 0 0111 0M10.5 20a5.5 5.5 0 0111 0"/>',
+ palette:'<path d="M12 3.5a8.5 8.5 0 100 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.5 1.6-1.5h2.2a3.9 3.9 0 003.9-3.9C20.5 6.8 16.7 3.5 12 3.5z"/><circle cx="7.8" cy="11" r="1.2"/><circle cx="10.5" cy="7.3" r="1.2"/><circle cx="15" cy="7.6" r="1.2"/>',
  paw:'<circle cx="12" cy="15.5" r="3.8"/><circle cx="6.5" cy="10.5" r="1.8"/><circle cx="17.5" cy="10.5" r="1.8"/><circle cx="9.5" cy="6.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/>',
  glove:'<path d="M7 10V7a5 5 0 0110 0v5a6 6 0 01-6 6H9.5A3.5 3.5 0 016 14.5V12a2 2 0 012-2h3"/><path d="M8 18v2.5h8V17"/>',
 };
@@ -79,13 +80,14 @@ document.body.insertAdjacentHTML('beforeend',`
 ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('camera')}${C.heroCTA||'카메라 켜기'}</button>${C.photoAnalyze!==false?`<button class="btn glass" id="dPhoto" aria-label="사진 분석">${I('image')}</button>`:''}</div>`:''}
 <section id="cam" class="hidden" aria-label="촬영">
  <div class="ctop"><button class="cbtn" id="cBack" aria-label="홈으로">${I('back')}</button><button class="gpick" id="cPick"><em id="cAuto" class="hidden">자동</em><span id="cName"></span>${I('chev')}</button><button class="cbtn" id="cAspect">3:4</button><button class="cbtn" id="cInfo" aria-label="촬영 방법">${I('info')}</button></div>
- <div class="stage" id="stage"><div class="view" id="view"><video id="vid" playsinline muted autoplay></video><img class="still" id="still" alt=""><canvas id="ov"></canvas>
+ <div class="stage" id="stage"><div class="view" id="view"><video id="vid" playsinline muted autoplay></video><img class="still" id="still" alt=""><canvas id="glv" class="glv"></canvas><canvas id="ov"></canvas>
   <div class="hint" id="hint"></div><div class="badges"><span class="badge" id="bPhone"></span><span class="badge hidden" id="bLevel"></span></div><div class="zoom hidden" id="zoom"></div>
   <div class="count hidden" id="count"></div><div class="flash" id="flash"></div>
   <div class="msg" id="msg">${I('camera')}<p id="msgT">카메라를 켜는 중…</p><button class="btn pri" id="mRetry">카메라 다시 켜기</button><button class="btn glass" id="mPhoto">${I('image')}찍어둔 사진으로 연습</button></div></div></div>
  <div class="say-cam hidden" id="sayCam"><div class="tx"><small>이렇게 말해보세요</small><b id="sayT"></b></div><button id="sayN" aria-label="다른 멘트">${I('next')}</button></div>
  ${C.sceneRec?`<div class="cchips" id="cchips"></div>`:''}
  <div class="cstrip" id="cstrip"></div>
+ <div class="lookbar hidden" id="lookbar"><div class="cchips" id="lkG"></div><div class="cstrip" id="lkS"></div><div class="lkr"><span id="lkN"></span><input type="range" id="lkR" min="0" max="100" aria-label="색감 강도"><button class="cc on" id="lkX">${I('check')}완료</button></div></div>
  <div class="toggles" id="toggles"></div>
  <div class="ctrl"><button class="last" id="cLast" aria-label="찍은 사진">${I('image')}</button><button class="shot" id="shutter" aria-label="촬영"><i></i><span id="shotN"></span></button><button class="round" id="cFlip" aria-label="카메라 전환">${I('flip')}</button></div>
 </section>
@@ -164,9 +166,10 @@ function relatedPool(id){const it=BY[id],same=ITEMS.filter(i=>i.cat===it.cat).ma
 const vid=$('#vid'),still=$('#still'),ov=$('#ov'),view=$('#view'),stage=$('#stage'),hintEl=$('#hint'),oc=ov.getContext('2d');
 const dpr=Math.min(devicePixelRatio||1,2),ASP=[[3,4],[9,16],[1,1]];
 const S={mode:'idle',facing:'environment',mirror:false,pSide:'L',pSideManual:false,spiralFlip:{x:false,y:false},spiralManual:false};
+const LK=!!window.LOOKS&&C.looks!==false;let look=LK?LS.get('look','none'):'none',lookStr=LS.get('lookStr',1),origs=[];if(LK&&!LOOKS.byId[look])look='none';const glv=$('#glv');let glr=null;if(LK){try{glr=new LOOKS.Renderer(glv)}catch(e){glr=null}}
 let pool=[],active=null,auto=false,autoPool=[],stream=null,feat=null,ema={},cand=null,candN=0,ai=0,stillAR=null,aligned=false,wasAligned=false,level=null,burst=C.burst||1,timer=0,shots=[],ments=[],mi=0,session=null;
 function curAR(){if(S.mode==='still'&&stillAR)return stillAR;const a=ASP[ai];return a[0]/a[1]}
-function fit(){const r=stage.getBoundingClientRect();if(!r.width)return;const ar=curAR();let w=r.width-20,h=w/ar;if(h>r.height-6){h=r.height-6;w=h*ar}view.style.width=w+'px';view.style.height=h+'px';ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr)}
+function fit(){const r=stage.getBoundingClientRect();if(!r.width)return;const ar=curAR();let w=r.width-20,h=w/ar;if(h>r.height-6){h=r.height-6;w=h*ar}view.style.width=w+'px';view.style.height=h+'px';ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr);if(glr){glr.cv.width=ov.width;glr.cv.height=ov.height}}
 addEventListener('resize',fit);
 
 function openCam(sess,o={}){session=sess||{ids:(C.defaultPool||[]).filter(i=>BY[i]),auto:true};pool=session.ids.filter(i=>BY[i]);if(!pool.length)pool=ITEMS.slice(0,12).map(i=>i.id);
@@ -221,14 +224,14 @@ function openPicker(){const cats=CATS;let pc=BY[active]?BY[active].cat:cats[0];
 
 /* 토글 */
 function renderToggles(){const T=[];if(autoPool.length&&!C.sceneRec)T.push(`<button class="tg${auto?' on':''}" data-t="auto">${I('spark')}자동 추천</button>`);
-  T.push(`<button class="tg${burst>1?' on':''}" data-t="burst">${I('bolt')}${burst>1?'연사 '+burst:'연사'}</button>`,`<button class="tg${timer?' on':''}" data-t="timer">${I('timer')}${timer?timer+'초':'타이머'}</button>`,`<button class="tg" data-t="side">${I('swap')}좌우</button>`,`<button class="tg" data-t="photo">${I('image')}사진 분석</button>`);
+  T.push(`<button class="tg${burst>1?' on':''}" data-t="burst">${I('bolt')}${burst>1?'연사 '+burst:'연사'}</button>`,`<button class="tg${timer?' on':''}" data-t="timer">${I('timer')}${timer?timer+'초':'타이머'}</button>`,`<button class="tg" data-t="side">${I('swap')}좌우</button>`,`<button class="tg" data-t="photo">${I('image')}사진 분석</button>`);if(LK)T.splice(0,0,`<button class="tg${look!=='none'?' on':''}" data-t="look">${I('palette')}${look==='none'?'색감':LOOKS.byId[look].name}</button>`);
   $('#toggles').innerHTML=T.join('')}
 $('#toggles').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;
   if(t==='auto'){auto=!auto;if(auto&&feat)rankNow();renderActive();toast(auto?'장면에 맞는 구도를 자동으로 골라요':'자동 추천을 껐어요')}
   if(t==='burst'){burst=burst===1?3:burst===3?6:1;toast(burst>1?`한 번에 ${burst}장 찍어요`:'한 장씩 찍어요')}
   if(t==='timer'){timer=timer===0?3:timer===3?10:0;toast(timer?`${timer}초 뒤에 찍어요`:'타이머를 껐어요')}
   if(t==='side'){const it=BY[active];if(it&&it.kind==='portrait'){S.pSideManual=true;S.pSide=S.pSide==='L'?'R':'L'}else{S.spiralManual=true;if(S.spiralFlip.x===S.spiralFlip.y)S.spiralFlip.x=!S.spiralFlip.x;else S.spiralFlip.y=!S.spiralFlip.y}toast('가이드를 좌우로 뒤집었어요')}
-  if(t==='photo')$('#file').click();renderToggles()};
+  if(t==='photo')$('#file').click();if(t==='look'){openLookbar();return}renderToggles()};
 
 /* 분석·추천 */
 function onFeat(f,force){feat=f;PC.follow(f,S,ov.width,ov.height);const {s}=PC.score(f,S);for(const k in s)ema[k]=ema[k]==null?s[k]:ema[k]*.55+s[k]*.45;if(C.sceneRec)sceneTick(f,force);if(auto&&autoPool.length)rankNow(force)}
@@ -255,19 +258,47 @@ function onMotion(e){const a=e.accelerationIncludingGravity;if(!a||a.x==null)ret
 let motionOn=false;async function enableMotion(){if(motionOn)return;try{if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){if(await DeviceMotionEvent.requestPermission()!=='granted')return}addEventListener('devicemotion',onMotion);motionOn=true}catch(e){}}
 
 /* 촬영 */
-function grab(){const cr=PC.getCrop(vid.videoWidth,vid.videoHeight,curAR()),c=document.createElement('canvas');c.width=Math.round(cr.w);c.height=Math.round(cr.h);const x=c.getContext('2d');if(S.mirror){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(vid,cr.x,cr.y,cr.w,cr.h,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.92))}
+function grab(){const cr=PC.getCrop(vid.videoWidth,vid.videoHeight,curAR()),c=document.createElement('canvas');c.width=Math.round(cr.w);c.height=Math.round(cr.h);const x=c.getContext('2d');if(S.mirror){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(vid,cr.x,cr.y,cr.w,cr.h,0,0,c.width,c.height);const tb=k=>new Promise(r=>k.toBlob(r,'image/jpeg',.92));if(LK&&look!=='none'){let o=null;try{o=LOOKS.apply(c,look,lookStr)}catch(e){}if(o){return Promise.all([tb(c)]).then(async([orig])=>{origs.push({b:orig,look,str:lookStr});return tb(o)})}}return tb(c).then(b=>{origs.push({b,look:'none',str:1});return b})}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));let busy=false;
 $('#shutter').onclick=async()=>{if(S.mode==='still'){$('#file').click();return}if(S.mode!=='live'||!vid.videoWidth){startCam();return}if(busy)return;busy=true;
   try{if(timer){const ce=$('#count');ce.classList.remove('hidden');for(let n=timer;n>0;n--){ce.textContent=n;await sleep(1000)}ce.classList.add('hidden')}
-    shots=[];for(let i=0;i<burst;i++){$('#shotN').textContent=burst>1?i+1:'';$('#flash').animate([{opacity:.55},{opacity:0}],{duration:180});shots.push(await grab());if(i<burst-1)await sleep(240)}$('#shotN').textContent='';
+    shots=[];origs=[];for(let i=0;i<burst;i++){$('#shotN').textContent=burst>1?i+1:'';$('#flash').animate([{opacity:.55},{opacity:0}],{duration:180});shots.push(await grab());if(i<burst-1)await sleep(240)}$('#shotN').textContent='';
     const u=URL.createObjectURL(shots[shots.length-1]);$('#cLast').innerHTML=`<img src="${u}" alt="">`;showShots()}finally{busy=false}};
 $('#cLast').onclick=()=>{shots.length?showShots():$('#file').click()};
 function saveFiles(files){try{if(navigator.canShare&&navigator.canShare({files}))return navigator.share({files}).catch(()=>{})}catch(e){}files.forEach(f=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});toast('저장했어요')}
 function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'),files=shots.map((b,i)=>new File([b],`${C.filePrefix||'photo'}-${ts}-${i+1}.jpg`,{type:'image/jpeg'}));
-  openSheet(shots.length>1?`찍은 사진 ${shots.length}장`:'찍은 사진',`<div class="shots">${shots.map((b,i)=>`<figure><img id="sh${i}" alt="찍은 사진 ${i+1}"><button data-s="${i}">${I('download')}저장</button></figure>`).join('')}</div><p class="note">아이폰은 저장을 누른 뒤 아래 메뉴에서 ‘이미지 저장’을 고르면 사진첩에 들어가요. 안드로이드는 갤러리에 바로 저장돼요.${C.reviewTip?'<br>'+C.reviewTip:''}</p>`,
+  openSheet(shots.length>1?`찍은 사진 ${shots.length}장`:'찍은 사진',`<div class="shots">${shots.map((b,i)=>`<figure><img id="sh${i}" alt="찍은 사진 ${i+1}">${LK&&origs[i]?`<button class="lk" data-e="${i}">${I('palette')}색감</button>`:''}<button data-s="${i}">${I('download')}저장</button></figure>`).join('')}</div><p class="note">아이폰은 저장을 누른 뒤 아래 메뉴에서 ‘이미지 저장’을 고르면 사진첩에 들어가요. 안드로이드는 갤러리에 바로 저장돼요.${C.reviewTip?'<br>'+C.reviewTip:''}</p>`,
    `<button class="btn pri wide" id="saveAll">${I('download')}${shots.length>1?'전부 사진첩에 저장':'사진첩에 저장'}</button>`,{dark:true});
   shots.forEach((b,i)=>{const fr=new FileReader();fr.onload=()=>{const im=$('#sh'+i);if(im)im.src=fr.result};fr.readAsDataURL(b)});
-  $('#shB').onclick=e=>{const b=e.target.closest('[data-s]');if(b)saveFiles([files[+b.dataset.s]])};$('#saveAll').onclick=()=>saveFiles(files)}
+  $('#shB').onclick=e=>{const ed=e.target.closest('[data-e]');if(ed){openEditor(+ed.dataset.e);return}const b=e.target.closest('[data-s]');if(b)saveFiles([files[+b.dataset.s]])};$('#saveAll').onclick=()=>saveFiles(files)}
 
+/* ---------- 색감 ---------- */
+function lookChips(el,g){el.innerHTML=Object.entries(LOOKS.groups).map(([k,n])=>`<button class="cc${g===k?' on':''}" data-lg="${k}">${n}</button>`).join('')}
+function lookThumbs(el,g,sel,TH){const L=LOOKS.list.filter(l=>l.g===g||(g!=='basic'&&l.id==='none'));el.innerHTML=L.map(l=>`<button class="gth${l.id===sel?' on':''}" data-lk="${l.id}"><span class="t">${TH&&TH[l.id]?`<img src="${TH[l.id]}" alt="">`:''}</span><span>${l.name}</span></button>`).join('');const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
+function snapSmall(){const src=S.mode==='still'?still:vid;const ok=S.mode==='still'?still.naturalWidth:vid.videoWidth;if(!ok)return null;const sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight,cr=PC.getCrop(sw,sh,curAR()),c=document.createElement('canvas');c.width=96;c.height=Math.round(96/curAR());const x=c.getContext('2d');if(S.mirror&&S.mode!=='still'){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(src,cr.x,cr.y,cr.w,cr.h,0,0,c.width,c.height);return c}
+let lkG='film',lkTH=null;
+function openLookbar(){const bar=$('#lookbar');if(!bar.classList.contains('hidden')){closeLookbar();return}lkG=LOOKS.byId[look]&&look!=='none'?LOOKS.byId[look].g:'film';const sm=snapSmall();lkTH=null;try{lkTH=sm?LOOKS.thumbs(sm,sm.width,sm.height):null}catch(e){}
+  bar.classList.remove('hidden');$('#cchips')&&$('#cchips').classList.add('hidden');$('#cstrip').classList.add('hidden');paintLookbar()}
+function closeLookbar(){$('#lookbar').classList.add('hidden');$('#cchips')&&$('#cchips').classList.remove('hidden');$('#cstrip').classList.remove('hidden');renderToggles()}
+function paintLookbar(){lookChips($('#lkG'),lkG);lookThumbs($('#lkS'),lkG,look,lkTH);const l=LOOKS.byId[look];$('#lkN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#lkR').value=Math.round(lookStr*100);$('#lkR').disabled=look==='none'}
+if(LK){$('#lkG').onclick=e=>{const b=e.target.closest('[data-lg]');if(!b)return;lkG=b.dataset.lg;paintLookbar()};
+  $('#lkS').onclick=e=>{const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);paintLookbar();renderToggles();navigator.vibrate&&navigator.vibrate(6)};
+  $('#lkR').oninput=e=>{lookStr=e.target.value/100;LS.set('lookStr',lookStr)};$('#lkX').onclick=closeLookbar}
+/* 실시간 미리보기 */
+function glLoop(){requestAnimationFrame(glLoop);if(!glr)return;const on=LK&&look!=='none'&&!$('#cam').classList.contains('hidden')&&(S.mode==='live'&&vid.videoWidth||S.mode==='still'&&still.naturalWidth);glv.style.display=on?'block':'none';if(!on)return;
+  try{const src=S.mode==='still'?still:vid,sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight;glr.render(src,look,{sw,sh,crop:PC.getCrop(sw,sh,curAR()),mirror:S.mirror&&S.mode!=='still',str:lookStr,seed:(performance.now()/90|0)%97})}catch(e){}}
+if(glr)requestAnimationFrame(glLoop);
+/* 찍은 사진 색감 바꾸기 */
+function openEditor(i){const o=origs[i];if(!o)return;const img=new Image(),url=URL.createObjectURL(o.b);let sel=o.look,str=o.str,g=LOOKS.byId[sel]&&sel!=='none'?LOOKS.byId[sel].g:'film',TH=null,er=null;
+  openSheet('색감 바꾸기',`<div class="ed-ph"><canvas id="edC"></canvas></div><div class="cchips ed" id="edG"></div><div class="cstrip ed" id="edS"></div><div class="lkr ed"><span id="edN"></span><input type="range" id="edR" min="0" max="100" aria-label="색감 강도"></div>`,
+    `<div class="row"><button class="btn ghost" id="edBack">${I('back')}돌아가기</button><button class="btn pri wide" id="edOk">${I('check')}이 색감으로</button></div>`,{dark:true});
+  const paint=()=>{lookChips($('#edG'),g);lookThumbs($('#edS'),g,sel,TH);const l=LOOKS.byId[sel];$('#edN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#edR').value=Math.round(str*100);$('#edR').disabled=sel==='none';if(er)er.render(img,sel,{str})};
+  img.onload=()=>{const cv=$('#edC');if(!cv)return;const k=Math.min(1,900/Math.max(img.width,img.height));cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);try{er=new Renderer2(cv)}catch(e){}
+    const sm=document.createElement('canvas');sm.width=96;sm.height=Math.round(96*img.height/img.width);sm.getContext('2d').drawImage(img,0,0,sm.width,sm.height);try{TH=LOOKS.thumbs(sm,sm.width,sm.height)}catch(e){}paint()};img.src=url;
+  $('#edG').onclick=e=>{const b=e.target.closest('[data-lg]');if(b){g=b.dataset.lg;paint()}};$('#edS').onclick=e=>{const b=e.target.closest('[data-lk]');if(b){sel=b.dataset.lk;paint()}};
+  $('#edR').oninput=e=>{str=e.target.value/100;if(er)er.render(img,sel,{str})};$('#edBack').onclick=showShots;
+  $('#edOk').onclick=async()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);let out=c;if(sel!=='none'){try{out=LOOKS.apply(c,sel,str)}catch(e){}}
+    shots[i]=await new Promise(r=>out.toBlob(r,'image/jpeg',.92));origs[i]={b:o.b,look:sel,str};toast('색감을 바꿨어요');showShots()}}
+function Renderer2(cv){return new LOOKS.Renderer(cv)}
 window.APP={openSheet,closeSheet,openCam,openDetail,I,toast,BY};
 })();

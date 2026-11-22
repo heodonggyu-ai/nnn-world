@@ -236,3 +236,21 @@ body:has(#cam:not(.hidden)) .dock{display:none}
 .gempty{flex:none;align-self:center;padding:0 14px;font-size:12.5px;color:rgba(255,255,255,.55)}
 .gth.auto .t small b{display:block;font-size:11px;color:#fff;font-weight:700}
 .gth.auto.on .t small b{color:var(--ink,#111)}
+/* 색감 */
+.view .glv{position:absolute;inset:0;width:100%;height:100%;display:none}
+.lookbar{flex:none}
+.lookbar .cstrip .gth .t{width:62px;height:82px}
+.lookbar .cstrip .gth{width:62px}
+.gth .t img{width:100%;height:100%;object-fit:cover}
+.lkr{display:flex;align-items:center;gap:10px;padding:6px 12px 2px;font-size:12px;color:rgba(255,255,255,.7)}
+.lkr span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lkr input{width:110px;accent-color:#fff}
+.lkr .cc{height:32px}
+.shots button.lk{right:auto;left:8px}
+.ed-ph{display:flex;justify-content:center;margin-bottom:6px}
+.ed-ph canvas{max-width:100%;max-height:46vh;border-radius:14px}
+.cchips.ed,.cstrip.ed{padding-left:0;padding-right:0}
+.lkr.ed{padding:8px 0 0}
+.lkr.ed input{width:150px}
+.sf .row .btn.ghost{flex:none;color:#fff;border-color:var(--camLine)}
+.sf .row .btn.wide{flex:1}
