@@ -80,6 +80,6 @@ h2.sec{font-weight:700;font-size:19px;margin-top:34px}
 .tab{height:46px;padding:0 18px;font-size:15.5px;font-weight:600;gap:8px}
 .tab .ic{width:20px;height:20px}
 .tab small{font-size:13px}
-.ibtn.cam{background:var(--ink);color:#fff;border-color:var(--ink)}
 .hero canvas{height:clamp(210px,34vh,290px)}
 .vf{height:calc(clamp(210px,34vh,290px) - 28px)}
+.dock .btn.glass{box-shadow:0 4px 16px rgba(20,27,52,.12)}
