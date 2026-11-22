@@ -744,5 +744,32 @@ body{color:var(--ink)}
 .tr-card.done::after{content:'';position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:#c79a4b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 #modal .size-grid .lvb{font-size:10px;padding:2px 6px;margin-left:3px}
 #modal .size-grid .lvb::before{display:none}
+/* AI 그림 선생님 */
+#topbar .teach-btn{display:inline-flex;align-items:center;gap:4px;width:auto!important;padding:0 11px 0 9px!important;border-radius:999px!important;background:linear-gradient(135deg,#f1d899,#c99a4e)!important;color:#2a2010!important;font-family:var(--fh);font-weight:800;font-size:12.5px;box-shadow:0 4px 12px rgba(200,150,70,.35)}
+.ai-hd{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ai-hd>svg{flex:0 0 auto;width:44px;height:44px;padding:10px;border-radius:14px;color:#3b2a10;background:linear-gradient(135deg,#f6e2b0,#d7ab5c);box-sizing:border-box}
+.ai-hd small{display:block;font-family:var(--fh);font-weight:700;font-size:11.5px;color:#a07434}
+.ai-hd h3{margin:0!important}
+.ai-list{margin:0 0 12px;padding-left:18px;font-size:13.5px;line-height:1.6;color:#4a4252}.ai-list li{margin-bottom:6px}
+.ai-p{font-size:14px;line-height:1.6;color:#4a4252;margin:0 0 8px}
+.ai-pic{position:relative;border-radius:18px;overflow:hidden;background:#fbf7ef;margin-bottom:10px;max-height:300px;display:grid;place-items:center}
+.ai-pic img{max-width:100%;max-height:300px;display:block}
+.ai-scan{position:absolute;left:0;right:0;height:60px;background:linear-gradient(180deg,rgba(215,171,92,0),rgba(215,171,92,.35),rgba(215,171,92,0));animation:aiScan 1.6s ease-in-out infinite}
+@keyframes aiScan{0%{top:-60px}100%{top:100%}}
+.ai-top{display:flex;gap:12px;align-items:stretch;margin-bottom:12px}
+.ai-top img{width:92px;height:92px;object-fit:cover;border-radius:14px;background:#fff;border:1px solid #ece3d4;flex:0 0 auto}
+.ai-praise{flex:1;background:linear-gradient(135deg,#fdf6e6,#f6e7c8);border-radius:16px;padding:10px 12px}
+.ai-praise small{font-family:var(--fh);font-weight:800;font-size:11px;color:#a07434}
+.ai-praise p{margin:3px 0 0;font-size:14px;line-height:1.55;color:#2a2433;font-weight:500}
+.ai-sub{font-family:var(--fs);font-weight:700;font-size:15px;color:#2a2433;margin:4px 2px 8px}
+.ai-tip{display:flex;gap:10px;align-items:flex-start;background:#fbf7ef;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.ai-tip>span{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:var(--fh);font-weight:800;font-size:12px;color:#fbf4e6;background:#2a2433}
+.ai-tip b{display:block;font-family:var(--fh);font-weight:800;font-size:14px;color:#2a2433}
+.ai-tip p{margin:2px 0 0;font-size:13.5px;line-height:1.55;color:#4a4252}
+.ai-les{margin-top:4px!important;background:#f7f2e9!important;box-shadow:none!important}
+.ai-cheer{text-align:center;font-family:var(--fs);font-weight:700;color:#a07434;margin:12px 0 4px;font-size:14.5px}
+.ai-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.ai-foot small{font-size:12px;color:#8c8376}
+.ai-rep{font-size:12px;color:#8c8376;text-decoration:underline;background:none;padding:4px 0}
 </style>
 </head>
