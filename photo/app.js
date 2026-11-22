@@ -106,14 +106,14 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
 <section id="cam" class="hidden" aria-label="촬영">
  <div class="ctop"><button class="cbtn" id="cBack" aria-label="홈으로">${I('back')}</button><button class="gpick" id="cPick"><em id="cAuto" class="hidden">자동</em><span id="cName"></span>${I('chev')}</button><button class="cbtn" id="cFav" aria-label="이 구도 즐겨찾기">${I('heart')}</button><button class="cbtn" id="cAspect">3:4</button><button class="cbtn" id="cInfo" aria-label="촬영 방법">${I('info')}</button></div>
  <div class="stage" id="stage"><div class="view" id="view"><video id="vid" playsinline muted autoplay></video><img class="still" id="still" alt=""><canvas id="glv" class="glv"></canvas><canvas id="ov"></canvas>
-  <div class="hint" id="hint"></div><div class="badges"><span class="badge" id="bPhone"></span><span class="badge hidden" id="bLevel"></span></div><div class="zoom hidden" id="zoom"></div>
+  <div class="hint" id="hint"></div>${C.bigView?`<button class="vexp" id="cExp" aria-label="화면 넓게 보기"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>`:''}<div class="badges"><span class="badge" id="bPhone"></span><span class="badge hidden" id="bLevel"></span></div><div class="zoom hidden" id="zoom"></div>
   <div class="count hidden" id="count"></div><div class="flash" id="flash"></div>
   <div class="msg" id="msg">${I('camera')}<p id="msgT">카메라를 켜는 중…</p><button class="btn pri" id="mRetry">카메라 다시 켜기</button><button class="btn glass" id="mPhoto">${I('image')}찍어둔 사진으로 연습</button></div></div></div>
  <div class="say-cam hidden" id="sayCam"><div class="tx"><small>이렇게 말해보세요</small><b id="sayT"></b></div><button id="sayN" aria-label="다른 멘트">${I('next')}</button></div>
  ${C.sceneRec?`<div class="cchips" id="cchips"></div>`:''}
  <div class="cstrip" id="cstrip"></div>
  <div class="lookbar hidden" id="lookbar"><div class="cchips" id="lkG"></div><div class="cstrip" id="lkS"></div><div class="lkr"><span id="lkN"></span><b class="lkp">농도 <i id="lkP"></i></b><input type="range" id="lkR" min="0" max="100" aria-label="색감 농도"><button class="cc" id="lkF" aria-label="이 색감 즐겨찾기">${I('heart')}</button><button class="cc on" id="lkX">${I('check')}완료</button></div></div>
- <div class="toggles" id="toggles"></div>
+ <div class="toggles${C.bigView?' side':''}" id="toggles"></div>
  <div class="ctrl"><button class="last" id="cLast" aria-label="찍은 사진">${I('image')}</button><button class="shot" id="shutter" aria-label="촬영"><i></i><span id="shotN"></span></button><button class="round" id="cFlip" aria-label="카메라 전환">${I('flip')}</button></div>
 </section>
 <div class="scrim" id="scrim"></div>
@@ -243,7 +243,7 @@ const S={mode:'idle',facing:'environment',mirror:false,pSide:'L',pSideManual:fal
 const LK=!!window.LOOKS&&C.looks!==false;let look=LK?LS.get('look','none'):'none',lookStr=LS.get('lookStr',1),origs=[];if(LK&&!LOOKS.byId[look])look='none';const glv=$('#glv');let glr=null;if(LK){try{glr=new LOOKS.Renderer(glv)}catch(e){glr=null}}
 let pool=[],active=null,auto=false,autoPool=[],stream=null,feat=null,ema={},cand=null,candN=0,ai=0,stillAR=null,aligned=false,wasAligned=false,level=null,burst=C.burst||1,timer=0,shots=[],ments=[],mi=0,session=null;
 function curAR(){if(S.mode==='still'&&stillAR)return stillAR;const a=ASP[ai];return a[0]/a[1]}
-function fit(){const r=stage.getBoundingClientRect();if(!r.width)return;const ar=curAR();let w=r.width-20,h=w/ar;if(h>r.height-6){h=r.height-6;w=h*ar}view.style.width=w+'px';view.style.height=h+'px';ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr);if(glr){glr.cv.width=ov.width;glr.cv.height=ov.height}}
+function fit(){const r=stage.getBoundingClientRect();if(!r.width)return;const ar=curAR();const full=!!C.bigView;let w=r.width-(full?0:20),h=w/ar;if(h>r.height-(full?0:6)){h=r.height-(full?0:6);w=h*ar}view.classList.toggle('edge',full&&w>=r.width-1);view.style.width=w+'px';view.style.height=h+'px';ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr);if(glr){glr.cv.width=ov.width;glr.cv.height=ov.height}}
 addEventListener('resize',fit);
 
 function openCam(sess,o={}){session=sess||{ids:(C.defaultPool||[]).filter(i=>BY[i]),auto:true};pool=session.ids.filter(i=>BY[i]);if(!pool.length)pool=ITEMS.slice(0,12).map(i=>i.id);
@@ -264,6 +264,8 @@ function setupZoom(){const z=$('#zoom');z.classList.add('hidden');try{const tr=s
   z.innerHTML=o.map(v=>`<button data-z="${v}" class="${v===1?'on':''}">${v}x</button>`).join('');z.classList.remove('hidden');z.onclick=async e=>{const b=e.target.closest('[data-z]');if(!b)return;try{await tr.applyConstraints({advanced:[{zoom:+b.dataset.z}]});z.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}catch(_){}}}catch(e){}}
 $('#mRetry').onclick=startCam;$('#mPhoto').onclick=()=>$('#file').click();
 $('#cFlip').onclick=()=>{S.facing=S.facing==='environment'?'user':'environment';startCam()};
+let wide=LS.get('wide',false);function applyWide(){$('#cam').classList.toggle('wide',wide);const b=$('#cExp');if(b)b.classList.toggle('on',wide);requestAnimationFrame(fit)}
+if($('#cExp')){$('#cExp').onclick=e=>{e.stopPropagation();wide=!wide;LS.set('wide',wide);applyWide();toast(wide?'화면을 넓게 봐요 · 옆으로 밀면 구도가 바뀌어요':'구도 고르는 줄을 다시 보여줘요')};applyWide()}
 $('#cAspect').onclick=()=>{ai=(ai+1)%ASP.length;$('#cAspect').textContent=ASP[ai].join(':');if(S.mode!=='still'){fit();ema={}}};
 $('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),img=new Image();img.onload=()=>{stopCam();S.mode='still';stillAR=img.naturalWidth/img.naturalHeight;still.src=url;still.style.display='block';vid.style.display='none';$('#msg').classList.remove('on');fit();ema={};
   onFeat(PC.analyze(img,img.naturalWidth,img.naturalHeight,false,curAR()),true);renderToggles()};img.src=url;e.target.value=''};
