@@ -53,6 +53,8 @@ const CATI={sport:'glove',pet:'paw',night:'moon',basic:'compass',portrait:'user'
 /* ---------- 저장 ---------- */
 const LS={get(k,d){try{return JSON.parse(localStorage.getItem(C.id+':'+k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(C.id+':'+k,JSON.stringify(v))}catch(e){}}};
 let favs=new Set(LS.get('fav',[]));const saveFav=()=>LS.set('fav',[...favs]);
+let lfavs=new Set(LS.get('lookFav',[]));const saveLF=()=>LS.set('lookFav',[...lfavs]);let USE=LS.get('use',{c:{},l:{}});
+const topUse=(m,n)=>Object.entries(m).sort((x,y)=>y[1]-x[1]).slice(0,n).map(x=>x[0]);
 
 /* ---------- 항목 ---------- */
 const ITEMS=PC.items.filter(it=>C.filter?C.filter(it):true),BY=PC.byId;
@@ -72,6 +74,8 @@ document.body.insertAdjacentHTML('beforeend',`
   <div class="vfc" id="goCam" role="button" tabindex="0" aria-label="카메라 켜기"><canvas id="vfCv" width="708" height="760"></canvas>
    <span class="dchip a">${I('spark')}장면: <b id="dScene"></b></span><span class="dchip b">추천 구도: <b id="dComp"></b></span><span class="dchip c">${I('palette')}<b id="dLook"></b></span>
    <div class="vfa"><button class="vp on" data-go="auto">${I('spark')}자동 추천</button><button class="vp" data-go="look">${I('palette')}색감</button><button class="vp" data-go="analyze">${I('compass')}분석</button></div></div>
+  <section class="myfav" id="myFav"><div class="mfh"><h2 class="sec">${I('heart','fill')}내 즐겨찾기</h2><span class="secsub">누르면 바로 그걸로 찍어요</span></div>
+   <div class="mfl">구도</div><div class="frow" id="favComp"></div><div class="mfl">색감</div><div class="frow" id="favLook"></div></section>
   <h2 class="sec">무엇을 찍나요?</h2><div class="crow" id="crow"></div>
   <h2 class="sec">오늘의 색감</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요</p><div class="lrow" id="lrow"></div>
  </section>
@@ -100,7 +104,7 @@ document.body.insertAdjacentHTML('beforeend',`
 ${C.tabsHome?`<nav class="ftab" id="ftab">${[['home','home','홈'],['refs','grid','구도'],['cam','camera',''],['looks','palette','색감'],['edit','image','보정']].map(([k,ic,n])=>k==='cam'?`<button class="cm" data-t="cam" aria-label="카메라 켜기">${I('camera')}</button>`:`<button data-t="${k}"${k==='home'?' class="on"':''}>${I(ic)}<span>${n}</span></button>`).join('')}</nav>`:''}
 ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('camera')}${C.heroCTA||'카메라 켜기'}</button>${C.photoAnalyze!==false?`<button class="btn glass" id="dPhoto" aria-label="사진 분석">${I('image')}</button>`:''}</div>`:''}
 <section id="cam" class="hidden" aria-label="촬영">
- <div class="ctop"><button class="cbtn" id="cBack" aria-label="홈으로">${I('back')}</button><button class="gpick" id="cPick"><em id="cAuto" class="hidden">자동</em><span id="cName"></span>${I('chev')}</button><button class="cbtn" id="cAspect">3:4</button><button class="cbtn" id="cInfo" aria-label="촬영 방법">${I('info')}</button></div>
+ <div class="ctop"><button class="cbtn" id="cBack" aria-label="홈으로">${I('back')}</button><button class="gpick" id="cPick"><em id="cAuto" class="hidden">자동</em><span id="cName"></span>${I('chev')}</button><button class="cbtn" id="cFav" aria-label="이 구도 즐겨찾기">${I('heart')}</button><button class="cbtn" id="cAspect">3:4</button><button class="cbtn" id="cInfo" aria-label="촬영 방법">${I('info')}</button></div>
  <div class="stage" id="stage"><div class="view" id="view"><video id="vid" playsinline muted autoplay></video><img class="still" id="still" alt=""><canvas id="glv" class="glv"></canvas><canvas id="ov"></canvas>
   <div class="hint" id="hint"></div><div class="badges"><span class="badge" id="bPhone"></span><span class="badge hidden" id="bLevel"></span></div><div class="zoom hidden" id="zoom"></div>
   <div class="count hidden" id="count"></div><div class="flash" id="flash"></div>
@@ -108,7 +112,7 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
  <div class="say-cam hidden" id="sayCam"><div class="tx"><small>이렇게 말해보세요</small><b id="sayT"></b></div><button id="sayN" aria-label="다른 멘트">${I('next')}</button></div>
  ${C.sceneRec?`<div class="cchips" id="cchips"></div>`:''}
  <div class="cstrip" id="cstrip"></div>
- <div class="lookbar hidden" id="lookbar"><div class="cchips" id="lkG"></div><div class="cstrip" id="lkS"></div><div class="lkr"><span id="lkN"></span><b class="lkp">농도 <i id="lkP"></i></b><input type="range" id="lkR" min="0" max="100" aria-label="색감 농도"><button class="cc on" id="lkX">${I('check')}완료</button></div></div>
+ <div class="lookbar hidden" id="lookbar"><div class="cchips" id="lkG"></div><div class="cstrip" id="lkS"></div><div class="lkr"><span id="lkN"></span><b class="lkp">농도 <i id="lkP"></i></b><input type="range" id="lkR" min="0" max="100" aria-label="색감 농도"><button class="cc" id="lkF" aria-label="이 색감 즐겨찾기">${I('heart')}</button><button class="cc on" id="lkX">${I('check')}완료</button></div></div>
  <div class="toggles" id="toggles"></div>
  <div class="ctrl"><button class="last" id="cLast" aria-label="찍은 사진">${I('image')}</button><button class="shot" id="shutter" aria-label="촬영"><i></i><span id="shotN"></span></button><button class="round" id="cFlip" aria-label="카메라 전환">${I('flip')}</button></div>
 </section>
@@ -116,7 +120,13 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
 <section class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div class="sh"><h3 id="shT"></h3><button class="xbtn" id="shX" aria-label="닫기">${I('close')}</button></div><div class="sb" id="shB"></div><div class="sf hidden" id="shF"></div></section>
 <div class="toast" id="toast"></div>
 <input type="file" id="file" accept="image/*" hidden><input type="file" id="file2" accept="image/*" hidden>`);
-/* ---------- 탭형 홈 ---------- */
+/* ---------- 내 즐겨찾기 ---------- */
+function myCompIds(){const f=[...favs].filter(i=>BY[i]),u=topUse(USE.c,8).filter(i=>BY[i]&&!favs.has(i));return{f,u}}
+function renderMyFav(){const fc=$('#favComp'),fl=$('#favLook');if(!fc)return;const {f,u}=myCompIds();
+  fc.innerHTML=(f.length+u.length?[...f.map(i=>[i,1]),...u.map(i=>[i,0])].map(([i,isF])=>`<button class="fc" data-fc="${i}"><span class="fci"><img data-id="${i}" data-plain="1" alt="">${isF?'<i class="lf">♥</i>':'<i class="uf">자주</i>'}</span><b>${BY[i].name}</b></button>`).join(''):'')+`<button class="fc add" data-go="refs"><span class="fci">${I('heart')}</span><b>${f.length+u.length?'더 담기':'구도 ♡ 담기'}</b></button>`;
+  $$('#favComp img[data-id]').forEach(im=>io.observe(im));
+  if(window.LOOKS){const lf=[...lfavs].filter(i=>LOOKS.byId[i]),lu=topUse(USE.l,6).filter(i=>LOOKS.byId[i]&&!lfavs.has(i));const card=window._lookCard;
+    fl.innerHTML=(card?[...lf,...lu].map(i=>card(LOOKS.byId[i])).join(''):'')+`<button class="fc add lkadd" data-go="looks"><span class="fci">${I('palette')}</span><b>${lf.length+lu.length?'더 담기':'색감 ♡ 담기'}</b></button>`}}
 let curV='home';
 function showV(v){if(!C.tabsHome)return;curV=v;$$('#home [data-v]').forEach(s=>s.classList.toggle('hidden',s.dataset.v!==v));$$('#ftab [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===v));scrollTo(0,0)}
 
@@ -135,17 +145,18 @@ if(C.tabsHome)(function(){const P=()=>C.startPool?C.startPool():null;
   $('#crow').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);q='';$('#q').value='';renderTabs();renderGrid();showV('refs');setTimeout(()=>{const t=$('#gSub').previousElementSibling;scrollTo({top:t.getBoundingClientRect().top+scrollY-8})},30)};
   /* 색감 견본 */
   if(window.LOOKS){const TH={},LS_ID=C.lookSample||'st_cafe_hand',ED_ID=C.editSample||'st_lake_mirror';const mkTH=()=>{const s=document.createElement('canvas');s.width=150;s.height=200;PC.drawThumb(LS_ID,s.getContext('2d'),150,200,{guide:false});LOOKS.list.forEach(l=>{try{TH[l.id]=LOOKS.apply(s,l.id,1).toDataURL('image/jpeg',.82)}catch(e){}})};mkTH();
-    const card=l=>`<button class="lk-c" data-lk="${l.id}"><img src="${TH[l.id]||''}" alt=""><b>${l.name}</b><small>${l.d||''}</small></button>`;
+    const card=l=>`<button class="lk-c" data-lk="${l.id}"><span class="lki"><img src="${TH[l.id]||''}" alt=""><span class="lfb${lfavs.has(l.id)?' on':''}" data-lf="${l.id}" role="button" aria-label="색감 즐겨찾기">${I('heart',lfavs.has(l.id)?'fill':'')}</span></span><b>${l.name}</b><small>${l.d||''}</small></button>`;
     $('#lrow').innerHTML=(C.todayLooks||['fuji_cneg','kodak_portra','teal_orange','leica_mono','wkw','kodak_gold']).filter(i=>LOOKS.byId[i]).map(i=>card(LOOKS.byId[i])).join('');
     let lg='film';const paintL=()=>{$('#lgG').innerHTML=Object.entries(LOOKS.groups).map(([k,n])=>`<button class="cc${lg===k?' on':''}" data-lg="${k}">${n}</button>`).join('');$('#lgL').innerHTML=LOOKS.list.filter(l=>l.g===lg&&l.id!=='none').map(card).join('')};paintL();
     $('#lgG').onclick=e=>{const b=e.target.closest('[data-lg]');if(b){lg=b.dataset.lg;paintL()}};
-    const pickL=e=>{const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);if(lookStr<.3){lookStr=1;LS.set('lookStr',1)}toast(LOOKS.byId[look].name+' 색감으로 찍어요');openCam(P())};$('#lrow').onclick=pickL;$('#lgL').onclick=pickL;
+    const pickL=e=>{const hf=e.target.closest('[data-lf]');if(hf){e.stopPropagation();toggleLF(hf.dataset.lf);$$(`[data-lf="${hf.dataset.lf}"]`).forEach(x=>{x.classList.toggle('on',lfavs.has(hf.dataset.lf));x.innerHTML=I('heart',lfavs.has(hf.dataset.lf)?'fill':'')});return}const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);if(lookStr<.3){lookStr=1;LS.set('lookStr',1)}toast(LOOKS.byId[look].name+' 색감으로 찍어요');openCam(P())};$('#lrow').onclick=pickL;$('#lgL').onclick=pickL;window._lookCard=card;window._pickL=pickL;
     /* 보정 탭 그림 */
     const paintEdit=()=>{const e2=$('#eCv'),ec=e2.getContext('2d'),et=document.createElement('canvas');et.width=e2.width;et.height=e2.height;const ex=et.getContext('2d'),kk=Math.max(et.width/300,et.height/400);ex.setTransform(kk,0,0,kk,(et.width-300*kk)/2,-(400*kk-et.height)*.25);PC.drawThumb(ED_ID,ex,300,400,{guide:false});
     ec.drawImage(et,0,0);try{const eo=LOOKS.apply(et,'kodak_portra',1);ec.drawImage(eo,e2.width/2,0,e2.width/2,e2.height,e2.width/2,0,e2.width/2,e2.height)}catch(e){}};paintEdit();
     let rt=null;window._homePhoto=id=>{if(![d.id,LS_ID,ED_ID].includes(id))return;clearTimeout(rt);rt=setTimeout(()=>{paintDemo();if(id===LS_ID){mkTH();$$('#lrow [data-lk] img,#lgL [data-lk] img').forEach(im=>{const b=im.closest('[data-lk]');if(TH[b.dataset.lk])im.src=TH[b.dataset.lk]})}if(id===ED_ID)paintEdit()},120)};}
   $('#ePick').onclick=()=>$('#file2').click();$('#eAna').onclick=()=>openCam(P(),{photo:1});
   $('#file2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;shots=[f];origs=[{b:f,look:'none',str:1}];openEditor(0)};
+  renderMyFav();$('#myFav').onclick=e=>{const g=e.target.closest('[data-go]');if(g){showV(g.dataset.go);return}const c=e.target.closest('[data-fc]');if(c){const {f,u}=myCompIds();openCam({ids:[...f,...u],first:c.dataset.fc,tab:'fav'});return}if(e.target.closest('#favLook')&&window._pickL)window._pickL(e)};
   $('#ftab').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;if(t==='cam'){openCam(P());return}showV(t)};
 })();
 if(C.features)(function demo(){const D=C.demos.filter(d=>BY[d.id]),d=D[Math.floor(Math.random()*D.length)],cv=$('#demoCv'),c=cv.getContext('2d'),W=cv.width,H=cv.height,k=W/300;
@@ -197,7 +208,7 @@ if(C.catGrid){const cov=k=>{const pre=(C.catGrid.covers||{})[k];return pre&&BY[p
   $('#cgrid').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);q='';$('#q').value='';renderTabs();renderGrid();
     const t=$('#gSub').previousElementSibling;window.scrollTo({top:t.getBoundingClientRect().top+scrollY-8,behavior:'smooth'});setTimeout(()=>{const on=$('#tabs .on');on&&on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})},450)}}
 $('#hFav').onclick=()=>{cat='fav';renderTabs();renderGrid();showV('refs');$('#tabs').scrollIntoView({behavior:'smooth'})};
-function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFav();$$(`[data-f="${id}"]`).forEach(f=>{f.classList.toggle('on',favs.has(id));f.innerHTML=I('heart',favs.has(id)?'fill':'')});renderTabs();if(cat==='fav')renderGrid();toast(favs.has(id)?'즐겨찾기에 담았어요':'즐겨찾기에서 뺐어요')}
+function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFav();$$(`[data-f="${id}"]`).forEach(f=>{f.classList.toggle('on',favs.has(id));f.innerHTML=I('heart',favs.has(id)?'fill':'')});renderTabs();if(cat==='fav')renderGrid();renderMyFav();toast(favs.has(id)?'즐겨찾기에 담았어요':'즐겨찾기에서 뺐어요')}
 $('#grid').onclick=e=>{const f=e.target.closest('[data-f]');if(f){e.stopPropagation();toggleFav(f.dataset.f);return}const b=e.target.closest('[data-id]');if(b)openDetail(b.dataset.id,{from:'home'})};
 renderTabs();renderGrid();
 
@@ -239,9 +250,9 @@ function openCam(sess,o={}){session=sess||{ids:(C.defaultPool||[]).filter(i=>BY[
   autoPool=(session.auto?pool:[]).filter(i=>BY[i].auto);auto=!!(session.auto&&autoPool.length);active=session.first||pool[0];ments=session.ments||null;mi=0;ema={};feat=null;S.pSideManual=false;S.spiralManual=false;
   S.facing=session.face||'environment';burst=C.burst||1;timer=0;
   $('#home').classList.add('hidden');$('#cam').classList.remove('hidden');if(!(history.state&&history.state.cam))history.pushState({cam:1},'');
-  stab=C.sceneRec?(session.auto?'rec':(BY[active]?BY[active].cat:'rec')):'rec';scn=null;scnN=0;recIds=[];renderChips();renderStrip();renderToggles();renderActive();fit();if(o.photo){$('#msg').classList.add('on');$('#msgT').textContent='연습할 사진을 골라주세요.';$('#file').click()}else{startCam();if(o.look&&LK){const w=()=>{if(vid.videoWidth||$('#cam').classList.contains('hidden')){if(vid.videoWidth&&$('#lookbar').classList.contains('hidden'))openLookbar()}else setTimeout(w,250)};setTimeout(w,400)}}}
+  stab=C.sceneRec?(session.tab?session.tab:session.auto?'rec':(BY[active]?BY[active].cat:'rec')):'rec';scn=null;scnN=0;recIds=[];renderChips();renderStrip();renderToggles();renderActive();fit();if(o.photo){$('#msg').classList.add('on');$('#msgT').textContent='연습할 사진을 골라주세요.';$('#file').click()}else{startCam();if(o.look&&LK){const w=()=>{if(vid.videoWidth||$('#cam').classList.contains('hidden')){if(vid.videoWidth&&$('#lookbar').classList.contains('hidden'))openLookbar()}else setTimeout(w,250)};setTimeout(w,400)}}}
 function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
-function goHome(fromPop){if(!fromPop&&history.state&&history.state.cam){history.back();return}hideSheet();stopCam();S.mode='idle';$('#cam').classList.add('hidden');$('#home').classList.remove('hidden')}
+function goHome(fromPop){setTimeout(()=>renderMyFav(),0);if(!fromPop&&history.state&&history.state.cam){history.back();return}hideSheet();stopCam();S.mode='idle';$('#cam').classList.add('hidden');$('#home').classList.remove('hidden')}
 $('#cBack').onclick=()=>goHome();
 addEventListener('popstate',e=>{const st=e.state||{};if(!st.m&&$('#sheet').classList.contains('on'))hideSheet();if(!st.cam&&!$('#cam').classList.contains('hidden'))goHome(true)});
 
@@ -259,7 +270,7 @@ $('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.cre
 
 /* 가이드 띠 */
 let stab='rec',scn=null,scnN=0,recIds=[];
-function stripIds(){if(!C.sceneRec)return pool;if(stab==='rec')return recIds.length?recIds:pool;if(stab==='fav')return ITEMS.filter(i=>favs.has(i.id)).map(i=>i.id);return ITEMS.filter(i=>i.cat===stab).map(i=>i.id)}
+function stripIds(){if(!C.sceneRec)return pool;if(stab==='rec')return recIds.length?recIds:pool;if(stab==='fav'){const {f,u}=myCompIds();return[...f,...u]}return ITEMS.filter(i=>i.cat===stab).map(i=>i.id)}
 function renderChips(){const el=$('#cchips');if(!el)return;el.innerHTML=[['rec','추천','spark'],['fav','즐겨찾기','heart'],...CATS.map(k=>[k,PC.cats[k],CATI[k]||'grid'])].map(([k,n,ic])=>`<button class="cc${stab===k?' on':''}" data-s="${k}">${I(ic)}${n}</button>`).join('');
   const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
 $('#cchips')&&($('#cchips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s;if(k==='rec'&&stab==='rec'){turnAuto(true)}stab=k;renderChips();renderStrip();$('#cstrip').scrollLeft=0;navigator.vibrate&&navigator.vibrate(6)});
@@ -274,7 +285,7 @@ $('#cstrip').onclick=e=>{if(e.target.closest('[data-more]')){openPicker();return
     const ids=stripIds();if(!ids.length)return;let i=ids.indexOf(active);i=i<0?0:(i+(dx<0?1:-1)+ids.length)%ids.length;setActive(ids[i],true);toast(BY[ids[i]].name)},{passive:true})})();
 function setActive(id,manual){if(!BY[id])return;if(!C.sceneRec&&!pool.includes(id)){pool.unshift(id);renderStrip()}if(manual&&auto){auto=false;renderToggles();const a=$('#cstrip [data-auto]');a&&a.classList.remove('on')}active=id;$$('#cstrip .gth[data-g]').forEach(b=>b.classList.toggle('on',b.dataset.g===id));renderActive();
   const el=$(`#cstrip [data-g="${id}"]`);el&&el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}
-function renderActive(){const it=BY[active];$('#cName').textContent=it?it.name:'';$('#cAuto').classList.toggle('hidden',!auto);$('#bPhone').innerHTML=I('phone')+(it&&it.phone||'자유');
+function renderActive(){const it=BY[active];const cf=$('#cFav');if(cf){const on=favs.has(active);cf.innerHTML=I('heart',on?'fill':'');cf.classList.toggle('fav',on)}$('#cName').textContent=it?it.name:'';$('#cAuto').classList.toggle('hidden',!auto);$('#bPhone').innerHTML=I('phone')+(it&&it.phone||'자유');
   const m=(ments&&ments.length?ments:(it&&it.ments&&it.ments.length?it.ments:(C.defaultMents||[])));$('#sayCam').classList.toggle('hidden',!m.length||C.showMents===false);if(m.length)$('#sayT').textContent='“'+m[mi%m.length]+'”'}
 $('#sayN').onclick=()=>{mi++;renderActive()};
 $('#cPick').onclick=()=>openPicker();
@@ -326,7 +337,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));let busy=false;
 $('#shutter').onclick=async()=>{if(S.mode==='still'){$('#file').click();return}if(S.mode!=='live'||!vid.videoWidth){startCam();return}if(busy)return;busy=true;
   try{if(timer){const ce=$('#count');ce.classList.remove('hidden');for(let n=timer;n>0;n--){ce.textContent=n;await sleep(1000)}ce.classList.add('hidden')}
     shots=[];origs=[];for(let i=0;i<burst;i++){$('#shotN').textContent=burst>1?i+1:'';$('#flash').animate([{opacity:.55},{opacity:0}],{duration:180});shots.push(await grab());if(i<burst-1)await sleep(240)}$('#shotN').textContent='';
-    const u=URL.createObjectURL(shots[shots.length-1]);$('#cLast').innerHTML=`<img src="${u}" alt="">`;showShots()}finally{busy=false}};
+    USE.c[active]=(USE.c[active]||0)+1;if(look!=='none')USE.l[look]=(USE.l[look]||0)+1;LS.set('use',USE);const u=URL.createObjectURL(shots[shots.length-1]);$('#cLast').innerHTML=`<img src="${u}" alt="">`;showShots()}finally{busy=false}};
 $('#cLast').onclick=()=>{shots.length?showShots():$('#file').click()};
 function saveFiles(files){try{if(navigator.canShare&&navigator.canShare({files}))return navigator.share({files}).catch(()=>{})}catch(e){}files.forEach(f=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});toast('저장했어요')}
 function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'),files=shots.map((b,i)=>new File([b],`${C.filePrefix||'photo'}-${ts}-${i+1}.jpg`,{type:'image/jpeg'}));
@@ -336,19 +347,21 @@ function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]
   $('#shB').onclick=e=>{const ed=e.target.closest('[data-e]');if(ed){openEditor(+ed.dataset.e);return}const b=e.target.closest('[data-s]');if(b)saveFiles([files[+b.dataset.s]])};$('#saveAll').onclick=()=>saveFiles(files)}
 
 /* ---------- 색감 ---------- */
-function lookChips(el,g){el.innerHTML=[['rec','추천'],...Object.entries(LOOKS.groups)].map(([k,n])=>`<button class="cc${g===k?' on':''}" data-lg="${k}">${k==='rec'?I('spark'):''}${n}</button>`).join('')}
+function lookChips(el,g){el.innerHTML=[['rec','추천'],['fav','♡ 즐겨찾기'],...Object.entries(LOOKS.groups)].map(([k,n])=>`<button class="cc${g===k?' on':''}" data-lg="${k}">${k==='rec'?I('spark'):''}${n}</button>`).join('')}
 let lkRec=[];
 function lookCtx(f,sc){const it=BY[active];return{scene:sc?sc.k:'general',dark:sc?sc.dark:false,warm:sc?sc.warm:false,cat:it&&it.kind==='style'?it.cat:null,catName:it&&it.kind==='style'?PC.cats[it.cat]:''}}
-function lookThumbs(el,g,sel,TH,REC){const R=REC||lkRec;const L=g==='rec'?[LOOKS.byId.none,...R.map(r=>Object.assign({},LOOKS.byId[r.id],{why:r.why}))]:LOOKS.list.filter(l=>l.g===g||(g!=='basic'&&l.id==='none'));el.innerHTML=L.map(l=>`<button class="gth${l.id===sel?' on':''}" data-lk="${l.id}"><span class="t">${TH&&TH[l.id]?`<img src="${TH[l.id]}" alt="">`:''}</span><span>${l.name}</span>${l.why?`<em>${l.why}</em>`:''}</button>`).join('');const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
+function lookThumbs(el,g,sel,TH,REC){const R=REC||lkRec;const L=g==='rec'?[LOOKS.byId.none,...R.map(r=>Object.assign({},LOOKS.byId[r.id],{why:r.why}))]:g==='fav'?[LOOKS.byId.none,...[...lfavs].filter(i=>LOOKS.byId[i]).map(i=>LOOKS.byId[i]),...topUse(USE.l,6).filter(i=>!lfavs.has(i)&&LOOKS.byId[i]).map(i=>Object.assign({},LOOKS.byId[i],{why:'자주 씀'}))]:LOOKS.list.filter(l=>l.g===g||(g!=='basic'&&l.id==='none'));el.innerHTML=(g==='fav'&&L.length<2?`<div class="gempty">색감을 고르고 ♡를 누르면 여기 모여요</div>`:'')+L.map(l=>`<button class="gth${l.id===sel?' on':''}" data-lk="${l.id}"><span class="t">${lfavs.has(l.id)?'<i class="lf">♥</i>':''}${TH&&TH[l.id]?`<img src="${TH[l.id]}" alt="">`:''}</span><span>${l.name}</span>${l.why?`<em>${l.why}</em>`:''}</button>`).join('');const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
 function snapSmall(){const src=S.mode==='still'?still:vid;const ok=S.mode==='still'?still.naturalWidth:vid.videoWidth;if(!ok)return null;const sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight,cr=PC.getCrop(sw,sh,curAR()),c=document.createElement('canvas');c.width=96;c.height=Math.round(96/curAR());const x=c.getContext('2d');if(S.mirror&&S.mode!=='still'){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(src,cr.x,cr.y,cr.w,cr.h,0,0,c.width,c.height);return c}
 let lkG='film',lkTH=null;
 function openLookbar(){const bar=$('#lookbar');if(!bar.classList.contains('hidden')){closeLookbar();return}lkRec=LOOKS.recommend(lookCtx(feat,scn||(feat?PC.scene(feat,S):null)));lkG='rec';const sm=snapSmall();lkTH=null;try{lkTH=sm?LOOKS.thumbs(sm,sm.width,sm.height):null}catch(e){}
   bar.classList.remove('hidden');$('#cchips')&&$('#cchips').classList.add('hidden');$('#cstrip').classList.add('hidden');paintLookbar()}
 function closeLookbar(){$('#lookbar').classList.add('hidden');$('#cchips')&&$('#cchips').classList.remove('hidden');$('#cstrip').classList.remove('hidden');renderToggles()}
-function paintLookbar(){lookChips($('#lkG'),lkG);lookThumbs($('#lkS'),lkG,look,lkTH);const l=LOOKS.byId[look];$('#lkN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#lkR').value=Math.round(lookStr*100);$('#lkR').disabled=look==='none';$('#lkP').textContent=look==='none'?'':Math.round(lookStr*100)+'%'}
+function paintLookbar(){lookChips($('#lkG'),lkG);lookThumbs($('#lkS'),lkG,look,lkTH);const l=LOOKS.byId[look];$('#lkN').textContent=l?l.name+(l.d?' · '+l.d:''):'';const lf=$('#lkF');lf.innerHTML=I('heart',lfavs.has(look)?'fill':'');lf.classList.toggle('on',lfavs.has(look));lf.disabled=look==='none';$('#lkR').value=Math.round(lookStr*100);$('#lkR').disabled=look==='none';$('#lkP').textContent=look==='none'?'':Math.round(lookStr*100)+'%'}
 if(LK){$('#lkG').onclick=e=>{const b=e.target.closest('[data-lg]');if(!b)return;lkG=b.dataset.lg;paintLookbar()};
   $('#lkS').onclick=e=>{const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);paintLookbar();renderToggles();navigator.vibrate&&navigator.vibrate(6)};
-  $('#lkR').oninput=e=>{lookStr=e.target.value/100;LS.set('lookStr',lookStr);$('#lkP').textContent=Math.round(lookStr*100)+'%'};$('#lkX').onclick=closeLookbar}
+  $('#lkR').oninput=e=>{lookStr=e.target.value/100;LS.set('lookStr',lookStr);$('#lkP').textContent=Math.round(lookStr*100)+'%'};$('#lkX').onclick=closeLookbar;$('#lkF').onclick=()=>{if(look==='none')return;toggleLF(look);paintLookbar()}}
+function toggleLF(id){lfavs.has(id)?lfavs.delete(id):lfavs.add(id);saveLF();toast(lfavs.has(id)?'색감을 즐겨찾기에 담았어요':'색감 즐겨찾기에서 뺐어요');renderMyFav&&renderMyFav()}
+$('#cFav').onclick=()=>{if(active){toggleFav(active);renderActive()}};
 /* 실시간 미리보기 */
 function glLoop(){requestAnimationFrame(glLoop);if(!glr)return;const on=LK&&look!=='none'&&!$('#cam').classList.contains('hidden')&&(S.mode==='live'&&vid.videoWidth||S.mode==='still'&&still.naturalWidth);glv.style.display=on?'block':'none';if(!on)return;
   try{const src=S.mode==='still'?still:vid,sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight;glr.render(src,look,{sw,sh,crop:PC.getCrop(sw,sh,curAR()),mirror:S.mirror&&S.mode!=='still',str:lookStr,seed:(performance.now()/90|0)%97})}catch(e){}}
