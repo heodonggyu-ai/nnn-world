@@ -63,7 +63,8 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return
 /* ---------- 레이아웃 ---------- */
 document.body.insertAdjacentHTML('beforeend',`
 <main id="home">
- <header class="top"><div class="brand">${C.logo}<span>${C.name}</span></div><div class="acts"><button class="ibtn" id="hFav" aria-label="즐겨찾기">${I('heart')}<span class="dot hidden"></span></button><button class="ibtn" id="hHelp" aria-label="사용법">${I('info')}</button></div></header>
+ <header class="top"><div class="brand">${C.logo}<span>${C.name}</span></div><div class="acts">${C.catGrid?`<button class="ibtn cam" id="hCam" aria-label="카메라 켜기">${I('camera')}</button>`:''}<button class="ibtn" id="hFav" aria-label="즐겨찾기">${I('heart')}<span class="dot hidden"></span></button><button class="ibtn" id="hHelp" aria-label="사용법">${I('info')}</button></div></header>
+ ${C.catGrid?`<section class="cgrid-w"><h2 class="sec">${C.catGrid.title||'무엇을 찍나요?'}</h2><p class="secsub">${C.catGrid.sub||''}</p><div class="cgrid" id="cgrid"></div></section>`:''}
  <section class="hero"><canvas id="heroCv" width="600" height="780"></canvas><div class="vf"><i></i><i></i><i></i><i></i><b></b></div>
   <div class="in"><div class="sample" id="heroTag"></div><h1>${C.heroTitle}</h1><p>${C.heroSub}</p><div class="btns"><button class="btn pri" id="goCam">${I('camera')}${C.heroCTA||'카메라 켜기'}</button>${C.photoAnalyze!==false?`<button class="btn glass" id="goPhoto">${I('image')}사진 분석</button>`:''}</div></div></section>
  ${C.scenarios?`<h2 class="sec">${C.scenarioTitle||'어디서 찍어요?'}</h2><p class="secsub">${C.scenarioSub||''}</p><div class="strip" id="places"></div>`:''}
@@ -96,6 +97,7 @@ const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearT
 (function hero(){const ids=(C.heroIds||['st_back_walk']).filter(i=>BY[i]),id=ids[Math.floor(Math.random()*ids.length)];const cv=$('#heroCv'),c=cv.getContext('2d');
   c.scale(2,1.95);PC.drawThumb(id,c,300,400,{guide:false});$('#heroTag').textContent='예시 · '+BY[id].name})();
 $('#goCam').onclick=()=>openCam(C.startPool?C.startPool():null);
+$('#hCam')&&($('#hCam').onclick=()=>openCam(C.startPool?C.startPool():null));
 $('#goPhoto')&&($('#goPhoto').onclick=()=>{openCam(C.startPool?C.startPool():null,{photo:1})});
 $('#hHelp').onclick=()=>openSheet(C.helpTitle||'사용법',`<div class="dt-desc">${C.help}</div>`);
 
@@ -120,6 +122,11 @@ function renderGrid(){const L=list();$('#gSub').textContent=`${ITEMS.length}가�
   $$('#grid img[data-id]').forEach(i=>io.observe(i))}
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);renderTabs();renderGrid();b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})};
 $('#q').oninput=e=>{q=e.target.value.trim();if(q&&cat!=='all'){cat='all';renderTabs()}renderGrid()};
+if(C.catGrid){const cov=k=>{const pre=(C.catGrid.covers||{})[k];return pre&&BY[pre]?pre:ITEMS.find(i=>i.cat===k).id};
+  $('#cgrid').innerHTML=CATS.map(k=>`<button class="ct" data-c="${k}"><span class="cti"><img data-id="${cov(k)}" data-plain="1" alt=""><i>${I(CATI[k]||'grid')}</i></span><b>${PC.cats[k]}</b><small>${ITEMS.filter(i=>i.cat===k).length}</small></button>`).join('');
+  $$('#cgrid img[data-id]').forEach(i=>io.observe(i));
+  $('#cgrid').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);q='';$('#q').value='';renderTabs();renderGrid();
+    const t=$('#gSub').previousElementSibling;window.scrollTo({top:t.getBoundingClientRect().top+scrollY-8,behavior:'smooth'});setTimeout(()=>{const on=$('#tabs .on');on&&on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})},450)}}
 $('#hFav').onclick=()=>{cat='fav';renderTabs();renderGrid();$('#tabs').scrollIntoView({behavior:'smooth'})};
 function toggleFav(id){favs.has(id)?favs.delete(id):favs.add(id);saveFav();$$(`[data-f="${id}"]`).forEach(f=>{f.classList.toggle('on',favs.has(id));f.innerHTML=I('heart',favs.has(id)?'fill':'')});renderTabs();if(cat==='fav')renderGrid();toast(favs.has(id)?'즐겨찾기에 담았어요':'즐겨찾기에서 뺐어요')}
 $('#grid').onclick=e=>{const f=e.target.closest('[data-f]');if(f){e.stopPropagation();toggleFav(f.dataset.f);return}const b=e.target.closest('[data-id]');if(b)openDetail(b.dataset.id,{from:'home'})};

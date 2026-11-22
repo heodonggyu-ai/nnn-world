@@ -192,3 +192,14 @@ h2.sec{font-size:20px;font-weight:800;letter-spacing:-.03em;margin:30px 0 4px}
 .ptabs .tab{background:var(--camLine);border-color:var(--camLine);color:#fff;height:34px;font-size:13px}
 .ptabs .tab.on{background:#fff;color:#111;border-color:#fff}
 .sheet.dark .card small{color:rgba(255,255,255,.55)}
+/* 분류 바로가기 (홈 맨 위) */
+.cgrid-w h2.sec{margin-top:4px}
+.cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px 8px;margin-bottom:26px}
+.ct{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink);min-width:0}
+.cti{position:relative;width:100%;max-width:68px;aspect-ratio:1;border-radius:20px;overflow:hidden;background:var(--line);box-shadow:0 0 0 1px rgba(20,27,52,.06)}
+.cti img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cti i{position:absolute;right:4px;bottom:4px;width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,.94);color:var(--ink);display:grid;place-items:center}
+.cti i .ic{width:15px;height:15px;stroke-width:1.8}
+.ct b{font-size:13px;font-weight:600;letter-spacing:-.04em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ct small{font-size:11px;color:var(--sub);margin-top:-5px}
+.ct:active .cti{transform:scale(.95)}

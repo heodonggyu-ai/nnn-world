@@ -75,3 +75,11 @@ h2.sec{font-weight:700;font-size:19px;margin-top:34px}
 .sheet.dark .switch.on i::after{background:var(--ink)}
 .sheet.dark .steps li::before{border-color:#fff;color:#fff}
 .ptabs .tab.on{background:#fff;color:var(--ink)}
+/* 갤러리 분류 칩도 크게 */
+.tabs{gap:8px;padding:12px 18px}
+.tab{height:46px;padding:0 18px;font-size:15.5px;font-weight:600;gap:8px}
+.tab .ic{width:20px;height:20px}
+.tab small{font-size:13px}
+.ibtn.cam{background:var(--ink);color:#fff;border-color:var(--ink)}
+.hero canvas{height:clamp(210px,34vh,290px)}
+.vf{height:calc(clamp(210px,34vh,290px) - 28px)}
