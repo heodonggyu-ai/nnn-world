@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Do+Hyeon&family=Black+Han+Sans&family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Gamja+Flower&family=Gowun+Dodum&family=Hi+Melody&family=Yeon+Sung&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Do+Hyeon&family=Black+Han+Sans&family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Gamja+Flower&family=Gowun+Dodum&family=Gowun+Batang:wght@700&family=Hi+Melody&family=Yeon+Sung&display=swap" rel="stylesheet">
 <style>
 :root{
   --pink:#ff7aa8; --pink2:#ffe3ef; --lav:#a78bfa; --lav2:#efe9ff; --mint:#5fd3b5; --sky:#6cb8ff; --sun:#ffc84a;
@@ -610,57 +610,109 @@ b,strong,h1,h2,h3{font-weight:700}
 .lvup{text-align:center;padding:4px 4px 0}.lvup-b{display:inline-block;animation:lvPop .7s cubic-bezier(.2,1.6,.4,1);filter:drop-shadow(0 12px 20px rgba(120,80,220,.35))}
 @keyframes lvPop{0%{transform:scale(.2) rotate(-30deg);opacity:0}100%{transform:none;opacity:1}}
 .lvup small{display:block;font-family:var(--fh);font-weight:700;color:#8b6cf0;margin-top:8px}.lvup h3{margin:4px 0 8px!important}.lvup p{color:#6a6480;line-height:1.6;margin:0 0 6px;font-size:14px}
+/* ================= IVORY & GOLD THEME ================= */
+:root{--ink:#2a2433;--ink2:#4a4252;--sub:#8c8376;--ivory:#f7f2e9;--paper:#fffdf9;--line:#ece3d4;--gold:#c79a4b;--goldL:#ecd29a;--goldG:linear-gradient(135deg,#f1d899 0%,#d7ab5c 55%,#b8843a 100%);
+--pink:#c79a4b;--pink2:#f6ecd8;--lav:#9c8a6e;--lav2:#f3ecdf;
+--grad:linear-gradient(135deg,#f1d899 0%,#d7ab5c 55%,#b8843a 100%);--grad2:linear-gradient(135deg,#ecd08c,#c4924a);
+--fs:'Gowun Batang','Pretendard',serif}
+body{color:var(--ink)}
+#home{background:radial-gradient(110% 55% at 0% 0%,#fffaf0 0%,rgba(255,250,240,0) 60%),radial-gradient(90% 50% at 100% 0%,#f1e6d3 0%,rgba(241,230,211,0) 60%),linear-gradient(180deg,#f8f3ea 0%,#f3ecdf 100%)!important}
+/* header */
+.lmark{box-shadow:0 8px 18px rgba(120,84,50,.22),inset 0 0 0 1px rgba(255,255,255,.6)!important}
+.logo small{color:#b08a52!important;font-weight:600!important;letter-spacing:.01em}
+.logo .wm{font-family:var(--fs)!important;font-weight:700!important;font-size:24px!important;background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;color:var(--ink)!important;letter-spacing:-.02em}
+#nnnLink{background:var(--paper)!important;color:var(--ink2)!important;border:1px solid var(--line)!important}
+/* serif display titles */
+.sec-title,.hero b,.lc-meta b,.road-head h2,.lv-t b,#modal h3,.empty b,.lvup h3{font-family:var(--fs)!important;font-weight:700!important;letter-spacing:-.02em!important}
+.sec-title{color:var(--ink)!important}
+.sec-title.mk{color:var(--ink2)!important}
+.sec-title .cnt{background:#f3e7cf!important;color:#a07434!important}
+.sec-title button{background:var(--paper)!important;border-color:var(--line)!important;color:var(--ink2)!important}
+/* learn card: ink + gold */
+.learn-card,.road-head{background:radial-gradient(90% 80% at 100% 0%,rgba(215,171,92,.28) 0%,rgba(215,171,92,0) 60%),linear-gradient(150deg,#2f2939 0%,#1c1823 100%)!important;box-shadow:0 18px 34px -16px rgba(30,20,10,.6),inset 0 1px 0 rgba(255,255,255,.08)!important}
+.learn-card::before{border-color:rgba(236,210,154,.18)!important}
+.lc-kick{color:#e3c27f!important}
+.chip-rank{background:var(--goldG)!important;color:#3b2a10!important}
+.chip-fire{background:rgba(255,255,255,.1)!important}
+.lc-next{background:#fffdf9!important}
+.lc-em,.un-em{background:linear-gradient(135deg,#fbf4e6,#f1e4cc)!important}
+.lc-tx small{color:#a07434!important}
+.lc-play{background:var(--goldG)!important;color:#3b2a10!important;box-shadow:0 6px 14px -4px rgba(184,132,58,.7)!important}
+.lc-steps i{background:linear-gradient(90deg,#e3c27f calc(var(--p)*100%),rgba(255,255,255,.14) calc(var(--p)*100%))!important}
+.lc-steps i.done{background:var(--goldG)!important}
+/* hero cards: jewel tones */
+.h-art{background:radial-gradient(110% 90% at 100% 0%,rgba(236,210,154,.35) 0%,rgba(236,210,154,0) 55%),linear-gradient(140deg,#2b3a6b 0%,#1d2648 100%)!important;box-shadow:0 18px 32px -14px rgba(20,28,60,.6)!important}
+.h-art .kick{color:#e3c27f!important}
+.h-art .go{background:var(--goldG)!important;color:#3b2a10!important;box-shadow:0 6px 14px rgba(0,0,0,.25)!important}
+.h-toon{background:radial-gradient(110% 80% at 100% 0%,rgba(255,220,220,.25) 0%,rgba(255,220,220,0) 55%),linear-gradient(160deg,#b0606f 0%,#8a4357 100%)!important;box-shadow:0 16px 30px -12px rgba(120,50,70,.55)!important}
+.h-anim{background:radial-gradient(110% 80% at 0% 0%,rgba(210,240,240,.25) 0%,rgba(210,240,240,0) 55%),linear-gradient(160deg,#3f7a86 0%,#2a5662 100%)!important;box-shadow:0 16px 30px -12px rgba(30,80,90,.55)!important}
+.h-toon .hplus{color:#8a4357!important}.h-anim .hplus{color:#2a5662!important}
+.hero::after{box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 1px rgba(255,255,255,.08)!important}
+/* tip + surfaces */
+#homeTip,.empty,.road-stats div,.badges,.lv,.lesson-card,.work{background:var(--paper)!important;box-shadow:0 1px 2px rgba(60,40,20,.05),0 12px 26px -16px rgba(80,55,30,.32)!important;border:1px solid rgba(236,227,212,.8)!important}
+.tc-ic{background:var(--goldG)!important;box-shadow:0 6px 14px -4px rgba(184,132,58,.55)!important}
+.tc-tx b{color:#a07434!important}
+.tc-tx p{color:var(--ink2)!important}
+.tc-re{background:#f5efe4!important;color:#a39782!important}
+.empty span,.road-stats span{color:var(--sub)!important}
+.work .badge i{background:#d7ab5c!important}.work .badge i.k-toon{background:#b0606f!important}.work .badge i.k-anim{background:#3f7a86!important}
+/* buttons */
+.btn{background:linear-gradient(180deg,#352e40,#231e2b)!important;color:#fbf4e6!important;box-shadow:0 10px 20px -10px rgba(30,20,10,.7),inset 0 1px 0 rgba(255,255,255,.12)!important}
+.btn.sec{background:var(--paper)!important;color:var(--ink2)!important;box-shadow:inset 0 0 0 1px var(--line)!important}
+.btn.lav{background:var(--goldG)!important;color:#3b2a10!important}
+/* nav */
+.home-nav{background:rgba(255,253,249,.9)!important;border:1px solid rgba(236,227,212,.9)!important;box-shadow:0 18px 40px -16px rgba(80,55,30,.45),0 2px 6px rgba(80,55,30,.08)!important}
+.home-nav button{color:#a89f90!important}
+.home-nav button.active{color:var(--ink)!important}
+.home-nav button.active .ni{background:linear-gradient(135deg,#faf1de,#f1e3c6)!important}
+.home-nav button.active span:last-child{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;color:var(--ink)!important}
+/* roadmap */
+.road-head p{color:rgba(255,255,255,.7)!important}
+.road-stats b{color:var(--ink)!important}
+.badges .bd small{color:var(--ink2)!important}
+.lv.cur{box-shadow:0 0 0 1.5px var(--b),0 14px 28px -14px var(--b)!important}
+.lv-t b{color:var(--ink)!important}
+.un{background:#fbf7ef!important}
+.un.next{background:linear-gradient(90deg,#fdf6e8,#f8eedb)!important}
+.un-t b{color:var(--ink)!important}
+.lesson-card .em,.lesson-grid .lesson-card:nth-child(n) .em{background:linear-gradient(135deg,#fbf4e6,#f1e4cc)!important}
+.lesson-card.done::after{background-color:#c79a4b!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important}
+.lesson .box{background:#fbf6ec!important;border-left-color:var(--gold)!important}
+.backlink{color:#a07434!important}
+/* modal */
+#modal{background:rgba(255,253,249,.98)!important}
+#modal input[type=text]{background:#fbf7ef!important;border-color:var(--line)!important}
+.size-grid button{background:#fbf7ef!important;border-color:#f0e8da!important}
+.size-grid button.on{background:linear-gradient(#fffdf9,#fffdf9) padding-box,var(--goldG) border-box!important}
+.size-grid button .ratio{border-color:#d9ccb4!important}
+.size-grid button.on .ratio{border-color:#c79a4b!important;background:linear-gradient(135deg,#fbf1dc,#f1e0bd)!important}
+#modal .chip.on{background:linear-gradient(#fdf7ea,#fdf7ea) padding-box,var(--goldG) border-box!important}
+/* editor accents on dark */
+.tabs button.on,.seg button.on,.sbtn.acc{color:#2a2010!important}
+.tl-ctrl #tlPlay{box-shadow:0 4px 12px rgba(200,150,70,.45)!important;color:#2a2010!important}
+#toast{background:rgba(42,36,51,.94)!important;color:#fbf4e6!important}
+#bottombar button.on{color:#2a2010!important;background:linear-gradient(135deg,#f1d899,#c99a4e)!important;box-shadow:0 6px 16px rgba(200,150,70,.4)!important}
+#stepCard{background:rgba(255,253,249,.96)!important}
+#stepCard .sc-h b{color:var(--ink)!important;font-family:var(--fs)!important;font-weight:700!important}
+#stepCard .sc-n button{background:linear-gradient(180deg,#352e40,#231e2b)!important;color:#fbf4e6!important}
+#stepCard .sc-h button{background:#f3ecdf!important}
+.vs .fill{background:linear-gradient(0deg,rgba(215,171,92,.6),rgba(236,210,154,.25))!important}
+.tl-ctrl button.on{color:#ecd29a!important;background:rgba(215,171,92,.18)!important}
 </style>
 </head>
 <body>
 <!-- ================= HOME ================= -->
 <section id="home" class="screen active">
   <header class="home-head">
-    <div class="logo"><span class="lmark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><clipPath id="lc3"><rect width="1024" height="1024" rx="230"/></clipPath><g clip-path="url(#lc3)"><defs>
-<linearGradient id="kBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a2a86"/><stop offset=".55" stop-color="#251a5e"/><stop offset="1" stop-color="#160f3a"/></linearGradient>
-<radialGradient id="kG1" cx=".9" cy=".05" r=".75"><stop offset="0" stop-color="#ff7aa8" stop-opacity=".75"/><stop offset="1" stop-color="#ff7aa8" stop-opacity="0"/></radialGradient>
-<radialGradient id="kG2" cx=".05" cy="1" r=".7"><stop offset="0" stop-color="#4fb6ff" stop-opacity=".55"/><stop offset="1" stop-color="#4fb6ff" stop-opacity="0"/></radialGradient>
-<linearGradient id="kPaper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1ecfb"/></linearGradient>
-<linearGradient id="kInk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ff5f9e"/><stop offset=".55" stop-color="#b06bff"/><stop offset="1" stop-color="#6a8cff"/></linearGradient>
-<linearGradient id="kPen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb21f"/><stop offset=".35" stop-color="#ffe27a"/><stop offset=".6" stop-color="#ffcc33"/><stop offset="1" stop-color="#e88a00"/></linearGradient>
-<linearGradient id="kFer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9aa0b8"/><stop offset=".4" stop-color="#fff"/><stop offset=".7" stop-color="#c9cde0"/><stop offset="1" stop-color="#868ba6"/></linearGradient>
-<linearGradient id="kEr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5d93"/><stop offset=".4" stop-color="#ffa3c4"/><stop offset="1" stop-color="#e24479"/></linearGradient>
-<linearGradient id="kWood" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9b98a"/><stop offset=".45" stop-color="#ffe6c8"/><stop offset="1" stop-color="#d79e6b"/></linearGradient>
-<filter id="kSh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="30" stdDeviation="30" flood-color="#07041c" flood-opacity=".55"/></filter>
-<filter id="kSh2" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="8" dy="22" stdDeviation="18" flood-color="#07041c" flood-opacity=".5"/></filter>
-<filter id="kGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
-<rect width="1024" height="1024" fill="url(#kBg)"/>
-<rect width="1024" height="1024" fill="url(#kG1)"/>
-<rect width="1024" height="1024" fill="url(#kG2)"/>
-<g filter="url(#kSh)" transform="rotate(-6 512 540)">
- <rect x="196" y="214" width="632" height="652" rx="70" fill="url(#kPaper)"/>
- <g transform="translate(290 290)">
-  <rect x="0" y="-26" width="210" height="52" rx="26" fill="#f1ecfb"/>
-  <circle cx="34" cy="0" r="17" fill="url(#kInk)"/><text x="34" y="7" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="20" fill="#fff">1</text>
-  <circle cx="105" cy="0" r="17" fill="url(#kInk)"/><text x="105" y="7" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="20" fill="#fff">2</text>
-  <circle cx="176" cy="0" r="17" fill="none" stroke="#cbbff0" stroke-width="4"/><text x="176" y="7" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="20" fill="#b9acdf">3</text>
-  <path d="M51 0h37" stroke="#b06bff" stroke-width="5" stroke-linecap="round"/><path d="M122 0h37" stroke="#cbbff0" stroke-width="5" stroke-linecap="round" stroke-dasharray="4 8"/>
- </g>
- <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path id="kCat" d="M330 520 L344 368 L436 438 Q512 420 588 438 L680 368 L694 520 Q726 600 690 680 Q640 772 512 772 Q384 772 334 680 Q298 600 330 520Z" stroke="#c9bdf0" stroke-width="12" stroke-dasharray="4 26"/>
-  <g><path id="kSolid" pathLength="100" stroke-dasharray="60 100" d="M330 520 L344 368 L436 438 Q512 420 588 438 L680 368 L694 520 Q726 600 690 680 Q640 772 512 772 Q384 772 334 680 Q298 600 330 520Z" stroke="url(#kInk)" stroke-width="22" filter="url(#kGlow)"/></g>
-  <path d="M440 596 q 22 -24 44 0" stroke="url(#kInk)" stroke-width="16"/>
-  <path d="M540 596 q 22 -24 44 0" stroke="#c9bdf0" stroke-width="10" stroke-dasharray="3 16"/>
-  <path d="M492 660 q 20 18 40 0" stroke="#c9bdf0" stroke-width="10" stroke-dasharray="3 16"/>
- </g>
-</g>
-<g filter="url(#kSh2)" transform="translate(51 49) rotate(40 700 560)">
- <rect x="652" y="200" width="96" height="320" rx="10" fill="url(#kPen)"/>
- <rect x="680" y="208" width="14" height="304" rx="7" fill="#fff" opacity=".45"/>
- <rect x="648" y="146" width="104" height="62" rx="8" fill="url(#kFer)"/>
- <rect x="648" y="164" width="104" height="6" fill="#7e839c" opacity=".5"/><rect x="648" y="184" width="104" height="6" fill="#7e839c" opacity=".5"/>
- <path d="M652 154 v-38 a36 36 0 0 1 36 -36 h24 a36 36 0 0 1 36 36 v38z" fill="url(#kEr)"/>
- <path d="M652 518 L700 640 L748 518Z" fill="url(#kWood)"/>
- <path d="M684 600 L700 640 L716 600Z" fill="#2b2150"/>
-</g>
-<g fill="#fff"><path d="M150 250 l12 30 30 12 -30 12 -12 30 -12 -30 -30 -12 30 -12z" opacity=".9"/><path d="M880 820 l9 22 22 9 -22 9 -9 22 -9 -22 -22 -9 22 -9z" opacity=".75"/></g>
-</g></svg></span><div><small>배우면서 완성하는 그림 클래스</small><span class="wm">밍뉴툰 스튜디오</span></div></div>
+    <div class="logo"><span class="lmark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><clipPath id="lc4"><rect width="1024" height="1024" rx="230"/></clipPath><g clip-path="url(#lc4)"><defs>
+<radialGradient id="qbg" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#fffdf8"/><stop offset=".55" stop-color="#f7efe4"/><stop offset="1" stop-color="#e9dccb"/></radialGradient>
+<linearGradient id="qf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6d3bb"/><stop offset=".35" stop-color="#d9a17f"/><stop offset=".7" stop-color="#b7795a"/><stop offset="1" stop-color="#8e5639"/></linearGradient>
+<linearGradient id="qhl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="qs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2e6"/><stop offset="1" stop-color="#e8c0a2"/></linearGradient>
+<radialGradient id="qgl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6dc"/><stop offset=".35" stop-color="#ffe2a6" stop-opacity=".8"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+<filter id="qsh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="18" dy="30" stdDeviation="26" flood-color="#6b4630" flood-opacity=".28"/></filter>
+<filter id="qgr"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .4  0 0 0 0 .3  0 0 0 .05 0"/></filter>
+</defs><rect width="1024" height="1024" fill="url(#qbg)"/><rect width="1024" height="1024" filter="url(#qgr)"/><g transform="translate(512 500) rotate(30) scale(1.12)"><g filter="url(#qsh)"><path d="M0 -380 C 74 -306 100 -136 72 40 C 58 122 34 178 12 210 L-2 210 C -42 162 -92 60 -88 -74 C -84 -210 -38 -316 0 -380Z" fill="url(#qf)"/></g><clipPath id="qc"><path d="M0 -380 C 74 -306 100 -136 72 40 C 58 122 34 178 12 210 L-2 210 C -42 162 -92 60 -88 -74 C -84 -210 -38 -316 0 -380Z"/></clipPath><g clip-path="url(#qc)"><path d="M2 -340 Q 60 -366 90 -394" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -332 Q -66 -356 -102 -380" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -306 Q 60 -332 90 -360" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -298 Q -66 -322 -102 -346" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -272 Q 60 -298 90 -326" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -264 Q -66 -288 -102 -312" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -238 Q 60 -264 90 -292" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -230 Q -66 -254 -102 -278" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -204 Q 60 -230 90 -258" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -196 Q -66 -220 -102 -244" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -170 Q 60 -196 90 -224" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -162 Q -66 -186 -102 -210" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -136 Q 60 -162 90 -190" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -128 Q -66 -152 -102 -176" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -102 Q 60 -128 90 -156" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -94 Q -66 -118 -102 -142" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -68 Q 60 -94 90 -122" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -60 Q -66 -84 -102 -108" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 -34 Q 60 -60 90 -88" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 -26 Q -66 -50 -102 -74" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 0 Q 60 -26 90 -54" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 8 Q -66 -16 -102 -40" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 34 Q 60 8 90 -20" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 42 Q -66 18 -102 -6" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 68 Q 60 42 90 14" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 76 Q -66 52 -102 28" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 102 Q 60 76 90 48" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 110 Q -66 86 -102 62" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 136 Q 60 110 90 82" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 144 Q -66 120 -102 96" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/><path d="M2 170 Q 60 144 90 116" stroke="#7a462c" stroke-opacity=".22" stroke-width="3" fill="none"/><path d="M-2 178 Q -66 154 -102 130" stroke="#7a462c" stroke-opacity=".18" stroke-width="3" fill="none"/></g><path d="M0 -380 C 74 -306 100 -136 72 40 C 58 122 34 178 12 210 L-2 210 C -42 162 -92 60 -88 -74 C -84 -210 -38 -316 0 -380Z" fill="url(#qhl)" opacity=".6"/><path d="M104 -96 L56 -70 L104 -78Z M-110 -36 L-64 -14 L-108 -16Z M96 -232 L58 -214 L92 -212Z" fill="#f5ece0"/><path d="M3 -320 C 6 -150 8 40 10 330" stroke="url(#qs)" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M3 -320 C 6 -150 8 40 10 330" stroke="#8e5639" stroke-opacity=".35" stroke-width="3" fill="none" transform="translate(4 0)"/><circle cx="10" cy="336" r="86" fill="url(#qgl)"/><circle cx="10" cy="334" r="7" fill="#fff"/></g><g transform="translate(512 512) scale(1.0) translate(-512 -512)"><path transform="translate(842 372)" d="M0 -30 C 4.8 -4.8 4.8 -4.8 30 0 C 4.8 4.8 4.8 4.8 0 30 C -4.8 4.8 -4.8 4.8 -30 0 C -4.8 -4.8 -4.8 -4.8 0 -30Z" fill="#d9a17f" opacity="1"/><circle cx="892" cy="448" r="7" fill="#d9a17f" opacity=".7"/><circle cx="800" cy="452" r="5" fill="#d9a17f" opacity=".5"/><path d="M842 372 L892 448 L800 452" stroke="#d9a17f" stroke-opacity=".35" stroke-width="2.5" fill="none" stroke-dasharray="3 9"/></g></g></svg></span><div><small>배우면서 완성하는 그림 클래스</small><span class="wm">밍뉴툰 스튜디오</span></div></div>
     <a id="nnnLink" href="../" class="hidden" style="margin-left:auto;font-family:var(--fh);font-size:13px;color:#6b4fd8;background:rgba(255,255,255,.7);border:1px solid #fff;padding:8px 12px;border-radius:999px;text-decoration:none;box-shadow:0 4px 12px rgba(120,90,180,.15)">← NNN 월드</a>
   </header>
   <main id="homeMain">
@@ -766,7 +818,7 @@ b,strong,h1,h2,h3{font-weight:700}
     <div id="tab-school" class="htab"></div>
     <div id="tab-idea" class="htab"></div>
   </main>
-  <nav class="home-nav"><svg width="0" height="0" style="position:absolute"><defs><linearGradient id="navG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7fa9"/><stop offset="1" stop-color="#8b6cff"/></linearGradient><linearGradient id="navG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc2d6"/><stop offset="1" stop-color="#cdbfff"/></linearGradient></defs></svg><button data-tab="works" class="active"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.3" fill="url(#navG)"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.3" fill="url(#navG2)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.3" fill="url(#navG2)"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.3" fill="url(#navG)"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.3"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.3"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.3"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.3"/></g></svg></span><span>내 작품</span></button><button data-tab="trace"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><path d="M4.5 19.5l1-4.3L16.2 4.5a2 2 0 012.8 0l.5.5a2 2 0 010 2.8L8.8 18.5z" fill="url(#navG)"/><path d="M5.5 15.2l3.3 3.3-4.3 1z" fill="#ffd9a8"/><path d="M13 20.5h7" stroke="#b58cff" stroke-width="2" stroke-linecap="round" stroke-dasharray="1.6 2.6"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5l1-4.3L16.2 4.5a2 2 0 012.8 0l.5.5a2 2 0 010 2.8L8.8 18.5z"/><path d="M14 6.7l3.3 3.3"/><path d="M13 20.5h7" stroke-dasharray="1.6 2.6"/></g></svg></span><span>따라 그리기</span></button><button data-tab="school"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><path d="M6.5 11.4v4.4c0 1.6 2.5 3.2 5.5 3.2s5.5-1.6 5.5-3.2v-4.4L12 14z" fill="url(#navG2)"/><path d="M2.5 9.3L12 4.8l9.5 4.5L12 13.8z" fill="url(#navG)"/><path d="M21.5 9.3v5" stroke="#8b6cff" stroke-width="1.8" stroke-linecap="round"/><circle cx="21.5" cy="15" r="1.4" fill="#ffc83d"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.3L12 4.8l9.5 4.5L12 13.8z"/><path d="M6.5 11.4v4.4c0 1.6 2.5 3.2 5.5 3.2s5.5-1.6 5.5-3.2v-4.4"/><path d="M21.5 9.3v5"/></g></svg></span><span>배우기</span></button><button data-tab="idea"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z" fill="url(#navG)"/><path d="M9 18h6M10 21h4" stroke="#8b6cff" stroke-width="1.8" stroke-linecap="round"/><path d="M10.2 7.6a2.6 2.6 0 012.4-1" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".8"/><path d="M20 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#ffc83d"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></g></svg></span><span>아이디어</span></button></nav>
+  <nav class="home-nav"><svg width="0" height="0" style="position:absolute"><defs><linearGradient id="navG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9c77d"/><stop offset="1" stop-color="#b07a3a"/></linearGradient><linearGradient id="navG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3e3c4"/><stop offset="1" stop-color="#e3cfae"/></linearGradient></defs></svg><button data-tab="works" class="active"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.3" fill="url(#navG)"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.3" fill="url(#navG2)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.3" fill="url(#navG2)"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.3" fill="url(#navG)"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.3"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.3"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.3"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.3"/></g></svg></span><span>내 작품</span></button><button data-tab="trace"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><path d="M4.5 19.5l1-4.3L16.2 4.5a2 2 0 012.8 0l.5.5a2 2 0 010 2.8L8.8 18.5z" fill="url(#navG)"/><path d="M5.5 15.2l3.3 3.3-4.3 1z" fill="#ffd9a8"/><path d="M13 20.5h7" stroke="#b07a3a" stroke-width="2" stroke-linecap="round" stroke-dasharray="1.6 2.6"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5l1-4.3L16.2 4.5a2 2 0 012.8 0l.5.5a2 2 0 010 2.8L8.8 18.5z"/><path d="M14 6.7l3.3 3.3"/><path d="M13 20.5h7" stroke-dasharray="1.6 2.6"/></g></svg></span><span>따라 그리기</span></button><button data-tab="school"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><path d="M6.5 11.4v4.4c0 1.6 2.5 3.2 5.5 3.2s5.5-1.6 5.5-3.2v-4.4L12 14z" fill="url(#navG2)"/><path d="M2.5 9.3L12 4.8l9.5 4.5L12 13.8z" fill="url(#navG)"/><path d="M21.5 9.3v5" stroke="#2a2433" stroke-width="1.8" stroke-linecap="round"/><circle cx="21.5" cy="15" r="1.4" fill="#ffc83d"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.3L12 4.8l9.5 4.5L12 13.8z"/><path d="M6.5 11.4v4.4c0 1.6 2.5 3.2 5.5 3.2s5.5-1.6 5.5-3.2v-4.4"/><path d="M21.5 9.3v5"/></g></svg></span><span>배우기</span></button><button data-tab="idea"><span class="ni"><svg viewBox="0 0 24 24" width="24" height="24"><g class="nf"><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z" fill="url(#navG)"/><path d="M9 18h6M10 21h4" stroke="#2a2433" stroke-width="1.8" stroke-linecap="round"/><path d="M10.2 7.6a2.6 2.6 0 012.4-1" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".8"/><path d="M20 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#ffc83d"/></g><g class="no" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></g></svg></span><span>아이디어</span></button></nav>
 </section>
 
 <!-- ================= EDITOR ================= -->
@@ -3675,15 +3727,15 @@ function renderTrace() {
 }
 /* ================= LEARNING PATH (배우며 그리기 로드맵) ================= */
 const COURSE = [
-  { lv: 1, t: '선과 모양', s: '동그라미와 타원으로 그림의 뼈대 잡기', badge: '첫 붓질', hue: ['#ff8db5', '#ff6b98'],
+  { lv: 1, t: '선과 모양', s: '동그라미와 타원으로 그림의 뼈대 잡기', badge: '첫 붓질', hue: ['#e3a0a9', '#c27482'],
     units: [['trace', 't_cat'], ['trace', 't_lizard'], ['lesson', 'color'], ['mission', 'save']] },
-  { lv: 2, t: '얼굴과 표정', s: '정면 · 옆얼굴 · 감정 표현', badge: '표정 장인', hue: ['#ffb36b', '#ff8a4c'],
+  { lv: 2, t: '얼굴과 표정', s: '정면 · 옆얼굴 · 감정 표현', badge: '표정 장인', hue: ['#e8c07a', '#c4923e'],
     units: [['trace', 't_face'], ['trace', 't_side'], ['lesson', 'faces'], ['trace', 't_faces']] },
-  { lv: 3, t: '나만의 캐릭터', s: '3등신 몸과 캐릭터 설정 만들기', badge: '캐릭터 디자이너', hue: ['#6fd6a8', '#36b98a'],
+  { lv: 3, t: '나만의 캐릭터', s: '3등신 몸과 캐릭터 설정 만들기', badge: '캐릭터 디자이너', hue: ['#9cc4ad', '#5e9479'],
     units: [['trace', 't_sd'], ['lesson', 'char'], ['mission', 'sheet']] },
-  { lv: 4, t: '웹툰 작가 되기', s: '칸 · 카메라 · 말풍선 · 연출', badge: '웹툰 작가', hue: ['#a88bff', '#7a5cf0'],
+  { lv: 4, t: '웹툰 작가 되기', s: '칸 · 카메라 · 말풍선 · 연출', badge: '웹툰 작가', hue: ['#a99ad0', '#7562a8'],
     units: [['lesson', 'steps'], ['lesson', 'panels'], ['lesson', 'shots'], ['lesson', 'bubbles'], ['trace', 't_toon'], ['lesson', 'direct'], ['mission', 'four']] },
-  { lv: 5, t: '애니메이터 되기', s: '12가지 법칙과 움직이는 이모티콘', badge: '애니메이터', hue: ['#6cc4ff', '#3d8ff0'],
+  { lv: 5, t: '애니메이터 되기', s: '12가지 법칙과 움직이는 이모티콘', badge: '애니메이터', hue: ['#8dbccc', '#4f8aa0'],
     units: [['lesson', 'a_basic'], ['example', 'ball_done'], ['lesson', 'a_12'], ['example', 'blink'], ['trace', 't_walk'], ['example', 'slime'], ['mission', 'gif']] },
 ];
 const RANKS = ['새싹 작가', '연필 작가', '표정 장인', '캐릭터 디자이너', '웹툰 작가', '애니메이터'];
@@ -3756,7 +3808,7 @@ function startUnit(u) {
 function refreshLearnViews() { renderLearnCard(); if ($('#tab-school').classList.contains('active') && !LESSON_OPEN) renderSchool(); }
 function ringSVG(pct, size = 64, dark = false) {
   const r = 26, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
-  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="rgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8db5"/><stop offset="1" stop-color="#8b6cff"/></linearGradient></defs><circle cx="32" cy="32" r="${r}" fill="none" stroke="${dark ? 'rgba(255,255,255,.14)' : 'rgba(139,108,255,.15)'}" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="url(#rgG)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="15" fill="${dark ? '#fff' : '#2a2342'}">${pct}%</text></svg>`;
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="rgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d58c"/><stop offset="1" stop-color="#c08a3e"/></linearGradient></defs><circle cx="32" cy="32" r="${r}" fill="none" stroke="${dark ? 'rgba(255,255,255,.14)' : 'rgba(139,108,255,.15)'}" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="url(#rgG)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="15" fill="${dark ? '#fff' : '#2a2433'}">${pct}%</text></svg>`;
 }
 const FIRE = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2c1 4 6 6 6 12a6 6 0 01-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z" fill="#ff7a3d"/><path d="M12 13c1 2 3 2.5 3 5a3 3 0 01-6 0c0-1.5 1-2.5 1.5-3 0 1 .5 1.5 1 1.5 0-1.5-.5-2.5.5-3.5z" fill="#ffd23f"/></svg>';
 function renderLearnCard() {

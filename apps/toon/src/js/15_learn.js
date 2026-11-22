@@ -1,14 +1,14 @@
 /* ================= LEARNING PATH (배우며 그리기 로드맵) ================= */
 const COURSE = [
-  { lv: 1, t: '선과 모양', s: '동그라미와 타원으로 그림의 뼈대 잡기', badge: '첫 붓질', hue: ['#ff8db5', '#ff6b98'],
+  { lv: 1, t: '선과 모양', s: '동그라미와 타원으로 그림의 뼈대 잡기', badge: '첫 붓질', hue: ['#e3a0a9', '#c27482'],
     units: [['trace', 't_cat'], ['trace', 't_lizard'], ['lesson', 'color'], ['mission', 'save']] },
-  { lv: 2, t: '얼굴과 표정', s: '정면 · 옆얼굴 · 감정 표현', badge: '표정 장인', hue: ['#ffb36b', '#ff8a4c'],
+  { lv: 2, t: '얼굴과 표정', s: '정면 · 옆얼굴 · 감정 표현', badge: '표정 장인', hue: ['#e8c07a', '#c4923e'],
     units: [['trace', 't_face'], ['trace', 't_side'], ['lesson', 'faces'], ['trace', 't_faces']] },
-  { lv: 3, t: '나만의 캐릭터', s: '3등신 몸과 캐릭터 설정 만들기', badge: '캐릭터 디자이너', hue: ['#6fd6a8', '#36b98a'],
+  { lv: 3, t: '나만의 캐릭터', s: '3등신 몸과 캐릭터 설정 만들기', badge: '캐릭터 디자이너', hue: ['#9cc4ad', '#5e9479'],
     units: [['trace', 't_sd'], ['lesson', 'char'], ['mission', 'sheet']] },
-  { lv: 4, t: '웹툰 작가 되기', s: '칸 · 카메라 · 말풍선 · 연출', badge: '웹툰 작가', hue: ['#a88bff', '#7a5cf0'],
+  { lv: 4, t: '웹툰 작가 되기', s: '칸 · 카메라 · 말풍선 · 연출', badge: '웹툰 작가', hue: ['#a99ad0', '#7562a8'],
     units: [['lesson', 'steps'], ['lesson', 'panels'], ['lesson', 'shots'], ['lesson', 'bubbles'], ['trace', 't_toon'], ['lesson', 'direct'], ['mission', 'four']] },
-  { lv: 5, t: '애니메이터 되기', s: '12가지 법칙과 움직이는 이모티콘', badge: '애니메이터', hue: ['#6cc4ff', '#3d8ff0'],
+  { lv: 5, t: '애니메이터 되기', s: '12가지 법칙과 움직이는 이모티콘', badge: '애니메이터', hue: ['#8dbccc', '#4f8aa0'],
     units: [['lesson', 'a_basic'], ['example', 'ball_done'], ['lesson', 'a_12'], ['example', 'blink'], ['trace', 't_walk'], ['example', 'slime'], ['mission', 'gif']] },
 ];
 const RANKS = ['새싹 작가', '연필 작가', '표정 장인', '캐릭터 디자이너', '웹툰 작가', '애니메이터'];
@@ -81,7 +81,7 @@ function startUnit(u) {
 function refreshLearnViews() { renderLearnCard(); if ($('#tab-school').classList.contains('active') && !LESSON_OPEN) renderSchool(); }
 function ringSVG(pct, size = 64, dark = false) {
   const r = 26, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
-  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="rgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8db5"/><stop offset="1" stop-color="#8b6cff"/></linearGradient></defs><circle cx="32" cy="32" r="${r}" fill="none" stroke="${dark ? 'rgba(255,255,255,.14)' : 'rgba(139,108,255,.15)'}" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="url(#rgG)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="15" fill="${dark ? '#fff' : '#2a2342'}">${pct}%</text></svg>`;
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="rgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d58c"/><stop offset="1" stop-color="#c08a3e"/></linearGradient></defs><circle cx="32" cy="32" r="${r}" fill="none" stroke="${dark ? 'rgba(255,255,255,.14)' : 'rgba(139,108,255,.15)'}" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="url(#rgG)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="15" fill="${dark ? '#fff' : '#2a2433'}">${pct}%</text></svg>`;
 }
 const FIRE = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2c1 4 6 6 6 12a6 6 0 01-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z" fill="#ff7a3d"/><path d="M12 13c1 2 3 2.5 3 5a3 3 0 01-6 0c0-1.5 1-2.5 1.5-3 0 1 .5 1.5 1 1.5 0-1.5-.5-2.5.5-3.5z" fill="#ffd23f"/></svg>';
 function renderLearnCard() {
