@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="../photo/app.css?v=20261122d">
+<link rel="stylesheet" href="../photo/app.css?v=20261122f">
 <title>인생샷 남친 — 여자친구·아내 사진 가이드</title>
 <style>
 .ng{border-radius:20px;background:var(--bg);padding:14px;margin-bottom:14px}
@@ -38,10 +38,11 @@
 </style>
 </head>
 <body>
-<script src="../photo/kit.js?v=20261122d"></script>
-<script src="../photo/styles.js?v=20261122d"></script>
-<script src="../photo/styles2.js?v=20261122d"></script>
-<script src="../photo/core.js?v=20261122d"></script>
+<script src="../photo/kit.js?v=20261122f"></script>
+<script src="../photo/styles.js?v=20261122f"></script>
+<script src="../photo/styles2.js?v=20261122f"></script>
+<script src="../photo/styles3.js?v=20261122f"></script>
+<script src="../photo/core.js?v=20261122f"></script>
 <script>
 (function(){
 const K=KIT,O=K.ops,GF={col:'#f3e6ea',pants:'#5a6b8c',hair:'#3a2418',long:1,smile:1};
@@ -78,8 +79,8 @@ window.APP_CONFIG={
   heroTitle:'여자친구 사진,\n이제 칭찬받자',heroCTA:'바로 촬영',
   heroSub:'장소를 고르면 구도·폰 높이·포즈 멘트를 알려주고, 얼굴 위치에 맞춰 실시간으로 안내해요.',
   heroIds:['st_hair_flip','st_twirl_dress','st_golden_backlight','st_blossom_tunnel','st_look_back','st_follow_me'],
-  cats:['people','couple','travel','portrait','film','master','street','food'],
-  filter:it=>it.cat!=='basic'&&it.cat!=='land',
+  cats:['people','couple','travel','portrait','night','film','master','street','food'],
+  filter:it=>!['basic','land','sport','pet'].includes(it.cat),
   galleryTitle:'인생샷 구도',searchPH:'카페, 노을, 전신, 커플…',
   startPool:()=>({ids:['full','half','off','close','profile','portrait','travel','two'],auto:true,title:'바로 촬영'}),
   scenarioTitle:'어디서 찍어요?',scenarioSub:'장소를 고르면 어울리는 구도와 포즈 멘트를 준비해요',
@@ -123,6 +124,6 @@ window.APP_CONFIG={
 };
 })();
 </script>
-<script src="../photo/app.js?v=20261122d"></script>
+<script src="../photo/app.js?v=20261122f"></script>
 </body>
 </html>

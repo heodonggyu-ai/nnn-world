@@ -42,10 +42,11 @@ const P={
  fork:'<path d="M7 3.5V10a2 2 0 004 0V3.5M9 12v8.5M16 20.5V3.5c-2 1-3 3.5-3 7h3"/>',
  moon:'<path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z"/>',
  couple:'<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 20a5.5 5.5 0 0111 0M10.5 20a5.5 5.5 0 0111 0"/>',
+ paw:'<circle cx="12" cy="15.5" r="3.8"/><circle cx="6.5" cy="10.5" r="1.8"/><circle cx="17.5" cy="10.5" r="1.8"/><circle cx="9.5" cy="6.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/>',
  glove:'<path d="M7 10V7a5 5 0 0110 0v5a6 6 0 01-6 6H9.5A3.5 3.5 0 016 14.5V12a2 2 0 012-2h3"/><path d="M8 18v2.5h8V17"/>',
 };
 const I=(n,cls='')=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||''}</svg>`;
-const CATI={basic:'compass',portrait:'user',people:'user',couple:'couple',travel:'plane',film:'film',master:'aperture',street:'city',land:'mountain',food:'fork'};
+const CATI={sport:'glove',pet:'paw',night:'moon',basic:'compass',portrait:'user',people:'user',couple:'couple',travel:'plane',film:'film',master:'aperture',street:'city',land:'mountain',food:'fork'};
 
 /* ---------- 저장 ---------- */
 const LS={get(k,d){try{return JSON.parse(localStorage.getItem(C.id+':'+k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(C.id+':'+k,JSON.stringify(v))}catch(e){}}};
@@ -83,7 +84,7 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
   <div class="count hidden" id="count"></div><div class="flash" id="flash"></div>
   <div class="msg" id="msg">${I('camera')}<p id="msgT">카메라를 켜는 중…</p><button class="btn pri" id="mRetry">카메라 다시 켜기</button><button class="btn glass" id="mPhoto">${I('image')}찍어둔 사진으로 연습</button></div></div></div>
  <div class="say-cam hidden" id="sayCam"><div class="tx"><small>이렇게 말해보세요</small><b id="sayT"></b></div><button id="sayN" aria-label="다른 멘트">${I('next')}</button></div>
- ${C.modes?`<div class="modes" id="modes"></div>`:''}
+ ${C.sceneRec?`<div class="cchips" id="cchips"></div>`:''}
  <div class="cstrip" id="cstrip"></div>
  <div class="toggles" id="toggles"></div>
  <div class="ctrl"><button class="last" id="cLast" aria-label="찍은 사진">${I('image')}</button><button class="shot" id="shutter" aria-label="촬영"><i></i><span id="shotN"></span></button><button class="round" id="cFlip" aria-label="카메라 전환">${I('flip')}</button></div>
@@ -172,7 +173,7 @@ function openCam(sess,o={}){session=sess||{ids:(C.defaultPool||[]).filter(i=>BY[
   autoPool=(session.auto?pool:[]).filter(i=>BY[i].auto);auto=!!(session.auto&&autoPool.length);active=session.first||pool[0];ments=session.ments||null;mi=0;ema={};feat=null;S.pSideManual=false;S.spiralManual=false;
   S.facing=session.face||'environment';burst=C.burst||1;timer=0;
   $('#home').classList.add('hidden');$('#cam').classList.remove('hidden');if(!(history.state&&history.state.cam))history.pushState({cam:1},'');
-  renderStrip();renderToggles();renderActive();fit();if(o.photo){$('#msg').classList.add('on');$('#msgT').textContent='연습할 사진을 골라주세요.';$('#file').click()}else startCam()}
+  stab=C.sceneRec?(session.auto?'rec':(BY[active]?BY[active].cat:'rec')):'rec';scn=null;scnN=0;recIds=[];renderChips();renderStrip();renderToggles();renderActive();fit();if(o.photo){$('#msg').classList.add('on');$('#msgT').textContent='연습할 사진을 골라주세요.';$('#file').click()}else startCam()}
 function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
 function goHome(fromPop){if(!fromPop&&history.state&&history.state.cam){history.back();return}hideSheet();stopCam();S.mode='idle';$('#cam').classList.add('hidden');$('#home').classList.remove('hidden')}
 $('#cBack').onclick=()=>goHome();
@@ -191,17 +192,23 @@ $('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.cre
   onFeat(PC.analyze(img,img.naturalWidth,img.naturalHeight,false,curAR()),true);renderToggles()};img.src=url;e.target.value=''};
 
 /* 가이드 띠 */
-function renderStrip(){$('#cstrip').innerHTML=pool.map(id=>`<button class="gth${id===active?' on':''}" data-g="${id}"><span class="t"><img data-id="${id}" alt=""></span><span>${BY[id].name}</span></button>`).join('')+`<button class="gth" data-more="1"><span class="t">${I('grid')}</span><span>전체</span></button>`;
-  $$('#cstrip img[data-id]').forEach(i=>io.observe(i))}
-$('#cstrip').onclick=e=>{if(e.target.closest('[data-more]')){openPicker();return}const b=e.target.closest('[data-g]');if(b)setActive(b.dataset.g,true)};
-function setActive(id,manual){if(!BY[id])return;if(!pool.includes(id)){pool.unshift(id);renderStrip()}if(manual&&auto){auto=false;renderToggles()}active=id;$$('#cstrip .gth').forEach(b=>b.classList.toggle('on',b.dataset.g===id));renderActive();
+let stab='rec',scn=null,scnN=0,recIds=[];
+function stripIds(){if(!C.sceneRec)return pool;if(stab==='rec')return recIds.length?recIds:pool;if(stab==='fav')return ITEMS.filter(i=>favs.has(i.id)).map(i=>i.id);return ITEMS.filter(i=>i.cat===stab).map(i=>i.id)}
+function renderChips(){const el=$('#cchips');if(!el)return;el.innerHTML=[['rec','추천','spark'],['fav','즐겨찾기','heart'],...CATS.map(k=>[k,PC.cats[k],CATI[k]||'grid'])].map(([k,n,ic])=>`<button class="cc${stab===k?' on':''}" data-s="${k}">${I(ic)}${n}</button>`).join('');
+  const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
+$('#cchips')&&($('#cchips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s;if(k==='rec'&&stab==='rec'){turnAuto(true)}stab=k;renderChips();renderStrip();$('#cstrip').scrollLeft=0;navigator.vibrate&&navigator.vibrate(6)});
+function turnAuto(on){if(!autoPool.length){auto=false;return}auto=on;if(auto&&feat)rankNow(true);renderToggles();renderActive();renderStrip();toast(auto?'장면에 맞는 구도를 자동으로 골라요':'자동 추천을 껐어요')}
+function renderStrip(){const ids=stripIds();const head=C.sceneRec&&stab==='rec'?`<button class="gth auto${auto?' on':''}" data-auto="1"><span class="t">${I('spark')}<small>지금 장면<br><b id="scnL">${scn?scn.label:'읽는 중'}</b></small></span><span>자동 추천</span></button>`:'';
+  $('#cstrip').innerHTML=head+(ids.length?ids.map(id=>`<button class="gth${id===active&&!(auto&&stab==='rec'&&C.sceneRec&&false)?' on':''}" data-g="${id}"><span class="t"><img data-id="${id}" alt="">${BY[id].auto&&C.sceneRec?'':`<i class="ref">${I('image')}</i>`}</span><span>${BY[id].name}</span></button>`).join(''):`<div class="gempty">${stab==='fav'?'♡ 누른 구도가 여기 모여요':'구도가 없어요'}</div>`)+`<button class="gth" data-more="1"><span class="t">${I('grid')}</span><span>전체</span></button>`;
+  $$('#cstrip img[data-id]').forEach(i=>io.observe(i));const on=$('#cstrip .gth.on[data-g]');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
+$('#cstrip').onclick=e=>{if(e.target.closest('[data-more]')){openPicker();return}if(e.target.closest('[data-auto]')){turnAuto(!auto);return}const b=e.target.closest('[data-g]');if(b){setActive(b.dataset.g,true);navigator.vibrate&&navigator.vibrate(6)}};
+/* 화면 좌우로 밀어 다음 구도 */
+(function(){let x0=null,y0=0;view.addEventListener('touchstart',e=>{if(e.target.closest('button'))return;x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+  view.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;if(Math.abs(dx)<50||Math.abs(dy)>Math.abs(dx))return;
+    const ids=stripIds();if(!ids.length)return;let i=ids.indexOf(active);i=i<0?0:(i+(dx<0?1:-1)+ids.length)%ids.length;setActive(ids[i],true);toast(BY[ids[i]].name)},{passive:true})})();
+function setActive(id,manual){if(!BY[id])return;if(!C.sceneRec&&!pool.includes(id)){pool.unshift(id);renderStrip()}if(manual&&auto){auto=false;renderToggles();const a=$('#cstrip [data-auto]');a&&a.classList.remove('on')}active=id;$$('#cstrip .gth[data-g]').forEach(b=>b.classList.toggle('on',b.dataset.g===id));renderActive();
   const el=$(`#cstrip [data-g="${id}"]`);el&&el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}
-function renderModes(){const m=$('#modes');if(!m)return;const ids=C.modes.filter(i=>BY[i]);
-  m.innerHTML=(autoPool.length?`<button class="md${auto?' on':''}" data-m="auto">${I('spark')}자동</button>`:'')+ids.map(id=>`<button class="md${!auto&&id===active?' on':''}${auto&&id===active?' cur':''}" data-m="${id}">${BY[id].name}</button>`).join('');
-  const on=m.querySelector('.on')||m.querySelector('.cur');on&&on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}
-$('#modes')&&($('#modes').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;const k=b.dataset.m;
-  if(k==='auto'){auto=!auto;if(auto&&feat)rankNow();renderToggles();renderActive();toast(auto?'장면에 맞는 구도를 자동으로 골라요':'자동 추천을 껐어요')}else setActive(k,true);navigator.vibrate&&navigator.vibrate(8)});
-function renderActive(){renderModes();const it=BY[active];$('#cName').textContent=it?it.name:'';$('#cAuto').classList.toggle('hidden',!auto);$('#bPhone').innerHTML=I('phone')+(it&&it.phone||'자유');
+function renderActive(){const it=BY[active];$('#cName').textContent=it?it.name:'';$('#cAuto').classList.toggle('hidden',!auto);$('#bPhone').innerHTML=I('phone')+(it&&it.phone||'자유');
   const m=(ments&&ments.length?ments:(it&&it.ments&&it.ments.length?it.ments:(C.defaultMents||[])));$('#sayCam').classList.toggle('hidden',!m.length||C.showMents===false);if(m.length)$('#sayT').textContent='“'+m[mi%m.length]+'”'}
 $('#sayN').onclick=()=>{mi++;renderActive()};
 $('#cPick').onclick=()=>openPicker();
@@ -213,7 +220,7 @@ function openPicker(){const cats=CATS;let pc=BY[active]?BY[active].cat:cats[0];
   rt();$('#pT').onclick=e=>{const b=e.target.closest('[data-c]');if(b){pc=b.dataset.c;rt()}};$('#pG').onclick=e=>{const b=e.target.closest('[data-id]');if(b){setActive(b.dataset.id,true);closeSheet()}}}
 
 /* 토글 */
-function renderToggles(){const T=[];if(autoPool.length&&!C.modes)T.push(`<button class="tg${auto?' on':''}" data-t="auto">${I('spark')}자동 추천</button>`);
+function renderToggles(){const T=[];if(autoPool.length&&!C.sceneRec)T.push(`<button class="tg${auto?' on':''}" data-t="auto">${I('spark')}자동 추천</button>`);
   T.push(`<button class="tg${burst>1?' on':''}" data-t="burst">${I('bolt')}${burst>1?'연사 '+burst:'연사'}</button>`,`<button class="tg${timer?' on':''}" data-t="timer">${I('timer')}${timer?timer+'초':'타이머'}</button>`,`<button class="tg" data-t="side">${I('swap')}좌우</button>`,`<button class="tg" data-t="photo">${I('image')}사진 분석</button>`);
   $('#toggles').innerHTML=T.join('')}
 $('#toggles').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;
@@ -224,7 +231,9 @@ $('#toggles').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;cons
   if(t==='photo')$('#file').click();renderToggles()};
 
 /* 분석·추천 */
-function onFeat(f,force){feat=f;PC.follow(f,S,ov.width,ov.height);const {s}=PC.score(f,S);for(const k in s)ema[k]=ema[k]==null?s[k]:ema[k]*.55+s[k]*.45;if(auto&&autoPool.length)rankNow(force)}
+function onFeat(f,force){feat=f;PC.follow(f,S,ov.width,ov.height);const {s}=PC.score(f,S);for(const k in s)ema[k]=ema[k]==null?s[k]:ema[k]*.55+s[k]*.45;if(C.sceneRec)sceneTick(f,force);if(auto&&autoPool.length)rankNow(force)}
+function sceneTick(f,force){const sc=PC.scene(f,S);if(!sc)return;if(scn&&sc.k===scn.k){scnN=0;if(sc.label!==scn.label){scn.label=sc.label;const l=$('#scnL');l&&(l.textContent=sc.label)}return}
+  if(scn&&!force&&++scnN<3)return;scnN=0;scn=sc;recIds=PC.recommend(sc,ema);const ap=recIds.filter(i=>BY[i].auto);if(ap.length)autoPool=ap;if(stab==='rec')renderStrip();const l=$('#scnL');l&&(l.textContent=sc.label)}
 function rankNow(force){const best=autoPool.slice().sort((a,b)=>(ema[b]||0)-(ema[a]||0))[0];if(!best||best===active)return;if(force||S.mode==='still'){setActive(best);return}
   if(cand===best)candN++;else{cand=best;candN=1}if(candN>=4&&(ema[best]||0)>(ema[active]||0)+.06){setActive(best);cand=null}}
 setInterval(()=>{if(S.mode==='live'&&vid.videoWidth&&!$('#cam').classList.contains('hidden')){try{onFeat(PC.analyze(vid,vid.videoWidth,vid.videoHeight,S.mirror,curAR()))}catch(e){}}},380);
@@ -241,7 +250,7 @@ function frame(){const W=ov.width,H=ov.height;oc.clearRect(0,0,W,H);
 requestAnimationFrame(frame);
 
 /* 수평계 */
-function onMotion(e){const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;let ang=Math.atan2(a.x,a.y)*180/Math.PI;ang=((ang%90)+90)%90;if(ang>45)ang-=90;level=level==null?ang:level*.7+ang*.3;
+function onMotion(e){const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;S.flat=(S.flat||0)*.8+(Math.abs(a.z||0)>8.3?.2:0);let ang=Math.atan2(a.x,a.y)*180/Math.PI;ang=((ang%90)+90)%90;if(ang>45)ang-=90;level=level==null?ang:level*.7+ang*.3;
   const el=$('#bLevel'),ok=Math.abs(level)<1.2;el.classList.remove('hidden');el.classList.toggle('ok',ok);el.innerHTML=I('level')+(ok?'수평':Math.abs(level).toFixed(1)+'°')}
 let motionOn=false;async function enableMotion(){if(motionOn)return;try{if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){if(await DeviceMotionEvent.requestPermission()!=='granted')return}addEventListener('devicemotion',onMotion);motionOn=true}catch(e){}}
 

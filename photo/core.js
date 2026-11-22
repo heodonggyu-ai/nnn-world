@@ -139,7 +139,7 @@ function portraitOverlay(c,id,W,H,st,opt){
 }
 
 /* ---------- 항목 목록 ---------- */
-const STY=(window.PHOTO_STYLES?PHOTO_STYLES.list:[]).map(s=>({id:'st_'+s.id,sid:s.id,cat:s.cat,kind:'style',name:s.name,who:s.who,desc:s.desc,steps:s.steps,phone:s.phone,ments:s.ments,target:s.target,face:s.face}));
+const STY=(window.PHOTO_STYLES?PHOTO_STYLES.list:[]).map(s=>({id:'st_'+s.id,sid:s.id,cat:s.cat,kind:'style',name:s.name,who:s.who,desc:s.desc,steps:s.steps,phone:s.phone,ments:s.ments,target:s.target,face:s.face,tags:s.tags||[]}));
 const ITEMS=[...BASIC,...PORTRAIT,...STY],BY=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 const CATS=Object.assign({basic:'기본 구도',portrait:'인물 구도'},window.PHOTO_STYLES?PHOTO_STYLES.cats:{});
 
@@ -157,7 +157,7 @@ function getCrop(sw,sh,ar){if(sw/sh>ar){const cw=sh*ar;return{x:(sw-cw)/2,y:0,w:
 function analyze(src,sw,sh,mir,ar){
   const AH=Math.max(24,Math.round(AW/ar));acv.width=AW;acv.height=AH;const cr=getCrop(sw,sh,ar);actx.save();if(mir){actx.translate(AW,0);actx.scale(-1,1)}actx.drawImage(src,cr.x,cr.y,cr.w,cr.h,0,0,AW,AH);actx.restore();
   const d=actx.getImageData(0,0,AW,AH).data,N=AW*AH,lum=new Float32Array(N);let mR=0,mG=0,mB=0,mL=0,skinN=0;const mask=new Uint8Array(N);
-  for(let i=0;i<N;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2],l=.299*r+.587*g+.114*b;lum[i]=l;mR+=r;mG+=g;mB+=b;mL+=l;const cb=128-.168736*r-.331264*g+.5*b,cr2=128+.5*r-.418688*g-.081312*b;if(cb>=77&&cb<=127&&cr2>=137&&cr2<=173&&l>45&&r>g&&r>b){skinN++;mask[i]=1}}
+  let satS=0,warmN=0;for(let i=0;i<N;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2],l=.299*r+.587*g+.114*b;lum[i]=l;{const mx=Math.max(r,g,b),mn=Math.min(r,g,b);satS+=mx?(mx-mn)/mx:0;if(r>g*1.15&&g>b*1.05&&mx>120)warmN++}mR+=r;mG+=g;mB+=b;mL+=l;const cb=128-.168736*r-.331264*g+.5*b,cr2=128+.5*r-.418688*g-.081312*b;if(cb>=77&&cb<=127&&cr2>=137&&cr2<=173&&l>45&&r>g&&r>b){skinN++;mask[i]=1}}
   mR/=N;mG/=N;mB/=N;mL/=N;let lv=0;for(let i=0;i<N;i++)lv+=(lum[i]-mL)**2;const std=Math.sqrt(lv/N);
   const mag=new Float32Array(N),gxA=new Float32Array(N),gyA=new Float32Array(N);let mm=0;
   for(let y=1;y<AH-1;y++)for(let x=1;x<AW-1;x++){const i=y*AW+x,a=lum[i-AW-1],b=lum[i-AW],c=lum[i-AW+1],e=lum[i-1],f=lum[i+1],g=lum[i+AW-1],h=lum[i+AW],k=lum[i+AW+1];const gx=(c+2*f+k)-(a+2*e+g),gy=(g+2*h+k)-(a+2*b+c);gxA[i]=gx;gyA[i]=gy;const m=Math.hypot(gx,gy);mag[i]=m;mm+=m}
@@ -176,11 +176,11 @@ function analyze(src,sw,sh,mir,ar){
   for(let i=0;i<N;i++){if(!mask[i]||lab[i])continue;let h=0,t=0;q[t++]=i;const id=blobs.length+1;lab[i]=id;const b={n:0,sx:0,sy:0,x0:AW,x1:0,y0:AH,y1:0};
     while(h<t){const j=q[h++],x=j%AW,y=(j/AW)|0;b.n++;b.sx+=x;b.sy+=y;if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y;
       if(x>0&&mask[j-1]&&!lab[j-1]){lab[j-1]=id;q[t++]=j-1}if(x<AW-1&&mask[j+1]&&!lab[j+1]){lab[j+1]=id;q[t++]=j+1}if(y>0&&mask[j-AW]&&!lab[j-AW]){lab[j-AW]=id;q[t++]=j-AW}if(y<AH-1&&mask[j+AW]&&!lab[j+AW]){lab[j+AW]=id;q[t++]=j+AW}}blobs.push(b)}
-  const sf=skinN/N;let skin=false,skinConf=0,skx=.5,sky=.3,fh=0,faces=[];const big=blobs.filter(b=>b.n>=N*.004).sort((a,b)=>b.n-a.n);
+  const sf=skinN/N;let skin=false,skinConf=0,skx=.5,sky=.3,fh=0,faces=[];const big=blobs.filter(b=>{const w=b.x1-b.x0+1,h=b.y1-b.y0+1;return b.n>=N*.004&&w<AW*.68&&h/w>.5&&h/w<2.8&&b.n/(w*h)>.35}).sort((a,b)=>b.n-a.n);
   if(big.length&&sf<.55){const m=big[0],bw=m.x1-m.x0+1,bh=m.y1-m.y0+1;skin=true;skx=(m.sx/m.n+.5)/AW;sky=(m.sy/m.n+.5)/AH;fh=bh/AH;skinConf=Math.min(1,m.n/(bw*bh)*1.3);
     faces=big.filter(b=>{const w=b.x1-b.x0+1,h=b.y1-b.y0+1;return b.n>=m.n*.35&&h/w>.6&&h/w<2.4}).slice(0,6).map(b=>[(b.sx/b.n+.5)/AW,(b.sy/b.n+.5)/AH]);if(!faces.length)faces=[[skx,sky]]}
   return{cx,cy,spr,subj,sym,hor:hc>.5,hy:(hy+.5)/AH,hc,diag:strong?diagN/strong:0,lead:Math.min(slLn?slL/slLn:0,bsRn?bsR/bsRn:0),tri:Math.min(tLn?tslL/tLn:0,tRn?tbsR/tRn:0),
-    density:strong/N,frameRatio:(bord/Math.max(1,bordN)+.005)/(cen/Math.max(1,cenN)+.005),topD,botD,skin,skinConf,skx,sky,fh,faces,std};
+    mL,sat:satS/N,warm:warmN/N,density:strong/N,frameRatio:(bord/Math.max(1,bordN)+.005)/(cen/Math.max(1,cenN)+.005),topD,botD,skin,skinConf,skx,sky,fh,faces,std};
 }
 /* ---------- 추천 점수 ---------- */
 function score(f,st){
@@ -218,5 +218,33 @@ function hint(id,f,st,W,H){
 }
 function follow(f,st,W,H){const p=H>W,e0=spiralEnd(p,false,false);if(!st.spiralManual){st.spiralFlip.x=(f.cx<.5)!==(e0[0]<.5);st.spiralFlip.y=(f.cy<.5)!==(e0[1]<.5)}if(!st.pSideManual&&f.skin){if(f.skx<.45)st.pSide='L';else if(f.skx>.55)st.pSide='R'}}
 
-window.PhotoCore={items:ITEMS,byId:BY,cats:CATS,drawThumb,drawOverlay,analyze,getCrop,score,hint,follow,pLayout,PT};
+/* ---------- 장면 인식 ---------- */
+const SCN={
+ selfie:{label:'셀카',cats:['people','couple'],tags:['selfie','person'],basic:['selfie','close','portrait']},
+ group:{label:'단체',cats:['couple','people','travel'],tags:['family','person'],basic:['group','triangle','center']},
+ couple:{label:'두 사람',cats:['couple','people'],tags:['couple','person'],basic:['two','thirds','center']},
+ portrait:{label:'인물',cats:['people','film','master','night'],tags:['person'],basic:['portrait','off','half','close','profile']},
+ personFar:{label:'인물 + 배경',cats:['travel','people','land','street'],tags:['person','travel','outdoor'],basic:['full','travel','thirds','leading']},
+ top:{label:'위에서 내려다봄',cats:['food','travel','pet'],tags:['top','food'],basic:['center','negative','diagonal']},
+ night:{label:'밤 · 어두운 곳',cats:['night','street','film'],tags:['night'],basic:['center','leading','negative']},
+ land:{label:'풍경',cats:['land','travel','night'],tags:['land','outdoor'],basic:['horizonLow','horizonHigh','thirds','leading']},
+ street:{label:'거리 · 건물',cats:['street','film','master'],tags:['street','city'],basic:['leading','center','frame','diagonal']},
+ object:{label:'사물 · 음식',cats:['food','master','pet'],tags:['food','close'],basic:['center','negative','golden']},
+ general:{label:'일상',cats:['travel','people','street','food'],tags:[],basic:['thirds','golden','spiral','diagonal']},
+};
+function scene(f,st){if(!f)return null;const nF=f.skin?Math.max(1,f.faces.length):0,dark=f.mL<62;let k;
+  if(st.facing==='user'&&f.skin)k='selfie';else if(nF>=3)k='group';else if(nF===2)k='couple';else if(f.skin&&f.fh>.07)k='portrait';else if(f.skin)k='personFar';
+  else if(st.flat>.6)k='top';else if(dark)k='night';else if(f.hor&&f.hc>.6)k='land';else if(f.lead>.22||f.sym>.62)k='street';else if(f.subj>.5&&f.density<.1)k='object';else k='general';
+  const o=Object.assign({k},SCN[k]);o.dark=dark;o.warm=f.warm>.18;o.n=nF;
+  o.label=(k==='group'?nF+'명 ':'')+o.label+(dark&&k!=='night'?' · 밤':'')+(o.warm&&!dark?' · 노을빛':'');return o}
+/* 장면에 맞는 레퍼런스 고르기: 기본 구도는 점수로, 스타일은 분류·태그로 */
+function recommend(sc,ema,n=12){if(!sc)return[];const out=[],seen=new Set(),push=id=>{if(BY[id]&&!seen.has(id)){seen.add(id);out.push(id)}};
+  const auto=ITEMS.filter(i=>i.auto).map(i=>i.id).sort((a,b)=>(ema[b]||0)-(ema[a]||0));
+  const want=new Set(sc.tags.concat(sc.dark?['night']:[],sc.warm?['sunset']:[]));
+  sc.basic.slice().sort((a,b)=>(ema[b]||0)-(ema[a]||0)).slice(0,2).forEach(push);auto.slice(0,1).forEach(push);
+  const st=ITEMS.filter(i=>i.kind==='style').map(i=>{let s=0;const ci=sc.cats.indexOf(i.cat);if(ci>=0)s+=3-ci*.6;(i.tags||[]).forEach(t=>{if(want.has(t))s+=1.2});
+    if(sc.n&&i.face)s+=1;if(!sc.n&&i.face&&sc.k!=='general')s-=1.5;if(sc.n>=2&&i.cat==='couple')s+=1;if(sc.dark&&i.cat==='night')s+=1.5;
+    let h=0;for(const c of i.id)h=(h*31+c.charCodeAt(0))%997;return[i.id,s+h/997*.8]}).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]);
+  st.slice(0,n).forEach(x=>push(x[0]));sc.basic.forEach(push);return out.slice(0,n+3)}
+window.PhotoCore={scene,recommend,SCN,items:ITEMS,byId:BY,cats:CATS,drawThumb,drawOverlay,analyze,getCrop,score,hint,follow,pLayout,PT};
 })();
