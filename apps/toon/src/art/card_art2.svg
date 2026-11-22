@@ -1,0 +1,41 @@
+<svg viewBox="0 0 190 150" xmlns="http://www.w3.org/2000/svg" class="cv-art">
+<defs>
+<filter id="caSh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#b0245a" flood-opacity=".28"/></filter>
+<linearGradient id="caPen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe066"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#f5a90f"/></linearGradient>
+<linearGradient id="caCat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe2bf"/><stop offset="1" stop-color="#ffc98f"/></linearGradient>
+</defs>
+<circle cx="150" cy="22" r="40" fill="#fff" opacity=".14"/>
+<g filter="url(#caSh)" transform="rotate(-7 100 78)">
+ <rect x="44" y="16" width="118" height="118" rx="16" fill="#fff"/>
+ <rect x="52" y="24" width="102" height="102" rx="10" fill="#fff7fb"/>
+ <circle cx="70" cy="44" r="9" fill="#ffd23f"/>
+ <g stroke="#ffd23f" stroke-width="2.6" stroke-linecap="round"><path d="M70 29v-3M70 62v-3M55 44h-3M88 44h-3M59.4 33.4l-2-2M82.6 56.6l-2-2M80.6 33.4l2-2M59.4 54.6l-2 2"/></g>
+ <path d="M58 118q22-14 44-4t44-6" fill="none" stroke="#9fe3c4" stroke-width="7" stroke-linecap="round"/>
+ <g>
+ <path d="M80 68 L84 44 L99 57 Q110 54 121 57 L136 44 L140 68 Q145 80 142 90 Q137 108 110 109 Q83 108 78 90 Q75 80 80 68Z" fill="url(#caCat)" opacity="0"><animate attributeName="opacity" dur="4.2s" repeatCount="indefinite" keyTimes="0;0.52;0.58;0.62;0.86;0.94;1" values="0;0;1;1;1;0;0"/></path>
+ <path d="M80 68 L84 44 L99 57 Q110 54 121 57 L136 44 L140 68 Q145 80 142 90 Q137 108 110 109 Q83 108 78 90 Q75 80 80 68Z" fill="none" stroke="#3b2a4a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="100" stroke-dasharray="100 100" stroke-dashoffset="100"><animate attributeName="stroke-dashoffset" dur="4.2s" repeatCount="indefinite" keyTimes="0;0.52;0.58;0.62;0.86;0.94;1" values="100;0;0;0;0;0;100"/><animate attributeName="opacity" dur="4.2s" repeatCount="indefinite" keyTimes="0;0.52;0.58;0.62;0.86;0.94;1" values="1;1;1;1;1;0;0"/></path>
+ <g opacity="0"><animate attributeName="opacity" dur="4.2s" repeatCount="indefinite" keyTimes="0;0.52;0.58;0.62;0.86;0.94;1" values="0;0;0;1;1;0;0"/>
+  <path d="M87 62 L88 52 L95 58Z M133 62 L132 52 L125 58Z" fill="#ff9cbd"/>
+  <ellipse cx="99" cy="80" rx="4" ry="5.2" fill="#3b2a4a"/><ellipse cx="121" cy="80" rx="4" ry="5.2" fill="#3b2a4a"/>
+  <circle cx="100.4" cy="78" r="1.5" fill="#fff"/><circle cx="122.4" cy="78" r="1.5" fill="#fff"/>
+  <path d="M107 87h6l-3 3z" fill="#ff6f9c"/><path d="M104 93q6 4 12 0" fill="none" stroke="#3b2a4a" stroke-width="2.2" stroke-linecap="round"/>
+  <ellipse cx="90" cy="88" rx="5" ry="3" fill="#ffb0c8"/><ellipse cx="130" cy="88" rx="5" ry="3" fill="#ffb0c8"/>
+ </g>
+ <g>
+  <animateMotion dur="4.2s" repeatCount="indefinite" keyTimes="0;0.52;1" keyPoints="0;1;1" calcMode="linear" path="M80 68 L84 44 L99 57 Q110 54 121 57 L136 44 L140 68 Q145 80 142 90 Q137 108 110 109 Q83 108 78 90 Q75 80 80 68Z"/>
+  <animate attributeName="opacity" dur="4.2s" repeatCount="indefinite" keyTimes="0;0.52;0.58;0.62;0.86;0.94;1" values="1;1;1;1;1;0;1"/>
+  <g transform="rotate(40) scale(.6)">
+   <rect x="-7.5" y="-80" width="15" height="62" rx="3" fill="#ffd23f" stroke="#3b2a4a" stroke-width="3"/>
+   <path d="M-7.5 -80 h15 v-8 a3 3 0 00-3-3 h-9 a3 3 0 00-3 3z" fill="#ff8db5" stroke="#3b2a4a" stroke-width="3"/>
+   <path d="M-7.5 -18 L0 0 L7.5 -18Z" fill="#ffe2bf" stroke="#3b2a4a" stroke-width="3" stroke-linejoin="round"/>
+   <path d="M-2.5 -6 L0 0 L2.5 -6Z" fill="#3b2a4a"/>
+  </g>
+ </g>
+</g>
+</g>
+
+<circle cx="24" cy="40" r="7" fill="#fff" opacity=".9"/><circle cx="24" cy="40" r="4" fill="#6cb8ff"/>
+<circle cx="14" cy="64" r="5.5" fill="#fff" opacity=".9"/><circle cx="14" cy="64" r="3" fill="#5fd3b5"/>
+<path d="M176 92l2.2 5 5 2.2-5 2.2-2.2 5-2.2-5-5-2.2 5-2.2z" fill="#fff"/>
+<path d="M34 16l1.6 3.6 3.6 1.6-3.6 1.6-1.6 3.6-1.6-3.6-3.6-1.6 3.6-1.6z" fill="#fff" opacity=".85"/>
+</svg>
