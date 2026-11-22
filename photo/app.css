@@ -299,3 +299,19 @@ html.pe-open,html.pe-open body{overflow:hidden}
 .pe-tabs button .ic{width:22px;height:22px}.pe-tabs button.on{color:#fff}
 .cc.sw{width:32px;padding:0;background:var(--c)!important;border:2px solid rgba(255,255,255,.6)}
 html.pe-open .toast{bottom:auto;top:calc(env(safe-area-inset-top) + 62px);z-index:70}
+/* AI 그리기 */
+.ai-setup{padding:8px 16px;font-size:13px;line-height:1.55;color:rgba(255,255,255,.85)}
+.ai-setup>b{display:flex;align-items:center;gap:6px;font-size:15px;color:#fff}.ai-setup>b .ic{width:18px;height:18px;color:#ffd34d}
+.ai-setup p{margin:6px 0}.ai-setup ol{margin:4px 0 8px;padding-left:20px}
+.ai-setup input,.ai-box textarea{flex:1;min-width:0;height:40px;border-radius:12px;border:1px solid #262E45;background:#161C2E;color:#fff;padding:0 12px;font:inherit;font-size:14px}
+.ai-box{padding:6px 12px}
+.ai-box textarea{width:100%;height:auto;padding:10px 12px;resize:none;box-sizing:border-box}
+.ai-ex{padding:6px 0!important;flex-wrap:nowrap}
+.ai-box .pe-row{padding:6px 0}
+.ai-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:rgba(255,255,255,.5);align-items:center}
+.ai-meta select{background:#161C2E;color:#fff;border:1px solid #262E45;border-radius:8px;font-size:11px;padding:2px 4px}
+.ai-x{border:0;background:none;color:rgba(255,120,140,.8);font-size:11px;text-decoration:underline;padding:0}
+.pe-tabs button[data-tool="ai"]{color:#ffd34d}
+.pe-tabs button[data-tool="ai"].on{color:#ffd34d}
+.pe-tabs button{width:auto;flex:1;font-size:10.5px}
+html.pe-open .toast{bottom:auto!important;top:calc(env(safe-area-inset-top) + 62px)!important;height:auto}

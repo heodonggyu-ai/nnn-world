@@ -83,7 +83,7 @@ document.body.insertAdjacentHTML('beforeend',`
  <section class="view-edit hidden" data-v="edit"><h2 class="sec">사진 편집</h2><p class="secsub">사진첩 사진을 골라 색감·자르기·지우기·AI 인물 편집을 해요</p>
   <div class="ebig"><canvas id="eCv" width="708" height="520"></canvas><span class="dsplit"><i>원본</i><i>보정</i></span></div>
   <button class="btn pri wide" id="ePick">${I('image')}사진첩에서 사진 고르기</button>
-  <div class="etools" id="eTools">${[['erase','close','물체 지우기','칠하면 배경으로 채워요'],['person','user','AI 배경 흐림','인물 모드·컬러 팝'],['crop','grid','자르기·수평','비율·회전·반전'],['add','image','사람·글자 넣기','다른 사진의 사람 합성'],['look','palette','색감 입히기','추천 색감 156종'],['adj','spark','직접 조정','밝기·색온도 등 8가지']].map(([k,ic,n,s])=>`<button class="etool" data-et="${k}"><span class="ei">${I(ic)}</span><b>${n}</b><small>${s}</small></button>`).join('')}</div>
+  <div class="etools" id="eTools">${[['erase','close','물체 지우기','칠하면 배경으로 채워요'],['person','user','AI 배경 흐림','인물 모드·컬러 팝'],['crop','grid','자르기·수평','비율·회전·반전'],['add','image','사람·글자 넣기','다른 사진의 사람 합성'],['look','palette','색감 입히기','추천 색감 156종'],['adj','spark','직접 조정','밝기·색온도 등 8가지'],['ai','spark','AI 그리기 ✦','말로 시켜서 그려 넣기 (유료 시험판)']].map(([k,ic,n,s])=>`<button class="etool" data-et="${k}"><span class="ei">${I(ic)}</span><b>${n}</b><small>${s}</small></button>`).join('')}</div>
   <button class="erow" id="eAna"><span class="ei">${I('compass')}</span><span><b>찍은 사진 구도 분석</b><small>사진을 올리면 맞는 구도와 고칠 점을 알려줘요</small></span>${I('next')}</button></section>
  <div class="view-refs hidden" data-v="refs">`:''}
  ${C.features?`<section class="demo" id="goCam" role="button" tabindex="0" aria-label="카메라 켜기"><div class="dv"><canvas id="demoCv" width="640" height="340"></canvas><span class="dsplit"><i>원본</i><i>색감</i></span>

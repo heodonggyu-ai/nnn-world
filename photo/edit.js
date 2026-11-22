@@ -15,7 +15,7 @@ function build(){if(ui)return;ui=true;const I=D.I;
   <div class="pe-top"><button class="pe-tb" id="peX">${I('close')}</button><b id="peTitle">편집</b><button class="pe-tb" id="peUndo" aria-label="되돌리기"><svg class="ic" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button><button class="pe-ok" id="peOk">${I('check')}완료</button></div>
   <div class="pe-stage" id="peStage"><div class="pe-wrap" id="peWrap"><canvas id="peC"></canvas><canvas id="peO"></canvas></div><div class="pe-busy hidden" id="peBusy"><i></i><span id="peBusyT">처리 중…</span></div><button class="pe-cmp" id="peCmp">원본</button></div>
   <div class="pe-panel" id="peP"></div>
-  <nav class="pe-tabs" id="peT">${[['look','palette','색감'],['adj','spark','조정'],['crop','grid','자르기'],['erase','close','지우기'],['person','user','인물 AI'],['add','image','추가']].map(([k,ic,n])=>`<button data-tool="${k}">${I(ic)}<span>${n}</span></button>`).join('')}</nav>
+  <nav class="pe-tabs" id="peT">${[['look','palette','색감'],['adj','spark','조정'],['crop','grid','자르기'],['erase','close','지우기'],['person','user','인물 AI'],['add','image','추가'],['ai','spark','AI 그리기']].map(([k,ic,n])=>`<button data-tool="${k}">${I(ic)}<span>${n}</span></button>`).join('')}</nav>
   <input type="file" id="peFile" accept="image/*" hidden></section>`);
   $('#peX').onclick=()=>close(false);$('#peOk').onclick=save;$('#peUndo').onclick=undo;
   $('#peT').onclick=e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool)};
@@ -47,7 +47,7 @@ function paint(){if(!S)return;const cv=$('#peC'),src=curSrc();const v=mkC(cv.wid
   if(S.layer)drawLayer(x,S.layer,v.width/S.base.width);
   if(S.r&&!S.cmp){try{S.r.render(v,lookObj(),{str:S.look==='none'?1:S.str});}catch(e){cv.getContext('2d')&&cv.getContext('2d').drawImage(v,0,0)}}else{const g=cv.getContext('webgl');if(g&&S.r){S.r.render(v,'none',{str:0})}else cv.getContext('2d').drawImage(v,0,0)}
   overlay()}
-function overlay(){const o=$('#peO'),x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);if(S.tool==='erase'&&S.strokes){x.save();x.strokeStyle='rgba(255,70,110,.55)';x.lineCap='round';x.lineJoin='round';S.strokes.forEach(s=>{x.lineWidth=s.w*o.width;x.beginPath();s.p.forEach((p,i)=>i?x.lineTo(p[0]*o.width,p[1]*o.height):x.moveTo(p[0]*o.width,p[1]*o.height));if(s.p.length===1)x.lineTo(s.p[0][0]*o.width+.1,s.p[0][1]*o.height);x.stroke()});x.restore()}
+function overlay(){const o=$('#peO'),x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);if((S.tool==='erase'||S.tool==='ai')&&S.strokes){x.save();x.strokeStyle='rgba(255,70,110,.55)';x.lineCap='round';x.lineJoin='round';S.strokes.forEach(s=>{x.lineWidth=s.w*o.width;x.beginPath();s.p.forEach((p,i)=>i?x.lineTo(p[0]*o.width,p[1]*o.height):x.moveTo(p[0]*o.width,p[1]*o.height));if(s.p.length===1)x.lineTo(s.p[0][0]*o.width+.1,s.p[0][1]*o.height);x.stroke()});x.restore()}
   if(S.crop){x.save();x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=1;[1,2].forEach(i=>{x.beginPath();x.moveTo(o.width*i/3,0);x.lineTo(o.width*i/3,o.height);x.moveTo(0,o.height*i/3);x.lineTo(o.width,o.height*i/3);x.stroke()});x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(1.5,1.5,o.width-3,o.height-3);x.restore()}
   if(S.layer){const L=S.layer,k=o.width/S.base.width,b=layerBox(L);x.save();x.setLineDash([6,5]);x.strokeStyle='#fff';x.lineWidth=2;x.strokeRect(b.x*k,b.y*k,b.w*k,b.h*k);x.restore()}}
 
@@ -75,6 +75,7 @@ function panel(){const P=$('#peP'),I=D.I,t=S.tool;P.className='pe-panel t-'+t;
       <label class="adr wide"><span>흐림 정도</span><input type="range" min="10" max="100" value="${Math.round(S.blur*100)}" id="peBl"><i>${Math.round(S.blur*100)}</i></label>`;
     $('#peBl').oninput=e=>{S.blur=e.target.value/100;e.target.nextElementSibling.textContent=e.target.value};
     P.onclick=async e=>{const b=e.target.closest('[data-p]');if(!b)return;await personFx(b.dataset.p)};return}
+  if(t==='ai'){aiPanel(P);return}
   if(t==='add'){const L=S.layer;P.innerHTML=L?`<label class="adr wide"><span>크기</span><input type="range" min="10" max="300" value="${Math.round(L.s*100)}" id="peLs"><i>${Math.round(L.s*100)}%</i></label>${L.type==='text'?`<div class="cchips">${['#ffffff','#141B34','#ffd34d','#ff5a7e','#3ddc84','#4aa3ff'].map(c=>`<button class="cc sw" data-c="${c}" style="--c:${c}"></button>`).join('')}</div>`:''}<div class="pe-row"><span class="pe-tip">끌어서 위치를 옮겨요</span><button class="cc" id="peLx">취소</button><button class="cc on" id="peLok">${I('check')}붙이기</button></div>`
       :`<div class="pe-grid two"><button class="pe-act" data-a="person">${I('user')}<b>다른 사진의 사람 넣기</b><small>AI가 사람만 오려서 붙여요</small></button><button class="pe-act" data-a="text">${I('chat')}<b>글자 넣기</b><small>날짜·장소·한마디</small></button></div>`;
     if(L){$('#peLs').oninput=e=>{L.s=e.target.value/100;e.target.nextElementSibling.textContent=e.target.value+'%';paint()};$('#peLx').onclick=()=>{S.layer=null;panel();paint()};
@@ -94,10 +95,10 @@ function cropOut(c,maxSide){const src=c._r90&&c._r90v===c.r90&&c._b===S.ver?c._r
 function pointer(){const o=$('#peO');let drag=null;
   const pos=e=>{const r=o.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
   o.addEventListener('pointerdown',e=>{if(!S)return;o.setPointerCapture(e.pointerId);const p=pos(e);
-    if(S.tool==='erase'){S.strokes=S.strokes||[];S.strokes.push({w:S.brush,p:[p]});overlay()}
+    if(S.tool==='erase'||(S.tool==='ai'&&S.aiPaint)){S.strokes=S.strokes||[];S.strokes.push({w:S.tool==='ai'?.08:S.brush,p:[p]});overlay()}
     else if(S.crop||S.layer)drag={p,px:S.crop?S.crop.px:0,py:S.crop?S.crop.py:0,lx:S.layer?S.layer.x:0,ly:S.layer?S.layer.y:0}});
   o.addEventListener('pointermove',e=>{if(!S)return;const p=pos(e);
-    if(S.tool==='erase'&&S.strokes&&e.buttons){S.strokes[S.strokes.length-1].p.push(p);overlay();return}
+    if((S.tool==='erase'||S.tool==='ai')&&S.strokes&&e.buttons){S.strokes[S.strokes.length-1].p.push(p);overlay();return}
     if(drag&&S.crop){const c=S.crop,sc=(c._vw||S.base.width)/1;c.px=drag.px-(p[0]-drag.p[0])*sc;c.py=drag.py-(p[1]-drag.p[1])*sc*(o.height/o.width)*(1);paint()}
     else if(drag&&S.layer){S.layer.x=drag.lx+(p[0]-drag.p[0])*S.base.width;S.layer.y=drag.ly+(p[1]-drag.p[1])*S.base.height;paint()}});
   const up=()=>{if(!S)return;drag=null;if(S.tool==='erase'&&S.strokes&&S.strokes.length)runErase()};
@@ -183,6 +184,54 @@ function textCanvas(t,col){const f=Math.round(S.base.width/14),c=mkC(10,10),x=c.
   const y=c.getContext('2d');y.font=`800 ${f}px Pretendard,'Apple SD Gothic Neo',sans-serif`;y.textBaseline='middle';y.textAlign='center';y.shadowColor='rgba(0,0,0,.45)';y.shadowBlur=f*.25;y.fillStyle=col;y.fillText(t,w/2,c.height/2);return c}
 function layerBox(L){const w=L.cv.width*L.s,h=L.cv.height*L.s;return{x:L.x-w/2,y:L.y-h/2,w,h}}
 function drawLayer(x,L,k){const b=layerBox(L);x.drawImage(L.cv,b.x*k,b.y*k,b.w*k,b.h*k)}
+
+/* ---------- AI 그리기 (시험판: 관장님 Gemini API 키를 이 폰에만 저장해 직접 호출) ---------- */
+const AK='gudo:aiKey',AM='gudo:aiModel',AU='gudo:aiUse';
+const aiKey=()=>{try{return localStorage.getItem(AK)||''}catch(e){return''}},aiModel=()=>{try{return localStorage.getItem(AM)||'gemini-2.5-flash-image'}catch(e){return'gemini-2.5-flash-image'}};
+const aiUse=()=>{try{return JSON.parse(localStorage.getItem(AU))||{n:0,usd:0}}catch(e){return{n:0,usd:0}}};
+const PRICE={'gemini-2.5-flash-image':.039,'gemini-3.1-flash-image':.067,'gemini-3.1-flash-image-preview':.067,'gemini-3-pro-image':.134,'gemini-3-pro-image-preview':.134};
+const EX=['배경을 노을 지는 바다로 바꿔줘','옆에 귀여운 강아지를 넣어줘','하늘을 맑은 파란 하늘로','눈이 내리는 장면으로','뒤에 있는 사람들을 지워줘','옷을 하얀 원피스로 바꿔줘','벚꽃이 흩날리게 해줘','밤하늘에 별을 가득'];
+function aiPanel(P){const I=D.I,key=aiKey();
+  if(!key){P.innerHTML=`<div class="ai-setup"><b>${I('spark')}AI 그리기 · 유료 시험판</b><p>말로 시키면 사진에 새로 그려 넣어요. 시험판이라 관장님의 구글 Gemini API 키를 이 폰에만 저장해서 써요. 한 번에 약 60~100원이 관장님 계정에서 나가요.</p>
+     <ol><li>aistudio.google.com 접속 → 로그인</li><li>왼쪽 메뉴 <b>Get API key</b> → <b>Create API key</b></li><li>결제 설정(Billing)에서 카드 등록 (이미지 기능은 유료 요금제 필요)</li><li>만든 키를 복사해서 아래에 붙여넣기</li></ol>
+     <div class="pe-row"><input id="peKey" type="password" placeholder="API 키 붙여넣기 (AIza…)" autocomplete="off"><button class="cc on" id="peKeyOk">저장</button></div></div>`;
+    $('#peKeyOk').onclick=async()=>{const k=$('#peKey').value.trim();if(k.length<20){D.toast('키를 다시 확인해 주세요');return}try{localStorage.setItem(AK,k)}catch(e){}busy('키 확인 중…');try{await aiModels(k)}catch(e){D.toast('키 확인 실패: '+(e.message||'').slice(0,60))}busy(false);aiPanel(P)};return}
+  const u=aiUse(),m=aiModel(),pr=PRICE[m]||.05;
+  P.innerHTML=`<div class="ai-box"><textarea id="peAiT" rows="2" placeholder="예) 옆에 강아지를 넣어줘, 배경을 바다로 바꿔줘">${S.aiText||''}</textarea>
+    <div class="cchips ai-ex">${EX.map(t=>`<button class="cc" data-ex="${t}">${t}</button>`).join('')}</div>
+    <div class="pe-row"><button class="cc${S.aiPaint?' on':''}" id="peAiP">${I('pin')}${S.aiPaint?'위치 칠하는 중':'넣을 위치 칠하기'}</button>${S.strokes&&S.strokes.length?`<button class="cc" id="peAiC">칠한 것 지우기</button>`:''}<span class="pe-tip"></span><button class="pe-ok" id="peAiGo">${I('spark')}AI로 바꾸기</button></div>
+    <div class="ai-meta"><span>모델 <select id="peAiM">${[m].map(x=>`<option>${x}</option>`).join('')}</select></span><span>이번 기기 사용 ${u.n}회 · 약 ${Math.round(u.usd*1450).toLocaleString()}원</span><span>1회 약 ${Math.round(pr*1450)}원</span><button class="ai-x" id="peAiK">키 삭제</button></div></div>`;
+  $('#peAiT').oninput=e=>S.aiText=e.target.value;
+  P.querySelector('.ai-ex').onclick=e=>{const b=e.target.closest('[data-ex]');if(b){S.aiText=b.dataset.ex;$('#peAiT').value=S.aiText}};
+  $('#peAiP').onclick=()=>{S.aiPaint=!S.aiPaint;if(S.aiPaint)D.toast('사진 위에 넣을 자리를 칠해 주세요');aiPanel(P)};
+  $('#peAiC')&&($('#peAiC').onclick=()=>{S.strokes=null;overlay();aiPanel(P)});
+  $('#peAiK').onclick=()=>{if(!confirm('이 폰에 저장된 API 키를 지울까요?'))return;try{localStorage.removeItem(AK)}catch(e){}aiPanel(P)};
+  aiModels(key).then(list=>{const sel=$('#peAiM');if(!sel||!list.length)return;sel.innerHTML=list.map(x=>`<option${x===m?' selected':''}>${x}</option>`).join('');sel.onchange=()=>{try{localStorage.setItem(AM,sel.value)}catch(e){}aiPanel(P)}}).catch(()=>{});
+  $('#peAiGo').onclick=()=>aiRun()}
+let MODELS=null;
+async function aiModels(k){if(MODELS)return MODELS;const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key='+encodeURIComponent(k));const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||r.status);
+  MODELS=(j.models||[]).map(x=>x.name.replace('models/','')).filter(n=>/image/.test(n)&&/gemini/.test(n)&&!/embed/.test(n));
+  if(MODELS.length&&!MODELS.includes(aiModel())){const pick=MODELS.find(n=>n==='gemini-2.5-flash-image')||MODELS.find(n=>/flash-image/.test(n))||MODELS[0];try{localStorage.setItem(AM,pick)}catch(e){}}return MODELS}
+function where(){if(!S.strokes||!S.strokes.length)return'';let x0=1,y0=1,x1=0,y1=0;S.strokes.forEach(s=>s.p.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));const cx=(x0+x1)/2,cy=(y0+y1)/2;
+  const h=cx<.36?'왼쪽':cx>.64?'오른쪽':'가운데',v=cy<.36?'위쪽':cy>.64?'아래쪽':'중간';return ` 위치: 사진의 ${v} ${h} 부분 (가로 ${Math.round(x0*100)}~${Math.round(x1*100)}%, 세로 ${Math.round(y0*100)}~${Math.round(y1*100)}% 영역)에만 적용.`}
+async function aiRun(){const t=(S.aiText||'').trim();if(!t){D.toast('무엇을 바꿀지 적어 주세요');return}const key=aiKey(),model=aiModel();
+  const k=Math.min(1,1536/Math.max(S.base.width,S.base.height)),sm=mkC(S.base.width*k,S.base.height*k);sm.getContext('2d').drawImage(S.base,0,0,sm.width,sm.height);
+  const b64=sm.toDataURL('image/jpeg',.9).split(',')[1];
+  const prompt=`이 사진을 편집해 주세요: ${t}.${where()} 요청한 부분 말고는 인물·구도·색감·화면 비율을 그대로 유지하고, 실제 사진처럼 자연스럽게 만들어 주세요.`;
+  busy('AI가 그리는 중… (10~30초)');
+  try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt},{inline_data:{mime_type:'image/jpeg',data:b64}}]}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||('오류 '+r.status));
+    const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[],ip=parts.find(p=>p.inlineData||p.inline_data);
+    if(!ip){const tx=parts.map(p=>p.text).filter(Boolean).join(' ');throw new Error(tx?'AI 답변: '+tx.slice(0,80):'이미지가 오지 않았어요 (요청을 바꿔 보세요)')}
+    const d=ip.inlineData||ip.inline_data,img=await loadImg(await (await fetch('data:'+(d.mimeType||d.mime_type||'image/png')+';base64,'+d.data)).blob());
+    push();const B=S.base,ctx=B.getContext('2d');
+    if(S.strokes&&S.strokes.length){/* 칠한 곳 주변만 자연스럽게 섞기 */const m=mkC(B.width,B.height),mx=m.getContext('2d');mx.strokeStyle='#fff';mx.lineCap='round';mx.lineJoin='round';S.strokes.forEach(s=>{mx.lineWidth=s.w*B.width*2.2;mx.beginPath();s.p.forEach((p,i)=>i?mx.lineTo(p[0]*B.width,p[1]*B.height):mx.moveTo(p[0]*B.width,p[1]*B.height));if(s.p.length===1)mx.lineTo(s.p[0][0]*B.width+.1,s.p[0][1]*B.height);mx.stroke()});
+      const f=mkC(B.width,B.height),fx=f.getContext('2d');fx.filter=`blur(${Math.round(B.width/40)}px)`;fx.drawImage(m,0,0);fx.drawImage(m,0,0);fx.filter='none';fx.globalCompositeOperation='source-in';fx.drawImage(img,0,0,B.width,B.height);ctx.drawImage(f,0,0)}
+    else ctx.drawImage(img,0,0,B.width,B.height);
+    const u=aiUse();u.n++;u.usd+=PRICE[model]||.05;try{localStorage.setItem(AU,JSON.stringify(u))}catch(e){}
+    S.strokes=null;S.aiPaint=false;S.ver++;thumbs();busy(false);aiPanel($('#peP'));paint();D.toast('AI가 바꿨어요 · 마음에 안 들면 ↶')}
+  catch(e){busy(false);D.toast('AI 실패: '+(e.message||e).toString().slice(0,90))}}
 
 /* ---------- 저장 ---------- */
 async function save(){if(S.crop){push();S.base=cropOut(S.crop,MAXS);S.crop=null}if(S.layer){push();drawLayer(S.base.getContext('2d'),S.layer,1);S.layer=null}
