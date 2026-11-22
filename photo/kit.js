@@ -37,7 +37,7 @@ const POSES={
   pocket:{...ST,la:[[-.15,-.62],[-.09,-.5]],ra:[[.15,-.62],[.09,-.5]]},
   crouch:{lk:[[-.15,-.25],[-.08,0]],rk:[[.16,-.28],[.1,0]],la:[[-.16,-.58],[-.12,-.33]],ra:[[.16,-.58],[.12,-.33]],drop:.18},
 };
-let PSTYLE='illust',SILC='#262b42';
+let PSTYLE='sil',SILC='#262b42';
 function person(c,x,fy,h,o={}){
   if(PSTYLE==='sil'&&!o.sil&&!o.ghost)o=Object.assign({},o,{sil:o.rim?'#ece8f2':SILC});
   const d=o.dir||1,P=POSES[o.pose||'stand']||POSES.stand,dr=(P.drop||0);

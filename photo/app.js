@@ -61,6 +61,7 @@ const CATS=(C.cats||Object.keys(PC.cats)).filter(k=>ITEMS.some(i=>i.cat===k));
 /* ---------- 썸네일 캐시 ---------- */
 const TH=new Map();
 function thumbURL(id,plain){const k=id+(plain?'|p':'');if(TH.has(k))return TH.get(k);const c=document.createElement('canvas');c.width=300;c.height=400;PC.drawThumb(id,c.getContext('2d'),300,400,{guide:!plain});const u=c.toDataURL('image/jpeg',.84);TH.set(k,u);return u}
+PC.setOnPhoto&&PC.setOnPhoto(id=>{[...TH.keys()].filter(k=>k.split('|')[0]===id).forEach(k=>TH.delete(k));document.querySelectorAll(`img[data-id="${id}"]`).forEach(el=>{if(el.src)el.src=thumbURL(id,el.dataset.plain)});const dc=document.getElementById('dtCv');if(dc&&dc.dataset.id===id&&dc._draw)dc._draw();window._homePhoto&&window._homePhoto(id)});
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;io.unobserve(el);requestAnimationFrame(()=>{el.src=thumbURL(el.dataset.id,el.dataset.plain)})}),{rootMargin:'300px'});
 
 /* ---------- 레이아웃 ---------- */
@@ -124,8 +125,8 @@ const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearT
 /* ---------- 홈: 히어로 ---------- */
 if(C.tabsHome)(function(){const P=()=>C.startPool?C.startPool():null;
   const D=C.demos.filter(d=>BY[d.id]),d=D[Math.floor(Math.random()*D.length)],cv=$('#vfCv'),c=cv.getContext('2d'),W=cv.width,H=cv.height,k=Math.max(W/300,H/400);
-  const t=document.createElement('canvas');t.width=W;t.height=H;const x=t.getContext('2d');x.setTransform(k,0,0,k,(W-300*k)/2,-(400*k-H)*.2);PC.drawThumb(d.id,x,300,400,{guide:true});
-  let o=t;try{if(window.LOOKS)o=LOOKS.apply(t,d.look,.9)}catch(e){}c.drawImage(o,0,0);
+  const paintDemo=()=>{const t=document.createElement('canvas');t.width=W;t.height=H;const x=t.getContext('2d');x.setTransform(k,0,0,k,(W-300*k)/2,-(400*k-H)*.2);PC.drawThumb(d.id,x,300,400,{guide:true});
+  let o=t;try{if(window.LOOKS)o=LOOKS.apply(t,d.look,.9)}catch(e){}c.drawImage(o,0,0)};paintDemo();
   $('#dScene').textContent=d.scene;$('#dComp').textContent=BY[d.id].name;$('#dLook').textContent=window.LOOKS&&LOOKS.byId[d.look]?LOOKS.byId[d.look].name:'';
   $('.vfa').onclick=e=>{const b=e.target.closest('[data-go]');if(!b)return;e.stopPropagation();const g=b.dataset.go;if(g==='auto')openCam(P());else if(g==='look')openCam(P(),{look:1});else openCam(P(),{photo:1})};
   /* 분류 줄 */
@@ -133,15 +134,16 @@ if(C.tabsHome)(function(){const P=()=>C.startPool?C.startPool():null;
   $('#crow').innerHTML=CATS.map(k=>`<button class="ct" data-c="${k}"><span class="cti"><img data-id="${cov(k)}" data-plain="1" alt=""></span><b>${k==='basic'?'기본':PC.cats[k]}</b></button>`).join('');$$('#crow img[data-id]').forEach(i=>io.observe(i));
   $('#crow').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;LS.set('cat',cat);q='';$('#q').value='';renderTabs();renderGrid();showV('refs');setTimeout(()=>{const t=$('#gSub').previousElementSibling;scrollTo({top:t.getBoundingClientRect().top+scrollY-8})},30)};
   /* 색감 견본 */
-  if(window.LOOKS){const s=document.createElement('canvas');s.width=150;s.height=200;PC.drawThumb(C.lookSample||'st_hat_brim_shadow',s.getContext('2d'),150,200,{guide:false});const TH={};LOOKS.list.forEach(l=>{try{TH[l.id]=LOOKS.apply(s,l.id,1).toDataURL('image/jpeg',.82)}catch(e){}});
+  if(window.LOOKS){const TH={},LS_ID=C.lookSample||'st_cafe_hand',ED_ID=C.editSample||'st_lake_mirror';const mkTH=()=>{const s=document.createElement('canvas');s.width=150;s.height=200;PC.drawThumb(LS_ID,s.getContext('2d'),150,200,{guide:false});LOOKS.list.forEach(l=>{try{TH[l.id]=LOOKS.apply(s,l.id,1).toDataURL('image/jpeg',.82)}catch(e){}})};mkTH();
     const card=l=>`<button class="lk-c" data-lk="${l.id}"><img src="${TH[l.id]||''}" alt=""><b>${l.name}</b><small>${l.d||''}</small></button>`;
     $('#lrow').innerHTML=(C.todayLooks||['fuji_cneg','kodak_portra','teal_orange','leica_mono','wkw','kodak_gold']).filter(i=>LOOKS.byId[i]).map(i=>card(LOOKS.byId[i])).join('');
     let lg='film';const paintL=()=>{$('#lgG').innerHTML=Object.entries(LOOKS.groups).map(([k,n])=>`<button class="cc${lg===k?' on':''}" data-lg="${k}">${n}</button>`).join('');$('#lgL').innerHTML=LOOKS.list.filter(l=>l.g===lg&&l.id!=='none').map(card).join('')};paintL();
     $('#lgG').onclick=e=>{const b=e.target.closest('[data-lg]');if(b){lg=b.dataset.lg;paintL()}};
     const pickL=e=>{const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);if(lookStr<.3){lookStr=1;LS.set('lookStr',1)}toast(LOOKS.byId[look].name+' 색감으로 찍어요');openCam(P())};$('#lrow').onclick=pickL;$('#lgL').onclick=pickL;
     /* 보정 탭 그림 */
-    const e2=$('#eCv'),ec=e2.getContext('2d'),et=document.createElement('canvas');et.width=e2.width;et.height=e2.height;const ex=et.getContext('2d'),kk=Math.max(et.width/300,et.height/400);ex.setTransform(kk,0,0,kk,(et.width-300*kk)/2,-(400*kk-et.height)*.25);PC.drawThumb('st_hat_brim_shadow',ex,300,400,{guide:false});
-    ec.drawImage(et,0,0);try{const eo=LOOKS.apply(et,'kodak_portra',1);ec.drawImage(eo,e2.width/2,0,e2.width/2,e2.height,e2.width/2,0,e2.width/2,e2.height)}catch(e){}}
+    const paintEdit=()=>{const e2=$('#eCv'),ec=e2.getContext('2d'),et=document.createElement('canvas');et.width=e2.width;et.height=e2.height;const ex=et.getContext('2d'),kk=Math.max(et.width/300,et.height/400);ex.setTransform(kk,0,0,kk,(et.width-300*kk)/2,-(400*kk-et.height)*.25);PC.drawThumb(ED_ID,ex,300,400,{guide:false});
+    ec.drawImage(et,0,0);try{const eo=LOOKS.apply(et,'kodak_portra',1);ec.drawImage(eo,e2.width/2,0,e2.width/2,e2.height,e2.width/2,0,e2.width/2,e2.height)}catch(e){}};paintEdit();
+    let rt=null;window._homePhoto=id=>{if(![d.id,LS_ID,ED_ID].includes(id))return;clearTimeout(rt);rt=setTimeout(()=>{paintDemo();if(id===LS_ID){mkTH();$$('#lrow [data-lk] img,#lgL [data-lk] img').forEach(im=>{const b=im.closest('[data-lk]');if(TH[b.dataset.lk])im.src=TH[b.dataset.lk]})}if(id===ED_ID)paintEdit()},120)};}
   $('#ePick').onclick=()=>$('#file2').click();$('#eAna').onclick=()=>openCam(P(),{photo:1});
   $('#file2').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;shots=[f];origs=[{b:f,look:'none',str:1}];openEditor(0)};
   $('#ftab').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;if(t==='cam'){openCam(P());return}showV(t)};
@@ -183,7 +185,7 @@ function list(){let L=ITEMS;if(cat==='fav')L=L.filter(i=>favs.has(i.id));else if
 function renderTabs(){const t=[['all','전체',ITEMS.length],['fav','즐겨찾기',ITEMS.filter(i=>favs.has(i.id)).length],...CATS.map(k=>[k,PC.cats[k],ITEMS.filter(i=>i.cat===k).length])];
   $('#tabs').innerHTML=t.map(([k,n,c])=>`<button class="tab${cat===k?' on':''}" data-c="${k}">${k==='fav'?I('heart'):CATI[k]?I(CATI[k]):''}${n}<small>${c}</small></button>`).join('');
   $('#hFav .dot').classList.toggle('hidden',!favs.size)}
-function card(it){return`<button class="card" data-id="${it.id}"><div class="ph"><img data-id="${it.id}" alt=""><span class="fav${favs.has(it.id)?' on':''}" data-f="${it.id}" role="button" aria-label="즐겨찾기">${I('heart',favs.has(it.id)?'fill':'')}</span></div><b>${it.name}</b><small>${it.who||''}</small></button>`}
+function card(it){return`<button class="card" data-id="${it.id}"><div class="ph"><img data-id="${it.id}" alt="">${PC.photoOf&&PC.photoOf(it)?'<span class="real">실사</span>':''}<span class="fav${favs.has(it.id)?' on':''}" data-f="${it.id}" role="button" aria-label="즐겨찾기">${I('heart',favs.has(it.id)?'fill':'')}</span></div><b>${it.name}</b><small>${it.who||''}</small></button>`}
 function renderGrid(){const L=list();$('#gSub').textContent=`${ITEMS.length}가지 구도 · 그림을 누르면 찍는 방법이 나와요`;
   $('#grid').innerHTML=L.length?L.map(card).join(''):`<div class="empty">${cat==='fav'?'아직 즐겨찾기가 없어요.<br>마음에 드는 구도의 ♡를 눌러 모아두세요.':'찾는 구도가 없어요. 다른 단어로 찾아보세요.'}</div>`;
   $$('#grid img[data-id]').forEach(i=>io.observe(i))}
@@ -208,15 +210,15 @@ function closeSheet(){if(history.state&&history.state.m)history.back();else hide
 $('#shX').onclick=closeSheet;$('#scrim').onclick=closeSheet;
 
 function openDetail(id,o={}){const it=BY[id];if(!it)return;const steps=it.steps||[],ments=it.ments||[];
-  const body=`<div class="dt-ph"><canvas id="dtCv" width="600" height="800"></canvas></div>
-   <div class="dt-row"><button class="switch on" id="dtG"><i></i>가이드선</button><button class="favbtn${favs.has(id)?' on':''}" id="dtF" aria-label="즐겨찾기">${I('heart',favs.has(id)?'fill':'')}</button></div>
+  const body=`<div class="dt-ph"><canvas id="dtCv" width="600" height="800"></canvas>${PC.photoOf&&PC.photoOf(it)?`<span class="dt-cr" id="dtCr">사진 ${PC.photoOf(it).by} · Unsplash</span>`:''}</div>
+   <div class="dt-row"><button class="switch on" id="dtG"><i></i>${PC.photoOf&&PC.photoOf(it)?'가이드 도해로 보기':'가이드선'}</button><button class="favbtn${favs.has(id)?' on':''}" id="dtF" aria-label="즐겨찾기">${I('heart',favs.has(id)?'fill':'')}</button></div>
    <div class="dt-who">${it.who||''}</div><div class="dt-title">${it.name}</div><p class="dt-desc">${it.desc||''}</p>
    <ol class="steps">${steps.map(s=>`<li>${s}</li>`).join('')}</ol>
    <div class="chips"><span class="chip">${I('phone')}${it.phone||'자유'}</span><span class="chip">${I(CATI[it.cat]||'grid')}${PC.cats[it.cat]||''}</span></div>
    ${ments.length&&C.showMents!==false?`<div class="say"><b>이렇게 말해보세요</b>${ments.map(m=>'“'+m+'”').join('<br>')}</div>`:''}`;
   const foot=o.from==='cam'?`<button class="btn pri wide" id="dtGo">${I('camera')}이 구도로 바꾸기</button>`:`<button class="btn pri wide" id="dtGo">${I('camera')}이 구도로 촬영</button>`;
   openSheet(PC.cats[it.cat]||'구도',body,foot,{dark:o.from==='cam'});
-  const cv=$('#dtCv'),c=cv.getContext('2d');let g=true;const draw=()=>{c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,300,400);PC.drawThumb(id,c,300,400,{guide:g})};draw();
+  const cv=$('#dtCv'),c=cv.getContext('2d'),ph=PC.photoOf&&PC.photoOf(it);let g=!ph;const draw=()=>{c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,300,400);PC.drawThumb(id,c,300,400,{guide:g,illust:g&&!!ph});const cr=$('#dtCr');if(cr)cr.classList.toggle('hidden',!ph||g||!ph.ok)};cv.dataset.id=id;cv._draw=draw;draw();if(!g)$('#dtG').classList.remove('on');
   $('#dtG').onclick=()=>{g=!g;$('#dtG').classList.toggle('on',g);draw()};
   $('#dtF').onclick=()=>{toggleFav(id);$('#dtF').classList.toggle('on',favs.has(id));$('#dtF').innerHTML=I('heart',favs.has(id)?'fill':'')};
   $('#dtGo').onclick=()=>{if(o.from==='cam'){setActive(id,true);closeSheet()}else{hideSheetSilently();openCam({ids:relatedPool(id),first:id})}}}

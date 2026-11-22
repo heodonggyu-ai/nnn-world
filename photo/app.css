@@ -257,3 +257,6 @@ body:has(#cam:not(.hidden)) .dock{display:none}
 .gth em{font-style:normal;font-size:9.5px;color:rgba(255,255,255,.5);margin-top:-3px;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lkp{flex:none;font-weight:600;color:#fff;font-size:12px}
 .lkp i{font-style:normal;display:inline-block;min-width:32px}
+.dt-ph{position:relative}
+.dt-cr{position:absolute;right:8px;bottom:8px;font-size:10.5px;color:#fff;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:999px}
+.card .ph .real{position:absolute;left:8px;top:8px;font-size:10.5px;font-weight:700;color:#fff;background:rgba(11,15,28,.6);padding:3px 7px;border-radius:999px}

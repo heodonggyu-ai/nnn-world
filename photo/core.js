@@ -143,7 +143,12 @@ const STY=(window.PHOTO_STYLES?PHOTO_STYLES.list:[]).map(s=>({id:'st_'+s.id,sid:
 const ITEMS=[...BASIC,...PORTRAIT,...STY],BY=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 const CATS=Object.assign({basic:'기본 구도',portrait:'인물 구도'},window.PHOTO_STYLES?PHOTO_STYLES.cats:{});
 
+/* 실사 사진 */
+const RP=window.REF_PHOTOS||{},PIMG={},PWAIT=new Set();let onPhoto=null;
+function photoOf(it){if(!it||it.kind!=='style')return null;const r=RP[it.sid];if(!r)return null;let p=PIMG[r[0]];if(!p){p=PIMG[r[0]]={img:new Image(),ok:false,by:r[1],ids:new Set()};p.img.crossOrigin='anonymous';
+  p.img.onload=()=>{p.ok=true;p.ids.forEach(i=>onPhoto&&onPhoto(i))};p.img.src='https://images.unsplash.com/'+r[0]+'?w=720&h=960&fit=crop&crop=entropy&q=72&auto=format'}p.ids.add(it.id);return p}
 function drawThumb(id,c,w,h,opt={}){const it=BY[id];if(!it)return;c.save();
+  const ph=opt.illust?null:photoOf(it);if(ph&&ph.ok){const im=ph.img,k=Math.max(w/im.naturalWidth,h/im.naturalHeight);c.drawImage(im,(w-im.naturalWidth*k)/2,(h-im.naturalHeight*k)/2,im.naturalWidth*k,im.naturalHeight*k);c.restore();return}
   if(it.kind==='style'){PHOTO_STYLES.drawScene(it.sid,c,w,h);if(opt.guide!==false)PHOTO_STYLES.drawGuide(it.sid,c,w,h,{lw:2,sample:1,color:opt.color})}
   else{if(it.kind==='basic')basicScene(id,c,w,h);else portraitScene(id,c,w,h);K.post(c,w,h);
     if(opt.guide!==false){const st={pSide:'L',spiralFlip:{x:false,y:false}},o={color:opt.color||'rgba(255,216,77,.95)',lw:2,sample:1};it.kind==='basic'?basicOverlay(c,id,w,h,st,o):portraitOverlay(c,id,w,h,st,o)}}
@@ -246,5 +251,5 @@ function recommend(sc,ema,n=12){if(!sc)return[];const out=[],seen=new Set(),push
     if(sc.n&&i.face)s+=1;if(!sc.n&&i.face&&sc.k!=='general')s-=1.5;if(sc.n>=2&&i.cat==='couple')s+=1;if(sc.dark&&i.cat==='night')s+=1.5;
     let h=0;for(const c of i.id)h=(h*31+c.charCodeAt(0))%997;return[i.id,s+h/997*.8]}).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]);
   st.slice(0,n).forEach(x=>push(x[0]));sc.basic.forEach(push);return out.slice(0,n+3)}
-window.PhotoCore={scene,recommend,SCN,items:ITEMS,byId:BY,cats:CATS,drawThumb,drawOverlay,analyze,getCrop,score,hint,follow,pLayout,PT};
+window.PhotoCore={photoOf,setOnPhoto:f=>{onPhoto=f},scene,recommend,SCN,items:ITEMS,byId:BY,cats:CATS,drawThumb,drawOverlay,analyze,getCrop,score,hint,follow,pLayout,PT};
 })();
