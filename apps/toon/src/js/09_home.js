@@ -5,6 +5,7 @@ function homeTab(t) {
 }
 function fmtDate(t) { const d = new Date(t); const now = new Date(); if (d.toDateString() === now.toDateString()) return `오늘 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; return `${d.getMonth() + 1}월 ${d.getDate()}일`; }
 async function renderGallery() {
+  renderLearnCard();
   const tip = [...TOON_TIPS, ...DRAW_TIPS][Math.floor(Math.random() * (TOON_TIPS.length + DRAW_TIPS.length))];
   $('#homeTip').innerHTML = `<span class="tc-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z" fill="rgba(255,255,255,.25)"/></svg></span><div class="tc-tx"><b>오늘의 꿀팁</b><p>${tip}</p></div><button class="tc-re" aria-label="다른 팁"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 5v6h-6"/></svg></button>`;
   $('#homeTip .tc-re').onclick = e => { e.stopPropagation(); const t2 = [...TOON_TIPS, ...DRAW_TIPS][Math.floor(Math.random() * (TOON_TIPS.length + DRAW_TIPS.length))]; const p = $('#homeTip p'); p.style.opacity = 0; setTimeout(() => { p.innerHTML = t2; p.style.opacity = 1; }, 150); };
@@ -107,7 +108,7 @@ const MISSIONS = [
   { id: 'gif', t: '움직이는 GIF 저장하기', d: '🎞 애니 → GIF' },
   { id: 'emoji', t: '나만의 움직이는 이모티콘', d: '투명 배경 GIF로 완성', manual: true },
 ];
-function markMission(id) { const m = LS.get('missions', {}); if (!m[id]) { m[id] = Date.now(); LS.set('missions', m); const ms = MISSIONS.find(x => x.id === id); if (ms) setTimeout(() => toast(`🏅 미션 성공! "${ms.t}"`, 2600), 500); } }
+function markMission(id) { const m = LS.get('missions', {}); if (!m[id]) { m[id] = Date.now(); LS.set('missions', m); touchDay(); checkLevelUp(); const ms = MISSIONS.find(x => x.id === id); if (ms) setTimeout(() => toast(`🏅 미션 성공! "${ms.t}"`, 2600), 500); } }
 
 const ANIM_SIZES = [{ n: '이모티콘', s: '360 × 360', w: 360, h: 360 }, { n: '정사각형', s: '480 × 480', w: 480, h: 480 }, { n: '가로 영상', s: '640 × 360', w: 640, h: 360 }, { n: '세로 영상', s: '360 × 640', w: 360, h: 640 }];
 function newAnimModal() {

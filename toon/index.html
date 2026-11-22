@@ -555,76 +555,118 @@ b,strong,h1,h2,h3{font-weight:700}
 .home-nav button:active .ni{transform:scale(.9)}
 .home-nav button.active{background:none!important;box-shadow:none!important}
 .h-art .kick{letter-spacing:.02em!important;font-size:11.5px!important}
+/* learning */
+.learn-card{position:relative;overflow:hidden;margin:10px 0 4px;padding:16px 16px 14px;border-radius:26px;color:#fff;background:radial-gradient(90% 80% at 100% 0%,rgba(255,122,168,.45) 0%,rgba(255,122,168,0) 60%),radial-gradient(80% 70% at 0% 100%,rgba(92,182,255,.35) 0%,rgba(92,182,255,0) 60%),linear-gradient(145deg,#2c2160 0%,#1d1642 100%);box-shadow:0 18px 34px -14px rgba(40,20,110,.65),inset 0 1px 0 rgba(255,255,255,.12)}
+.learn-card::before{content:'';position:absolute;right:-30px;top:-40px;width:150px;height:150px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.16)}
+.lc-top{display:flex;align-items:center;gap:13px;cursor:pointer;position:relative}
+.lc-ring{flex:0 0 auto;filter:drop-shadow(0 4px 10px rgba(255,122,168,.35))}
+.lc-meta{min-width:0}
+.lc-kick{display:block;font-family:var(--fh);font-weight:700;font-size:11px;letter-spacing:.02em;color:#ffb4cf}
+.lc-meta b{display:block;font-family:var(--fh);font-weight:800;font-size:18px;letter-spacing:-.03em;margin:2px 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip-rank,.chip-fire{display:inline-flex;align-items:center;gap:4px;font-family:var(--fh);font-weight:700;font-size:11px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff}
+.chip-rank{background:linear-gradient(135deg,#ffd76a,#ffab3d);color:#5a3300}
+.chip-fire.off{color:rgba(255,255,255,.7);font-weight:600}
+.lc-next{position:relative;display:flex;align-items:center;gap:11px;width:100%;margin-top:14px;padding:10px 10px 10px 10px;border-radius:18px;background:rgba(255,255,255,.95);color:#1f1b2e;text-align:left;box-shadow:0 8px 18px -8px rgba(0,0,0,.4)}
+.lc-next:active{transform:scale(.98)}
+.lc-em{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:linear-gradient(135deg,#fff0f6,#efe8ff)}
+.lc-tx{flex:1;min-width:0}.lc-tx small{display:block;font-size:11px;font-weight:600;color:#8b6cf0}.lc-tx b{display:block;font-family:var(--fh);font-weight:800;font-size:15px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-play{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#ff7fa9,#8b6cff);box-shadow:0 6px 14px -4px rgba(200,90,200,.7)}
+.lc-steps{display:flex;gap:5px;margin-top:12px}
+.lc-steps i{flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#ff8db5 calc(var(--p)*100%),rgba(255,255,255,.16) calc(var(--p)*100%))}
+.lc-steps i.done{background:linear-gradient(90deg,#ff8db5,#b58cff)}
+.sec-title.mk{margin:18px 4px 2px!important;font-size:16px!important;color:#5d5775}
+.sub-title{font-family:var(--fh);font-weight:700;font-size:14px;color:#7a7491;margin:14px 4px 10px}
+/* roadmap */
+.road-head{display:flex;align-items:center;gap:12px;padding:18px;border-radius:26px;color:#fff;background:radial-gradient(90% 80% at 100% 0%,rgba(255,122,168,.45),rgba(255,122,168,0) 60%),linear-gradient(145deg,#2c2160,#1d1642);box-shadow:0 18px 34px -14px rgba(40,20,110,.6);margin-top:8px}
+.road-head .rh-l{flex:1}.road-head h2{margin:3px 0 4px;font-family:var(--fh);font-weight:800;font-size:24px;letter-spacing:-.03em}.road-head p{margin:0;font-size:13px;color:rgba(255,255,255,.75);line-height:1.5}
+.road-head .rh-r svg circle:first-child{stroke:rgba(255,255,255,.14)}.road-head .rh-r svg text{fill:#fff}
+.road-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.road-stats div{background:#fff;border-radius:18px;padding:11px 8px;text-align:center;box-shadow:0 8px 20px -14px rgba(90,60,160,.4)}
+.road-stats b{display:block;font-family:var(--fh);font-weight:800;font-size:20px;color:#2a2342}.road-stats b small{font-size:12px;color:#a39dbb;font-weight:700}.road-stats span{font-size:11.5px;color:#8a84a0;font-weight:600}
+.badges{display:flex;justify-content:space-between;background:#fff;border-radius:20px;padding:12px 8px 10px;box-shadow:0 8px 20px -14px rgba(90,60,160,.4)}
+.badges .bd{display:flex;flex-direction:column;align-items:center;gap:4px;width:20%}.badges .bd small{font-size:10px;font-weight:700;color:#5d5775;text-align:center;letter-spacing:-.03em;line-height:1.2}
+.badges .bd.lock small{color:#b9b3c8}
+.road{position:relative;padding-left:0}
+.lv{position:relative;background:#fff;border-radius:22px;margin-bottom:10px;box-shadow:0 1px 2px rgba(40,20,80,.05),0 10px 22px -14px rgba(90,60,160,.35);overflow:hidden}
+.lv.cur{box-shadow:0 0 0 2px var(--a),0 14px 28px -12px var(--b)}
+.lv-h{display:flex;align-items:center;gap:12px;width:100%;padding:14px;text-align:left}
+.lv-n{flex:0 0 auto;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-family:var(--fh);font-weight:800;font-size:17px;color:#fff;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 6px 12px -5px var(--b)}
+.lv:not(.done):not(.cur) .lv-n{background:#f1eef7;color:#a39dbb;box-shadow:none}
+.lv-t{flex:1;min-width:0}.lv-t small{display:block;font-size:11px;font-weight:700;color:var(--b)}.lv:not(.cur):not(.done) .lv-t small{color:#a39dbb}
+.lv-t b{display:block;font-family:var(--fh);font-weight:800;font-size:16px;letter-spacing:-.03em;color:#1f1b2e}.lv-t em{display:block;font-style:normal;font-size:12px;color:#8a84a0;margin-top:1px}
+.lv-p{flex:0 0 auto;width:56px;text-align:right}.lv-p b{font-family:var(--fh);font-size:12.5px;color:#5d5775}.lv-p i{display:block;height:5px;border-radius:3px;background:#f0edf6;margin-top:5px;overflow:hidden}.lv-p u{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b));border-radius:3px}
+.lv-u{display:none;padding:0 10px 10px}.lv.open .lv-u{display:block}
+.un{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:14px;text-align:left;margin-top:4px;background:#faf8fd}
+.un.next{background:linear-gradient(90deg,#fff3f8,#f3eeff);box-shadow:inset 0 0 0 1.5px var(--a)}
+.un-em{flex:0 0 auto;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:#fff;box-shadow:0 2px 6px rgba(80,60,130,.08)}
+.un-t{flex:1;min-width:0}.un-t small{display:block;font-size:10.5px;font-weight:700;color:#a39dbb}.un-t b{display:block;font-family:var(--fh);font-weight:700;font-size:14px;letter-spacing:-.02em;color:#2a2342;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.un.done .un-t b{color:#9a94ae}
+.un-s{flex:0 0 auto;font-family:var(--fh);font-weight:800;font-size:12px}
+.un.done .un-s{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--a),var(--b))}
+.un.next .un-s{padding:6px 11px;border-radius:999px;color:#fff;background:linear-gradient(135deg,var(--a),var(--b))}
+.lesson-card{position:relative}
+.lesson-card.done::after{content:'';position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ff8db5,#8b6cff) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
+.lvup{text-align:center;padding:4px 4px 0}.lvup-b{display:inline-block;animation:lvPop .7s cubic-bezier(.2,1.6,.4,1);filter:drop-shadow(0 12px 20px rgba(120,80,220,.35))}
+@keyframes lvPop{0%{transform:scale(.2) rotate(-30deg);opacity:0}100%{transform:none;opacity:1}}
+.lvup small{display:block;font-family:var(--fh);font-weight:700;color:#8b6cf0;margin-top:8px}.lvup h3{margin:4px 0 8px!important}.lvup p{color:#6a6480;line-height:1.6;margin:0 0 6px;font-size:14px}
 </style>
 </head>
 <body>
 <!-- ================= HOME ================= -->
 <section id="home" class="screen active">
   <header class="home-head">
-    <div class="logo"><span class="lmark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><clipPath id="lc"><rect width="1024" height="1024" rx="230"/></clipPath><g clip-path="url(#lc)"><defs>
-<linearGradient id="iBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7eb3"/><stop offset=".48" stop-color="#a875ff"/><stop offset="1" stop-color="#4f63f5"/></linearGradient>
-<radialGradient id="iGlow" cx=".22" cy=".15" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></radialGradient>
-<radialGradient id="iVig" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="#1a0f5c" stop-opacity="0"/><stop offset="1" stop-color="#1a0f5c" stop-opacity=".35"/></radialGradient>
-<linearGradient id="iSw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe066"/><stop offset=".5" stop-color="#ff9ec4"/><stop offset="1" stop-color="#7fe3ff"/></linearGradient>
-<linearGradient id="iHead" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#fbf7ff"/><stop offset="1" stop-color="#e9defd"/></linearGradient>
-<linearGradient id="iEar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8fb8"/><stop offset="1" stop-color="#ffc6db"/></linearGradient>
-<radialGradient id="iEye" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#4a3d78"/><stop offset=".6" stop-color="#241c45"/><stop offset="1" stop-color="#140f2b"/></radialGradient>
-<linearGradient id="iPenB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb21f"/><stop offset=".35" stop-color="#ffe27a"/><stop offset=".6" stop-color="#ffcc33"/><stop offset="1" stop-color="#e88a00"/></linearGradient>
-<linearGradient id="iFer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9aa0b8"/><stop offset=".4" stop-color="#ffffff"/><stop offset=".7" stop-color="#c9cde0"/><stop offset="1" stop-color="#868ba6"/></linearGradient>
-<linearGradient id="iEr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5d93"/><stop offset=".4" stop-color="#ffa3c4"/><stop offset="1" stop-color="#e24479"/></linearGradient>
-<linearGradient id="iWood" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9b98a"/><stop offset=".45" stop-color="#ffe6c8"/><stop offset="1" stop-color="#d79e6b"/></linearGradient>
-<filter id="iSh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="34" stdDeviation="34" flood-color="#2a0f7a" flood-opacity=".45"/></filter>
-<filter id="iSh2" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="10" dy="24" stdDeviation="20" flood-color="#2a0f7a" flood-opacity=".45"/></filter>
-<filter id="iBlur"><feGaussianBlur stdDeviation="6"/></filter>
-<filter id="iSpk" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<linearGradient id="iBer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7aa8"/><stop offset="1" stop-color="#e03f7a"/></linearGradient></defs>
-<rect width="1024" height="1024" fill="url(#iBg)"/>
-<rect width="1024" height="1024" fill="url(#iGlow)"/>
-<rect width="1024" height="1024" fill="url(#iVig)"/>
-<g opacity=".16" fill="#fff"><circle cx="880" cy="170" r="150"/><circle cx="120" cy="900" r="110"/></g>
-<path d="M150 760 C 330 640, 560 900, 880 700" fill="none" stroke="#2a0f7a" stroke-opacity=".25" stroke-width="96" stroke-linecap="round" filter="url(#iBlur)" transform="translate(0 22)"/>
-<path d="M150 760 C 330 640, 560 900, 880 700" fill="none" stroke="url(#iSw)" stroke-width="92" stroke-linecap="round"/>
-<path d="M170 742 C 340 630, 560 880, 860 688" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="16" stroke-linecap="round"/>
-<g filter="url(#iSh)">
- <path d="M300 410 L318 196 Q322 168 348 184 L474 270 Q512 260 550 270 L676 184 Q702 168 706 196 L724 410 Q770 480 760 560 Q740 760 512 772 Q284 760 264 560 Q254 480 300 410Z" fill="url(#iHead)"/>
+    <div class="logo"><span class="lmark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><clipPath id="lc3"><rect width="1024" height="1024" rx="230"/></clipPath><g clip-path="url(#lc3)"><defs>
+<linearGradient id="kBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a2a86"/><stop offset=".55" stop-color="#251a5e"/><stop offset="1" stop-color="#160f3a"/></linearGradient>
+<radialGradient id="kG1" cx=".9" cy=".05" r=".75"><stop offset="0" stop-color="#ff7aa8" stop-opacity=".75"/><stop offset="1" stop-color="#ff7aa8" stop-opacity="0"/></radialGradient>
+<radialGradient id="kG2" cx=".05" cy="1" r=".7"><stop offset="0" stop-color="#4fb6ff" stop-opacity=".55"/><stop offset="1" stop-color="#4fb6ff" stop-opacity="0"/></radialGradient>
+<linearGradient id="kPaper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1ecfb"/></linearGradient>
+<linearGradient id="kInk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ff5f9e"/><stop offset=".55" stop-color="#b06bff"/><stop offset="1" stop-color="#6a8cff"/></linearGradient>
+<linearGradient id="kPen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb21f"/><stop offset=".35" stop-color="#ffe27a"/><stop offset=".6" stop-color="#ffcc33"/><stop offset="1" stop-color="#e88a00"/></linearGradient>
+<linearGradient id="kFer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9aa0b8"/><stop offset=".4" stop-color="#fff"/><stop offset=".7" stop-color="#c9cde0"/><stop offset="1" stop-color="#868ba6"/></linearGradient>
+<linearGradient id="kEr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5d93"/><stop offset=".4" stop-color="#ffa3c4"/><stop offset="1" stop-color="#e24479"/></linearGradient>
+<linearGradient id="kWood" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9b98a"/><stop offset=".45" stop-color="#ffe6c8"/><stop offset="1" stop-color="#d79e6b"/></linearGradient>
+<filter id="kSh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="30" stdDeviation="30" flood-color="#07041c" flood-opacity=".55"/></filter>
+<filter id="kSh2" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="8" dy="22" stdDeviation="18" flood-color="#07041c" flood-opacity=".5"/></filter>
+<filter id="kGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1024" height="1024" fill="url(#kBg)"/>
+<rect width="1024" height="1024" fill="url(#kG1)"/>
+<rect width="1024" height="1024" fill="url(#kG2)"/>
+<g filter="url(#kSh)" transform="rotate(-6 512 540)">
+ <rect x="196" y="214" width="632" height="652" rx="70" fill="url(#kPaper)"/>
+ <g transform="translate(290 290)">
+  <rect x="0" y="-26" width="210" height="52" rx="26" fill="#f1ecfb"/>
+  <circle cx="34" cy="0" r="17" fill="url(#kInk)"/><text x="34" y="7" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="20" fill="#fff">1</text>
+  <circle cx="105" cy="0" r="17" fill="url(#kInk)"/><text x="105" y="7" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="20" fill="#fff">2</text>
+  <circle cx="176" cy="0" r="17" fill="none" stroke="#cbbff0" stroke-width="4"/><text x="176" y="7" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="20" fill="#b9acdf">3</text>
+  <path d="M51 0h37" stroke="#b06bff" stroke-width="5" stroke-linecap="round"/><path d="M122 0h37" stroke="#cbbff0" stroke-width="5" stroke-linecap="round" stroke-dasharray="4 8"/>
+ </g>
+ <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path id="kCat" d="M330 520 L344 368 L436 438 Q512 420 588 438 L680 368 L694 520 Q726 600 690 680 Q640 772 512 772 Q384 772 334 680 Q298 600 330 520Z" stroke="#c9bdf0" stroke-width="12" stroke-dasharray="4 26"/>
+  <g><path id="kSolid" pathLength="100" stroke-dasharray="60 100" d="M330 520 L344 368 L436 438 Q512 420 588 438 L680 368 L694 520 Q726 600 690 680 Q640 772 512 772 Q384 772 334 680 Q298 600 330 520Z" stroke="url(#kInk)" stroke-width="22" filter="url(#kGlow)"/></g>
+  <path d="M440 596 q 22 -24 44 0" stroke="url(#kInk)" stroke-width="16"/>
+  <path d="M540 596 q 22 -24 44 0" stroke="#c9bdf0" stroke-width="10" stroke-dasharray="3 16"/>
+  <path d="M492 660 q 20 18 40 0" stroke="#c9bdf0" stroke-width="10" stroke-dasharray="3 16"/>
+ </g>
 </g>
-<path d="M346 236 L356 330 L430 280Z" fill="url(#iEar)"/><path d="M678 236 L668 330 L594 280Z" fill="url(#iEar)"/>
-<path d="M300 410 L318 196 Q322 168 348 184 L474 270 Q512 260 550 270 L676 184 Q702 168 706 196 L724 410 Q770 480 760 560 Q740 760 512 772 Q284 760 264 560 Q254 480 300 410Z" fill="none" stroke="#fff" stroke-width="6" stroke-opacity=".9"/>
-<g transform="rotate(-14 520 262)" filter="url(#iSh2)">
- <ellipse cx="520" cy="268" rx="150" ry="54" fill="url(#iBer)"/>
- <ellipse cx="500" cy="250" rx="96" ry="22" fill="#fff" opacity=".22"/>
- <path d="M512 214 q6 -34 26 -30" stroke="#c42d68" stroke-width="16" fill="none" stroke-linecap="round"/>
- <path d="M384 288 q136 40 272 0" stroke="#b8245d" stroke-width="10" fill="none" opacity=".5" stroke-linecap="round"/>
+<g filter="url(#kSh2)" transform="translate(51 49) rotate(40 700 560)">
+ <rect x="652" y="200" width="96" height="320" rx="10" fill="url(#kPen)"/>
+ <rect x="680" y="208" width="14" height="304" rx="7" fill="#fff" opacity=".45"/>
+ <rect x="648" y="146" width="104" height="62" rx="8" fill="url(#kFer)"/>
+ <rect x="648" y="164" width="104" height="6" fill="#7e839c" opacity=".5"/><rect x="648" y="184" width="104" height="6" fill="#7e839c" opacity=".5"/>
+ <path d="M652 154 v-38 a36 36 0 0 1 36 -36 h24 a36 36 0 0 1 36 36 v38z" fill="url(#kEr)"/>
+ <path d="M652 518 L700 640 L748 518Z" fill="url(#kWood)"/>
+ <path d="M684 600 L700 640 L716 600Z" fill="#2b2150"/>
 </g>
-<g>
- <ellipse cx="420" cy="512" rx="52" ry="64" fill="url(#iEye)"/><ellipse cx="604" cy="512" rx="52" ry="64" fill="url(#iEye)"/>
- <ellipse cx="438" cy="488" rx="19" ry="22" fill="#fff"/><ellipse cx="622" cy="488" rx="19" ry="22" fill="#fff"/>
- <circle cx="404" cy="540" r="9" fill="#fff" opacity=".75"/><circle cx="588" cy="540" r="9" fill="#fff" opacity=".75"/>
- <path d="M386 560 Q420 578 454 560" stroke="#7d6cf2" stroke-width="6" fill="none" opacity=".35" stroke-linecap="round"/>
- <path d="M570 560 Q604 578 638 560" stroke="#7d6cf2" stroke-width="6" fill="none" opacity=".35" stroke-linecap="round"/>
-</g>
-<ellipse cx="338" cy="612" rx="52" ry="30" fill="#ff9ec4" opacity=".55"/><ellipse cx="686" cy="612" rx="52" ry="30" fill="#ff9ec4" opacity=".55"/>
-<path d="M490 586 Q512 576 534 586 Q530 606 512 612 Q494 606 490 586Z" fill="#ff6f9f"/>
-<path d="M470 640 Q490 666 512 646 Q534 666 554 640" fill="none" stroke="#2b2150" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-<g filter="url(#iSh2)" transform="rotate(38 760 640)">
- <rect x="712" y="372" width="96" height="320" rx="10" fill="url(#iPenB)"/>
- <rect x="740" y="380" width="14" height="304" rx="7" fill="#fff" opacity=".45"/>
- <rect x="708" y="318" width="104" height="62" rx="8" fill="url(#iFer)"/>
- <rect x="708" y="336" width="104" height="6" fill="#7e839c" opacity=".5"/><rect x="708" y="356" width="104" height="6" fill="#7e839c" opacity=".5"/>
- <path d="M712 326 v-38 a36 36 0 0 1 36 -36 h24 a36 36 0 0 1 36 36 v38z" fill="url(#iEr)"/>
- <path d="M712 690 L760 812 L808 690Z" fill="url(#iWood)"/>
- <path d="M744 772 L760 812 L776 772Z" fill="#2b2150"/>
-</g>
-<g filter="url(#iSpk)" fill="#fff">
- <path d="M196 250 l14 34 34 14 -34 14 -14 34 -14 -34 -34 -14 34 -14z"/>
- <path d="M842 420 l9 22 22 9 -22 9 -9 22 -9 -22 -22 -9 22 -9z" opacity=".9"/>
- <path d="M240 520 l7 16 16 7 -16 7 -7 16 -7 -16 -16 -7 16 -7z" opacity=".8"/>
-</g>
-</g></svg></span><div><small>오늘은 뭘 만들까?</small><span class="wm">밍뉴툰 스튜디오</span></div></div>
+<g fill="#fff"><path d="M150 250 l12 30 30 12 -30 12 -12 30 -12 -30 -30 -12 30 -12z" opacity=".9"/><path d="M880 820 l9 22 22 9 -22 9 -9 22 -9 -22 -22 -9 22 -9z" opacity=".75"/></g>
+</g></svg></span><div><small>배우면서 완성하는 그림 클래스</small><span class="wm">밍뉴툰 스튜디오</span></div></div>
     <a id="nnnLink" href="../" class="hidden" style="margin-left:auto;font-family:var(--fh);font-size:13px;color:#6b4fd8;background:rgba(255,255,255,.7);border:1px solid #fff;padding:8px 12px;border-radius:999px;text-decoration:none;box-shadow:0 4px 12px rgba(120,90,180,.15)">← NNN 월드</a>
   </header>
   <main id="homeMain">
     <div id="tab-works" class="htab active">
+      <div class="learn-card" id="learnCard"></div>
+      <div class="sec-title mk">바로 만들기</div>
       <div class="hero-wrap">
         <button class="hero h-art" id="btnNewArt"><div class="hx"><span class="kick">자유 드로잉</span><b>새 그림</b><small>브러시 · 레이어 · 대칭 그리기</small><span class="go">그리러 가기 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div><div class="hv"><svg viewBox="0 0 190 150" xmlns="http://www.w3.org/2000/svg" class="cv-art">
 <defs>
@@ -2286,6 +2328,7 @@ function homeTab(t) {
 }
 function fmtDate(t) { const d = new Date(t); const now = new Date(); if (d.toDateString() === now.toDateString()) return `오늘 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; return `${d.getMonth() + 1}월 ${d.getDate()}일`; }
 async function renderGallery() {
+  renderLearnCard();
   const tip = [...TOON_TIPS, ...DRAW_TIPS][Math.floor(Math.random() * (TOON_TIPS.length + DRAW_TIPS.length))];
   $('#homeTip').innerHTML = `<span class="tc-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z" fill="rgba(255,255,255,.25)"/></svg></span><div class="tc-tx"><b>오늘의 꿀팁</b><p>${tip}</p></div><button class="tc-re" aria-label="다른 팁"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 5v6h-6"/></svg></button>`;
   $('#homeTip .tc-re').onclick = e => { e.stopPropagation(); const t2 = [...TOON_TIPS, ...DRAW_TIPS][Math.floor(Math.random() * (TOON_TIPS.length + DRAW_TIPS.length))]; const p = $('#homeTip p'); p.style.opacity = 0; setTimeout(() => { p.innerHTML = t2; p.style.opacity = 1; }, 150); };
@@ -2388,7 +2431,7 @@ const MISSIONS = [
   { id: 'gif', t: '움직이는 GIF 저장하기', d: '🎞 애니 → GIF' },
   { id: 'emoji', t: '나만의 움직이는 이모티콘', d: '투명 배경 GIF로 완성', manual: true },
 ];
-function markMission(id) { const m = LS.get('missions', {}); if (!m[id]) { m[id] = Date.now(); LS.set('missions', m); const ms = MISSIONS.find(x => x.id === id); if (ms) setTimeout(() => toast(`🏅 미션 성공! "${ms.t}"`, 2600), 500); } }
+function markMission(id) { const m = LS.get('missions', {}); if (!m[id]) { m[id] = Date.now(); LS.set('missions', m); touchDay(); checkLevelUp(); const ms = MISSIONS.find(x => x.id === id); if (ms) setTimeout(() => toast(`🏅 미션 성공! "${ms.t}"`, 2600), 500); } }
 
 const ANIM_SIZES = [{ n: '이모티콘', s: '360 × 360', w: 360, h: 360 }, { n: '정사각형', s: '480 × 480', w: 480, h: 480 }, { n: '가로 영상', s: '640 × 360', w: 640, h: 360 }, { n: '세로 영상', s: '360 × 640', w: 360, h: 640 }];
 function newAnimModal() {
@@ -2573,13 +2616,14 @@ let LESSON_OPEN = null;
 function renderSchool() {
   const el = $('#tab-school');
   const ALL_L = LESSONS.concat(ANIM_LESSONS);
-  if (LESSON_OPEN) { const L = ALL_L.find(l => l.id === LESSON_OPEN); el.innerHTML = `<button class="backlink" id="lsBack">← 배우기</button><div class="lesson">${L.h()}</div><div style="display:flex;justify-content:space-between;margin:14px 0 30px"><button class="btn sec sm" id="lsPrev">← 이전</button><button class="btn sm" id="lsNext">다음 수업 →</button></div>`; $('#lsBack').onclick = () => { LESSON_OPEN = null; renderSchool(); }; const i = ALL_L.indexOf(L); $('#lsPrev').onclick = () => { LESSON_OPEN = ALL_L[(i - 1 + ALL_L.length) % ALL_L.length].id; renderSchool(); $('#homeMain').scrollTop = 0; }; $('#lsNext').onclick = () => { LESSON_OPEN = ALL_L[(i + 1) % ALL_L.length].id; renderSchool(); $('#homeMain').scrollTop = 0; }; el.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => startExample(b.dataset.ex)); return; }
+  if (LESSON_OPEN) { const L = ALL_L.find(l => l.id === LESSON_OPEN); learnMark('lesson:' + L.id); el.innerHTML = `<button class="backlink" id="lsBack">← 배우기</button><div class="lesson">${L.h()}</div><div style="display:flex;justify-content:space-between;margin:14px 0 30px"><button class="btn sec sm" id="lsPrev">← 이전</button><button class="btn sm" id="lsNext">다음 수업 →</button></div>`; $('#lsBack').onclick = () => { LESSON_OPEN = null; renderSchool(); }; const i = ALL_L.indexOf(L); $('#lsPrev').onclick = () => { LESSON_OPEN = ALL_L[(i - 1 + ALL_L.length) % ALL_L.length].id; renderSchool(); $('#homeMain').scrollTop = 0; }; $('#lsNext').onclick = () => { LESSON_OPEN = ALL_L[(i + 1) % ALL_L.length].id; renderSchool(); $('#homeMain').scrollTop = 0; }; el.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => startExample(b.dataset.ex)); return; }
   const done = LS.get('missions', {});
-  el.innerHTML = `<div class="tipcard"><b>🎓 배우기</b><br>그럴듯한 웹툰과 애니메이션을 만드는 비법을 하나씩 배워요. 읽고 나서 바로 그려 보는 게 최고!</div><div class="sec-title">웹툰 수업</div><div class="lesson-grid" id="lsGrid"></div><div class="sec-title" style="margin-top:18px">애니메이션 수업</div><div class="lesson-grid" id="lsGridA"></div>
-  <div class="sec-title" style="margin-top:20px">도전 미션 <small style="font-family:var(--fb);font-size:13px;color:#77738a">${Object.keys(done).length}/${MISSIONS.length}</small></div><div id="msList"></div>`;
-  const ga = $('#lsGridA'); ANIM_LESSONS.forEach(L => { const b = document.createElement('button'); b.className = 'lesson-card'; b.style.background = 'linear-gradient(135deg,#fff,#eaf6ff)'; b.innerHTML = `<span class="em">${L.em}</span><b>${L.t}</b><small>${L.s}</small>`; b.onclick = () => { LESSON_OPEN = L.id; renderSchool(); $('#homeMain').scrollTop = 0; }; ga.appendChild(b); });
-  const g = $('#lsGrid'); LESSONS.forEach(L => { const b = document.createElement('button'); b.className = 'lesson-card'; b.innerHTML = `<span class="em">${L.em}</span><b>${L.t}</b><small>${L.s}</small>`; b.onclick = () => { LESSON_OPEN = L.id; renderSchool(); $('#homeMain').scrollTop = 0; }; g.appendChild(b); });
-  const ml = $('#msList'); MISSIONS.forEach(m => { const d = document.createElement('div'); d.className = 'mission' + (done[m.id] ? ' done' : ''); d.innerHTML = `<div class="ck">${done[m.id] ? '✔' : ''}</div><div class="tx"><b>${m.t}</b><br><small style="color:#77738a">${m.d}${m.manual && !done[m.id] ? ' · 다 하면 눌러서 체크!' : ''}</small></div>`; if (m.manual) d.onclick = () => { const x = LS.get('missions', {}); if (x[m.id]) delete x[m.id]; else x[m.id] = Date.now(); LS.set('missions', x); renderSchool(); }; ml.appendChild(d); });
+  el.innerHTML = roadmapHTML() + `<div class="sec-title" style="margin-top:26px">모든 수업 모아보기</div><div class="sub-title">웹툰 수업</div><div class="lesson-grid" id="lsGrid"></div><div class="sub-title">애니메이션 수업</div><div class="lesson-grid" id="lsGridA"></div>
+  <div class="sec-title" style="margin-top:26px">도전 미션 <small style="font-family:var(--fb);font-size:13px;color:#77738a">${Object.keys(done).length}/${MISSIONS.length}</small></div><div id="msList"></div>`;
+  const ga = $('#lsGridA'); ANIM_LESSONS.forEach(L => { const b = document.createElement('button'); b.className = 'lesson-card'; if (LS.get('learn', {})['lesson:' + L.id]) b.classList.add('done'); b.innerHTML = `<span class="em">${L.em}</span><b>${L.t}</b><small>${L.s}</small>`; b.onclick = () => { LESSON_OPEN = L.id; renderSchool(); $('#homeMain').scrollTop = 0; }; ga.appendChild(b); });
+  const g = $('#lsGrid'); LESSONS.forEach(L => { const b = document.createElement('button'); b.className = 'lesson-card'; if (LS.get('learn', {})['lesson:' + L.id]) b.classList.add('done'); b.innerHTML = `<span class="em">${L.em}</span><b>${L.t}</b><small>${L.s}</small>`; b.onclick = () => { LESSON_OPEN = L.id; renderSchool(); $('#homeMain').scrollTop = 0; }; g.appendChild(b); });
+  const ml = $('#msList'); MISSIONS.forEach(m => { const d = document.createElement('div'); d.className = 'mission' + (done[m.id] ? ' done' : ''); d.innerHTML = `<div class="ck">${done[m.id] ? '✔' : ''}</div><div class="tx"><b>${m.t}</b><br><small style="color:#77738a">${m.d}${m.manual && !done[m.id] ? ' · 다 하면 눌러서 체크!' : ''}</small></div>`; if (m.manual) d.onclick = () => { const x = LS.get('missions', {}); if (x[m.id]) delete x[m.id]; else { x[m.id] = Date.now(); touchDay(); } LS.set('missions', x); checkLevelUp(); renderSchool(); }; ml.appendChild(d); });
+  bindRoadmap(el);
 }
 
 /* ================= IDEAS ================= */
@@ -3209,7 +3253,7 @@ function initSteps() {
   $('#scX').onclick = () => { ST.guide = null; showStep(); };
   $('#scT').onclick = () => $('#stepCard').classList.toggle('mini');
   $('#scP').onclick = () => { if (ST.guide && ST.guide.i > 0) { ST.guide.i--; showStep(); } };
-  $('#scNx').onclick = () => { const E = guidedById(ST.guide.id); if (ST.guide.i < E.steps.length - 1) { ST.guide.i++; showStep(); } else { const tr = TRACE_LESSONS.includes(E); ST.guide = null; showStep(); toast(tr ? '🎉 따라 그리기 완료! 📐 가이드를 끄고 내 그림을 봐요' : '🎉 예제 끝! 이제 나만의 애니메이션을 만들어 봐요'); markMission(tr ? 'trace' : 'example'); } };
+  $('#scNx').onclick = () => { const E = guidedById(ST.guide.id); if (ST.guide.i < E.steps.length - 1) { ST.guide.i++; showStep(); } else { const tr = TRACE_LESSONS.includes(E); afterUnit((tr ? 'trace:' : 'example:') + E.id); ST.guide = null; showStep(); toast(tr ? '🎉 따라 그리기 완료! 📐 가이드를 끄고 내 그림을 봐요' : '🎉 예제 끝! 이제 나만의 애니메이션을 만들어 봐요'); markMission(tr ? 'trace' : 'example'); } };
 }
 
 /* ================= ANIMATION SCHOOL ================= */
@@ -3627,7 +3671,120 @@ function renderTrace() {
   <div class="tipcard" style="font-size:13.5px"><b>🤝 그림 예절</b><br>다른 사람 그림을 따라 그린 건 <b>연습용</b>이에요. SNS에 올릴 땐 "○○ 작가님 그림 따라 그렸어요"처럼 꼭 원래 작가를 밝히고, 내 작품이라고 하지 않아요.</div><div style="height:20px"></div>`;
   el.querySelectorAll('[data-ti]').forEach(b => b.onclick = () => pickTraceImage(b.dataset.ti));
   $('#trVid').onclick = pickTraceVideo;
-  const g = $('#trGrid'); TRACE_LESSONS.forEach(E => { const b = document.createElement('button'); b.className = 'lesson-card'; b.innerHTML = `<span class="em">${E.em}</span><b>${E.name}</b><small>${E.desc}</small><small style="color:#a78bfa">${E.kind === 'anim' ? '🎞 애니' : E.kind === 'toon' ? '📱 웹툰' : '🖌 그림'} · ${E.steps.length}단계</small>`; b.onclick = () => startTrace(E.id); g.appendChild(b); });
+  const g = $('#trGrid'); TRACE_LESSONS.forEach(E => { const b = document.createElement('button'); b.className = 'lesson-card' + (LS.get('learn', {})['trace:' + E.id] ? ' done' : ''); b.innerHTML = `<span class="em">${E.em}</span><b>${E.name}</b><small>${E.desc}</small><small style="color:#a78bfa">${E.kind === 'anim' ? '🎞 애니' : E.kind === 'toon' ? '📱 웹툰' : '🖌 그림'} · ${E.steps.length}단계</small>`; b.onclick = () => startTrace(E.id); g.appendChild(b); });
+}
+/* ================= LEARNING PATH (배우며 그리기 로드맵) ================= */
+const COURSE = [
+  { lv: 1, t: '선과 모양', s: '동그라미와 타원으로 그림의 뼈대 잡기', badge: '첫 붓질', hue: ['#ff8db5', '#ff6b98'],
+    units: [['trace', 't_cat'], ['trace', 't_lizard'], ['lesson', 'color'], ['mission', 'save']] },
+  { lv: 2, t: '얼굴과 표정', s: '정면 · 옆얼굴 · 감정 표현', badge: '표정 장인', hue: ['#ffb36b', '#ff8a4c'],
+    units: [['trace', 't_face'], ['trace', 't_side'], ['lesson', 'faces'], ['trace', 't_faces']] },
+  { lv: 3, t: '나만의 캐릭터', s: '3등신 몸과 캐릭터 설정 만들기', badge: '캐릭터 디자이너', hue: ['#6fd6a8', '#36b98a'],
+    units: [['trace', 't_sd'], ['lesson', 'char'], ['mission', 'sheet']] },
+  { lv: 4, t: '웹툰 작가 되기', s: '칸 · 카메라 · 말풍선 · 연출', badge: '웹툰 작가', hue: ['#a88bff', '#7a5cf0'],
+    units: [['lesson', 'steps'], ['lesson', 'panels'], ['lesson', 'shots'], ['lesson', 'bubbles'], ['trace', 't_toon'], ['lesson', 'direct'], ['mission', 'four']] },
+  { lv: 5, t: '애니메이터 되기', s: '12가지 법칙과 움직이는 이모티콘', badge: '애니메이터', hue: ['#6cc4ff', '#3d8ff0'],
+    units: [['lesson', 'a_basic'], ['example', 'ball_done'], ['lesson', 'a_12'], ['example', 'blink'], ['trace', 't_walk'], ['example', 'slime'], ['mission', 'gif']] },
+];
+const RANKS = ['새싹 작가', '연필 작가', '표정 장인', '캐릭터 디자이너', '웹툰 작가', '애니메이터'];
+const UTYPE = { trace: '따라 그리기', lesson: '수업', example: '애니 실습', mission: '미션' };
+function unitInfo(u) {
+  const [k, id] = u; let o;
+  if (k === 'trace') o = TRACE_LESSONS.find(e => e.id === id);
+  else if (k === 'example') o = ANIM_EXAMPLES.find(e => e.id === id);
+  else if (k === 'lesson') o = LESSONS.concat(ANIM_LESSONS).find(e => e.id === id);
+  else o = MISSIONS.find(e => e.id === id);
+  if (!o) return { k, id, t: id, em: '•' };
+  return { k, id, t: o.name || o.t, em: o.em || (k === 'mission' ? '🏅' : '•'), d: o.desc || o.s || o.d || '', manual: o.manual };
+}
+function unitDone(u) { const [k, id] = u; if (k === 'mission') return !!LS.get('missions', {})[id]; return !!LS.get('learn', {})[k + ':' + id]; }
+function levelProg(L) { const d = L.units.filter(unitDone).length; return { d, n: L.units.length, done: d === L.units.length }; }
+function courseStat() {
+  let d = 0, n = 0, lvDone = 0, cur = null, next = null;
+  COURSE.forEach(L => { const p = levelProg(L); d += p.d; n += p.n; if (p.done) lvDone++; else if (!cur) { cur = L; next = L.units.find(u => !unitDone(u)); } });
+  return { d, n, pct: Math.round(d / n * 100), lvDone, rank: RANKS[lvDone], cur, next };
+}
+function todayKey(t = Date.now()) { const x = new Date(t); return x.getFullYear() + '-' + (x.getMonth() + 1) + '-' + x.getDate(); }
+function touchDay() { const days = LS.get('learnDays', []); const k = todayKey(); if (!days.includes(k)) { days.push(k); LS.set('learnDays', days.slice(-400)); } }
+function streak() {
+  const days = new Set(LS.get('learnDays', [])); let n = 0; let t = Date.now();
+  if (!days.has(todayKey(t))) t -= 864e5; // 오늘 아직 안 했으면 어제부터 셈
+  while (days.has(todayKey(t))) { n++; t -= 864e5; }
+  return n;
+}
+function learnMark(key) {
+  touchDay();
+  const m = LS.get('learn', {}); if (m[key]) return false; m[key] = Date.now(); LS.set('learn', m);
+  return checkLevelUp();
+}
+function afterUnit(key) {
+  const up = learnMark(key); if (up) return;
+  const S = courseStat(); if (!S.next) return; const I = unitInfo(S.next);
+  setTimeout(() => {
+    openModal(`<div class="lvup"><small>수업 완료</small><h3>잘했어요! 다음 수업도 해 볼까요?</h3><button class="lc-next" id="nuGo" style="background:#f7f4fc;box-shadow:none"><span class="lc-em">${I.em}</span><span class="lc-tx"><small>${S.cur.lv}단계 · ${UTYPE[I.k]}</small><b>${I.t}</b></span><span class="lc-play"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span></button><div class="mbtns"><button class="btn sec sm" id="nuX">계속 그리기</button></div></div>`);
+    $('#nuX').onclick = closeModal; $('#nuGo').onclick = () => { closeModal(); const u = S.next; if (ST.doc) leaveEditor(() => startUnit(u)); else startUnit(u); };
+  }, 900);
+}
+function checkLevelUp() {
+  const got = LS.get('badges', {}); let up = false;
+  COURSE.forEach(L => { if (levelProg(L).done && !got[L.lv]) { got[L.lv] = Date.now(); LS.set('badges', got); up = true; setTimeout(() => celebrate(L), 700); } });
+  return up;
+}
+function badgeSVG(L, size = 64, locked = false) {
+  const [a, b] = L.hue; const id = 'bg' + L.lv + (locked ? 'l' : '') + Math.random().toString(36).slice(2, 6);
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${locked ? '#e4e0ec' : a}"/><stop offset="1" stop-color="${locked ? '#cdc7da' : b}"/></linearGradient></defs>
+  <path d="M32 3l7 5 8.5-.5 3.5 7.8 7.5 4-1.5 8.4 4 7.5-6 6-.5 8.5-8 2.5-5 7-8-3-8 3-5-7-8-2.5-.5-8.5-6-6 4-7.5L7 19.3l7.5-4L18 7.5 26.5 8z" fill="url(#${id})"/>
+  <circle cx="32" cy="32" r="17" fill="#fff" opacity="${locked ? .55 : .25}"/>
+  <text x="32" y="39" text-anchor="middle" font-family="Pretendard,Jua,sans-serif" font-weight="800" font-size="20" fill="${locked ? '#a7a0b8' : '#fff'}">${L.lv}</text></svg>`;
+}
+function celebrate(L) {
+  const nx = COURSE.find(c => c.lv === L.lv + 1);
+  openModal(`<div class="lvup"><div class="lvup-b">${badgeSVG(L, 120)}</div><small>${L.lv}단계 완료!</small><h3>‘${L.badge}’ 배지를 받았어요</h3><p>이제 나는 <b>${RANKS[COURSE.filter(c => levelProg(c).done).length]}</b>! ${nx ? `다음은 <b>${nx.lv}단계 · ${nx.t}</b>에 도전해 봐요.` : '모든 단계를 끝냈어요. 진짜 작가예요!'}</p><div class="mbtns"><button class="btn sec sm" id="lvX">좋아요</button>${nx ? '<button class="btn sm" id="lvGo">다음 단계 보기</button>' : ''}</div></div>`);
+  $('#lvX').onclick = closeModal; if (nx) $('#lvGo').onclick = () => { closeModal(); if (ST.doc) { leaveEditor(() => { LESSON_OPEN = null; homeTab('school'); }); } else { LESSON_OPEN = null; homeTab('school'); } };
+}
+function startUnit(u) {
+  const [k, id] = u;
+  if (k === 'trace') return startTrace(id);
+  if (k === 'example') return startExample(id);
+  if (k === 'lesson') { LESSON_OPEN = id; homeTab('school'); LESSON_OPEN = id; renderSchool(); $('#homeMain').scrollTop = 0; return; }
+  const I = unitInfo(u); const done = unitDone(u);
+  openModal(`<h3>${I.t}</h3><p style="color:#6a6480;line-height:1.6;margin:0 0 6px">${I.d}</p>${I.manual ? '<p style="font-size:13px;color:#9a94ae;margin:0">해냈으면 아래 버튼으로 체크해요.</p>' : '<p style="font-size:13px;color:#9a94ae;margin:0">해내면 자동으로 체크돼요.</p>'}<div class="mbtns"><button class="btn sec sm" id="muX">닫기</button>${I.manual ? `<button class="btn sm" id="muOk">${done ? '체크 해제' : '해냈어요!'}</button>` : `<button class="btn sm" id="muGo">${id === 'gif' ? '새 애니 만들기' : '새 그림 만들기'}</button>`}</div>`);
+  $('#muX').onclick = closeModal;
+  if (I.manual) $('#muOk').onclick = () => { const x = LS.get('missions', {}); if (x[id]) delete x[id]; else { x[id] = Date.now(); touchDay(); } LS.set('missions', x); closeModal(); checkLevelUp(); refreshLearnViews(); };
+  else $('#muGo').onclick = () => { closeModal(); (id === 'gif' ? $('#btnNewAnim') : $('#btnNewArt')).click(); };
+}
+function refreshLearnViews() { renderLearnCard(); if ($('#tab-school').classList.contains('active') && !LESSON_OPEN) renderSchool(); }
+function ringSVG(pct, size = 64, dark = false) {
+  const r = 26, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}"><defs><linearGradient id="rgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8db5"/><stop offset="1" stop-color="#8b6cff"/></linearGradient></defs><circle cx="32" cy="32" r="${r}" fill="none" stroke="${dark ? 'rgba(255,255,255,.14)' : 'rgba(139,108,255,.15)'}" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="url(#rgG)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-family="Pretendard,sans-serif" font-weight="800" font-size="15" fill="${dark ? '#fff' : '#2a2342'}">${pct}%</text></svg>`;
+}
+const FIRE = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2c1 4 6 6 6 12a6 6 0 01-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z" fill="#ff7a3d"/><path d="M12 13c1 2 3 2.5 3 5a3 3 0 01-6 0c0-1.5 1-2.5 1.5-3 0 1 .5 1.5 1 1.5 0-1.5-.5-2.5.5-3.5z" fill="#ffd23f"/></svg>';
+function renderLearnCard() {
+  const el = $('#learnCard'); if (!el) return; const S = courseStat(); const st = streak();
+  const nx = S.next ? unitInfo(S.next) : null;
+  el.innerHTML = `<div class="lc-top"><div class="lc-ring">${ringSVG(S.pct, 62, true)}</div><div class="lc-meta"><span class="lc-kick">나의 그림 클래스</span><b>${S.cur ? `${S.cur.lv}단계 · ${S.cur.t}` : '모든 단계 완료!'}</b><div class="lc-chips"><span class="chip-rank">${S.rank}</span>${st ? `<span class="chip-fire">${FIRE}${st}일 연속</span>` : '<span class="chip-fire off">오늘 첫 수업을 해 봐요</span>'}</div></div></div>
+  ${nx ? `<button class="lc-next" id="lcGo"><span class="lc-em">${nx.em}</span><span class="lc-tx"><small>다음 수업 · ${UTYPE[nx.k]}</small><b>${nx.t}</b></span><span class="lc-play"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span></button>` : `<button class="lc-next" id="lcGo"><span class="lc-tx"><small>졸업!</small><b>자유롭게 작품을 만들어 봐요</b></span></button>`}
+  <div class="lc-steps">${COURSE.map(L => { const p = levelProg(L); return `<i class="${p.done ? 'done' : (S.cur === L ? 'cur' : '')}" style="--p:${p.d / p.n}"></i>`; }).join('')}</div>`;
+  $('#lcGo').onclick = () => S.next ? startUnit(S.next) : $('#btnNewArt').click();
+  el.querySelector('.lc-top').onclick = () => { LESSON_OPEN = null; homeTab('school'); };
+}
+function roadmapHTML() {
+  const S = courseStat(); const st = streak(); const open = LS.get('roadOpen', null) ?? (S.cur ? S.cur.lv : 5);
+  let h = `<div class="road-head"><div class="rh-l"><span class="lc-kick">나의 그림 클래스</span><h2>${S.rank}</h2><p>배우면서 바로 그려요. 단계를 끝내면 배지를 받아요.</p></div><div class="rh-r">${ringSVG(S.pct, 74)}</div></div>
+  <div class="road-stats"><div><b>${S.d}<small>/${S.n}</small></b><span>끝낸 수업</span></div><div><b>${S.lvDone}<small>/5</small></b><span>받은 배지</span></div><div><b>${st}<small>일</small></b><span>연속 학습</span></div></div>
+  <div class="badges">${COURSE.map(L => `<div class="bd ${levelProg(L).done ? '' : 'lock'}">${badgeSVG(L, 46, !levelProg(L).done)}<small>${L.badge}</small></div>`).join('')}</div>
+  <div class="sec-title">학습 로드맵</div><div class="road">`;
+  COURSE.forEach(L => {
+    const p = levelProg(L); const isCur = S.cur === L; const isOpen = open === L.lv;
+    h += `<div class="lv ${p.done ? 'done' : ''} ${isCur ? 'cur' : ''} ${isOpen ? 'open' : ''}" style="--a:${L.hue[0]};--b:${L.hue[1]}"><button class="lv-h" data-lv="${L.lv}"><span class="lv-n">${p.done ? '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' : L.lv}</span><span class="lv-t"><small>${L.lv}단계${isCur ? ' · 진행 중' : ''}</small><b>${L.t}</b><em>${L.s}</em></span><span class="lv-p"><b>${p.d}/${p.n}</b><i><u style="width:${p.d / p.n * 100}%"></u></i></span></button><div class="lv-u">`;
+    L.units.forEach((u, i) => { const I = unitInfo(u); const d = unitDone(u); const isNext = S.next === u; h += `<button class="un ${d ? 'done' : ''} ${isNext ? 'next' : ''}" data-u="${L.lv}:${i}"><span class="un-em">${I.em}</span><span class="un-t"><small>${UTYPE[I.k]}</small><b>${I.t}</b></span><span class="un-s">${d ? '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' : isNext ? '시작' : ''}</span></button>`; });
+    h += `</div></div>`;
+  });
+  return h + '</div>';
+}
+function bindRoadmap(el) {
+  el.querySelectorAll('.lv-h').forEach(b => b.onclick = () => { const lv = +b.dataset.lv; const cur = LS.get('roadOpen', null); LS.set('roadOpen', cur === lv ? 0 : lv); renderSchool(); });
+  el.querySelectorAll('.un').forEach(b => b.onclick = () => { const [lv, i] = b.dataset.u.split(':').map(Number); startUnit(COURSE.find(c => c.lv === lv).units[i]); });
 }
 init();
 if (HOSTED) { const l = document.getElementById('nnnLink'); if (l) l.classList.remove('hidden'); }

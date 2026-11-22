@@ -201,7 +201,7 @@ function initSteps() {
   $('#scX').onclick = () => { ST.guide = null; showStep(); };
   $('#scT').onclick = () => $('#stepCard').classList.toggle('mini');
   $('#scP').onclick = () => { if (ST.guide && ST.guide.i > 0) { ST.guide.i--; showStep(); } };
-  $('#scNx').onclick = () => { const E = guidedById(ST.guide.id); if (ST.guide.i < E.steps.length - 1) { ST.guide.i++; showStep(); } else { const tr = TRACE_LESSONS.includes(E); ST.guide = null; showStep(); toast(tr ? '🎉 따라 그리기 완료! 📐 가이드를 끄고 내 그림을 봐요' : '🎉 예제 끝! 이제 나만의 애니메이션을 만들어 봐요'); markMission(tr ? 'trace' : 'example'); } };
+  $('#scNx').onclick = () => { const E = guidedById(ST.guide.id); if (ST.guide.i < E.steps.length - 1) { ST.guide.i++; showStep(); } else { const tr = TRACE_LESSONS.includes(E); afterUnit((tr ? 'trace:' : 'example:') + E.id); ST.guide = null; showStep(); toast(tr ? '🎉 따라 그리기 완료! 📐 가이드를 끄고 내 그림을 봐요' : '🎉 예제 끝! 이제 나만의 애니메이션을 만들어 봐요'); markMission(tr ? 'trace' : 'example'); } };
 }
 
 /* ================= ANIMATION SCHOOL ================= */

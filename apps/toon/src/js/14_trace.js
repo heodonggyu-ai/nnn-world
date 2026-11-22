@@ -163,5 +163,5 @@ function renderTrace() {
   <div class="tipcard" style="font-size:13.5px"><b>🤝 그림 예절</b><br>다른 사람 그림을 따라 그린 건 <b>연습용</b>이에요. SNS에 올릴 땐 "○○ 작가님 그림 따라 그렸어요"처럼 꼭 원래 작가를 밝히고, 내 작품이라고 하지 않아요.</div><div style="height:20px"></div>`;
   el.querySelectorAll('[data-ti]').forEach(b => b.onclick = () => pickTraceImage(b.dataset.ti));
   $('#trVid').onclick = pickTraceVideo;
-  const g = $('#trGrid'); TRACE_LESSONS.forEach(E => { const b = document.createElement('button'); b.className = 'lesson-card'; b.innerHTML = `<span class="em">${E.em}</span><b>${E.name}</b><small>${E.desc}</small><small style="color:#a78bfa">${E.kind === 'anim' ? '🎞 애니' : E.kind === 'toon' ? '📱 웹툰' : '🖌 그림'} · ${E.steps.length}단계</small>`; b.onclick = () => startTrace(E.id); g.appendChild(b); });
+  const g = $('#trGrid'); TRACE_LESSONS.forEach(E => { const b = document.createElement('button'); b.className = 'lesson-card' + (LS.get('learn', {})['trace:' + E.id] ? ' done' : ''); b.innerHTML = `<span class="em">${E.em}</span><b>${E.name}</b><small>${E.desc}</small><small style="color:#a78bfa">${E.kind === 'anim' ? '🎞 애니' : E.kind === 'toon' ? '📱 웹툰' : '🖌 그림'} · ${E.steps.length}단계</small>`; b.onclick = () => startTrace(E.id); g.appendChild(b); });
 }
