@@ -101,5 +101,17 @@ let off1=null;
 function apply(src,look,str){const w=src.width||src.naturalWidth,h=src.height||src.naturalHeight;if(!off1){const cv=document.createElement('canvas');off1=new Renderer(cv)}off1.cv.width=w;off1.cv.height=h;off1.cur=null;off1.render(src,look,{str});return off1.cv}
 function thumbs(src,w,h,ids){const t=document.createElement('canvas');t.width=w;t.height=h;const x=t.getContext('2d');const sw=src.videoWidth||src.naturalWidth||src.width,sh=src.videoHeight||src.naturalHeight||src.height,k=Math.max(w/sw,h/sh);
   x.drawImage(src,(w-sw*k)/2,(h-sh*k)/2,sw*k,sh*k);const out={};(ids||L.map(l=>l.id)).forEach(id=>{const c=apply(t,id,1);out[id]=c.toDataURL('image/jpeg',.8)});return out}
-window.LOOKS={list:L,groups:G,byId,Renderer,apply,thumbs};
+/* 장면·구도에 맞는 색감 추천 */
+const RS={selfie:['canon_portrait','fuji_astia','bright','kodak_portra','her'],portrait:['canon_portrait','fuji_astia','kodak_portra','fuji_cneg','her','leica_mono'],
+ couple:['kodak_portra','kodak_gold','her','warm','budapest'],group:['kodak_gold','kodak_portra','warm','vivid'],personFar:['kodak_gold','fuji_cneg','ricoh_posi','teal_orange','little_forest'],
+ land:['fuji_velvia','kodak_ektar','mccurry','ansel','cool'],night:['cinestill','neon_noir','wkw','br2049','leica_mono'],street:['fuji_cc','ilford_hp5','leiter','joker','noir','ricoh_posi'],
+ top:['warm','kodak_gold','bright','eggleston'],object:['kodak_portra','vivid','eggleston','fuji_cc'],general:['fuji_cneg','kodak_portra','fuji_cc','vivid']};
+const RC={film:['teal_orange','wkw','amelie','budapest','moonlight'],master:['leica_mono','eggleston','mccurry','bresson','leiter'],sport:['teal_orange','leica_mono','noir','ricoh_posi'],
+ pet:['bright','kodak_portra','warm'],food:['warm','kodak_gold','vivid'],night:['cinestill','neon_noir','wkw'],land:['fuji_velvia','kodak_ektar','ansel'],street:['fuji_cc','ilford_hp5','leiter'],
+ couple:['kodak_portra','her','kodak_gold'],travel:['kodak_gold','fuji_cneg','teal_orange'],people:['canon_portrait','fuji_cneg','kodak_portra'],portrait:['canon_portrait','fuji_astia']};
+const WHY={selfie:'셀카',portrait:'인물',couple:'두 사람',group:'단체',personFar:'인물+배경',land:'풍경',night:'밤',street:'거리',top:'음식·탑뷰',object:'사물',general:'일상'};
+function recommend(o={}){const out=[],add=(ids,why)=>(ids||[]).forEach(id=>{if(byId[id]&&!out.some(x=>x.id===id))out.push({id,why})});
+  if(o.dark&&o.scene!=='night')add(['cinestill','wkw'],'어두운 장면');if(o.warm)add(['kodak_gold','br2049','lalaland'],'노을빛');
+  add((RS[o.scene]||[]).slice(0,4),WHY[o.scene]||'');add((RC[o.cat]||[]).slice(0,3),o.catName?o.catName+' 구도':'');add(RS[o.scene],WHY[o.scene]||'');add(RS.general,'');return out.slice(0,9)}
+window.LOOKS={list:L,groups:G,byId,Renderer,apply,thumbs,recommend};
 })();

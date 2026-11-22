@@ -87,7 +87,7 @@ ${C.dock?`<div class="dock" id="dock"><button class="btn pri" id="dCam">${I('cam
  <div class="say-cam hidden" id="sayCam"><div class="tx"><small>이렇게 말해보세요</small><b id="sayT"></b></div><button id="sayN" aria-label="다른 멘트">${I('next')}</button></div>
  ${C.sceneRec?`<div class="cchips" id="cchips"></div>`:''}
  <div class="cstrip" id="cstrip"></div>
- <div class="lookbar hidden" id="lookbar"><div class="cchips" id="lkG"></div><div class="cstrip" id="lkS"></div><div class="lkr"><span id="lkN"></span><input type="range" id="lkR" min="0" max="100" aria-label="색감 강도"><button class="cc on" id="lkX">${I('check')}완료</button></div></div>
+ <div class="lookbar hidden" id="lookbar"><div class="cchips" id="lkG"></div><div class="cstrip" id="lkS"></div><div class="lkr"><span id="lkN"></span><b class="lkp">농도 <i id="lkP"></i></b><input type="range" id="lkR" min="0" max="100" aria-label="색감 농도"><button class="cc on" id="lkX">${I('check')}완료</button></div></div>
  <div class="toggles" id="toggles"></div>
  <div class="ctrl"><button class="last" id="cLast" aria-label="찍은 사진">${I('image')}</button><button class="shot" id="shutter" aria-label="촬영"><i></i><span id="shotN"></span></button><button class="round" id="cFlip" aria-label="카메라 전환">${I('flip')}</button></div>
 </section>
@@ -273,30 +273,32 @@ function showShots(){const ts=new Date().toISOString().slice(0,19).replace(/[:T]
   $('#shB').onclick=e=>{const ed=e.target.closest('[data-e]');if(ed){openEditor(+ed.dataset.e);return}const b=e.target.closest('[data-s]');if(b)saveFiles([files[+b.dataset.s]])};$('#saveAll').onclick=()=>saveFiles(files)}
 
 /* ---------- 색감 ---------- */
-function lookChips(el,g){el.innerHTML=Object.entries(LOOKS.groups).map(([k,n])=>`<button class="cc${g===k?' on':''}" data-lg="${k}">${n}</button>`).join('')}
-function lookThumbs(el,g,sel,TH){const L=LOOKS.list.filter(l=>l.g===g||(g!=='basic'&&l.id==='none'));el.innerHTML=L.map(l=>`<button class="gth${l.id===sel?' on':''}" data-lk="${l.id}"><span class="t">${TH&&TH[l.id]?`<img src="${TH[l.id]}" alt="">`:''}</span><span>${l.name}</span></button>`).join('');const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
+function lookChips(el,g){el.innerHTML=[['rec','추천'],...Object.entries(LOOKS.groups)].map(([k,n])=>`<button class="cc${g===k?' on':''}" data-lg="${k}">${k==='rec'?I('spark'):''}${n}</button>`).join('')}
+let lkRec=[];
+function lookCtx(f,sc){const it=BY[active];return{scene:sc?sc.k:'general',dark:sc?sc.dark:false,warm:sc?sc.warm:false,cat:it&&it.kind==='style'?it.cat:null,catName:it&&it.kind==='style'?PC.cats[it.cat]:''}}
+function lookThumbs(el,g,sel,TH,REC){const R=REC||lkRec;const L=g==='rec'?[LOOKS.byId.none,...R.map(r=>Object.assign({},LOOKS.byId[r.id],{why:r.why}))]:LOOKS.list.filter(l=>l.g===g||(g!=='basic'&&l.id==='none'));el.innerHTML=L.map(l=>`<button class="gth${l.id===sel?' on':''}" data-lk="${l.id}"><span class="t">${TH&&TH[l.id]?`<img src="${TH[l.id]}" alt="">`:''}</span><span>${l.name}</span>${l.why?`<em>${l.why}</em>`:''}</button>`).join('');const on=el.querySelector('.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}
 function snapSmall(){const src=S.mode==='still'?still:vid;const ok=S.mode==='still'?still.naturalWidth:vid.videoWidth;if(!ok)return null;const sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight,cr=PC.getCrop(sw,sh,curAR()),c=document.createElement('canvas');c.width=96;c.height=Math.round(96/curAR());const x=c.getContext('2d');if(S.mirror&&S.mode!=='still'){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(src,cr.x,cr.y,cr.w,cr.h,0,0,c.width,c.height);return c}
 let lkG='film',lkTH=null;
-function openLookbar(){const bar=$('#lookbar');if(!bar.classList.contains('hidden')){closeLookbar();return}lkG=LOOKS.byId[look]&&look!=='none'?LOOKS.byId[look].g:'film';const sm=snapSmall();lkTH=null;try{lkTH=sm?LOOKS.thumbs(sm,sm.width,sm.height):null}catch(e){}
+function openLookbar(){const bar=$('#lookbar');if(!bar.classList.contains('hidden')){closeLookbar();return}lkRec=LOOKS.recommend(lookCtx(feat,scn||(feat?PC.scene(feat,S):null)));lkG='rec';const sm=snapSmall();lkTH=null;try{lkTH=sm?LOOKS.thumbs(sm,sm.width,sm.height):null}catch(e){}
   bar.classList.remove('hidden');$('#cchips')&&$('#cchips').classList.add('hidden');$('#cstrip').classList.add('hidden');paintLookbar()}
 function closeLookbar(){$('#lookbar').classList.add('hidden');$('#cchips')&&$('#cchips').classList.remove('hidden');$('#cstrip').classList.remove('hidden');renderToggles()}
-function paintLookbar(){lookChips($('#lkG'),lkG);lookThumbs($('#lkS'),lkG,look,lkTH);const l=LOOKS.byId[look];$('#lkN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#lkR').value=Math.round(lookStr*100);$('#lkR').disabled=look==='none'}
+function paintLookbar(){lookChips($('#lkG'),lkG);lookThumbs($('#lkS'),lkG,look,lkTH);const l=LOOKS.byId[look];$('#lkN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#lkR').value=Math.round(lookStr*100);$('#lkR').disabled=look==='none';$('#lkP').textContent=look==='none'?'':Math.round(lookStr*100)+'%'}
 if(LK){$('#lkG').onclick=e=>{const b=e.target.closest('[data-lg]');if(!b)return;lkG=b.dataset.lg;paintLookbar()};
   $('#lkS').onclick=e=>{const b=e.target.closest('[data-lk]');if(!b)return;look=b.dataset.lk;LS.set('look',look);paintLookbar();renderToggles();navigator.vibrate&&navigator.vibrate(6)};
-  $('#lkR').oninput=e=>{lookStr=e.target.value/100;LS.set('lookStr',lookStr)};$('#lkX').onclick=closeLookbar}
+  $('#lkR').oninput=e=>{lookStr=e.target.value/100;LS.set('lookStr',lookStr);$('#lkP').textContent=Math.round(lookStr*100)+'%'};$('#lkX').onclick=closeLookbar}
 /* 실시간 미리보기 */
 function glLoop(){requestAnimationFrame(glLoop);if(!glr)return;const on=LK&&look!=='none'&&!$('#cam').classList.contains('hidden')&&(S.mode==='live'&&vid.videoWidth||S.mode==='still'&&still.naturalWidth);glv.style.display=on?'block':'none';if(!on)return;
   try{const src=S.mode==='still'?still:vid,sw=src.videoWidth||src.naturalWidth,sh=src.videoHeight||src.naturalHeight;glr.render(src,look,{sw,sh,crop:PC.getCrop(sw,sh,curAR()),mirror:S.mirror&&S.mode!=='still',str:lookStr,seed:(performance.now()/90|0)%97})}catch(e){}}
 if(glr)requestAnimationFrame(glLoop);
 /* 찍은 사진 색감 바꾸기 */
-function openEditor(i){const o=origs[i];if(!o)return;const img=new Image(),url=URL.createObjectURL(o.b);let sel=o.look,str=o.str,g=LOOKS.byId[sel]&&sel!=='none'?LOOKS.byId[sel].g:'film',TH=null,er=null;
-  openSheet('색감 바꾸기',`<div class="ed-ph"><canvas id="edC"></canvas></div><div class="cchips ed" id="edG"></div><div class="cstrip ed" id="edS"></div><div class="lkr ed"><span id="edN"></span><input type="range" id="edR" min="0" max="100" aria-label="색감 강도"></div>`,
+function openEditor(i){const o=origs[i];if(!o)return;const img=new Image(),url=URL.createObjectURL(o.b);let sel=o.look,str=o.str,g='rec',TH=null,er=null,REC=LOOKS.recommend({scene:'general'});
+  openSheet('색감 바꾸기',`<div class="ed-ph"><canvas id="edC"></canvas></div><div class="cchips ed" id="edG"></div><div class="cstrip ed" id="edS"></div><div class="lkr ed"><span id="edN"></span><b class="lkp">농도 <i id="edP"></i></b><input type="range" id="edR" min="0" max="100" aria-label="색감 농도"></div>`,
     `<div class="row"><button class="btn ghost" id="edBack">${I('back')}돌아가기</button><button class="btn pri wide" id="edOk">${I('check')}이 색감으로</button></div>`,{dark:true});
-  const paint=()=>{lookChips($('#edG'),g);lookThumbs($('#edS'),g,sel,TH);const l=LOOKS.byId[sel];$('#edN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#edR').value=Math.round(str*100);$('#edR').disabled=sel==='none';if(er)er.render(img,sel,{str})};
+  const paint=()=>{lookChips($('#edG'),g);lookThumbs($('#edS'),g,sel,TH,REC);const l=LOOKS.byId[sel];$('#edN').textContent=l?l.name+(l.d?' · '+l.d:''):'';$('#edR').value=Math.round(str*100);$('#edR').disabled=sel==='none';$('#edP').textContent=sel==='none'?'':Math.round(str*100)+'%';if(er)er.render(img,sel,{str})};
   img.onload=()=>{const cv=$('#edC');if(!cv)return;const k=Math.min(1,900/Math.max(img.width,img.height));cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);try{er=new Renderer2(cv)}catch(e){}
-    const sm=document.createElement('canvas');sm.width=96;sm.height=Math.round(96*img.height/img.width);sm.getContext('2d').drawImage(img,0,0,sm.width,sm.height);try{TH=LOOKS.thumbs(sm,sm.width,sm.height)}catch(e){}paint()};img.src=url;
+    const sm=document.createElement('canvas');sm.width=96;sm.height=Math.round(96*img.height/img.width);sm.getContext('2d').drawImage(img,0,0,sm.width,sm.height);try{const f=PC.analyze(img,img.width,img.height,false,img.width/img.height);REC=LOOKS.recommend(lookCtx(f,PC.scene(f,{facing:'environment',flat:0})))}catch(e){}try{TH=LOOKS.thumbs(sm,sm.width,sm.height)}catch(e){}paint()};img.src=url;
   $('#edG').onclick=e=>{const b=e.target.closest('[data-lg]');if(b){g=b.dataset.lg;paint()}};$('#edS').onclick=e=>{const b=e.target.closest('[data-lk]');if(b){sel=b.dataset.lk;paint()}};
-  $('#edR').oninput=e=>{str=e.target.value/100;if(er)er.render(img,sel,{str})};$('#edBack').onclick=showShots;
+  $('#edR').oninput=e=>{str=e.target.value/100;$('#edP').textContent=Math.round(str*100)+'%';if(er)er.render(img,sel,{str})};$('#edBack').onclick=showShots;
   $('#edOk').onclick=async()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);let out=c;if(sel!=='none'){try{out=LOOKS.apply(c,sel,str)}catch(e){}}
     shots[i]=await new Promise(r=>out.toBlob(r,'image/jpeg',.92));origs[i]={b:o.b,look:sel,str};toast('색감을 바꿨어요');showShots()}}
 function Renderer2(cv){return new LOOKS.Renderer(cv)}

@@ -254,3 +254,6 @@ body:has(#cam:not(.hidden)) .dock{display:none}
 .lkr.ed input{width:150px}
 .sf .row .btn.ghost{flex:none;color:#fff;border-color:var(--camLine)}
 .sf .row .btn.wide{flex:1}
+.gth em{font-style:normal;font-size:9.5px;color:rgba(255,255,255,.5);margin-top:-3px;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lkp{flex:none;font-weight:600;color:#fff;font-size:12px}
+.lkp i{font-style:normal;display:inline-block;min-width:32px}
