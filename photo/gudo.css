@@ -83,3 +83,30 @@ h2.sec{font-weight:700;font-size:19px;margin-top:34px}
 .hero canvas{height:clamp(210px,34vh,290px)}
 .vf{height:calc(clamp(210px,34vh,290px) - 28px)}
 .dock .btn.glass{box-shadow:0 4px 16px rgba(20,27,52,.12)}
+/* 첫 화면: 기능 한눈에 */
+.demo{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:8px;cursor:pointer;margin-top:2px}
+.dv{position:relative;border-radius:15px;overflow:hidden;aspect-ratio:640/340;background:#222}
+.dv canvas{display:block;width:100%;height:100%}
+.dsplit{position:absolute;inset:0;pointer-events:none}
+.dsplit::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,.25)}
+.dsplit i{position:absolute;bottom:10px;font-style:normal;font-size:11px;font-weight:700;color:#fff;background:rgba(11,15,28,.55);padding:3px 8px;border-radius:999px}
+.dsplit i:first-child{right:calc(50% + 8px)}.dsplit i:last-child{left:calc(50% + 8px)}
+.dchip{position:absolute;display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 20px);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.94);color:var(--ink);font-size:12px;font-weight:500;box-shadow:0 4px 14px rgba(11,15,28,.18);white-space:nowrap}
+.dchip .ic{width:14px;height:14px}
+.dchip b{font-weight:700}
+.dchip.a{top:10px;left:10px}.dchip.b{top:44px;left:10px}
+.dchip.c{top:10px;right:10px;background:var(--ink);color:#fff}
+.dt{padding:12px 8px 4px}
+.dt h1{margin:0 0 4px;font-size:clamp(20px,5.8vw,24px);line-height:1.25;font-weight:700;letter-spacing:-.045em;white-space:pre-line}
+.dt p{margin:0;font-size:13.5px;line-height:1.55;color:var(--sub)}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feat{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:8px 8px 12px;text-align:left;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
+.feat .fa{position:relative;display:block;border-radius:11px;overflow:hidden;aspect-ratio:240/150;margin-bottom:6px;background:var(--line)}
+.feat .fa canvas{display:block;width:100%;height:100%}
+.feat .fa em{position:absolute;top:6px;right:6px;font-style:normal;font-size:11px;font-weight:700;background:var(--ink);color:#fff;padding:2px 7px;border-radius:999px}
+.feat b{display:flex;align-items:center;gap:5px;font-size:14.5px;font-weight:700;letter-spacing:-.035em;padding:0 4px}
+.feat b .ic{width:16px;height:16px}
+.feat small{font-size:12px;line-height:1.4;color:var(--sub);padding:0 4px}
+.feat:active{transform:scale(.98)}
+.demo+h2.sec{margin-top:20px}
+.cgrid-w{margin-top:8px}
