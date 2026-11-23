@@ -49,7 +49,7 @@ function paint(){if(!S)return;const cv=$('#peC'),src=curSrc();const v=mkC(cv.wid
   overlay()}
 function overlay(){const o=$('#peO'),x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);if((S.tool==='erase'||S.tool==='ai')&&S.strokes){x.save();x.strokeStyle='rgba(255,70,110,.55)';x.lineCap='round';x.lineJoin='round';S.strokes.forEach(s=>{x.lineWidth=s.w*o.width;x.beginPath();s.p.forEach((p,i)=>i?x.lineTo(p[0]*o.width,p[1]*o.height):x.moveTo(p[0]*o.width,p[1]*o.height));if(s.p.length===1)x.lineTo(s.p[0][0]*o.width+.1,s.p[0][1]*o.height);x.stroke()});x.restore()}
   if(S.crop){x.save();x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=1;[1,2].forEach(i=>{x.beginPath();x.moveTo(o.width*i/3,0);x.lineTo(o.width*i/3,o.height);x.moveTo(0,o.height*i/3);x.lineTo(o.width,o.height*i/3);x.stroke()});x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(1.5,1.5,o.width-3,o.height-3);x.restore()}
-  if(S.layer){const L=S.layer,k=o.width/S.base.width,b=layerBox(L);x.save();x.setLineDash([6,5]);x.strokeStyle='#fff';x.lineWidth=2;x.strokeRect(b.x*k,b.y*k,b.w*k,b.h*k);x.restore()}}
+  if(S.layer)drawLayerBox(o,S.layer)}
 
 /* ---------- 도구 판 ---------- */
 function setTool(t){if(S.crop&&t!=='crop')S.crop=null;if(S.layer&&t!=='add')S.layer=null;S.tool=t;S.strokes=null;$$('#peT [data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));panel();fit()}
@@ -76,12 +76,20 @@ function panel(){const P=$('#peP'),I=D.I,t=S.tool;P.className='pe-panel t-'+t;
     $('#peBl').oninput=e=>{S.blur=e.target.value/100;e.target.nextElementSibling.textContent=e.target.value};
     P.onclick=async e=>{const b=e.target.closest('[data-p]');if(!b)return;await personFx(b.dataset.p)};return}
   if(t==='ai'){aiPanel(P);return}
-  if(t==='add'){const L=S.layer;P.innerHTML=L?`<label class="adr wide"><span>크기</span><input type="range" min="10" max="300" value="${Math.round(L.s*100)}" id="peLs"><i>${Math.round(L.s*100)}%</i></label>${L.type==='text'?`<div class="cchips">${['#ffffff','#141B34','#ffd34d','#ff5a7e','#3ddc84','#4aa3ff'].map(c=>`<button class="cc sw" data-c="${c}" style="--c:${c}"></button>`).join('')}</div>`:''}<div class="pe-row"><span class="pe-tip">끌어서 위치를 옮겨요</span><button class="cc" id="peLx">취소</button><button class="cc on" id="peLok">${I('check')}붙이기</button></div>`
-      :`<div class="pe-grid two"><button class="pe-act" data-a="person">${I('user')}<b>다른 사진의 사람 넣기</b><small>AI가 사람만 오려서 붙여요</small></button><button class="pe-act" data-a="text">${I('chat')}<b>글자 넣기</b><small>날짜·장소·한마디</small></button></div>`;
-    if(L){$('#peLs').oninput=e=>{L.s=e.target.value/100;e.target.nextElementSibling.textContent=e.target.value+'%';paint()};$('#peLx').onclick=()=>{S.layer=null;panel();paint()};
+  if(t==='add'){const L=S.layer;
+    if(L){const deg=Math.round(((L.rot*180/Math.PI)%360+540)%360-180);P.innerHTML=`<p class="pe-tip" style="padding:4px 16px">한 손가락: 옮기기 · 두 손가락: 크기·회전 · 흰 손잡이: 돌리며 크기</p>
+      <label class="adr wide"><span>크기</span><input type="range" min="5" max="400" value="${Math.round(L.s*100)}" id="peLs"><i>${Math.round(L.s*100)}%</i></label>
+      <label class="adr wide"><span>회전</span><input type="range" min="-180" max="180" value="${deg}" id="peLr"><i>${deg}°</i></label>
+      <div class="cchips">${L.type==='img'?`<button class="cc${L.match?' on':''}" data-o="match">${I('spark')}색 맞추기</button><button class="cc${L.shadow?' on':''}" data-o="shadow">${I('moon')}발밑 그림자</button><button class="cc" data-o="auto">${I('user')}자동 배치</button>`:['#ffffff','#141B34','#ffd34d','#ff5a7e','#3ddc84','#4aa3ff'].map(c=>`<button class="cc sw" data-c="${c}" style="--c:${c}"></button>`).join('')}<button class="cc" data-o="flip">⇋ 반전</button></div>
+      <div class="pe-row"><span class="pe-tip"></span><button class="cc" id="peLx">취소</button><button class="cc on" id="peLok">${I('check')}붙이기</button></div>`;
+      $('#peLs').oninput=e=>{L.s=e.target.value/100;e.target.nextElementSibling.textContent=e.target.value+'%';paint()};
+      $('#peLr').oninput=e=>{L.rot=e.target.value*Math.PI/180;e.target.nextElementSibling.textContent=e.target.value+'°';paint()};
+      $('#peLx').onclick=()=>{S.layer=null;panel();paint()};
       $('#peLok').onclick=()=>{push();drawLayer(S.base.getContext('2d'),L,1);S.layer=null;thumbs();panel();paint();D.toast('붙였어요')};
-      P.onclick=e=>{const c=e.target.closest('[data-c]');if(c&&L.type==='text'){L.col=c.dataset.c;L.cv=textCanvas(L.text,L.col);paint()}}}
-    else P.onclick=async e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='text'){const t=prompt('넣을 글자를 적어주세요','');if(!t)return;S.layer={type:'text',text:t,col:'#ffffff',cv:textCanvas(t,'#ffffff'),x:S.base.width/2,y:S.base.height*.85,s:1};panel();paint()}else{$('#peFile').onchange=async ev=>{const f=ev.target.files[0];ev.target.value='';if(f)await addPerson(f)};$('#peFile').click()}};return}
+      P.onclick=async e=>{const c=e.target.closest('[data-c]'),op=e.target.closest('[data-o]');if(c&&L.type==='text'){L.col=c.dataset.c;L.cv=textCanvas(L.text,L.col);paint();return}if(!op)return;const k=op.dataset.o;
+        if(k==='flip')L.flip=!L.flip;else if(k==='match'){L.match=!L.match;refreshLayer(L)}else if(k==='shadow')L.shadow=!L.shadow;else if(k==='auto'){busy('자리 찾는 중…');await autoPlace(L);busy(false)}panel();paint()};return}
+    P.innerHTML=`<div class="pe-grid two"><button class="pe-act" data-a="person">${I('user')}<b>다른 사진의 사람 넣기</b><small>AI가 오려서 크기·색·그림자까지 맞춰요</small></button><button class="pe-act" data-a="text">${I('chat')}<b>글자 넣기</b><small>날짜·장소·한마디</small></button></div>`;
+    P.onclick=async e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='text'){const t=prompt('넣을 글자를 적어주세요','');if(!t)return;S.layer={type:'text',text:t,col:'#ffffff',cv:textCanvas(t,'#ffffff'),x:S.base.width/2,y:S.base.height*.85,s:1,rot:0,flip:false};panel();paint()}else{$('#peFile').onchange=async ev=>{const f=ev.target.files[0];ev.target.value='';if(f)await addPerson(f)};$('#peFile').click()}};return}
 }
 
 /* ---------- 자르기 ---------- */
@@ -92,64 +100,62 @@ function cropOut(c,maxSide){const src=c._r90&&c._r90v===c.r90&&c._b===S.ver?c._r
   const k=Math.min(1,maxSide/Math.max(vw,vh)),o=mkC(vw*k,vh*k),x=o.getContext('2d');x.imageSmoothingQuality='high';x.translate(o.width/2,o.height/2);x.scale(k,k);x.rotate(th);if(c.flip)x.scale(-1,1);x.translate(-(W/2+c.px),-(H/2+c.py));x.drawImage(src,0,0);c._vw=vw;return o}
 
 /* ---------- 손가락 입력 ---------- */
-function pointer(){const o=$('#peO');let drag=null;
+function pointer(){const o=$('#peO'),pts=new Map();let drag=null;
   const pos=e=>{const r=o.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
-  o.addEventListener('pointerdown',e=>{if(!S)return;o.setPointerCapture(e.pointerId);const p=pos(e);
-    if(S.tool==='erase'||(S.tool==='ai'&&S.aiPaint)){S.strokes=S.strokes||[];S.strokes.push({w:S.tool==='ai'?.08:S.brush,p:[p]});overlay()}
-    else if(S.crop||S.layer)drag={p,px:S.crop?S.crop.px:0,py:S.crop?S.crop.py:0,lx:S.layer?S.layer.x:0,ly:S.layer?S.layer.y:0}});
-  o.addEventListener('pointermove',e=>{if(!S)return;const p=pos(e);
-    if((S.tool==='erase'||S.tool==='ai')&&S.strokes&&e.buttons){S.strokes[S.strokes.length-1].p.push(p);overlay();return}
-    if(drag&&S.crop){const c=S.crop,sc=(c._vw||S.base.width)/1;c.px=drag.px-(p[0]-drag.p[0])*sc;c.py=drag.py-(p[1]-drag.p[1])*sc*(o.height/o.width)*(1);paint()}
-    else if(drag&&S.layer){S.layer.x=drag.lx+(p[0]-drag.p[0])*S.base.width;S.layer.y=drag.ly+(p[1]-drag.p[1])*S.base.height;paint()}});
-  const up=()=>{if(!S)return;drag=null;if(S.tool==='erase'&&S.strokes&&S.strokes.length)runErase()};
+  const toB=p=>[p[0]*S.base.width,p[1]*S.base.height];
+  const two=()=>{const a=[...pts.values()];const A=toB(a[0]),B=toB(a[1]);return{d:Math.hypot(B[0]-A[0],B[1]-A[1]),ang:Math.atan2(B[1]-A[1],B[0]-A[0]),mx:(A[0]+B[0])/2,my:(A[1]+B[1])/2}};
+  o.addEventListener('pointerdown',e=>{if(!S)return;o.setPointerCapture(e.pointerId);const p=pos(e);pts.set(e.pointerId,p);
+    if(S.tool==='erase'||(S.tool==='ai'&&S.aiPaint)){if(pts.size>1)return;S.strokes=S.strokes||[];S.strokes.push({w:S.tool==='ai'?.08:S.brush,p:[p]});overlay();return}
+    if(S.layer){const L=S.layer;if(pts.size===2){const t=two();drag={mode:'pinch',d:t.d,ang:t.ang,s:L.s,rot:L.rot,mx:t.mx,my:t.my,lx:L.x,ly:L.y};return}
+      const hb=handlePos(L),b=toB(p),r=o.getBoundingClientRect(),hit=Math.hypot(b[0]-hb[0],b[1]-hb[1])<40*S.base.width/r.width;
+      if(hit){drag={mode:'handle',a0:Math.atan2(b[1]-L.y,b[0]-L.x),d0:Math.hypot(b[0]-L.x,b[1]-L.y),s:L.s,rot:L.rot}}else drag={mode:'move',b,lx:L.x,ly:L.y};return}
+    if(S.crop)drag={mode:'crop',p,px:S.crop.px,py:S.crop.py}});
+  o.addEventListener('pointermove',e=>{if(!S||!pts.has(e.pointerId))return;const p=pos(e);pts.set(e.pointerId,p);
+    if((S.tool==='erase'||S.tool==='ai')&&S.strokes&&e.buttons&&pts.size===1){S.strokes[S.strokes.length-1].p.push(p);overlay();return}
+    if(!drag)return;
+    if(drag.mode==='crop'){const c=S.crop,sc=(c._vw||S.base.width);c.px=drag.px-(p[0]-drag.p[0])*sc;c.py=drag.py-(p[1]-drag.p[1])*sc*(o.height/o.width);paint();return}
+    const L=S.layer;if(!L)return;
+    if(drag.mode==='pinch'&&pts.size===2){const t=two();L.s=Math.max(.05,Math.min(8,drag.s*t.d/drag.d));L.rot=drag.rot+(t.ang-drag.ang);L.x=drag.lx+(t.mx-drag.mx);L.y=drag.ly+(t.my-drag.my)}
+    else if(drag.mode==='handle'){const b=toB(p);L.rot=drag.rot+(Math.atan2(b[1]-L.y,b[0]-L.x)-drag.a0);L.s=Math.max(.05,Math.min(8,drag.s*Math.hypot(b[0]-L.x,b[1]-L.y)/drag.d0))}
+    else if(drag.mode==='move'&&pts.size===1){const b=toB(p);L.x=drag.lx+(b[0]-drag.b[0]);L.y=drag.ly+(b[1]-drag.b[1])}
+    paint();syncLayerUI()});
+  const up=e=>{if(!S)return;pts.delete(e.pointerId);if(pts.size===0){drag=null;if(S.tool==='erase'&&S.strokes&&S.strokes.length)runErase()}
+    else if(S.layer&&pts.size===1){const L=S.layer,b=toB([...pts.values()][0]);drag={mode:'move',b,lx:L.x,ly:L.y}}};
   o.addEventListener('pointerup',up);o.addEventListener('pointercancel',up)}
+function syncLayerUI(){const L=S&&S.layer;if(!L)return;const a=$('#peLs'),r=$('#peLr');if(a){a.value=Math.round(L.s*100);a.nextElementSibling.textContent=Math.round(L.s*100)+'%'}if(r){const d=Math.round(((L.rot*180/Math.PI)%360+540)%360-180);r.value=d;r.nextElementSibling.textContent=d+'°'}}
 
 /* ---------- 지우기: 패치 기반 내용 채우기 ---------- */
 function runErase(){const B=S.base,m=mkC(B.width,B.height),x=m.getContext('2d');x.strokeStyle='#fff';x.lineCap='round';x.lineJoin='round';
-  S.strokes.forEach(s=>{x.lineWidth=s.w*B.width;x.beginPath();s.p.forEach((p,i)=>i?x.lineTo(p[0]*B.width,p[1]*B.height):x.moveTo(p[0]*B.width,p[1]*B.height));if(s.p.length===1)x.lineTo(s.p[0][0]*B.width+.1,s.p[0][1]*B.height);x.stroke()});
+  S.strokes.forEach(s=>{x.lineWidth=s.w*B.width+Math.max(6,B.width*.012);x.beginPath();s.p.forEach((p,i)=>i?x.lineTo(p[0]*B.width,p[1]*B.height):x.moveTo(p[0]*B.width,p[1]*B.height));if(s.p.length===1)x.lineTo(s.p[0][0]*B.width+.1,s.p[0][1]*B.height);x.stroke()});
   busy('지우는 중…');setTimeout(()=>{try{push();inpaint(B,m)}catch(e){console.error(e)}S.strokes=null;busy(false);thumbs();paint()},40)}
 function inpaint(B,maskC){const W0=B.width,H0=B.height,md=maskC.getContext('2d').getImageData(0,0,W0,H0).data;let x0=W0,y0=H0,x1=-1,y1=-1;
-  for(let y=0;y<H0;y++)for(let x=0;x<W0;x++)if(md[(y*W0+x)*4+3]>20){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
-  if(x1<0)return;const bw=x1-x0+1,bh=y1-y0+1,mg=Math.max(28,Math.round(Math.max(bw,bh)*.7));const rx=Math.max(0,x0-mg),ry=Math.max(0,y0-mg),rw=Math.min(W0,x1+mg+1)-rx,rh=Math.min(H0,y1+mg+1)-ry;
-  const k=Math.min(1,300/Math.max(rw,rh)),W=Math.max(12,Math.round(rw*k)),H=Math.max(12,Math.round(rh*k));
-  const ic=mkC(W,H),ix=ic.getContext('2d');ix.imageSmoothingQuality='high';ix.drawImage(B,rx,ry,rw,rh,0,0,W,H);const id=ix.getImageData(0,0,W,H),px=id.data;
-  const mc=mkC(W,H),mx=mc.getContext('2d');mx.drawImage(maskC,rx,ry,rw,rh,0,0,W,H);const mm=mx.getImageData(0,0,W,H).data;
-  const N=W*H,hole=new Uint8Array(N);for(let i=0;i<N;i++)hole[i]=mm[i*4+3]>8?1:0;
-  /* 구멍 1칸 넓히기 */
-  const h2=hole.slice();for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(hole[i])continue;if((x>0&&hole[i-1])||(x<W-1&&hole[i+1])||(y>0&&hole[i-W])||(y<H-1&&hole[i+W]))h2[i]=1}hole.set(h2);
-  const R=new Float32Array(N),G=new Float32Array(N),Bl=new Float32Array(N);for(let i=0;i<N;i++){R[i]=px[i*4];G[i]=px[i*4+1];Bl[i]=px[i*4+2]}
-  const conf=new Float32Array(N),offx=new Int16Array(N),offy=new Int16Array(N),has=new Uint8Array(N);for(let i=0;i<N;i++)conf[i]=hole[i]?0:1;
-  const r=W>120?4:3,A=(2*r+1)*(2*r+1);
-  /* 원본 후보: 구멍 없는 패치 중심 */
-  const ii=new Int32Array((W+1)*(H+1));for(let y=0;y<H;y++){let s=0;for(let x=0;x<W;x++){s+=hole[y*W+x];ii[(y+1)*(W+1)+x+1]=ii[y*(W+1)+x+1]+s}}
-  const holeIn=(cx,cy)=>{const a=cx-r,b=cy-r,c=cx+r+1,d=cy+r+1;return ii[d*(W+1)+c]-ii[b*(W+1)+c]-ii[d*(W+1)+a]+ii[b*(W+1)+a]};
-  const cand=[];for(let y=r;y<H-r;y+=1)for(let x=r;x<W-r;x+=1)if(!holeIn(x,y))cand.push(y*W+x);
-  if(!cand.length){diffuse();return finish()}
-  let left=0;for(let i=0;i<N;i++)left+=hole[i];let guard=0;const rnd=(()=>{let s=7;return()=>(s=(s*16807)%2147483647)/2147483647})();
-  while(left>0&&guard++<20000){/* 경계에서 우선순위 높은 점 */let best=-1,bp=-1;
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!hole[i])continue;if(!((x>0&&!hole[i-1])||(x<W-1&&!hole[i+1])||(y>0&&!hole[i-W])||(y<H-1&&!hole[i+W])))continue;
-      let c=0,n=0;for(let dy=-r;dy<=r;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-r;dx<=r;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;c+=conf[yy*W+xx];n++}}const pr=c/A+rnd()*1e-3;if(pr>best){best=pr;bp=i}}
-    if(bp<0)break;const px0=bp%W,py0=(bp/W)|0;
-    /* 후보 모으기: 무작위 + 가까운 곳 + 이웃의 오프셋 */
-    const tries=[];for(let t=0;t<500;t++)tries.push(cand[(rnd()*cand.length)|0]);
-    for(let dy=-26;dy<=26;dy+=2)for(let dx=-26;dx<=26;dx+=2){const qx=px0+dx,qy=py0+dy;if(qx<r||qy<r||qx>=W-r||qy>=H-r)continue;if(!holeIn(qx,qy))tries.push(qy*W+qx)}
-    for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=px0+dx,yy=py0+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const j=yy*W+xx;if(has[j]){const qx=px0+offx[j],qy=py0+offy[j];if(qx>=r&&qy>=r&&qx<W-r&&qy<H-r&&!holeIn(qx,qy))tries.push(qy*W+qx)}}
-    let bd=1e30,bq=-1;for(const q of tries){const qx=q%W,qy=(q/W)|0;if(Math.abs(qx-px0)<=r&&Math.abs(qy-py0)<=r)continue;let d=0,n=0;
-      for(let dy=-r;dy<=r&&d<bd;dy++){const yy=py0+dy;if(yy<0||yy>=H)continue;for(let dx=-r;dx<=r;dx++){const xx=px0+dx;if(xx<0||xx>=W)continue;const j=yy*W+xx;if(hole[j])continue;const s=(qy+dy)*W+qx+dx,a=R[j]-R[s],b=G[j]-G[s],e=Bl[j]-Bl[s];d+=a*a+b*b+e*e;n++}}
-      if(n)d=d/n*(1+0.0008*((qx-px0)**2+(qy-py0)**2)**.5);if(n&&d<bd){bd=d;bq=q}}
-    if(bq<0){diffuse();break}const qx=bq%W,qy=(bq/W)|0;
-    for(let dy=-r;dy<=r;dy++){const yy=py0+dy;if(yy<0||yy>=H)continue;for(let dx=-r;dx<=r;dx++){const xx=px0+dx;if(xx<0||xx>=W)continue;const j=yy*W+xx;if(!hole[j])continue;const s=(qy+dy)*W+qx+dx;
-      R[j]=R[s];G[j]=G[s];Bl[j]=Bl[s];hole[j]=0;conf[j]=best;offx[j]=qx-px0;offy[j]=qy-py0;has[j]=1;left--}}}
-  if(left>0)diffuse();finish();
-  function diffuse(){for(let it=0;it<200;it++)for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!hole[i])continue;let r2=0,g2=0,b2=0,n=0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)return;const j=yy*W+xx;if(hole[j]&&it<150)return;r2+=R[j];g2+=G[j];b2+=Bl[j];n++});if(n){R[i]=r2/n;G[i]=g2/n;Bl[i]=b2/n;if(it>=150)hole[i]=0}}}
-  function finish(){for(let i=0;i<N;i++){px[i*4]=R[i];px[i*4+1]=G[i];px[i*4+2]=Bl[i]}ix.putImageData(id,0,0);
-    /* 원래 크기로 키워서 칠한 부분만 부드럽게 덮기 */
-    const up=mkC(rw,rh),ux=up.getContext('2d');ux.imageSmoothingQuality='high';ux.drawImage(ic,0,0,rw,rh);
-    const fm=mkC(rw,rh),fx=fm.getContext('2d');fx.filter=`blur(${Math.max(1.5,2/k)}px)`;fx.drawImage(maskC,rx,ry,rw,rh,0,0,rw,rh);fx.filter='none';fx.globalCompositeOperation='source-over';
-    const lay=mkC(rw,rh),lx=lay.getContext('2d');lx.drawImage(fm,0,0);lx.drawImage(fm,0,0);lx.globalCompositeOperation='source-in';lx.drawImage(up,0,0);
-    /* 확대로 흐려진 결과에 원본 입자를 조금 섞기 */
-    lx.globalCompositeOperation='source-atop';lx.globalAlpha=.08;for(let t=0;t<2;t++)lx.drawImage(B,rx+(t?3:-3),ry+(t?-2:2),rw,rh,0,0,rw,rh);
-    B.getContext('2d').drawImage(lay,rx,ry)}}
+  for(let y=0;y<H0;y+=2)for(let x=0;x<W0;x+=2)if(md[(y*W0+x)*4+3]>10){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0)return;x0=Math.max(0,x0-2);y0=Math.max(0,y0-2);x1=Math.min(W0-1,x1+2);y1=Math.min(H0-1,y1+2);
+  const bw=x1-x0+1,bh=y1-y0+1,mg=Math.max(48,Math.round(Math.max(bw,bh)*.9));const rx=Math.max(0,x0-mg),ry=Math.max(0,y0-mg),rw=Math.min(W0,x1+mg+1)-rx,rh=Math.min(H0,y1+mg+1)-ry;
+  /* 원래 크기 영역 */const fc=mkC(rw,rh),fx=fc.getContext('2d');fx.drawImage(B,rx,ry,rw,rh,0,0,rw,rh);const fd=fx.getImageData(0,0,rw,rh),fp=fd.data;
+  const fm=new Uint8Array(rw*rh);for(let y=0;y<rh;y++)for(let x=0;x<rw;x++)fm[y*rw+x]=md[((y+ry)*W0+x+rx)*4+3]>10?1:0;
+  /* 작업 크기 */const k=Math.min(1,460/Math.max(rw,rh)),W=Math.max(16,Math.round(rw*k)),H=Math.max(16,Math.round(rh*k));
+  const ic=mkC(W,H),ix=ic.getContext('2d');ix.imageSmoothingQuality='high';ix.drawImage(fc,0,0,W,H);const id=ix.getImageData(0,0,W,H).data;
+  const N=W*H,im={w:W,h:H,r:new Float32Array(N),g:new Float32Array(N),b:new Float32Array(N)},hole=new Uint8Array(N);
+  for(let i=0;i<N;i++){im.r[i]=id[i*4];im.g[i]=id[i*4+1];im.b[i]=id[i*4+2]}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){/* 작게 줄일 때 가장자리가 섞이지 않게 넉넉히 */const fx0=Math.max(0,Math.floor((x-1)/k)),fx1=Math.min(rw-1,Math.ceil((x+2)/k)),fy0=Math.max(0,Math.floor((y-1)/k)),fy1=Math.min(rh-1,Math.ceil((y+2)/k));let h=0;
+    for(let yy=fy0;yy<=fy1&&!h;yy+=Math.max(1,(fy1-fy0)>>2))for(let xx=fx0;xx<=fx1;xx+=Math.max(1,(fx1-fx0)>>2))if(fm[yy*rw+xx]){h=1;break}hole[y*W+x]=h}
+  const nn=window.FILL?FILL.complete(im,hole,(rx*7+ry*13)|0):null;
+  const out=fx.createImageData(rw,rh),op=out.data;op.set(fp);
+  if(nn&&k<1){/* 원래 크기에서 다시 투표: 진짜 픽셀을 가져와 선명하게 */const Rf=Math.max(2,Math.round(2/k)),st=Math.max(1,Rf>>1);
+    for(let y=0;y<rh;y++)for(let x=0;x<rw;x++){const p=y*rw+x;if(!fm[p])continue;let r=0,g=0,b=0,n=0;
+      for(let dy=-Rf;dy<=Rf;dy+=st)for(let dx=-Rf;dx<=Rf;dx+=st){const qx=x+dx,qy=y+dy;if(qx<0||qy<0||qx>=rw||qy>=rh)continue;const wx=Math.min(W-1,Math.round(qx*k)),wy=Math.min(H-1,Math.round(qy*k)),wi=wy*W+wx;if(!nn.tgt[wi])continue;
+        const sx=x+Math.round(nn.ox[wi]/k),sy=y+Math.round(nn.oy[wi]/k);if(sx<0||sy<0||sx>=rw||sy>=rh)continue;const s=sy*rw+sx;if(fm[s])continue;r+=fp[s*4];g+=fp[s*4+1];b+=fp[s*4+2];n++}
+      if(n){op[p*4]=r/n;op[p*4+1]=g/n;op[p*4+2]=b/n}else{const wi=Math.min(H-1,Math.round(y*k))*W+Math.min(W-1,Math.round(x*k));op[p*4]=im.r[wi];op[p*4+1]=im.g[wi];op[p*4+2]=im.b[wi]}}
+    /* 작게 채운 결과와 밝기·색을 맞추기 (큰 얼룩 방지) */
+    const tc=mkC(rw,rh),tx=tc.getContext('2d');tx.putImageData(out,0,0);const lo1=mkC(W,H),l1=lo1.getContext('2d');l1.drawImage(tc,0,0,W,H);const a1=l1.getImageData(0,0,W,H).data;
+    const cor=mkC(W,H),cx=cor.getContext('2d'),cd=cx.createImageData(W,H);for(let i=0;i<N;i++){cd.data[i*4]=128+(im.r[i]-a1[i*4])/2;cd.data[i*4+1]=128+(im.g[i]-a1[i*4+1])/2;cd.data[i*4+2]=128+(im.b[i]-a1[i*4+2])/2;cd.data[i*4+3]=255}cx.putImageData(cd,0,0);
+    const cu=mkC(rw,rh),cux=cu.getContext('2d');cux.filter='blur(2px)';cux.drawImage(cor,0,0,rw,rh);const cdata=cux.getImageData(0,0,rw,rh).data;
+    for(let p=0;p<rw*rh;p++)if(fm[p]){op[p*4]=Math.max(0,Math.min(255,op[p*4]+(cdata[p*4]-128)*2));op[p*4+1]=Math.max(0,Math.min(255,op[p*4+1]+(cdata[p*4+1]-128)*2));op[p*4+2]=Math.max(0,Math.min(255,op[p*4+2]+(cdata[p*4+2]-128)*2))}}
+  else for(let y=0;y<rh;y++)for(let x=0;x<rw;x++){const p=y*rw+x;if(!fm[p])continue;const wi=Math.min(H-1,Math.round(y*k))*W+Math.min(W-1,Math.round(x*k));op[p*4]=im.r[wi];op[p*4+1]=im.g[wi];op[p*4+2]=im.b[wi]}
+  /* 가장자리를 부드럽게 섞어 붙이기 */
+  const res=mkC(rw,rh);res.getContext('2d').putImageData(out,0,0);const fe=mkC(rw,rh),fex=fe.getContext('2d');fex.filter=`blur(${Math.max(1.2,W0/900)}px)`;fex.drawImage(maskC,rx,ry,rw,rh,0,0,rw,rh);fex.drawImage(maskC,rx,ry,rw,rh,0,0,rw,rh);fex.filter='none';
+  fex.globalCompositeOperation='source-in';fex.drawImage(res,0,0);B.getContext('2d').drawImage(fe,0,0,rw,rh,rx,ry,rw,rh)}
 
 /* ---------- 인물 AI (MediaPipe 셀피 분리, 기기 안에서 실행) ---------- */
 let segP=null;
@@ -174,64 +180,38 @@ async function personFx(kind){let m;try{m=await personMask()}catch(e){D.toast('A
   else{bx.filter='brightness(.35) saturate(.6)';bx.drawImage(B,0,0);bx.filter='none'}
   const out=B.getContext('2d');out.clearRect(0,0,W,H);out.drawImage(bg,0,0);out.drawImage(person,0,0);S.ver++;busy(false);thumbs();paint();D.toast({blur:'배경을 흐렸어요',pop:'배경을 흑백으로 바꿨어요',white:'배경을 하얗게 바꿨어요',dark:'배경을 어둡게 바꿨어요'}[kind])}
 async function addPerson(f){let img;try{img=await loadImg(f)}catch(e){return}const k=Math.min(1,1400/Math.max(img.width,img.height)),c=mkC(img.width*k,img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-  let m;busy('AI가 사람을 오리는 중…');try{m=await segment(c)}catch(e){busy(false);D.toast('AI 기능을 불러오지 못했어요');return}busy(false);if(!hasPerson(m)){D.toast('그 사진에서 사람을 찾지 못했어요');return}
-  const cut=mkC(c.width,c.height),x=cut.getContext('2d');x.filter=`blur(${Math.max(1,c.width/500)}px)`;x.drawImage(m,0,0);x.filter='none';x.globalCompositeOperation='source-in';x.drawImage(c,0,0);
-  /* 사람 있는 곳만 잘라내기 */
+  let m;busy('AI가 사람을 오리는 중…');try{m=await segment(c)}catch(e){busy(false);D.toast('AI 기능을 불러오지 못했어요');return}if(!hasPerson(m)){busy(false);D.toast('그 사진에서 사람을 찾지 못했어요');return}
+  /* 가장자리를 살짝 줄이고 부드럽게 (배경 테두리가 남지 않게) */
+  const mm=mkC(c.width,c.height),mx=mm.getContext('2d');mx.filter=`blur(${Math.max(1,c.width/600)}px)`;mx.drawImage(m,0,0);mx.filter='none';const md=mx.getImageData(0,0,mm.width,mm.height),mp=md.data;for(let i=3;i<mp.length;i+=4){const a=mp[i]/255,v=Math.max(0,Math.min(1,(a-.35)/.5));mp[i]=Math.round(v*v*(3-2*v)*255)}mx.putImageData(md,0,0);
+  const cut=mkC(c.width,c.height),x=cut.getContext('2d');x.drawImage(mm,0,0);x.globalCompositeOperation='source-in';x.drawImage(c,0,0);
   const d=x.getImageData(0,0,cut.width,cut.height).data;let x0=cut.width,y0=cut.height,x1=0,y1=0;for(let y=0;y<cut.height;y+=2)for(let xx=0;xx<cut.width;xx+=2)if(d[(y*cut.width+xx)*4+3]>60){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(y<y0)y0=y;if(y>y1)y1=y}
-  const t=mkC(x1-x0+1,y1-y0+1);t.getContext('2d').drawImage(cut,x0,y0,t.width,t.height,0,0,t.width,t.height);
-  const s=Math.min(1,S.base.height*.6/t.height,S.base.width*.6/t.width);S.layer={type:'img',cv:t,x:S.base.width/2,y:S.base.height-t.height*s/2,s};panel();paint();D.toast('끌어서 위치를 옮기고 크기를 맞춰요')}
+  const t=mkC(x1-x0+3,y1-y0+3);t.getContext('2d').drawImage(cut,x0,y0,t.width,t.height,0,0,t.width,t.height);
+  const L={type:'img',src:t,cv:t,x:0,y:0,s:1,rot:0,flip:false,match:true,shadow:true};refreshLayer(L);busy('자연스러운 자리 찾는 중…');await autoPlace(L);busy(false);S.layer=L;panel();paint();D.toast('크기·색·자리를 맞췄어요. 손가락으로 더 조정해요')}
 function textCanvas(t,col){const f=Math.round(S.base.width/14),c=mkC(10,10),x=c.getContext('2d');x.font=`800 ${f}px Pretendard,'Apple SD Gothic Neo',sans-serif`;const w=Math.ceil(x.measureText(t).width)+f;c.width=w;c.height=Math.round(f*1.6);
   const y=c.getContext('2d');y.font=`800 ${f}px Pretendard,'Apple SD Gothic Neo',sans-serif`;y.textBaseline='middle';y.textAlign='center';y.shadowColor='rgba(0,0,0,.45)';y.shadowBlur=f*.25;y.fillStyle=col;y.fillText(t,w/2,c.height/2);return c}
-function layerBox(L){const w=L.cv.width*L.s,h=L.cv.height*L.s;return{x:L.x-w/2,y:L.y-h/2,w,h}}
-function drawLayer(x,L,k){const b=layerBox(L);x.drawImage(L.cv,b.x*k,b.y*k,b.w*k,b.h*k)}
-
-/* ---------- AI 그리기 (시험판: 관장님 Gemini API 키를 이 폰에만 저장해 직접 호출) ---------- */
-const AK='gudo:aiKey',AM='gudo:aiModel',AU='gudo:aiUse';
-const aiKey=()=>{try{return localStorage.getItem(AK)||''}catch(e){return''}},aiModel=()=>{try{return localStorage.getItem(AM)||'gemini-2.5-flash-image'}catch(e){return'gemini-2.5-flash-image'}};
-const aiUse=()=>{try{return JSON.parse(localStorage.getItem(AU))||{n:0,usd:0}}catch(e){return{n:0,usd:0}}};
-const PRICE={'gemini-2.5-flash-image':.039,'gemini-3.1-flash-image':.067,'gemini-3.1-flash-image-preview':.067,'gemini-3-pro-image':.134,'gemini-3-pro-image-preview':.134};
-const EX=['배경을 노을 지는 바다로 바꿔줘','옆에 귀여운 강아지를 넣어줘','하늘을 맑은 파란 하늘로','눈이 내리는 장면으로','뒤에 있는 사람들을 지워줘','옷을 하얀 원피스로 바꿔줘','벚꽃이 흩날리게 해줘','밤하늘에 별을 가득'];
-function aiPanel(P){const I=D.I,key=aiKey();
-  if(!key){P.innerHTML=`<div class="ai-setup"><b>${I('spark')}AI 그리기 · 유료 시험판</b><p>말로 시키면 사진에 새로 그려 넣어요. 시험판이라 관장님의 구글 Gemini API 키를 이 폰에만 저장해서 써요. 한 번에 약 60~100원이 관장님 계정에서 나가요.</p>
-     <ol><li>aistudio.google.com 접속 → 로그인</li><li>왼쪽 메뉴 <b>Get API key</b> → <b>Create API key</b></li><li>결제 설정(Billing)에서 카드 등록 (이미지 기능은 유료 요금제 필요)</li><li>만든 키를 복사해서 아래에 붙여넣기</li></ol>
-     <div class="pe-row"><input id="peKey" type="password" placeholder="API 키 붙여넣기 (AIza…)" autocomplete="off"><button class="cc on" id="peKeyOk">저장</button></div></div>`;
-    $('#peKeyOk').onclick=async()=>{const k=$('#peKey').value.trim();if(k.length<20){D.toast('키를 다시 확인해 주세요');return}try{localStorage.setItem(AK,k)}catch(e){}busy('키 확인 중…');try{await aiModels(k)}catch(e){D.toast('키 확인 실패: '+(e.message||'').slice(0,60))}busy(false);aiPanel(P)};return}
-  const u=aiUse(),m=aiModel(),pr=PRICE[m]||.05;
-  P.innerHTML=`<div class="ai-box"><textarea id="peAiT" rows="2" placeholder="예) 옆에 강아지를 넣어줘, 배경을 바다로 바꿔줘">${S.aiText||''}</textarea>
-    <div class="cchips ai-ex">${EX.map(t=>`<button class="cc" data-ex="${t}">${t}</button>`).join('')}</div>
-    <div class="pe-row"><button class="cc${S.aiPaint?' on':''}" id="peAiP">${I('pin')}${S.aiPaint?'위치 칠하는 중':'넣을 위치 칠하기'}</button>${S.strokes&&S.strokes.length?`<button class="cc" id="peAiC">칠한 것 지우기</button>`:''}<span class="pe-tip"></span><button class="pe-ok" id="peAiGo">${I('spark')}AI로 바꾸기</button></div>
-    <div class="ai-meta"><span>모델 <select id="peAiM">${[m].map(x=>`<option>${x}</option>`).join('')}</select></span><span>이번 기기 사용 ${u.n}회 · 약 ${Math.round(u.usd*1450).toLocaleString()}원</span><span>1회 약 ${Math.round(pr*1450)}원</span><button class="ai-x" id="peAiK">키 삭제</button></div></div>`;
-  $('#peAiT').oninput=e=>S.aiText=e.target.value;
-  P.querySelector('.ai-ex').onclick=e=>{const b=e.target.closest('[data-ex]');if(b){S.aiText=b.dataset.ex;$('#peAiT').value=S.aiText}};
-  $('#peAiP').onclick=()=>{S.aiPaint=!S.aiPaint;if(S.aiPaint)D.toast('사진 위에 넣을 자리를 칠해 주세요');aiPanel(P)};
-  $('#peAiC')&&($('#peAiC').onclick=()=>{S.strokes=null;overlay();aiPanel(P)});
-  $('#peAiK').onclick=()=>{if(!confirm('이 폰에 저장된 API 키를 지울까요?'))return;try{localStorage.removeItem(AK)}catch(e){}aiPanel(P)};
-  aiModels(key).then(list=>{const sel=$('#peAiM');if(!sel||!list.length)return;sel.innerHTML=list.map(x=>`<option${x===m?' selected':''}>${x}</option>`).join('');sel.onchange=()=>{try{localStorage.setItem(AM,sel.value)}catch(e){}aiPanel(P)}}).catch(()=>{});
-  $('#peAiGo').onclick=()=>aiRun()}
-let MODELS=null;
-async function aiModels(k){if(MODELS)return MODELS;const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key='+encodeURIComponent(k));const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||r.status);
-  MODELS=(j.models||[]).map(x=>x.name.replace('models/','')).filter(n=>/image/.test(n)&&/gemini/.test(n)&&!/embed/.test(n));
-  if(MODELS.length&&!MODELS.includes(aiModel())){const pick=MODELS.find(n=>n==='gemini-2.5-flash-image')||MODELS.find(n=>/flash-image/.test(n))||MODELS[0];try{localStorage.setItem(AM,pick)}catch(e){}}return MODELS}
-function where(){if(!S.strokes||!S.strokes.length)return'';let x0=1,y0=1,x1=0,y1=0;S.strokes.forEach(s=>s.p.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}));const cx=(x0+x1)/2,cy=(y0+y1)/2;
-  const h=cx<.36?'왼쪽':cx>.64?'오른쪽':'가운데',v=cy<.36?'위쪽':cy>.64?'아래쪽':'중간';return ` 위치: 사진의 ${v} ${h} 부분 (가로 ${Math.round(x0*100)}~${Math.round(x1*100)}%, 세로 ${Math.round(y0*100)}~${Math.round(y1*100)}% 영역)에만 적용.`}
-async function aiRun(){const t=(S.aiText||'').trim();if(!t){D.toast('무엇을 바꿀지 적어 주세요');return}const key=aiKey(),model=aiModel();
-  const k=Math.min(1,1536/Math.max(S.base.width,S.base.height)),sm=mkC(S.base.width*k,S.base.height*k);sm.getContext('2d').drawImage(S.base,0,0,sm.width,sm.height);
-  const b64=sm.toDataURL('image/jpeg',.9).split(',')[1];
-  const prompt=`이 사진을 편집해 주세요: ${t}.${where()} 요청한 부분 말고는 인물·구도·색감·화면 비율을 그대로 유지하고, 실제 사진처럼 자연스럽게 만들어 주세요.`;
-  busy('AI가 그리는 중… (10~30초)');
-  try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt},{inline_data:{mime_type:'image/jpeg',data:b64}}]}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
-    const j=await r.json();if(!r.ok)throw new Error(j.error&&j.error.message||('오류 '+r.status));
-    const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[],ip=parts.find(p=>p.inlineData||p.inline_data);
-    if(!ip){const tx=parts.map(p=>p.text).filter(Boolean).join(' ');throw new Error(tx?'AI 답변: '+tx.slice(0,80):'이미지가 오지 않았어요 (요청을 바꿔 보세요)')}
-    const d=ip.inlineData||ip.inline_data,img=await loadImg(await (await fetch('data:'+(d.mimeType||d.mime_type||'image/png')+';base64,'+d.data)).blob());
-    push();const B=S.base,ctx=B.getContext('2d');
-    if(S.strokes&&S.strokes.length){/* 칠한 곳 주변만 자연스럽게 섞기 */const m=mkC(B.width,B.height),mx=m.getContext('2d');mx.strokeStyle='#fff';mx.lineCap='round';mx.lineJoin='round';S.strokes.forEach(s=>{mx.lineWidth=s.w*B.width*2.2;mx.beginPath();s.p.forEach((p,i)=>i?mx.lineTo(p[0]*B.width,p[1]*B.height):mx.moveTo(p[0]*B.width,p[1]*B.height));if(s.p.length===1)mx.lineTo(s.p[0][0]*B.width+.1,s.p[0][1]*B.height);mx.stroke()});
-      const f=mkC(B.width,B.height),fx=f.getContext('2d');fx.filter=`blur(${Math.round(B.width/40)}px)`;fx.drawImage(m,0,0);fx.drawImage(m,0,0);fx.filter='none';fx.globalCompositeOperation='source-in';fx.drawImage(img,0,0,B.width,B.height);ctx.drawImage(f,0,0)}
-    else ctx.drawImage(img,0,0,B.width,B.height);
-    const u=aiUse();u.n++;u.usd+=PRICE[model]||.05;try{localStorage.setItem(AU,JSON.stringify(u))}catch(e){}
-    S.strokes=null;S.aiPaint=false;S.ver++;thumbs();busy(false);aiPanel($('#peP'));paint();D.toast('AI가 바꿨어요 · 마음에 안 들면 ↶')}
-  catch(e){busy(false);D.toast('AI 실패: '+(e.message||e).toString().slice(0,90))}}
+function lsize(L){return[L.cv.width*L.s,L.cv.height*L.s]}
+function corners(L){const[w,h]=lsize(L),c=Math.cos(L.rot),s=Math.sin(L.rot);return[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>[L.x+x*c-y*s,L.y+x*s+y*c])}
+function handlePos(L){return corners(L)[1]}
+function drawLayer(x,L,k){const[w,h]=lsize(L);x.save();x.translate(L.x*k,L.y*k);x.rotate(L.rot);
+  if(L.type==='img'&&L.shadow){/* 발밑 그림자 */x.save();x.filter=`blur(${Math.max(2,h*k*.025)}px)`;x.fillStyle='rgba(0,0,0,.42)';x.beginPath();x.ellipse(0,(h/2-h*.012)*k,w*.36*k,h*.03*k,0,0,Math.PI*2);x.fill();x.restore()}
+  if(L.flip)x.scale(-1,1);x.drawImage(L.cv,-w/2*k,-h/2*k,w*k,h*k);x.restore()}
+function drawLayerBox(o,L){const x=o.getContext('2d'),k=o.width/S.base.width,C=corners(L).map(([a,b])=>[a*k,b*k]);x.save();x.setLineDash([7,6]);x.strokeStyle='#fff';x.lineWidth=2;x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=3;x.beginPath();C.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.closePath();x.stroke();x.setLineDash([]);
+  const[hx,hy]=C[1];x.fillStyle='#fff';x.beginPath();x.arc(hx,hy,15*(o.width/o.clientWidth),0,Math.PI*2);x.fill();x.strokeStyle='#141B34';x.lineWidth=2.2*(o.width/o.clientWidth);x.beginPath();x.arc(hx,hy,7*(o.width/o.clientWidth),-.3,Math.PI*1.4);x.stroke();x.restore()}
+/* 색·밝기를 배경에 맞추기 */
+function stats(c,alphaOnly){const s=mkC(80,80*c.height/c.width),x=s.getContext('2d');x.drawImage(c,0,0,s.width,s.height);const d=x.getImageData(0,0,s.width,s.height).data;const m=[0,0,0],v=[0,0,0];let n=0;
+  for(let i=0;i<d.length;i+=4){if(alphaOnly&&d[i+3]<160)continue;for(let k=0;k<3;k++){m[k]+=d[i+k];v[k]+=d[i+k]*d[i+k]}n++}if(!n)return null;return{m:m.map(a=>a/n),s:v.map((a,k)=>Math.sqrt(Math.max(1,a/n-(m[k]/n)**2)))}}
+function matchColor(src,bgStats){const ps=stats(src,true);if(!ps||!bgStats)return src;const o=cloneC(src),x=o.getContext('2d'),id=x.getImageData(0,0,o.width,o.height),p=id.data;
+  const tm=ps.m.map((m,k)=>m+(bgStats.m[k]-m)*.45),ts=ps.s.map((s,k)=>s+(bgStats.s[k]-s)*.3);
+  for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;for(let k=0;k<3;k++)p[i+k]=Math.max(0,Math.min(255,(p[i+k]-ps.m[k])*(ts[k]/ps.s[k])+tm[k]))}x.putImageData(id,0,0);return o}
+function refreshLayer(L){if(L.type!=='img')return;L.cv=L.match?matchColor(L.src,stats(S.base,false)):L.src}
+/* 자동 배치: 사진 속 사람 크기·발 위치에 맞추기 */
+async function autoPlace(L){const W=S.base.width,H=S.base.height,[w0,h0]=[L.src.width,L.src.height];let s=Math.min(1,H*.6/h0,W*.6/w0),x=W/2,y=H-h0*s/2-H*.03;
+  try{const m=await personMask();if(hasPerson(m)){const sm=mkC(96,96*H/W),sx=sm.getContext('2d');sx.drawImage(m,0,0,sm.width,sm.height);const d=sx.getImageData(0,0,sm.width,sm.height).data;let x0=1e9,y0=1e9,x1=-1,y1=-1;
+    for(let yy=0;yy<sm.height;yy++)for(let xx=0;xx<sm.width;xx++)if(d[(yy*sm.width+xx)*4+3]>128){x0=Math.min(x0,xx);x1=Math.max(x1,xx);y0=Math.min(y0,yy);y1=Math.max(y1,yy)}
+    if(x1>0){const f=W/sm.width,bx0=x0*f,bx1=(x1+1)*f,by0=y0*f,by1=(y1+1)*f,ph=by1-by0;s=Math.min(ph/h0,W*.8/w0,H*.95/h0);if(Math.max(bx0,W-bx1)<w0*s*.5)s*=.75;const nw=w0*s,nh=h0*s;
+      const leftRoom=bx0,rightRoom=W-bx1;x=rightRoom>=leftRoom?Math.min(W-nw/2,bx1+nw*.45):Math.max(nw/2,bx0-nw*.45);y=by1-nh/2;
+      if(by1>H*.97)y=H-nh/2;x=Math.max(Math.min(nw/2,W/2),Math.min(Math.max(W-nw/2,W/2),x));y=Math.max(nh/2,Math.min(H-nh/2,y))}}}catch(e){}
+  L.s=s;L.x=x;L.y=y}
 
 /* ---------- 저장 ---------- */
 async function save(){if(S.crop){push();S.base=cropOut(S.crop,MAXS);S.crop=null}if(S.layer){push();drawLayer(S.base.getContext('2d'),S.layer,1);S.layer=null}
