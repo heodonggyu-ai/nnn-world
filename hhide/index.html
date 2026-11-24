@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 술래 괴물</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script src="../shared/horror.js"></script>
+<script>
+/* NNN 술래 괴물: 곰인형 술래 '털복이'를 피해 숨고 도망치며, 물건을 하나씩 옮겨 출구를 여는 게임 */
+const H=Horror,TS=H.TS,VW=320,VH=180;
+const MAPS=[{"name": "할머니 집", "rows": ["########################################", "#:::::::W#,,,,,,,,,,,,#.......T.......p#", "#:B::::::#,,q,,,,,S,,,#................#", "#::::::::#,,,,,,,,,,,,#....O....O......#", "#:::*:::d#,,,,c,,,r,,,D.......P........#", "#::::::::#,,,,,,,,,,,,#..........l.....#", "####D######,,,,,,,,,,,#######D##########", "#.........D,,,,l,,,,,,#,,,,,,,,,,,,,,,,#", "#.........#############,,,,,,,,,,,,,,,,#", "#..p...l..#:::::::::::#,,,,,,,,,,,,,,,,E", "#.........#::B::::::W:#,,,,,,,*,,,,,,,,#", "#....T....#:::::::::::#,,,,X,,,,,,,,,,L#", "#.........R:::::K:::::#,,,,,,,,,,,,,,,,#", "#....M....#:::::::::d:#########D########", "#....*....#:::::::::::#..........h.....#", "#.........#:::::::::::#..b.............#", "#........W#:::::::+:::#....T.......W...#", "########################################"]}, {"name": "밤의 학교", "rows": ["############################################", "#,,,,,,,,,,,#,,,,,,,,,,,#;;;;;;;;;;;;;;;;;;#", "#,T,T,T,T,,L#,T,T,T,T,,L#;;;;;;;;;;;;;;;;;;#", "#,,,,,,,,,,,#,,,,,,,,,,,#;;;b;;;;;;;;b;;;;;#", "#,T,T,T,T,,,#,T,T,T,T,,,#;;;;;;;;;;;;;;;;;;#", "#,,,,f,,,,,,#,,,,,*,,,,,#;;;;;;;;f;;;;;;;;;#", "#,,,,,,,,,,S#,,,,,,,,,,S#;;;;;;;;;;;;;;;;;X#", "#####D#############D#########U##############", "#_____l_______________________________l____#", "#_____________________P____________________E", "#______p___________*_______________________#", "###D########D##########D################D###", "#::::::::::#,,,,,,,,,,#.....S..S..S...#,,,,#", "#:S:S:S:S::#,,,q,,,,,,#...............#,,F,#", "#::::::::::#,,,,,,,,,,#.....S..S..S...#,,,,#", "#::::u:::::#,,c,,,,c,,#.......l.......#,,,,#", "#:S:S:S:S::#,,,,,,,,f,#....T....T.....#,,,,#", "#::::::::W:#,,,,M,,,,L#.........+.....#,,,X#", "############################################"]}, {"name": "한밤의 체육관", "rows": ["##########################################", "#;;;;;;;;;;;;;;;;;;;;;;;;;#,,,,,,,,#.....#", "#;b;;;b;;;;;;;;;;;;;;b;;;;#,L,L,L,,#.T.d.#", "#;;;;;;;;;;;;;;;;;;;;;;;;;#,,,,,,,,#.....#", "#;;;;;QQQQQ;;;;;;;;;;;;;;;#,,,,r,,,#..C..#", "#;;;;;QQQQQ;;;;;;;l;;;;;;;#,,,,,,,,#.....#", "#;;;;;QQQQQ;;;;;;;;;;;;;;;D,,,,,,,,#S...W#", "#;;;;;QQQQQ;;;;;;;;;;b;;;;#,,,,,,,,###R###", "#;;;;;;;;;;;;;;;;;;;;;;;;;#####D###_____E#", "#;;b;;;;;;;;*;;;;;;;;;;;;;#______________#", "#;;;;;;;;;;;;;;;;;;;;;;;;;D______l_______#", "#;;;;;;;;;;;;;;;;;;;b;;;;;#______________#", "#;;;;;l;;;;;;;;;;;;;;;;;;;#####D##########", "#;;;;;;;;;;;;;;;;;;;;;;;;;#,,,,,,,,,,,,,,#", "#;;;;;;;;;;;;;;;;;;;;;;;;;#,X,,,,M,,,,L,,#", "#;;;;;;P;;;;;;;;;;;;;;;;;;#,,,,,,,,h,,,,,#", "#;;;;;;;;;;;;;;;;;;+;;;;;;#,,,,,,,,,,,,,,#", "##########################################"]}, {"name": "귀신의 집", "rows": ["############################################", "#::::::::::#~~~~~~~~~~~~~~~~#::::::::::::::#", "#:W::::::B:#~~c~~~~~~~~~c~~~#:k::::::::::W:#", "#::::::::::#~~~~~~~~~~~~~~~~#::::::::::::::#", "#:::::g::::D~~~~~~~l~~~~~~~~D::::::t:::::::#", "#::::::::::#~~~~~~~~~~~~~~~~#::::::::::::::#", "#::*:::::d:#~~c~~~~~~~~~c~~~#::::m:::::::::#", "####D#######~~~~~~~~~~~~~~~~######D#########", "#,,,,,,,,,,#######D##########,,,,,,,,,,,,,,#", "#,,,,,l,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,l,,,,#", "#,,,,,,,,,,,,,,,,,,,,,P,,,,,,,,,,,,,,,,,,,,E", "#,,,,,,,,,,####D#######U#####,,,,,,,,,,,,,,#", "####D#######.......#.......######D##########", "#__________#..S.S..#.......#______________X#", "#_X___M____#.......#...K...#______________L#", "#__________#..S.S..#.......#___c______c____#", "#____*_____#...u...#..+....#_______________#", "#________W_#.......#.......#_____*_________#", "############################################"]}];
+const CH=[
+  {needs:['key','hammer'],tip:'빨간 열쇠로 빨간 문을 열고, 현관 열쇠와 망치를 출구로!',spd:52,dark:.86},
+  {needs:[],fuse:3,tip:'퓨즈 3개를 두꺼비집에 꽂으면 출구 전기가 들어와요',spd:55,dark:.9},
+  {needs:['card','hammer'],tip:'관장실의 출입카드와 창고의 망치를 찾아요',spd:58,dark:.9},
+  {needs:['gear','tool','key'],tip:'톱니바퀴·공구·열쇠! 이번엔 털복이가 둘이에요',spd:56,dark:.92},
+];
+const ITEM={r:'redkey',u:'bluekey',h:'hammer',f:'fuse',K:'key',C:'card',g:'gear',t:'tool'};
+const NAME={redkey:'빨간 열쇠',bluekey:'파란 열쇠',hammer:'망치',fuse:'퓨즈',key:'현관 열쇠',card:'출입카드',gear:'톱니바퀴',tool:'공구'};
+const PROP={T:'table',S:'shelf',O:'sofa',p:'plant',q:'machine',c:'crate',b:'bag',d:'drawer',L:'locker',W:'wardrobe',B:'bed',X:'box',k:'piano',Q:'ring',n:'bench'};
+let G0,W,M,pl,mons,ch,hearts,hold,exitP,fuseP,tChap,state,stT,beatT,hideP,needs,candies,msgT,msgS,tipShown;
+
+function build(i){ch=i;const C=CH[i];const rows=MAPS[i].rows;
+  M=H.fromAscii(rows,{wallStyle:i===3?'wood':'brick'});W=H.world(M,{dark:C.dark*(G0.level==='easy'?.92:1)});
+  for(const [k,type] of Object.entries(PROP))for(const [x,y] of (M.marks[k]||[]))H.addProp(M,{type,x,y});
+  for(const k of 'DRU')for(const [x,y] of (M.marks[k]||[]))H.addProp(M,{type:'door',x,y,open:false,locked:k!=='D',need:k==='R'?'redkey':k==='U'?'bluekey':null});
+  for(const [k,kind] of Object.entries(ITEM))for(const [x,y] of (M.marks[k]||[]))H.addProp(M,{type:'item',kind,x,y});
+  for(const [x,y] of (M.marks['*']||[]))H.addProp(M,{type:'item',kind:'candy',x,y});
+  for(const [x,y] of (M.marks['+']||[]))H.addProp(M,{type:'item',kind:'band',x,y});
+  for(const [x,y] of (M.marks['l']||[]))H.addLight(W,x*TS+8,y*TS+8,58,{a:.85,flick:Math.random()<.4?1:0});
+  fuseP=null;for(const [x,y] of (M.marks.F||[]))fuseP=H.addProp(M,{type:'fusebox',x,y,max:C.fuse,n:0,need:'fuse'});
+  const [ex,ey]=M.marks.E[0];exitP=H.addProp(M,{type:'exit',x:ex,y:ey,open:false});exitP.vert=true;
+  needs=C.needs.slice();
+  const [px,py]=M.marks.P[0];pl={x:px*TS+8,y:py*TS+8,r:4.5,face:0,stam:1,draw:(c,e,X,Y,t)=>H.drawKid(c,e,X,Y,t,{shirt:'#e8312a'})};pl.sx=pl.x;pl.sy=pl.y;W.ents.push(pl);
+  mons=[];const sp=C.spd*G0.diff;
+  for(const k of ['M','m'])for(const [x,y] of (M.marks[k]||[]))mons.push(mkMon(x*TS+8,y*TS+8,sp,k==='m'));
+  hold=null;hideP=null;tChap=0;state='play';stT=0;beatT=0;msgT=0;
+  W.cam.x=pl.x-VW/2;W.cam.y=pl.y-VH/2;
+  if(G0.state==='play'){G0.msg(`${i+1}장 · ${MAPS[i].name}`,1600);setTimeout(()=>{if(G0.state==='play')say(C.tip,4)},1700)}}
+function mkMon(x,y,sp,pink){const m={x,y,sx:x,sy:y,r:5.5,face:0,sp,st:'patrol',tgt:null,D:null,dKey:'',think:0,stun:2.5,pink,searchT:0,lastSeen:null,stepT:0,
+  draw:(c,e,X,Y,t)=>drawBear(c,e,X,Y,t),glow:(c,e,X,Y,t)=>{if(e.st==='stun')return;const a=e.st==='chase'?1:.45;c.fillStyle=`rgba(255,40,40,${a})`;const fx=Math.cos(e.face)*1.5;c.beginPath();c.arc(X-2.6+fx,Y-11,1.2,0,7);c.arc(X+2.6+fx,Y-11,1.2,0,7);c.fill()}};
+  W.ents.push(m);return m}
+function drawBear(c,e,X,Y,t){const wob=e.moving?Math.sin(t*(e.st==='chase'?14:8))*1.2:0;const col=e.pink?'#c27a8a':'#8a5a3a',dk=e.pink?'#9a5568':'#6a4128';
+  c.fillStyle='rgba(0,0,0,.4)';c.beginPath();c.ellipse(X,Y+5,8,3,0,0,7);c.fill();
+  c.fillStyle=dk;c.beginPath();c.ellipse(X-4,Y+3+wob,3,3.5,0,0,7);c.ellipse(X+4,Y+3-wob,3,3.5,0,0,7);c.fill();
+  c.fillStyle=col;c.beginPath();c.ellipse(X,Y-2,7,7.5,0,0,7);c.fill();c.fillStyle='#e8cdb0';c.beginPath();c.ellipse(X,Y,4,4.5,0,0,7);c.fill();
+  c.strokeStyle='#5a3a22';c.lineWidth=.6;c.beginPath();c.moveTo(X,Y-4);c.lineTo(X,Y+4);for(let k=-3;k<=3;k+=2){c.moveTo(X-1,Y+k);c.lineTo(X+1,Y+k)}c.stroke();
+  c.fillStyle=dk;c.beginPath();c.ellipse(X-7,Y-2-wob,2.5,4,.3,0,7);c.ellipse(X+7,Y-2+wob,2.5,4,-.3,0,7);c.fill();
+  c.fillStyle=col;c.beginPath();c.arc(X,Y-11,6.2,0,7);c.fill();c.beginPath();c.arc(X-5,Y-16,2.6,0,7);c.arc(X+5,Y-16,2.6,0,7);c.fill();c.fillStyle=dk;c.beginPath();c.arc(X-5,Y-16,1.3,0,7);c.arc(X+5,Y-16,1.3,0,7);c.fill();
+  const fx=Math.cos(e.face)*1.5;c.fillStyle='#111';c.beginPath();c.arc(X-2.6+fx,Y-11,1.5,0,7);c.fill();c.strokeStyle='#111';c.lineWidth=.9;c.beginPath();c.moveTo(X+1.4+fx,Y-12.4);c.lineTo(X+3.8+fx,Y-9.6);c.moveTo(X+3.8+fx,Y-12.4);c.lineTo(X+1.4+fx,Y-9.6);c.stroke();
+  c.fillStyle='#e8cdb0';c.beginPath();c.ellipse(X+fx,Y-8.3,2.6,1.9,0,0,7);c.fill();c.fillStyle='#222';c.fillRect(X-.8+fx,Y-9.3,1.6,1);
+  c.strokeStyle='#3a1a10';c.lineWidth=.6;c.beginPath();c.moveTo(X-2+fx,Y-7.2);c.lineTo(X+2+fx,Y-7.2);for(let k=-1.5;k<=1.5;k+=1){c.moveTo(X+k+fx,Y-7.8);c.lineTo(X+k+fx,Y-6.6)}c.stroke();
+  if(e.st==='check'||e.st==='sniff'){c.fillStyle='#fff';c.font='6px Jua,sans-serif';c.textAlign='center';c.fillText('킁킁…',X,Y-21)}
+  if(e.st==='chase'){c.fillStyle='#ff5a4f';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('!',X,Y-21)}
+  if(e.st==='stun'){c.fillStyle='#ffd23f';c.font='6px sans-serif';c.textAlign='center';c.fillText('★ ★',X+Math.sin(t*6)*2,Y-21)}}
+function bearFace(c,x,y,s){c.save();c.translate(x,y);c.scale(s/20,s/20);c.fillStyle='#8a5a3a';c.beginPath();c.arc(0,0,18,0,7);c.fill();c.beginPath();c.arc(-14,-14,7,0,7);c.arc(14,-14,7,0,7);c.fill();
+  c.fillStyle='#ff3b2f';c.beginPath();c.arc(-7,-3,4,0,7);c.fill();c.strokeStyle='#111';c.lineWidth=2.2;c.beginPath();c.moveTo(4,-7);c.lineTo(11,1);c.moveTo(11,-7);c.lineTo(4,1);c.stroke();
+  c.fillStyle='#e8cdb0';c.beginPath();c.ellipse(0,8,8,6,0,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.ellipse(0,9,6,4,0,0,Math.PI);c.fill();c.fillStyle='#fff';for(let k=-4;k<=4;k+=2.6)c.fillRect(k-.8,9,1.6,2);c.restore()}
+
+function say(s,sec){msgS=s;msgT=sec||2.5}
+function catchPlayer(G,m){hearts--;H.scare(W,bearFace,.6);G.sfx('die');
+  if(hold){H.addProp(M,{type:'item',kind:hold,x:Math.floor(pl.x/TS),y:Math.floor(pl.y/TS)});hold=null}
+  if(hideP){hideP.occ=0;hideP=null;pl.hidden=false}
+  if(hearts<=0){state='dead';stT=0;setTimeout(()=>G.over(`${ch+1}장 «${MAPS[ch].name}»에서 잡혔어요`),900);return}
+  pl.x=pl.sx;pl.y=pl.sy;for(const o of mons){o.x=o.sx;o.y=o.sy;o.st='stun';o.stun=4;o.D=null}say(`잡혔다! 하트 ${hearts}개 남음`,2.5)}
+function noise(x,y,r){if(r<=0)return;for(const m of mons){if(m.st==='chase'||m.st==='stun')continue;if(Math.hypot(m.x-x,m.y-y)<r*TS){m.st='investigate';m.tgt=[Math.floor(x/TS),Math.floor(y/TS)];m.think=0}}}
+function goTo(m,tx,ty,sp,dt){const key=tx+','+ty;if(m.dKey!==key||!m.D||m.think<=0){m.D=H.flow(M,tx,ty,{doors:true,onDoor:()=>H.snd('door')});m.dKey=key;m.think=.6}
+  const r=H.follow(M,m,m.D,sp,dt,{doors:true,onDoor:()=>H.snd('door')});m.moving=r===true;return r}
+function monUpdate(G,m,dt){m.think-=dt;
+  if(m.st==='stun'){m.stun-=dt;m.moving=false;if(m.stun<=0)m.st='patrol';return}
+  const d=Math.hypot(pl.x-m.x,pl.y-m.y);
+  const sees=!pl.hidden&&d<7.5*TS&&H.los(M,m.x,m.y-6,pl.x,pl.y-4);
+  if(sees){if(m.st!=='chase'){G.sfx('blip');H.snd('growl')}m.st='chase';m.lastSeen=[Math.floor(pl.x/TS),Math.floor(pl.y/TS)];m.lostT=0}
+  if(!pl.hidden&&d<11){catchPlayer(G,m);return}
+  const base=m.sp;
+  if(m.st==='chase'){if(!sees){m.lostT=(m.lostT||0)+dt}
+    const tgt=sees?[Math.floor(pl.x/TS),Math.floor(pl.y/TS)]:m.lastSeen;
+    if(m.watchHide&&pl.hidden){const p=m.watchHide;if(goTo(m,p.x,p.y,base*1.1,dt)==='arrived'||Math.hypot(p.x*TS+8-m.x,p.y*TS+8-m.y)<18){m.st='check';m.checkT=1.1;m.chk=p}return}
+    const r=goTo(m,tgt[0],tgt[1],base*1.12,dt);if(!sees&&(r==='arrived'||m.lostT>4)){m.st='search';m.searchT=4;m.tgt=null}}
+  else if(m.st==='check'){m.moving=false;m.checkT-=dt;if(m.checkT<=0){const p=m.chk;m.watchHide=null;
+      if(hideP===p&&Math.random()<(G0.level==='easy'?.35:G0.level==='hard'?.8:.6)){pl.hidden=false;catchPlayer(G,m);return}
+      H.dust(W,p.x*TS+8,p.y*TS+4,'#aaa',4);m.st='search';m.searchT=3;if(hideP===p)say('휴, 못 찾았어!',1.6)}}
+  else if(m.st==='investigate'){const r=goTo(m,m.tgt[0],m.tgt[1],base*.85,dt);if(r==='arrived'||r===false){m.st='search';m.searchT=3}}
+  else if(m.st==='search'){m.searchT-=dt;if(!m.tgt)m.tgt=H.randomFloor(M,m,3);if(m.tgt){const r=goTo(m,m.tgt[0],m.tgt[1],base*.6,dt);if(r==='arrived'||r===false)m.tgt=null}if(m.searchT<=0){m.st='patrol';m.tgt=null}}
+  else{/* 순찰: 가끔 숨을 곳을 킁킁 */
+    if(!m.tgt||m.st!=='patrol')m.tgt=H.randomFloor(M,null);const r=goTo(m,m.tgt[0],m.tgt[1],base*.62,dt);if(r==='arrived'||r===false){m.tgt=null;
+      const hp=H.nearProp({M},m,q=>q.hide,26);if(hp&&Math.random()<.25){m.st='check';m.checkT=1.2;m.chk=hp}}}
+  /* 발소리 */
+  if(m.moving){m.stepT+=dt;if(m.stepT>(m.st==='chase'?.28:.45)){m.stepT=0;if(d<9*TS)H.tone(70,.07,'sine',Math.max(.02,.18-d/TS*.018),50)}}}
+
+function interact(G){
+  if(hideP){hideP.occ=0;pl.hidden=false;const p=hideP;hideP=null;H.snd('hide');pl.y=p.y*TS+TS+6;pl.x=p.x*TS+8;if(!H.canAt(M,pl.x,pl.y,pl.r)){pl.y=p.y*TS-6;if(!H.canAt(M,pl.x,pl.y,pl.r)){pl.x=p.x*TS-6;pl.y=p.y*TS+8;if(!H.canAt(M,pl.x,pl.y,pl.r))pl.x=p.x*TS+TS+6}}return}
+  const t=target();if(!t)return;const p=t.p;
+  if(t.act==='hide'){hideP=p;p.occ=1;pl.hidden=true;H.snd('hide');for(const m of mons){if(m.st==='chase'&&Math.hypot(m.x-pl.x,m.y-pl.y)<5*TS&&H.los(M,m.x,m.y-6,pl.x,pl.y))m.watchHide=p}return}
+  if(t.act==='pick'){if(p.kind==='candy'){p.gone=1;H.refresh(M,p);G.add(50);H.snd('pick');H.float(W,p.x*TS+8,p.y*TS,'+50','#ffd23f');candies++;return}
+    if(p.kind==='band'){p.gone=1;H.refresh(M,p);hearts=Math.min(hearts+1,G0.lives(3)+1);H.snd('pick');H.float(W,p.x*TS+8,p.y*TS,'♥ +1','#ff4f7b');return}
+    const old=hold;hold=p.kind;p.gone=1;H.refresh(M,p);H.snd('pick');say(NAME[hold]+' 들었다 (하나만 들 수 있어요)',2);
+    if(old){const np=H.addProp(M,{type:'item',kind:old,x:p.x,y:p.y});noise(pl.x,pl.y,4)}return}
+  if(t.act==='use'){H.snd('lock');G.sfx('power');
+    if(p.type==='door'){p.locked=false;H.setDoor(M,p,true);hold=null;G.add(200);say('문이 열렸다!',1.5)}
+    else if(p.type==='fusebox'){p.n++;hold=null;G.add(200);if(p.n>=p.max){p.on=1;for(const l of W.lights){l.a=1;l.flick=0}W.dark*=.75;H.snd('done');say('전기가 들어왔다! 출구로!',2.5);checkExit()}else say(`퓨즈 ${p.n}/${p.max}`,1.5)}
+    else if(p.type==='exit'){needs.splice(needs.indexOf(hold),1);hold=null;G.add(300);noise(pl.x,pl.y,6);if(hold==null)checkExit();if(!exitP.open)say(`출구: ${needs.length}개 남음`,1.6)}
+    return}
+  if(t.act==='door'){H.setDoor(M,p,!p.open);H.snd('door');noise(pl.x,pl.y,3);return}
+  if(t.act==='locked'){say(p.type==='exit'?exitNeedText():`잠겨 있어요 (${NAME[p.need]} 필요)`,1.8);H.snd('lock')}}
+function checkExit(){if(!needs.length&&(!fuseP||fuseP.on)){exitP.open=true;H.setDoor(M,exitP,true);H.snd('done');say('출구가 열렸다! 달려!',2.5)}}
+function exitNeedText(){const a=needs.map(k=>NAME[k]);if(fuseP&&!fuseP.on)a.push(`퓨즈 ${fuseP.max-fuseP.n}개 (두꺼비집)`);return '출구에 필요: '+a.join(', ')}
+function target(){if(hideP)return{act:'out'};
+  const p=H.nearProp(W,pl,q=>q.type!=='note',19);if(!p)return null;
+  if(p.type==='item')return{p,act:'pick',label:p.kind==='candy'?'사탕 줍기':p.kind==='band'?'반창고 (♥+1)':(hold?`${NAME[p.kind]}와 바꾸기`:`${NAME[p.kind]} 줍기`)};
+  if(p.hide)return{p,act:'hide',label:`${p.hide}에 숨기`};
+  if(p.type==='door'){if(p.locked)return hold&&hold===p.need?{p,act:'use',label:`${NAME[hold]} 쓰기`}:{p,act:'locked',label:'잠긴 문'};return{p,act:'door',label:p.open?'문 닫기':'문 열기'}}
+  if(p.type==='fusebox'&&!p.on)return hold==='fuse'?{p,act:'use',label:'퓨즈 꽂기'}:{p,act:'locked',label:`두꺼비집 ${p.n}/${p.max}`};
+  if(p.type==='exit'&&!p.open)return hold&&needs.includes(hold)?{p,act:'use',label:`${NAME[hold]} 쓰기`}:{p,act:'locked',label:'출구'};
+  return null}
+
+function update(G,dt){W.t+=dt;H.stepFx(W,dt);H.stepScare(W,dt);if(msgT>0)msgT-=dt;
+  if(state==='dead')return;
+  if(state==='clear'){stT+=dt;if(stT>2.2){if(ch+1>=MAPS.length){G.win('탈출 성공!',`털복이에게서 4장 모두 탈출! 사탕 ${candies}개`);state='dead';return}G.reach(ch+2);build(ch+1)}return}
+  tChap+=dt;
+  if(G.hit.a)interact(G);
+  if(!pl.hidden){const n=H.playerMove(W,G,pl,dt,{walk:48,run:80,walkNoise:2,runNoise:7});if(n)noise(pl.x,pl.y,n)}else pl.moving=false;
+  for(const m of mons)monUpdate(G,m,dt);
+  /* 출구 도착 */
+  if(exitP.open&&Math.hypot(pl.x-(exitP.x*TS+8),pl.y-(exitP.y*TS+8))<14){state='clear';stT=0;const bonus=Math.max(0,3000-Math.floor(tChap)*10);G.add(1000*(ch+1)+bonus);G.sfx('clear');say(`탈출! 시간 보너스 ${bonus}`,3)}
+  /* 심장 소리 */
+  let near=1e9;for(const m of mons)if(m.st!=='stun')near=Math.min(near,Math.hypot(m.x-pl.x,m.y-pl.y)/TS);
+  beatT-=dt;if(near<7&&beatT<=0){H.snd('beat');beatT=.35+near*.12}
+  W.danger=near<7?1-near/7:0;
+  H.camFollow(W,pl.x,pl.y,VW,VH,dt)}
+
+function draw(G,c){if(!W){c.fillStyle='#07060c';c.fillRect(0,0,VW,VH);return}
+  const lights=[];if(!pl.hidden){lights.push({x:pl.x,y:pl.y-4,r:92,cone:.55,a:pl.face,i:1},{x:pl.x,y:pl.y-4,r:30,i:.85})}
+  H.render(G,c,W,{lights});
+  if(pl.hidden)H.drawHidden(c,VW,VH,hideP?hideP.hide:'',G.t,W.danger);
+  /* HUD */
+  const mx=G0.lives(3)+1;for(let i=0;i<Math.max(hearts,0);i++)H.heart(c,8+i*10,6,8,true);
+  H.bar(c,8,17,40,3,pl.stam,pl.stam<.25?'#e74c3c':'#7fd1ff');
+  c.fillStyle='rgba(0,0,0,.55)';H.rr(c,VW-28,4,24,24,4);c.fill();c.strokeStyle='rgba(255,255,255,.35)';c.stroke();if(hold)H.icon(c,hold,VW-16,16,1.6);else{G.text('손',VW-16,11,{size:7,k:1,color:'#777',align:'center'})}
+  G.text(`${ch+1}장 ${MAPS[ch].name}`,VW/2,4,{size:8,k:1,align:'center',color:'#ddd'});
+  /* 출구 필요 물건 */
+  let x=VW/2-((needs.length+(fuseP&&!fuseP.on?1:0))*11)/2+5;for(const k of needs){H.icon(c,k,x,20,.9);x+=11}if(fuseP&&!fuseP.on){H.icon(c,'fuse',x,20,.8);G.text(`${fuseP.n}/${fuseP.max}`,x+4,17,{size:5,k:1})}
+  const t=target();if(t&&state==='play'){const s=t.act==='out'?'A: 나오기':'A: '+t.label;c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w=c.measureText(s).width+12;H.rr(c,VW/2-w/2,VH-22,w,15,4);c.fill();G.text(s,VW/2,VH-19,{size:9,k:1,align:'center',color:'#ffe9a8'})}
+  if(msgT>0){c.globalAlpha=Math.min(1,msgT*2);c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w=c.measureText(msgS).width+14;H.rr(c,VW/2-w/2,32,w,15,4);c.fill();G.text(msgS,VW/2,35,{size:9,k:1,align:'center'});c.globalAlpha=1}
+  if(state==='clear'){c.fillStyle=`rgba(255,255,255,${Math.min(.85,stT)})`;c.fillRect(0,0,VW,VH);G.text('탈출 성공!',VW/2,VH/2-10,{size:18,k:1,align:'center',color:'#2a7a3a',shadow:false})}
+  H.drawScare(c,W,VW,VH)}
+
+Retro.boot({id:'hhide',title:'NNN 술래 괴물',en:'HIDE FROM TEDDY',w:VW,h:VH,hd:3,a:'행동',b:'달리기',diag:true,stages:{label:'장',max:4},
+  intro:'곰인형 술래 «털복이»가 집 안을 돌아다녀요. 들키지 않게 숨고 도망치면서 물건을 찾아 출구를 여세요!',
+  help:'<b>이동</b> 십자키 · <b>B</b> 달리기 (시끄러워요!)<br><b>A</b> 줍기 · 문 열기 · 숨기 · 물건 쓰기<br><b>물건은 한 번에 하나만</b> 들 수 있어요<br><b>숨기</b> 옷장·사물함·침대 밑·상자 — 들키는 걸 봤으면 찾아와요<br>잡히면 하트 −1 · 사탕 +50점 · 빨리 탈출하면 보너스',
+  setup(G){G0=G;hearts=3;candies=0;build(0)},
+  init(G){G0=G;hearts=G.lives(3);candies=0;build(G.start-1)},
+  update,draw});
+</script>
+</body>
+</html>

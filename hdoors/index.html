@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 문 너머</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script src="../shared/horror.js"></script>
+<script>
+/* NNN 문 너머: 번호 붙은 문을 하나씩 열고 100번 문까지. 돌진이가 오면 숨고, 어둠 속 쉿쉿이는 손전등으로 비추고, 50번 도서관의 귀 큰 거인은 살금살금 */
+const H=Horror,TS=H.TS,VW=320,VH=180,MH=30;
+let G0,W,M,pl,rooms,floorN,curRoom,hearts,battery,coins,hideP,hideT,rush,shh,giant,books,state,stT,msgS,msgT,lastRushRoom,beatT,best,searchT,searchP,flick;
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ---------- 층 만들기 (방 11개: 0=시작, 1..10) ---------- */
+function genFloor(f){floorN=f;
+  const specs=[];let x=1,prevY=null,prevH=null;
+  for(let k=0;k<=10;k++){let w,h,type='normal';const num=f*10+k;
+    if(k===0){w=8;h=7;type='lobby'}
+    else if(k===10){w=8;h=7;type=f===9?'final':'stairs'}
+    else if(f===4&&k===9){w=20;h=12;type='library'}
+    else{w=R(8,14);h=R(6,10);const r=Math.random();if(num>=3&&r<.18+f*.015)type='dark';else if(num>=5&&r<.36)type='key';else if(r<.45&&w>=11)type='hall'}
+    if(type==='hall'){h=R(4,5);w=R(14,18)}
+    let y0;if(prevY==null)y0=Math.floor((MH-h)/2);else{let tries=0;do{y0=R(2,MH-h-2);tries++}while(tries<60&&!(Math.min(y0+h-2,prevY+prevH-2)-Math.max(y0+1,prevY+1)>=2));if(tries>=60)y0=Math.max(1,Math.min(prevY,MH-h-2))}
+    specs.push({k,x0:x,y0,w,h,type,num});x+=w+1;prevY=y0;prevH=h}
+  const MW=x+1;const g=[];for(let y=0;y<MH;y++)g.push(new Array(MW).fill(' '));
+  const fl={normal:'.',lobby:',',stairs:'_',final:'_',dark:'=',key:':',hall:'=',library:':'};
+  for(const r of specs)for(let y=r.y0;y<r.y0+r.h;y++)for(let xx=r.x0;xx<r.x0+r.w;xx++)g[y][xx]=fl[r.type];
+  /* 문 자리 */
+  for(let k=1;k<specs.length;k++){const a=specs[k-1],b=specs[k];const lo=Math.max(a.y0+1,b.y0+1),hi=Math.min(a.y0+a.h-2,b.y0+b.h-2);const dy=R(lo,hi);const dx=b.x0-1;g[dy][dx]=fl[b.type];b.door={x:dx,y:dy};a.out={x:dx,y:dy}}
+  M=H.fromAscii(g.map(r=>r.join('')),{wallStyle:'brick'});W=H.world(M,{dark:.94});
+  rooms=specs;
+  for(const r of rooms){r.hides=[];r.drawers=[];
+    if(r.door){const locked=r.type==='library'?false:rooms[r.k-1].type==='key';r.doorP=H.addProp(M,{type:'door',x:r.door.x,y:r.door.y,open:false,locked,need:locked?'key':null,num:r.num});r.doorP.vert=true;r.doorP.room=r.k}
+    furnish(r);
+    if(r.type!=='dark'&&r.type!=='library'){r.light=H.addLight(W,(r.x0+r.w/2)*TS,(r.y0+r.h/2)*TS,Math.max(r.w,r.h)*TS*.75,{a:r.type==='hall'?.8:.92})}
+    else if(r.type==='library'){r.light=H.addLight(W,(r.x0+r.w/2)*TS,(r.y0+2)*TS,6*TS,{a:.45,flick:1})}}
+  /* 도서관 출구(50번 문)는 책 3권으로 */
+  const lib=rooms.find(r=>r.type==='library');if(lib){const nx=rooms[lib.k+1];nx.doorP.locked=true;nx.doorP.need='books';books={need:3,got:0}}else books=null;
+  const s=rooms[0];pl={x:(s.x0+2)*TS+8,y:(s.y0+s.h/2|0)*TS+8,r:4.5,face:0,stam:1,draw:(c,e,X,Y,t)=>H.drawKid(c,e,X,Y,t,{shirt:'#2f7ae8',hair:'#3a2414'})};W.ents.push(pl);
+  W.cam.x=pl.x-VW/2;W.cam.y=pl.y-VH/2;curRoom=0;rush=null;shh=null;giant=null;hideP=null;hideT=0;lastRushRoom=-3;
+  if(lib){giant=mkGiant(lib)}
+  for(const r of rooms){r.visited=r.k===0;if(r.light)r.light.on=r.visited}}
+function free(r,x,y){return!H.blocked(M,x,y)&&!(r.door&&Math.abs(x-r.x0)<=0&&y===r.door.y)&&!(r.out&&x===r.x0+r.w-1&&y===r.out.y)}
+function put(r,type,x,y,extra){if(x<r.x0||x>=r.x0+r.w||y<r.y0||y>=r.y0+r.h)return null;if(!free(r,x,y))return null;
+  if(r.door&&((x===r.x0&&Math.abs(y-r.door.y)<=1)))return null;if(r.out&&((x===r.x0+r.w-1&&Math.abs(y-r.out.y)<=1)))return null;
+  const p=H.addProp(M,Object.assign({type,x,y},extra||{}));if(p.hide)r.hides.push(p);if(type==='drawer')r.drawers.push(p);return p}
+function furnish(r){const top=r.y0,bot=r.y0+r.h-1;const xs=[];for(let x=r.x0+1;x<r.x0+r.w-1;x++)xs.push(x);xs.sort(()=>Math.random()-.5);
+  if(r.type==='lobby'){put(r,'sofa',r.x0+1,top);put(r,'plant',r.x0+r.w-2,top);put(r,'machine',r.x0+3,top);put(r,'locker',r.x0+5,top);return}
+  if(r.type==='stairs'||r.type==='final'){const sx=r.x0+r.w-2,sy=r.y0+(r.h/2|0);r.stairs=H.addProp(M,{type:'stair',x:sx,y:sy,solid:false,draw:drawStairs,final:r.type==='final'});put(r,'plant',r.x0+1,top);put(r,'bench',r.x0+2,bot);return}
+  if(r.type==='library'){for(let row=r.y0+2;row<r.y0+r.h-2;row+=3)for(let x=r.x0+3;x<r.x0+r.w-3;x++){if((x-r.x0)%6===0)continue;put(r,'shelf',x,row)}
+    for(let i=0;i<4;i++){const x=R(r.x0+2,r.x0+r.w-3);put(r,'wardrobe',x,top)}
+    let n=0,guard=0;while(n<3&&guard++<200){const x=R(r.x0+1,r.x0+r.w-2),y=R(r.y0+1,r.y0+r.h-2);if(free(r,x,y)&&!M.props.some(p=>p.x===x&&p.y===y)){H.addProp(M,{type:'item',kind:'book',x,y});n++}}
+    return}
+  const nh=r.type==='hall'?1:R(1,2);let i=0;
+  for(let k=0;k<nh;k++)put(r,Math.random()<.6?'locker':'wardrobe',xs[i++],top);
+  const nd=r.type==='key'?R(2,4):R(1,3);for(let k=0;k<nd;k++){const y=Math.random()<.5||r.h<6?top:bot;put(r,'drawer',xs[i++]||r.x0+1,y)}
+  for(let k=0;k<R(1,3);k++)put(r,pick(['plant','shelf','table','bed','box','piano']),xs[i++]||r.x0+2,Math.random()<.5?top:bot);
+  if(r.type!=='hall'&&r.w>10&&r.h>7&&Math.random()<.5)put(r,'table',r.x0+(r.w/2|0),r.y0+(r.h/2|0)+(Math.random()<.5?-1:1));
+  if(!r.hides.length){for(const x of xs){if(put(r,'locker',x,top))break}}
+  /* 서랍 속 */
+  const loot=[];if(r.type==='key')loot.push('key');for(let k=loot.length;k<r.drawers.length;k++)loot.push(pick(['coin','coin','coin','battery','battery','band',null,null]));loot.sort(()=>Math.random()-.5);
+  r.drawers.forEach((d,j)=>d.loot=loot[j]);
+  if(r.type==='key'&&!r.drawers.length){/* 서랍을 못 놓았으면 열쇠를 바닥에 */const x=r.x0+(r.w/2|0),y=r.y0+(r.h/2|0);H.addProp(M,{type:'item',kind:'key',x,y})}}
+function drawStairs(c,p,X,Y,t){for(let i=0;i<4;i++){c.fillStyle=i%2?'#6b6b74':'#7d7d86';c.fillRect(X-4+i*2,Y-6+i*5,20-i*4,5)}c.fillStyle=p.final?'#2ecc71':'#ffd23f';c.font='bold 6px Jua,sans-serif';c.textAlign='center';c.fillText(p.final?'출구!':'계단',X+8,Y-9)}
+
+/* ---------- 괴물들 ---------- */
+function mkRush(fromRoom,toRoom){const a=rooms[fromRoom],b=rooms[toRoom];const sx=(a.door?a.door.x:a.x0)*TS+8,sy=(a.door?a.door.y:a.y0+(a.h/2|0))*TS+8;
+  const tgt=b.out||{x:b.x0+b.w-1,y:b.y0+(b.h/2|0)};
+  const e={x:sx,y:sy,r:4,face:0,sp:250*G0.diff,D:H.flow(M,tgt.x,tgt.y,{doors:true,locked:true}),trail:[],
+    draw:(c,e,X,Y,t)=>drawRush(c,e,X,Y,t),glow:(c,e,X,Y,t)=>{c.fillStyle='#fff';c.beginPath();c.arc(X-4,Y-8,2.2,0,7);c.arc(X+4,Y-8,2.2,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(X-4+Math.random(),Y-8,1,0,7);c.arc(X+4+Math.random(),Y-8,1,0,7);c.fill()}};
+  W.ents.push(e);return e}
+function drawRush(c,e,X,Y,t){for(let i=0;i<e.trail.length;i++){const p=e.trail[i];c.fillStyle=`rgba(20,10,30,${i/e.trail.length*.6})`;c.beginPath();c.arc(p[0]-W.cam.x,p[1]-W.cam.y-6,8*i/e.trail.length+3,0,7);c.fill()}
+  c.fillStyle='#120a1a';c.beginPath();for(let i=0;i<14;i++){const a=i/14*6.283,r=11+Math.sin(t*20+i*2)*2.5;c.lineTo(X+Math.cos(a)*r,Y-6+Math.sin(a)*r)}c.fill();
+  c.fillStyle='#2a0a10';c.beginPath();c.ellipse(X,Y-1,5,3+Math.sin(t*30),0,0,7);c.fill()}
+function shhFace(c,x,y,s){c.save();c.translate(x,y);c.scale(s/20,s/20);c.fillStyle='#0d0814';c.beginPath();for(let i=0;i<16;i++){const a=i/16*6.283;c.lineTo(Math.cos(a)*(18+(i%2)*4),Math.sin(a)*(18+(i%2)*4))}c.fill();
+  c.fillStyle='#fff';c.beginPath();c.arc(0,-2,9,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(0,-2,4,0,7);c.fill();c.fillStyle='#e74c3c';c.beginPath();c.ellipse(0,11,7,3,0,0,7);c.fill();c.restore()}
+function rushFace(c,x,y,s){c.save();c.translate(x,y);c.scale(s/20,s/20);c.fillStyle='#120a1a';c.beginPath();for(let i=0;i<20;i++){const a=i/20*6.283,r=19+(i%2)*5;c.lineTo(Math.cos(a)*r,Math.sin(a)*r)}c.fill();
+  c.fillStyle='#fff';c.beginPath();c.arc(-7,-4,4,0,7);c.arc(7,-4,4,0,7);c.fill();c.fillStyle='#2a0a10';c.beginPath();c.ellipse(0,9,11,6,0,0,7);c.fill();c.restore()}
+function giantFace(c,x,y,s){c.save();c.translate(x,y);c.scale(s/20,s/20);c.fillStyle='#5a2a2a';c.beginPath();c.ellipse(0,0,16,20,0,0,7);c.fill();c.fillStyle='#3a1414';for(let i=-2;i<=2;i++)c.fillRect(i*5-1.5,-14,3,12);c.fillStyle='#ffcc66';c.beginPath();c.ellipse(0,9,10,6,0,0,Math.PI);c.fill();c.restore()}
+function mkGiant(r){const e={x:(r.x0+r.w-4)*TS+8,y:(r.y0+r.h/2|0)*TS+8,r:6,face:Math.PI,sp:34,st:'wander',tgt:null,D:null,dk:'',think:0,room:r,stepT:0,
+  draw:(c,e,X,Y,t)=>{const w=e.moving?Math.sin(t*(e.st==='hunt'?10:5))*1.5:0;c.fillStyle='rgba(0,0,0,.45)';c.beginPath();c.ellipse(X,Y+5,10,3.5,0,0,7);c.fill();
+    c.fillStyle='#4a2222';c.fillRect(X-6,Y-2+w,5,8);c.fillRect(X+1,Y-2-w,5,8);c.fillStyle='#6a2e2e';H.rr(c,X-9,Y-22,18,22,5);c.fill();
+    c.fillStyle='#5a2a2a';c.beginPath();c.ellipse(X,Y-26,7,8,0,0,7);c.fill();c.fillStyle='#3a1414';for(let i=-1;i<=1;i++)c.fillRect(X+i*3.5-1,Y-31,2,6);
+    c.fillStyle='#ffcc66';c.beginPath();c.ellipse(X,Y-21,4.5,2.5,0,0,Math.PI);c.fill();
+    c.strokeStyle='#4a1e1e';c.lineWidth=3;c.beginPath();c.moveTo(X-8,Y-18);c.lineTo(X-11,Y-6+w);c.moveTo(X+8,Y-18);c.lineTo(X+11,Y-6-w);c.stroke();
+    if(e.st==='hunt'){c.fillStyle='#ff5a4f';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('!',X,Y-38)}else if(e.st==='listen'){c.fillStyle='#fff';c.font='6px Jua,sans-serif';c.textAlign='center';c.fillText('…?',X,Y-38)}}};
+  W.ents.push(e);return e}
+
+function say(s,t){msgS=s;msgT=t||2.2}
+function hurt(G,why,face){hearts--;H.snd('hurt');if(face)H.scare(W,face,.5);W.shake=1;G.sfx('die');say(why,2.2);
+  if(hearts<=0){state='dead';setTimeout(()=>G.over(`${doorNow()}번 문까지 왔어요`),900)}}
+function doorNow(){let n=floorN*10;for(const r of rooms)if(r.visited&&r.k>0)n=Math.max(n,r.num);return n}
+function roomAt(x){const tx=x/TS;for(const r of rooms)if(tx>=r.x0-.5&&tx<r.x0+r.w+.5)return r.k;return curRoom}
+
+/* ---------- 상호작용 ---------- */
+function target(){if(hideP)return{act:'out',label:'나오기'};if(searchP)return null;
+  const p=H.nearProp(W,pl,q=>q.type!=='stair'||true,19);if(!p)return null;
+  if(p.type==='item')return{p,act:'pick',label:p.kind==='book'?'책 줍기':p.kind==='key'?'열쇠 줍기':'줍기'};
+  if(p.hide)return{p,act:'hide',label:p.hide+'에 숨기'};
+  if(p.type==='drawer')return p.searched?null:{p,act:'search',label:'서랍 뒤지기'};
+  if(p.type==='door'){if(p.open)return null;if(p.locked){if(p.need==='key'&&pl.key)return{p,act:'unlock',label:'열쇠로 열기'};if(p.need==='books')return{p,act:'locked',label:`책 ${books.got}/3 필요`};return{p,act:'locked',label:'잠겼어요 · 이 방 서랍에 열쇠가!'}}return{p,act:'open',label:`${p.num}번 문 열기`}}
+  if(p.type==='stair')return{p,act:'stair',label:p.final?'탈출하기!':'다음 층으로'};
+  return null}
+function interact(G){const t=target();if(!t)return;const p=t.p;
+  if(t.act==='out'){hideP.occ=0;hideP=null;pl.hidden=false;hideT=0;H.snd('hide');return}
+  if(t.act==='hide'){hideP=p;p.occ=1;pl.hidden=true;hideT=0;H.snd('hide');pl.x=p.x*TS+8;pl.y=(p.y+1)*TS+6;if(!H.canAt(M,pl.x,pl.y,pl.r))pl.y=p.y*TS+8;return}
+  if(t.act==='search'){searchP=p;searchT=.55;H.snd('creak');return}
+  if(t.act==='pick'){p.gone=1;H.refresh(M,p);H.snd('pick');
+    if(p.kind==='key'){pl.key=1;say('열쇠를 찾았다!',1.6)}
+    else if(p.kind==='book'){books.got++;G.add(300);say(`책 ${books.got}/3`,1.5);if(books.got>=3){const d=rooms.find(r=>r.doorP&&r.doorP.need==='books').doorP;d.locked=false;H.snd('lock');say('50번 문이 열렸다! 살금살금 나가자',2.5)}}
+    return}
+  if(t.act==='unlock'){p.locked=false;pl.key=0;H.snd('lock');openDoor(G,p);return}
+  if(t.act==='open'){openDoor(G,p);return}
+  if(t.act==='locked'){H.snd('lock');say(t.label,1.8);return}
+  if(t.act==='stair'){if(p.final){G.add(5000);state='won';stT=0;G.sfx('clear');return}G.add(500);G.reach(floorN+2);state='fade';stT=0;G.sfx('power')}}
+function openDoor(G,p){H.setDoor(M,p,true);H.snd('door');const r=rooms[p.room];if(r.light)r.light.on=true;if(!r.visited){r.visited=true;G.add(100);if(p.num>best)best=p.num;onEnter(G,r)}}
+function onEnter(G,r){if(r.type==='dark')say('깜깜한 방… 쉿쉿이를 조심!',2);
+  if(r.type==='library'){say('쉿… 귀 큰 거인은 앞을 못 봐요. 책 3권을 찾아요. 뛰면 들켜요!',4);H.snd('growl')}
+  if(r.type==='key')say('문이 잠겼다. 서랍을 뒤져 열쇠를 찾자',2.2);
+  /* 돌진이 */
+  if(!rush&&r.num>=4&&r.type!=='library'&&r.type!=='stairs'&&r.type!=='final'&&r.k-lastRushRoom>=3&&Math.random()<.24+floorN*.02){lastRushRoom=r.k;rush={warn:G0.level==='easy'?4.6:G0.level==='hard'?2.9:3.7,from:Math.max(0,r.k-2),to:Math.min(10,r.k+1),e:null};H.snd('rumble');for(const q of rooms)if(q.light&&Math.abs(q.k-r.k)<=2)q.light.flick=3}}
+
+function update(G,dt){W.t+=dt;H.stepFx(W,dt);H.stepScare(W,dt);if(msgT>0)msgT-=dt;
+  if(state==='dead')return;
+  if(state==='fade'){stT+=dt;if(stT>1.2){genFloor(floorN+1);state='play';G.msg(`${floorN+1}층 · ${floorN*10+1}번 문부터`,1600)}return}
+  if(state==='won'){stT+=dt;if(stT>2){state='dead';G.win('100번 문 탈출!',`하트 ${hearts}개 · 금화 ${coins}개`)}return}
+  if(G.hit.a)interact(G);
+  if(searchP){searchT-=dt;pl.moving=false;if(searchT<=0){const p=searchP;searchP=null;p.searched=1;p.open=1;const l=p.loot;
+      if(l==='coin'){const n=R(1,3);coins+=n;G.add(n*30);H.float(W,p.x*TS+8,p.y*TS,`금화 +${n}`,'#ffd23f');H.snd('pick')}
+      else if(l==='battery'){battery=Math.min(1,battery+.45);H.float(W,p.x*TS+8,p.y*TS,'배터리!','#2ecc71');H.snd('pick')}
+      else if(l==='band'){hearts=Math.min(hearts+1,G0.lives(4));H.float(W,p.x*TS+8,p.y*TS,'♥ +1','#ff4f7b');H.snd('pick')}
+      else if(l==='key'){pl.key=1;H.float(W,p.x*TS+8,p.y*TS,'열쇠!','#ffd23f');H.snd('pick');say('열쇠를 찾았다!',1.4)}
+      else H.float(W,p.x*TS+8,p.y*TS,'텅…','#aaa')}}
+  else if(!pl.hidden){const n=H.playerMove(W,G,pl,dt,{walk:50,run:82,walkNoise:2,runNoise:8});if(giant&&n)hear(n)}
+  else pl.moving=false;
+  curRoom=roomAt(pl.x);const room=rooms[curRoom];
+  /* 배터리 */
+  const darkHere=room.type==='dark'||room.type==='library';battery=Math.max(0,battery-dt*(darkHere?.012:.003));
+  /* 숨기 시간 */
+  if(pl.hidden){hideT+=dt;if(hideT>9&&hideT-dt<=9){say('…나와!',1.5);H.snd('whisper');W.shake=.6}if(hideT>11.5){hideP.occ=0;hideP=null;pl.hidden=false;hideT=0;hurt(G,'사물함 귀신이 밀어냈다! 너무 오래 숨지 마요',null)}}
+  /* 돌진이 */
+  if(rush){if(!rush.e){rush.warn-=dt;if(Math.random()<dt*3)W.shake=Math.max(W.shake,.25);for(const q of rooms)if(q.light&&q.light.flick&&q.visited)q.light.on=Math.random()>.4;if(rush.warn<=0){rush.e=mkRush(rush.from,rush.to);H.snd('scare')}}
+    else{const e=rush.e;e.trail.push([e.x,e.y]);if(e.trail.length>10)e.trail.shift();const r=H.follow(M,e,e.D,e.sp,dt,{doors:true,onDoor:()=>H.snd('door')});
+      if(Math.random()<dt*20)H.tone(60+Math.random()*40,.05,'sawtooth',.06);W.shake=Math.max(W.shake,Math.max(0,.8-Math.abs(e.x-pl.x)/300));
+      if(!pl.hidden&&Math.hypot(e.x-pl.x,e.y-pl.y)<16&&!rush.hit){rush.hit=1;hurt(G,'돌진이에게 부딪혔다! 불빛이 깜빡이면 숨어요',rushFace)}
+      if(r==='arrived'||r===false){W.ents.splice(W.ents.indexOf(e),1);for(const q of rooms)if(q.light){q.light.flick=q.type==='library'?1:0;q.light.on=!!q.visited}if(!rush.hit){G.add(200);say('휴… 지나갔다 (+200)',1.6)}rush=null}}}
+  /* 쉿쉿이 (깜깜한 방) */
+  if(room.type==='dark'&&!pl.hidden&&!rush){if(!shh){room.shhT=(room.shhT==null?R(3,7):room.shhT)-dt;if(room.shhT<=0&&!room.shhDone){room.shhDone=1;const a=Math.random()*6.283;shh={x:pl.x+Math.cos(a)*36,y:pl.y+Math.sin(a)*36,a,t:G0.level==='easy'?3:G0.level==='hard'?1.8:2.3};H.snd('whisper');say('쉿! 손전등으로 비춰요!',1.8)}}}
+  if(shh){shh.t-=dt;shh.x=pl.x+Math.cos(shh.a)*36;shh.y=pl.y+Math.sin(shh.a)*36;let da=Math.atan2(shh.y-pl.y,shh.x-pl.x)-pl.face;da=Math.atan2(Math.sin(da),Math.cos(da));
+    if(Math.abs(da)<.45&&battery>0){H.snd('pick');G.add(150);H.float(W,shh.x,shh.y-10,'으악! (+150)','#ccc');shh=null}
+    else if(shh.t<=0){shh=null;hurt(G,'쉿쉿이에게 물렸다! 소리 나는 쪽을 비춰요',shhFace)}
+    else if(pl.hidden){shh=null}}
+  /* 거인 */
+  if(giant)giantUpdate(G,dt);
+  /* 심장 */
+  beatT-=dt;let dn=1e9;if(giant&&curRoom===giant.room.k)dn=Math.hypot(giant.x-pl.x,giant.y-pl.y)/TS;if(rush&&rush.e)dn=Math.min(dn,Math.abs(rush.e.x-pl.x)/TS*.5);if(dn<8&&beatT<=0){H.snd('beat');beatT=.3+dn*.1}
+  W.danger=dn<8?1-dn/8:0;
+  H.camFollow(W,pl.x,pl.y,VW,VH,dt)}
+function hear(n){if(curRoom!==giant.room.k||pl.hidden)return;const d=Math.hypot(giant.x-pl.x,giant.y-pl.y)/TS;if(d<n*(G0.level==='hard'?1.25:1)){giant.st='hunt';giant.tgt=[Math.floor(pl.x/TS),Math.floor(pl.y/TS)];giant.think=0;giant.huntT=3}}
+function giantUpdate(G,dt){const g=giant;if(curRoom<g.room.k-1||curRoom>g.room.k){g.moving=false;return}
+  g.think-=dt;const go=(tx,ty,sp)=>{const k=tx+','+ty;if(k!==g.dk||g.think<=0){g.D=H.flow(M,tx,ty,{});g.dk=k;g.think=.5}const r=H.follow(M,g,g.D,sp,dt,{});g.moving=r===true;return r};
+  /* 도서관 밖으로는 안 나감 */
+  const clamp=()=>{g.x=Math.max((g.room.x0)*TS+6,Math.min((g.room.x0+g.room.w)*TS-6,g.x))};
+  if(g.st==='hunt'){g.huntT-=dt;const r=go(g.tgt[0],g.tgt[1],78*G0.diff);if(r==='arrived'||r===false||g.huntT<=0){g.st='listen';g.lt=1.6}}
+  else if(g.st==='listen'){g.moving=false;g.lt-=dt;if(g.lt<=0)g.st='wander'}
+  else{if(!g.tgt||g.st!=='wander'){const x=R(g.room.x0+1,g.room.x0+g.room.w-2),y=R(g.room.y0+1,g.room.y0+g.room.h-2);if(!H.blocked(M,x,y))g.tgt=[x,y]}if(g.tgt){const r=go(g.tgt[0],g.tgt[1],30*G0.diff);if(r==='arrived'||r===false)g.tgt=null}}
+  clamp();
+  if(g.moving){g.stepT+=dt;if(g.stepT>(g.st==='hunt'?.3:.6)){g.stepT=0;H.tone(55,.12,'sine',.22,40)}}
+  if(!pl.hidden&&Math.hypot(g.x-pl.x,g.y-pl.y)<13){hurt(G,'거인에게 잡혔다! 걸어서 살금살금…',giantFace);const r=g.room;pl.x=(r.x0)*TS+8;pl.y=r.door.y*TS+8;g.st='wander';g.tgt=null;g.x=(r.x0+r.w-3)*TS+8}}
+
+/* ---------- 그리기 ---------- */
+function draw(G,c){if(!W){c.fillStyle='#07060c';c.fillRect(0,0,VW,VH);return}
+  const lights=[];const room=rooms[curRoom];
+  if(!pl.hidden){const bat=battery>0?(.55+battery*.45):0;lights.push({x:pl.x,y:pl.y-4,r:20+82*bat,cone:.5,a:pl.face,i:battery>0?1:.25},{x:pl.x,y:pl.y-4,r:26,i:.7})}
+  H.render(G,c,W,{lights,over:(c,cam)=>{if(shh){const X=shh.x-cam.x,Y=shh.y-cam.y;c.globalAlpha=.85;shhFace(c,X,Y,8+Math.sin(G.t*20));c.globalAlpha=1}}});
+  if(pl.hidden){H.drawHidden(c,VW,VH,hideP?hideP.hide:'',G.t,Math.max(W.danger,hideT>8?(hideT-8)/3.5:0));H.bar(c,VW/2-30,VH-14,60,3,1-hideT/11.5,hideT>8?'#e74c3c':'#aaa')}
+  if(rush&&!rush.e){c.fillStyle=`rgba(0,0,0,${Math.random()*.35})`;c.fillRect(0,0,VW,VH)}
+  /* HUD */
+  for(let i=0;i<hearts;i++)H.heart(c,8+i*10,6,8,true);
+  G.text('🔦',8,17,{size:7,k:1});H.bar(c,20,19,30,3,battery,battery<.2?'#e74c3c':'#ffd23f');H.bar(c,56,19,24,3,pl.stam,'#7fd1ff');
+  if(pl.key)H.icon(c,'key',92,20,1);if(books&&curRoom>=rooms.findIndex(r=>r.type==='library')-1&&books.got<3){H.icon(c,'book',106,20,1);G.text(`${books.got}/3`,112,17,{size:6,k:1})}
+  const dn=Math.max(doorNow(),floorN*10);c.fillStyle='rgba(0,0,0,.55)';H.rr(c,VW-48,4,44,18,4);c.fill();G.text(String(dn).padStart(3,'0'),VW-26,6,{size:12,k:1,align:'center',color:'#e8dcc0'});
+  G.text(`금화 ${coins}`,VW-26,24,{size:6,k:1,align:'center',color:'#ffd23f'});
+  const t=target();if(t&&state==='play'){const s='A: '+t.label;c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w=c.measureText(s).width+12;H.rr(c,VW/2-w/2,VH-22,w,15,4);c.fill();G.text(s,VW/2,VH-19,{size:9,k:1,align:'center',color:'#ffe9a8'})}
+  if(searchP){G.text('뒤적뒤적…',pl.x-W.cam.x,pl.y-W.cam.y-22,{size:7,k:1,align:'center'})}
+  if(msgT>0){c.globalAlpha=Math.min(1,msgT*2);c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w=c.measureText(msgS).width+14;H.rr(c,VW/2-w/2,30,w,15,4);c.fill();G.text(msgS,VW/2,33,{size:9,k:1,align:'center'});c.globalAlpha=1}
+  if(state==='fade'||state==='won'){c.fillStyle=`rgba(0,0,0,${Math.min(1,stT)})`;c.fillRect(0,0,VW,VH);G.text(state==='won'?'탈출 성공!':'계단을 올라가는 중…',VW/2,VH/2-6,{size:12,k:1,align:'center'})}
+  H.drawScare(c,W,VW,VH)}
+
+Retro.boot({id:'hdoors',title:'NNN 문 너머',en:'100 DOORS',w:VW,h:VH,hd:3,a:'행동',b:'달리기',diag:true,stages:{label:'층',max:10},
+  intro:'번호가 붙은 문을 하나씩 열고 나아가요. 100번 문까지 가면 탈출! 문 너머엔 뭐가 있을까?',
+  help:'<b>이동</b> 십자키 · <b>B</b> 달리기 · <b>A</b> 문 열기·서랍 뒤지기·숨기<br><b>불빛이 깜빡이고 우르릉</b> → 돌진이! 빨리 사물함·옷장에 숨어요<br><b>깜깜한 방 «쉿!»</b> → 그쪽을 손전등으로 비추기<br><b>너무 오래 숨으면</b> 쫓겨나요 · <b>잠긴 문</b> 열쇠는 서랍 속<br><b>50번 도서관</b> 거인은 소리로 찾아요. 걸어서 책 3권!',
+  setup(G){G0=G;hearts=4;battery=1;coins=0;best=0;state='play';genFloor(0)},
+  init(G){G0=G;hearts=G.lives(4);battery=1;coins=0;best=0;searchP=null;state='play';genFloor(G.start-1);G.msg(`${floorN+1}층 · ${floorN*10+1}번 문부터`,1600)},
+  update,draw});
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 좀비 체육관</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script src="../shared/horror.js"></script>
+<script>
+/* NNN 좀비 체육관: 정전된 밤의 체육관. 글러브 펀치로 샌드백 좀비를 막아내며 퓨즈를 모아 전기를 살리고 탈출 */
+const H=Horror,TS=H.TS,VW=320,VH=180;
+const MAPS=[{"name": "1층 로비", "rows": ["########################################", "#,,,,,,,,,,,,,,,,#;;;;;;;;;;;;;;;;;;;;;#", "#,O,O,,,,,,,,,,p,#;b;;;b;;;;;b;;;;b;;;;#", "#,,,,,,,,l,,,,,,,#;;;;;;;;;;;;;;;;;;;;;#", "#,,,,,,,,,,,,,,,,D;;;;;;;z;;;;;;;;;;;f;#", "#,T,,,,,,,,,,,T,,#;;;;;;;;;;;;l;;;;;;;;#", "#,,,,,,P,,,,,,,,,#;;b;;;b;;;;;b;;;;b;;;#", "#,,,,,,,,,,,,,,,,#;;;;;;;;;;;;;;;;;;;;;#", "######D###########;;;;;;;z;;;;;;;;;;;;;#", "#________________#########D#############", "#__l______z______D_____________________#", "#________________#__________l___v______#", "######D###########_______z_____________E", "#,,,,,,,,#:::::::#######D###############", "#,L,L,L,,#:::%:::#,,,,,,,,,,,,,,,,,,,,,#", "#,,,,,,,,R:::::::#,,,L,L,L,L,,,,,f,,,,,#", "#,,z,,,,,#:::f:::#,,,,,,,,,,,,,,,,,,,,,#", "#,,,,,+,,#:::::::#,,,,,,,,z,,,,,,,,,,,,#", "#,L,L,L,C#:::W:::#,L,L,L,L,,,,,,,,,,,F,#", "########################################"]}, {"name": "2층 체육관", "rows": ["############################################", "#;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;#", "#;;b;;;;b;;;;b;;;;;;;;;;;;;;;b;;;;b;;;;b;;;#", "#;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;#", "#;;;;;;;;;;;;;QQQQQQQQ;;;;;;;;;;;;;;;;;;;;;#", "#;;;z;;;;;;;;;QQQQQQQQ;;;;;;;;;;;;;z;;;;;;;#", "#;;;;;;;;l;;;;QQQQQQQQ;;;;;;;;;l;;;;;;;;;;;#", "#;;;;;;;;;;;;;QQQQQQQQ;;;;;;;;;;;;;;;;;;;;;#", "#;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;#", "#;;n;;n;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;n;;n;;#", "#;;;;;;;;;;;;;;;;;Z;;;;;;;;;;;;;;;;;;;;;;;;#", "#;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;#", "####D###########D##########D############D###", "#,,,,,,,,#______________________#::::::::::#", "#,L,L,L,,#__l_______z___________#::T:::T:::#", "#,,,,,,,,D______________________R::::::::::#", "#,,f,,,,,#____P__________v______#:::::f::::#", "#,,,,,+,,#______________________#::%:::::::#", "#,L,L,L,C#____________z_____f___#:::::W::F:#", "############################E###############"]}, {"name": "지하 보일러실", "rows": ["############################################", "#____________#______________#______________#", "#_q__q__q____#__c_c_c_c_____#____l____c__c_#", "#____________#______________#______________#", "#______z_____D_______z______D______Z_______#", "#____l_______#____________f_#______________#", "#_q__q__q____#__c_c_c_c_____#__c________c__#", "######D##############D############D#########", "#__________________________________________#", "#_____%____l________________l______________#", "#____P_____________________________v_______#", "#__________________________________________#", "######D##############D############D#########", "#,,,,,,,,,,,,#______________#______________#", "#,L,L,L,,,,,,#______________#______________#", "#,,,,,,,,,f,,#______Y_______R______________E", "#,,,,+,,,,,,,#______________#______________#", "#,L,L,L,,,,,C#_____l________#_q_______F__q_#", "############################################"]}];
+const PROP={T:'table',S:'shelf',O:'sofa',p:'plant',q:'machine',c:'crate',b:'bag',L:'locker',W:'wardrobe',B:'bed',X:'box',Q:'ring',n:'bench'};
+let G0,W,M,pl,zs,fl,hp,maxHp,battery,fuseP,exitP,boss,state,stT,msgS,msgT,beatT,vents,spawnT,kills,tFloor,power,inv,punchT,punchCd,powerT;
+
+function build(i){fl=i;const rows=MAPS[i].rows;M=H.fromAscii(rows,{wallStyle:i===2?'concrete':'brick'});W=H.world(M,{dark:.93});
+  for(const [k,type] of Object.entries(PROP))for(const [x,y] of (M.marks[k]||[]))H.addProp(M,{type,x,y,col:k==='b'?['#b23b2e','#2a4a8a','#333'][(x+y)%3]:null});
+  for(const k of 'DR')for(const [x,y] of (M.marks[k]||[]))H.addProp(M,{type:'door',x,y,open:false,locked:k==='R',need:k==='R'?'card':null});
+  const IT={f:'fuse',C:'card','+':'band','%':'battery','!':'power'};for(const [k,kind] of Object.entries(IT))for(const [x,y] of (M.marks[k]||[]))H.addProp(M,{type:'item',kind,x,y});
+  for(const [x,y] of (M.marks.l||[]))H.addLight(W,x*TS+8,y*TS+8,56,{a:.55,flick:1});
+  const nf=(M.marks.f||[]).length;fuseP=null;for(const [x,y] of (M.marks.F||[]))fuseP=H.addProp(M,{type:'fusebox',x,y,max:nf,n:0});
+  const [ex,ey]=M.marks.E[0];exitP=H.addProp(M,{type:'exit',x:ex,y:ey,open:false});
+  vents=(M.marks.v||[]).map(([x,y])=>{H.addProp(M,{type:'vent',x,y,solid:false,draw:drawVent});return[x,y]});
+  const [px,py]=M.marks.P[0];pl={x:px*TS+8,y:py*TS+8,r:4.5,face:0,stam:1,card:0,fuse:0,draw:(c,e,X,Y,t)=>{if(inv>0&&(t*20|0)%2)return;H.drawKid(c,e,X,Y,t,{shirt:'#222',hair:'#111',glove:1});drawPunch(c,e,X,Y)}};W.ents.push(pl);
+  zs=[];boss=null;
+  for(const [x,y] of (M.marks.z||[]))zs.push(mkZ(x,y,'n'));for(const [x,y] of (M.marks.Z||[]))zs.push(mkZ(x,y,'f'));for(const [x,y] of (M.marks.Y||[])){boss=mkZ(x,y,'boss');zs.push(boss)}
+  power=false;spawnT=12;tFloor=0;inv=0;punchT=0;punchCd=0;state='play';
+  W.cam.x=pl.x-VW/2;W.cam.y=pl.y-VH/2;
+  if(G0.state==='play'){G0.msg(`${MAPS[i].name}`,1500);setTimeout(()=>{if(G0.state==='play')say(i===2?'대왕 좀비를 쓰러뜨리고, 퓨즈로 전기를 살려 탈출!':`퓨즈 ${nf}개를 두꺼비집에 꽂으면 출구가 열려요`,3.5)},1600)}}
+function drawVent(c,p,X,Y,t){c.fillStyle='#2a2a2e';c.fillRect(X+2,Y+3,12,10);c.fillStyle='#55555c';for(let i=0;i<4;i++)c.fillRect(X+3,Y+4+i*2.4,10,1.2)}
+function drawPunch(c,e,X,Y){if(punchT<=0)return;const k=punchT/.18;const r=6+(1-k)*8;const fx=Math.cos(e.face),fy=Math.sin(e.face);c.fillStyle=powerT>0?'#ffd23f':'#e8312a';c.beginPath();c.arc(X+fx*r,Y-3+fy*r,3,0,7);c.fill();
+  if(k>.5){c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1;c.beginPath();c.arc(X,Y-3,r+4,e.face-.5,e.face+.5);c.stroke()}}
+const ZT={n:{hp:3,sp:30,ch:44,col:'#6f9a54',r:5,pts:100},f:{hp:2,sp:40,ch:60,col:'#8a7ad0',r:4.5,pts:150},boss:{hp:22,sp:26,ch:36,col:'#a0583a',r:9,pts:3000}};
+function mkZ(tx,ty,k){const T=ZT[k];const hpMul=G0.level==='easy'?.75:G0.level==='hard'?1.3:1;const z={x:tx*TS+8,y:ty*TS+8,r:T.r,k,hp:Math.ceil(T.hp*hpMul),max:Math.ceil(T.hp*hpMul),face:0,st:'wander',tgt:null,D:null,dk:'',think:0,kb:{x:0,y:0},stun:0,stepT:0,groanT:Math.random()*6,atk:0,
+  draw:(c,e,X,Y,t)=>drawZ(c,e,X,Y,t),glow:(c,e,X,Y,t)=>{if(e.st!=='chase')return;const s=e.k==='boss'?1.8:1;c.fillStyle='rgba(180,255,120,.9)';c.beginPath();c.arc(X-2*s,Y-11*s,1*s,0,7);c.arc(X+2*s,Y-11*s,1*s,0,7);c.fill()}};W.ents.push(z);return z}
+function drawZ(c,e,X,Y,t){const T=ZT[e.k];const s=e.k==='boss'?1.8:1;const w=e.moving?Math.sin(t*9+e.x)*1.2:0;c.save();c.translate(X,Y);c.scale(s,s);
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(0,5,6,2.3,0,0,7);c.fill();
+  c.fillStyle='#3a3a2a';c.fillRect(-3,1+w,2,4);c.fillRect(1,1-w,2,4);
+  c.fillStyle=e.hit>0?'#fff':T.col;H.rr(c,-4.5,-6,9,9,3);c.fill();c.fillStyle='rgba(0,0,0,.25)';c.fillRect(-4.5,-2,9,1.2);
+  const fx=Math.cos(e.face),fy=Math.sin(e.face);c.strokeStyle=e.hit>0?'#fff':T.col;c.lineWidth=2.2;c.beginPath();c.moveTo(-3,-4);c.lineTo(-3+fx*7,-4+fy*4+w);c.moveTo(3,-4);c.lineTo(3+fx*7,-4+fy*4-w);c.stroke();
+  c.fillStyle=e.hit>0?'#fff':'#8fbf6a';if(e.k==='f')c.fillStyle=e.hit>0?'#fff':'#b0a4e8';if(e.k==='boss')c.fillStyle=e.hit>0?'#fff':'#c87a54';c.beginPath();c.arc(0,-10,4.3,0,7);c.fill();
+  c.fillStyle='#111';c.fillRect(-2.4+fx,-11,1.3,1.6);c.fillRect(1.1+fx,-11,1.3,1.6);c.fillStyle='#4a1a1a';c.fillRect(-1.5+fx,-8,3,1);
+  c.strokeStyle='#2a2a1a';c.lineWidth=.5;c.beginPath();c.moveTo(-3,-13);c.lineTo(-1,-12);c.moveTo(-2.4,-13.5);c.lineTo(-2,-11.6);c.stroke();
+  if(e.k==='f'){c.strokeStyle='#ffd23f';c.lineWidth=.8;c.beginPath();c.arc(0,-3,9,Math.PI*1.1+Math.sin(t*8)*.3,Math.PI*1.9+Math.sin(t*8)*.3);c.stroke()}
+  if(e.k==='boss'){c.fillStyle='#ffd23f';c.fillRect(-4.5,-3,9,2);c.fillStyle='#e8312a';c.fillRect(-1,-3,2,2)}
+  c.restore();
+  if(e.hp<e.max){H.bar(c,X-8*s,Y-18*s-4,16*s,2,e.hp/e.max,e.k==='boss'?'#e74c3c':'#9be15d')}
+  if(e.stun>0){c.fillStyle='#ffd23f';c.font='6px sans-serif';c.textAlign='center';c.fillText('★',X+Math.sin(t*8)*4,Y-18*s-6)}}
+function zFace(c,x,y,s){c.save();c.translate(x,y);c.scale(s/20,s/20);c.fillStyle='#8fbf6a';c.beginPath();c.arc(0,0,18,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(-7,-4,4,0,7);c.arc(7,-4,4,0,7);c.fill();c.fillStyle='#c8ff9a';c.beginPath();c.arc(-7,-4,1.4,0,7);c.arc(7,-4,1.4,0,7);c.fill();c.fillStyle='#4a1a1a';c.beginPath();c.ellipse(0,9,9,5,0,0,7);c.fill();c.fillStyle='#fff';for(let k=-6;k<=6;k+=3)c.fillRect(k-1,5,2,3);c.restore()}
+
+function say(s,t){msgS=s;msgT=t||2.2}
+function noise(x,y,r){for(const z of zs){if(z.st==='chase')continue;if(Math.hypot(z.x-x,z.y-y)<r*TS){z.st='go';z.tgt=[Math.floor(x/TS),Math.floor(y/TS)];z.think=0}}}
+function zGo(z,tx,ty,sp,dt){const k=tx+','+ty;if(k!==z.dk||z.think<=0||!z.D){z.D=H.flow(M,tx,ty,{doors:true,max:40});z.dk=k;z.think=.5}const r=H.follow(M,z,z.D,sp,dt,{doors:true,onDoor:()=>H.snd('door')});z.moving=r===true;return r}
+function zUpdate(G,z,dt){z.think-=dt;if(z.hit>0)z.hit-=dt;
+  if(z.kb.x||z.kb.y){H.move(M,z,z.kb.x*dt,z.kb.y*dt);z.kb.x*=.85;z.kb.y*=.85;if(Math.abs(z.kb.x)+Math.abs(z.kb.y)<4)z.kb.x=z.kb.y=0}
+  if(z.stun>0){z.stun-=dt;z.moving=false;return}
+  const T=ZT[z.k];const d=Math.hypot(pl.x-z.x,pl.y-z.y);const mul=G0.diff;
+  const sees=!pl.hidden&&d<(z.k==='boss'?9:6.5)*TS&&H.los(M,z.x,z.y-6,pl.x,pl.y-4);
+  if(sees){if(z.st!=='chase'){H.snd('growl')}z.st='chase';z.last=[Math.floor(pl.x/TS),Math.floor(pl.y/TS)];z.lost=0}
+  if(z.st==='chase'){if(!sees)z.lost+=dt;
+    if(sees&&d<40){const vx=pl.x-z.x,vy=pl.y-z.y;z.face=Math.atan2(vy,vx);H.move(M,z,vx/d*T.ch*mul*dt,vy/d*T.ch*mul*dt);z.moving=true}
+    else{const r=zGo(z,z.last[0],z.last[1],T.ch*mul,dt);if(!sees&&(r==='arrived'||r===false||z.lost>5)){z.st='wander';z.tgt=null}}
+    /* 공격 */
+    z.atk-=dt;if(d<(z.r+pl.r+3)&&z.atk<=0&&inv<=0&&!pl.hidden){z.atk=1;hit(G,z)}}
+  else if(z.st==='go'){const r=zGo(z,z.tgt[0],z.tgt[1],T.sp*1.2*mul,dt);if(r==='arrived'||r===false){z.st='wander';z.tgt=null}}
+  else{if(!z.tgt)z.tgt=H.randomFloor(M,z,4);if(z.tgt){const r=zGo(z,z.tgt[0],z.tgt[1],T.sp*.7*mul,dt);if(r==='arrived'||r===false)z.tgt=null}}
+  z.groanT-=dt;if(z.groanT<=0){z.groanT=4+Math.random()*6;if(d<8*TS)H.tone(110+Math.random()*40,.5,'sawtooth',.025,70)}
+  if(z.k==='boss'&&z.moving){z.stepT+=dt;if(z.stepT>.5){z.stepT=0;W.shake=Math.max(W.shake,.15*(1-Math.min(1,d/200)));H.tone(50,.12,'sine',.18,35)}}}
+function hit(G,z){const dmg=z.k==='boss'?2:1;hp-=dmg;inv=1.1;H.snd('hurt');W.shake=.8;W.flash=.25;W.flash_col='#a00';navigator.vibrate&&navigator.vibrate(60);
+  const d=Math.hypot(pl.x-z.x,pl.y-z.y)||1;for(let i=0;i<6;i++)H.move(M,pl,(pl.x-z.x)/d*2,(pl.y-z.y)/d*2);
+  if(hp<=0){H.scare(W,zFace,.6);state='dead';setTimeout(()=>G.over(`${MAPS[fl].name}에서 쓰러졌어요 · 좀비 ${kills}마리 KO`),900)}}
+function punch(G){if(punchCd>0||pl.stam<.08)return;punchCd=.34;punchT=.18;pl.stam=Math.max(0,pl.stam-.12);G.sfx('punch');noise(pl.x,pl.y,4);
+  const reach=20,ang=pl.face;let any=false;
+  for(const z of zs){const dx=z.x-pl.x,dy=(z.y-4)-(pl.y-4),d=Math.hypot(dx,dy);if(d>reach+z.r)continue;let da=Math.atan2(dy,dx)-ang;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)>1.0&&d>z.r+4)continue;
+    any=true;const dmg=powerT>0?2:1;z.hp-=dmg;z.hit=.12;const kbs=z.k==="boss"?50:120;z.kb.x=dx/(d||1)*kbs;z.kb.y=dy/(d||1)*kbs;z.stun=z.k==='boss'?.15:.45;z.st='chase';z.last=[Math.floor(pl.x/TS),Math.floor(pl.y/TS)];
+    H.dust(W,z.x,z.y-6,'#fff',5);W.shake=Math.max(W.shake,.3);
+    if(z.hp<=0){const T=ZT[z.k];G.add(T.pts);kills++;H.float(W,z.x,z.y-14,'KO! +'+T.pts,'#9be15d');H.dust(W,z.x,z.y,T.col,14);G.sfx('hit');zs.splice(zs.indexOf(z),1);W.ents.splice(W.ents.indexOf(z),1);
+      if(z===boss){boss=null;W.shake=1.2;say('대왕 좀비 KO!!',2.5);H.snd('done');checkExit()}
+      if(Math.random()<.22){const tx=Math.floor(z.x/TS),ty=Math.floor(z.y/TS);if(!H.blocked(M,tx,ty))H.addProp(M,{type:'item',kind:Math.random()<.5?'battery':'band',x:tx,y:ty})}}}
+  if(any)H.tone(90,.08,'square',.12,50)}
+function checkExit(){if(power&&!boss){exitP.open=true;H.setDoor(M,exitP,true);say('출구가 열렸다! 탈출!',2.5)}}
+function target(){const p=H.nearProp(W,pl,q=>['item','door','fusebox','exit'].includes(q.type),19);if(!p)return null;
+  if(p.type==='item')return{p,act:'pick',label:{fuse:'퓨즈 줍기',card:'출입카드 줍기',band:'붕대 (체력 +2)',battery:'배터리',power:'파워 글러브!'}[p.kind]||'줍기'};
+  if(p.type==='door'){if(p.locked)return pl.card?{p,act:'unlock',label:'카드로 열기'}:{p,act:'msg',label:'잠김 (출입카드 필요)'};return{p,act:'door',label:p.open?'문 닫기':'문 열기'}}
+  if(p.type==='fusebox'&&!p.on)return pl.fuse?{p,act:'fuse',label:`퓨즈 꽂기 (${pl.fuse}개)`}:{p,act:'msg',label:`두꺼비집 ${p.n}/${p.max}`};
+  if(p.type==='exit'&&!p.open)return{p,act:'msg',label:boss?'대왕 좀비를 먼저!':'전기가 없어 잠김'};return null}
+function interact(G){const t=target();if(!t){punch(G);return}const p=t.p;
+  if(t.act==='pick'){const near=zs.some(z=>z.st==='chase'&&Math.hypot(z.x-pl.x,z.y-pl.y)<26);if(near){punch(G);return}
+    p.gone=1;H.refresh(M,p);H.snd('pick');
+    if(p.kind==='fuse'){pl.fuse++;G.add(300);say(`퓨즈를 주웠다 (${pl.fuse}개 들고 있음)`,1.6)}
+    else if(p.kind==='card'){pl.card=1;say('출입카드! 잠긴 문을 열 수 있어요',1.8)}
+    else if(p.kind==='band'){hp=Math.min(maxHp,hp+2);H.float(W,pl.x,pl.y-14,'체력 +2','#ff4f7b')}
+    else if(p.kind==='battery'){battery=Math.min(1,battery+.5);H.float(W,pl.x,pl.y-14,'배터리 +50%','#2ecc71')}
+    else if(p.kind==='power'){powerT=15;H.float(W,pl.x,pl.y-14,'파워 글러브 15초!','#ffd23f');G.sfx('power')}
+    return}
+  if(t.act==='door'){H.setDoor(M,p,!p.open);H.snd('door');return}
+  if(t.act==='unlock'){p.locked=false;H.setDoor(M,p,true);H.snd('lock');return}
+  if(t.act==='fuse'){p.n+=pl.fuse;pl.fuse=0;H.snd('lock');G.add(200);if(p.n>=p.max){p.on=1;power=true;W.dark=.7;for(const l of W.lights){l.a=.9;l.flick=0}H.snd('done');say('전기가 들어왔다!',2);checkExit();if(!exitP.open)say('전기는 됐다! 이제 대왕 좀비를…',2.5);
+      /* 전기가 들어오면 좀비들이 몰려온다 */for(const z of zs)if(z!==boss){z.st='go';z.tgt=[Math.floor(pl.x/TS),Math.floor(pl.y/TS)]}}else say(`퓨즈 ${p.n}/${p.max}`,1.5);return}
+  if(t.act==='msg'){H.snd('lock');say(t.label,1.6);punch(G)}}
+
+function update(G,dt){W.t+=dt;H.stepFx(W,dt);H.stepScare(W,dt);if(msgT>0)msgT-=dt;if(state==='dead')return;
+  if(state==='clear'){stT+=dt;if(stT>2.2){if(fl+1>=MAPS.length){state='dead';G.win('체육관 탈출!',`좀비 ${kills}마리 KO`);return}G.reach(fl+2);build(fl+1)}return}
+  tFloor+=dt;inv=Math.max(0,inv-dt);punchT=Math.max(0,punchT-dt);punchCd=Math.max(0,punchCd-dt);powerT=Math.max(0,powerT-dt);
+  if(G.hit.a)interact(G);
+  const n=H.playerMove(W,G,pl,dt,{walk:50,run:82,walkNoise:1.5,runNoise:6,drain:.3});if(n)noise(pl.x,pl.y,n);
+  battery=Math.max(0,battery-dt*(power?.002:.008));
+  for(const z of zs.slice())zUpdate(G,z,dt);
+  /* 환풍구에서 좀비가 더 나와요 */
+  spawnT-=dt;const cap=(fl===0?6:fl===1?8:7)+(G0.level==='hard'?2:0);if(spawnT<=0&&vents.length){spawnT=(power?9:16)/G0.diff;if(zs.length<cap){const v=vents[Math.floor(Math.random()*vents.length)];if(Math.hypot(v[0]*TS-pl.x,v[1]*TS-pl.y)>5*TS){const z=mkZ(v[0],v[1],Math.random()<.3+fl*.1?'f':'n');zs.push(z);H.dust(W,v[0]*TS+8,v[1]*TS+8,'#666',8);H.tone(200,.3,'square',.04,80)}}}
+  if(exitP.open&&Math.hypot(pl.x-(exitP.x*TS+8),pl.y-(exitP.y*TS+8))<14){state='clear';stT=0;const bonus=Math.max(0,4000-Math.floor(tFloor)*10);G.add(2000+bonus);G.sfx('clear');say(`탈출! 시간 보너스 ${bonus}`,3)}
+  let near=1e9;for(const z of zs)if(z.st==='chase')near=Math.min(near,Math.hypot(z.x-pl.x,z.y-pl.y)/TS);beatT-=dt;if(near<6&&beatT<=0){H.snd('beat');beatT=.3+near*.1}W.danger=near<6?1-near/6:0;
+  H.camFollow(W,pl.x,pl.y,VW,VH,dt)}
+
+function draw(G,c){if(!W){c.fillStyle='#07060c';c.fillRect(0,0,VW,VH);return}
+  const bat=battery>0?(.55+battery*.45):0;const lights=[{x:pl.x,y:pl.y-4,r:20+80*bat,cone:.55,a:pl.face,i:battery>0?1:.3},{x:pl.x,y:pl.y-4,r:28,i:.75}];
+  H.render(G,c,W,{lights});
+  if(W.danger>0){c.fillStyle=`rgba(120,0,0,${W.danger*.18})`;c.fillRect(0,0,VW,VH)}
+  for(let i=0;i<maxHp;i++)H.heart(c,8+i*10,6,8,i<hp);
+  G.text('🔦',8,17,{size:7,k:1});H.bar(c,20,19,30,3,battery,battery<.2?'#e74c3c':'#ffd23f');H.bar(c,56,19,26,3,pl.stam,'#7fd1ff');
+  let x=92;if(pl.card){H.icon(c,'card',x,20,1);x+=12}if(pl.fuse){H.icon(c,'fuse',x,20,1);G.text('×'+pl.fuse,x+4,17,{size:6,k:1});x+=18}if(powerT>0){G.text('파워 '+Math.ceil(powerT),x,16,{size:7,k:1,color:'#ffd23f'})}
+  G.text(MAPS[fl].name,VW/2,4,{size:8,k:1,align:'center',color:'#ddd'});
+  if(fuseP){G.text(`퓨즈 ${fuseP.n+pl.fuse}/${fuseP.max}`+(boss?' · 대왕 좀비':''),VW/2,15,{size:7,k:1,align:'center',color:power?'#2ecc71':'#ffd23f'})}
+  G.text(`KO ${kills}`,VW-8,6,{size:8,k:1,align:'right',color:'#9be15d'});
+  const t=target();const s=t?'A: '+t.label:'A: 펀치';c.fillStyle='rgba(0,0,0,.55)';c.font='9px Jua,sans-serif';const w=c.measureText(s).width+12;H.rr(c,VW/2-w/2,VH-22,w,15,4);c.fill();G.text(s,VW/2,VH-19,{size:9,k:1,align:'center',color:t?'#ffe9a8':'#bbb'});
+  if(msgT>0){c.globalAlpha=Math.min(1,msgT*2);c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w2=c.measureText(msgS).width+14;H.rr(c,VW/2-w2/2,30,w2,15,4);c.fill();G.text(msgS,VW/2,33,{size:9,k:1,align:'center'});c.globalAlpha=1}
+  if(state==='clear'){c.fillStyle=`rgba(255,255,255,${Math.min(.85,stT)})`;c.fillRect(0,0,VW,VH);G.text('탈출 성공!',VW/2,VH/2-10,{size:18,k:1,align:'center',color:'#2a7a3a',shadow:false})}
+  H.drawScare(c,W,VW,VH)}
+
+Retro.boot({id:'hzombie',title:'NNN 좀비 체육관',en:'ZOMBIE GYM',w:VW,h:VH,hd:3,a:'펀치·행동',b:'달리기',diag:true,stages:{label:'층',max:3},
+  intro:'정전된 밤의 체육관에 샌드백 좀비가 나타났어요! 글러브 펀치로 버티면서 퓨즈를 모아 전기를 살리고 탈출하세요.',
+  help:'<b>이동</b> 십자키 · <b>B</b> 달리기 · <b>A</b> 펀치 (물건 앞이면 줍기·열기)<br>펀치는 힘(파란 막대)을 써요 · 좀비는 3대, 보라 줄넘기 좀비는 빠르지만 2대<br><b>퓨즈</b>를 다 모아 두꺼비집에 꽂으면 출구가 열려요 · 환풍구에서 좀비가 계속 나와요<br><b>지하</b>에는 대왕 좀비가! · 손전등 배터리를 아껴요',
+  setup(G){G0=G;maxHp=5;hp=5;battery=1;kills=0;powerT=0;build(0)},
+  init(G){G0=G;maxHp=G.lives(5);hp=maxHp;battery=1;kills=0;powerT=0;build(G.start-1)},
+  update,draw});
+</script>
+</body>
+</html>

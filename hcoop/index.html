@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NNN 다같이 탈출</title>
+<meta name="theme-color" content="#0d0b1e">
+<link rel="icon" href="../shared/img/samsaek.png">
+</head>
+<body>
+<script src="../shared/retro.js"></script>
+<script src="../shared/horror.js"></script>
+<script>
+/* NNN 다같이 탈출: 친구 3명과 함께 발전기를 고치고, 그림자 술래에게 잡힌 친구를 살려 주며 다같이 탈출 */
+const H=Horror,TS=H.TS,VW=320,VH=180,MW=50,MH=32;
+const ROUNDS=[
+  {name:'밤의 운동장',floor:'"',path:'~',obs:['tree','tree','bench','box','crate'],need:4,gens:5,mons:1,wall:'hedge',dark:.86},
+  {name:'문 닫은 놀이공원',floor:'_',path:',',obs:['crate','box','car','bench','machine'],need:5,gens:6,mons:2,wall:'concrete',dark:.88},
+  {name:'안개 낀 캠핑장',floor:'~',path:'"',obs:['tree','tree','tree','box','crate','car'],need:5,gens:7,mons:3,wall:'hedge',dark:.9},
+];
+const FR=[{name:'민준',shirt:'#2f7ae8',hair:'#2a1a10'},{name:'서연',shirt:'#ff7aa8',hair:'#4a2a18',long:1},{name:'지호',shirt:'#2ecc71',hair:'#111'}];
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+let G0,W,M,pl,kids,mons,gens,exits,rd,state,stT,msgS,msgT,beatT,fixedN,escaped,tRound,talkT;
+
+function genMap(i){const C=ROUNDS[i];
+  for(let tries=0;tries<40;tries++){const g=[];for(let y=0;y<MH;y++){const r=[];for(let x=0;x<MW;x++)r.push(x===0||y===0||x===MW-1||y===MH-1?'#':C.floor);g.push(r)}
+    /* 길 */for(let k=0;k<3;k++){if(k%2){const y=R(4,MH-5);for(let x=1;x<MW-1;x++){g[y][x]=C.path;g[y+1][x]=C.path}}else{const x=R(4,MW-5);for(let y=1;y<MH-1;y++){g[y][x]=C.path;g[y][x+1]=C.path}}}
+    /* 건물(벽 덩어리) */const blocks=[];for(let k=0;k<R(5,8);k++){const w=R(3,7),h=R(2,4),x=R(3,MW-w-3),y=R(3,MH-h-3);for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)g[yy][xx]='#';blocks.push([x,y,w,h])}
+    const flat=g.map(r=>r.join(''));const Mx=H.fromAscii(flat,{wallStyle:C.wall});
+    /* 시작점 = 가운데 근처 */const sx=MW>>1,sy=MH>>1;let s=null;for(let r=0;r<8&&!s;r++)for(let dy=-r;dy<=r&&!s;dy++)for(let dx=-r;dx<=r&&!s;dx++)if(!H.blocked(Mx,sx+dx,sy+dy))s=[sx+dx,sy+dy];
+    const D=H.flow(Mx,s[0],s[1],{});let reach=0,tot=0;for(let k=0;k<D.length;k++){if(!Mx.t[k]){tot++;if(D[k]>=0)reach++}}if(reach<tot*.97)continue;
+    return{Mx,s,D}}
+  return null}
+function build(i){rd=i;const C=ROUNDS[i];const {Mx,s,D}=genMap(i);M=Mx;W=H.world(M,{dark:C.dark*(G0.level==='easy'?.93:1)});
+  const used=new Set();const ok=(x,y)=>!H.blocked(M,x,y)&&!used.has(x+','+y)&&D[y*M.w+x]>=0;
+  const far=(x,y,list,d)=>list.every(p=>Math.abs(p[0]-x)+Math.abs(p[1]-y)>=d);
+  /* 발전기: 고르게 흩어지게 */gens=[];const gp=[];let guard=0;while(gp.length<C.gens&&guard++<3000){const x=R(2,MW-3),y=R(2,MH-3);if(!ok(x,y)||!far(x,y,gp,10)||Math.abs(x-s[0])+Math.abs(y-s[1])<6)continue;
+    /* 옆에 설 자리가 있어야 */if(!['1,0','-1,0','0,1','0,-1'].some(k=>{const [a,b]=k.split(',').map(Number);return ok(x+a,y+b)}))continue;gp.push([x,y]);used.add(x+','+y)}
+  for(const [x,y] of gp){const p=H.addProp(M,{type:'gen',x,y,prog:0,done:false});p.light=H.addLight(W,x*TS+8,y*TS+8,74,{a:.9});p.light.on=false;gens.push(p)}
+  /* 출구 2개: 테두리 벽에 */exits=[];for(const side of [0,1]){for(let k=0;k<200;k++){const y=R(3,MH-4);const x=side?MW-1:0;const ix=side?x-1:x+1;if(ok(ix,y)&&ok(ix,y-1)&&ok(ix,y+1)){const p=H.addProp(M,{type:'exit',x,y,open:false});p.vert=true;exits.push(p);break}}}
+  /* 장애물 */let n=0;guard=0;while(n<70&&guard++<4000){const x=R(1,MW-2),y=R(1,MH-2);if(!ok(x,y)||Math.abs(x-s[0])+Math.abs(y-s[1])<4)continue;const near=[...gp,...exits.map(e=>[e.x,e.y])].some(p=>Math.abs(p[0]-x)+Math.abs(p[1]-y)<3);if(near)continue;
+    const type=C.obs[R(0,C.obs.length-1)];H.addProp(M,{type,x,y});const D2=H.flow(M,s[0],s[1],{});if(gp.some(([gx,gy])=>![[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>D2[(gy+b)*M.w+gx+a]>=0))||exits.some(e=>D2[e.y*M.w+(e.x?e.x-1:1)]<0)){M.props.pop();M.blk[y*M.w+x]=0;M.pid[y*M.w+x]=-1;continue}
+    used.add(x+','+y);n++}
+  /* 가로등 */for(let k=0;k<6;k++){const x=R(3,MW-4),y=R(3,MH-4);if(ok(x,y))H.addLight(W,x*TS+8,y*TS+8,60,{a:.5,flick:Math.random()<.5?1:0})}
+  /* 아이들 */kids=[];const sx=s[0]*TS+8,sy=s[1]*TS+8;
+  pl=mkKid(sx,sy,{name:'나',shirt:'#e8312a',hair:'#2a1a10'},true);
+  FR.forEach((f,j)=>{const a=j*2.1;const k=mkKid(sx+Math.cos(a)*14,sy+Math.sin(a)*14,f,false);if(!H.canAt(M,k.x,k.y,k.r)){k.x=sx;k.y=sy}});
+  /* 술래: 멀리서 시작 */mons=[];const cnt=C.mons+(G0.level==='hard'?1:0);for(let j=0;j<cnt;j++){for(let k=0;k<400;k++){const x=R(2,MW-3),y=R(2,MH-3);if(ok(x,y)&&Math.abs(x-s[0])+Math.abs(y-s[1])>18){mons.push(mkMon(x*TS+8,y*TS+8));break}}}
+  fixedN=0;escaped=0;tRound=0;state='play';talkT=4;W.cam.x=sx-VW/2;W.cam.y=sy-VH/2;
+  if(G0.state==='play'){G0.msg(`${i+1}판 · ${C.name}`,1600);setTimeout(()=>{if(G0.state==='play')say(`발전기 ${C.need}개를 고치면 출구가 열려요! (A 꾹)`,3.5)},1700)}}
+function mkKid(x,y,o,me){const k={x,y,r:4.5,face:0,stam:1,me,o,down:false,bleed:0,revive:0,gone:false,out:false,ai:{st:'gen',tgt:null,D:null,dk:'',think:0},hidden:false,
+  draw:(c,e,X,Y,t)=>{if(e.out)return;H.drawKid(c,e,X,Y,t,Object.assign({tag:e.me?null:e.o.name},e.o));
+    if(e.down){H.bar(c,X-8,Y-14,16,2,1-e.bleed/bleedMax(),'#e74c3c');if(e.revive>0)H.bar(c,X-8,Y-18,16,2,e.revive,'#2ecc71');c.fillStyle='#fff';c.font='6px Jua,sans-serif';c.textAlign='center';if(!e.revive)c.fillText('도와줘!',X,Y-21)}
+    if(e.fixing&&!e.down){c.fillStyle='#ffd23f';c.font='5px sans-serif';c.textAlign='center';c.fillText('🔧',X+6,Y-12)}}};
+  W.ents.push(k);kids.push(k);return k}
+function bleedMax(){return G0.level==='easy'?45:G0.level==='hard'?25:35}
+function mkMon(x,y){const m={x,y,r:5,face:0,st:'roam',tgt:null,D:null,dk:'',think:0,rest:2,prey:null,stepT:0,
+  draw:(c,e,X,Y,t)=>{const fl=Math.sin(t*3+e.x)*2;c.fillStyle='rgba(0,0,0,.4)';c.beginPath();c.ellipse(X,Y+5,7,2.5,0,0,7);c.fill();
+    c.fillStyle='#120d1e';c.beginPath();c.moveTo(X-8,Y+4);for(let i=0;i<=6;i++)c.lineTo(X-8+i*16/6,Y+4+(i%2?-3:0)+Math.sin(t*8+i)*1);c.lineTo(X+7,Y-12+fl);c.quadraticCurveTo(X,Y-24+fl,X-7,Y-12+fl);c.closePath();c.fill();
+    c.fillStyle='#231a36';c.beginPath();c.ellipse(X,Y-13+fl,5,5.5,0,0,7);c.fill();
+    if(e.st==='chase'){c.fillStyle='#ff5a4f';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('!',X,Y-26+fl)}},
+  glow:(c,e,X,Y,t)=>{const fl=Math.sin(t*3+e.x)*2;const fx=Math.cos(e.face)*1.2;c.fillStyle=e.st==='chase'?'#ff4040':'#c9b8ff';c.beginPath();c.arc(X-2+fx,Y-13+fl,1.3,0,7);c.arc(X+2+fx,Y-13+fl,1.3,0,7);c.fill()}};
+  W.ents.push(m);return m}
+function ghostFace(c,x,y,s){c.save();c.translate(x,y);c.scale(s/20,s/20);c.fillStyle='#120d1e';c.beginPath();c.moveTo(-18,20);c.lineTo(-16,-6);c.quadraticCurveTo(0,-30,16,-6);c.lineTo(18,20);c.closePath();c.fill();c.fillStyle='#ff4040';c.beginPath();c.arc(-6,-3,3.5,0,7);c.arc(6,-3,3.5,0,7);c.fill();c.fillStyle='#000';c.beginPath();c.ellipse(0,8,6,4,0,0,7);c.fill();c.restore()}
+
+function say(s,t){msgS=s;msgT=t||2.2}
+function goTo(e,tx,ty,sp,dt){const A=e.ai||e;const k=tx+','+ty;if(k!==A.dk||A.think<=0||!A.D){A.D=H.flow(M,tx,ty,{});A.dk=k;A.think=.5}const r=H.follow(M,e,A.D,sp,dt,{});e.moving=r===true;return r}
+function standNear(p){for(const [a,b] of [[0,1],[1,0],[-1,0],[0,-1]])if(!H.blocked(M,p.x+a,p.y+b))return[p.x+a,p.y+b];return[p.x,p.y]}
+function exitOpen(){return exits.length&&exits[0].open}
+
+/* 술래 */
+function monUpdate(G,m,dt){m.think-=dt;if(m.rest>0){m.rest-=dt;m.moving=false;return}
+  if(m.leaveT>0){m.leaveT-=dt;if(!m.tgt){let b=null,bs=-1;for(let i=0;i<12;i++){const q=H.randomFloor(M,null);if(!q)continue;const d=Math.hypot(q[0]*TS-m.x,q[1]*TS-m.y);if(d>bs){bs=d;b=q}}m.tgt=b}if(m.tgt){const r=goTo(m,m.tgt[0],m.tgt[1],50,dt);if(r==='arrived'||r===false)m.tgt=null}return}
+  const sp=(G0.level==='easy'?54:G0.level==='hard'?66:60)*(1+rd*.05);
+  /* 가장 가까운 보이는 아이 */let best=null,bd=1e9;for(const k of kids){if(k.down||k.out||k.hidden)continue;const d=Math.hypot(k.x-m.x,k.y-m.y);if(d<6*TS&&d<bd&&H.los(M,m.x,m.y-8,k.x,k.y-4)){bd=d;best=k}}
+  if(best){if(m.st!=='chase'&&best.me)H.snd('growl');m.st='chase';m.prey=best;m.last=[Math.floor(best.x/TS),Math.floor(best.y/TS)];m.lost=0}
+  if(m.st==='chase'){const p=m.prey;if(!best)m.lost+=dt;
+    if(best&&bd<36){const vx=p.x-m.x,vy=p.y-m.y,d=Math.hypot(vx,vy)||1;m.face=Math.atan2(vy,vx);H.move(M,m,vx/d*sp*dt,vy/d*sp*dt);m.moving=true}
+    else{const r=goTo(m,m.last[0],m.last[1],sp,dt);if(r==='arrived'||r===false||m.lost>4){m.st='roam';m.tgt=null}}
+    if(p&&!p.down&&!p.out&&Math.hypot(p.x-m.x,p.y-m.y)<11){p.down=true;p.bleed=0;p.revive=0;p.fixing=false;m.rest=1.5;m.leaveT=G0.level==='hard'?6:9;m.st='roam';m.tgt=null;
+      if(p.me){H.scare(W,ghostFace,.5);say('잡혔다! 친구들이 살려 줄 거예요',2.5)}else{H.snd('hurt');say(`${p.o.name}이(가) 잡혔다! A를 꾹 눌러 살려 줘요`,2.5)}}}
+  else{/* 소리 나는 발전기 쪽으로 가끔 */if(!m.tgt){const noisy=gens.filter(g=>g.noise>0);if(noisy.length&&Math.random()<.4){const g=noisy[R(0,noisy.length-1)];m.tgt=standNear(g)}else m.tgt=H.randomFloor(M,null)}
+    const r=goTo(m,m.tgt[0],m.tgt[1],sp*.55,dt);if(r==='arrived'||r===false)m.tgt=null}
+  if(m.moving){m.stepT+=dt;if(m.stepT>.5){m.stepT=0;const d=Math.hypot(pl.x-m.x,pl.y-m.y)/TS;if(d<9)H.tone(130,.18,'triangle',Math.max(.01,.06-d*.006),90)}}}
+
+/* 친구 AI */
+function kidAI(G,k,dt){const A=k.ai;A.think-=dt;k.fixing=false;if(k.down||k.out)return;
+  const sp=48,run=78;
+  /* 술래 피하기 */let th=null,td=1e9;for(const m of mons){if(m.rest>0)continue;const d=Math.hypot(m.x-k.x,m.y-k.y);if(d<5*TS&&d<td&&H.los(M,m.x,m.y-6,k.x,k.y-4)){td=d;th=m}}
+  if(th){if(!A.flee||A.fleeT<=0||A.think<=0){A.fleeT=1.2;let bestP=null,bs=-1;for(let i=0;i<14;i++){const p=H.randomFloor(M,k,6);if(!p)continue;const px=p[0]*TS+8,py=p[1]*TS+8;const s=Math.hypot(px-th.x,py-th.y)-Math.hypot(px-k.x,py-k.y)*.3;if(s>bs){bs=s;bestP=p}}A.flee=bestP}A.fleeT-=dt;
+    if(A.flee){const r=goTo(k,A.flee[0],A.flee[1],k.stam>0?run:sp,dt);if(k.moving){k.stam=Math.max(0,k.stam-dt*.2)}if(r==='arrived')A.flee=null}return}
+  k.stam=Math.min(1,k.stam+dt*.15);A.flee=null;
+  /* 쓰러진 친구 살리기 */let dn=null,dd=1e9;for(const o of kids){if(o===k||!o.down||o.out)continue;const d=Math.hypot(o.x-k.x,o.y-k.y);const danger=mons.some(m=>m.rest<=0&&Math.hypot(m.x-o.x,m.y-o.y)<4*TS);if(!danger&&d<dd){dd=d;dn=o}}
+  if(dn){if(dd<14){k.moving=false;k.face=Math.atan2(dn.y-k.y,dn.x-k.x);reviveTick(G,dn,dt,k);return}goTo(k,Math.floor(dn.x/TS),Math.floor(dn.y/TS),run*.9,dt);return}
+  /* 출구로 */if(exitOpen()){const e=nearestExit(k);const r=goTo(k,e.x,e.y,sp*1.2,dt);if(Math.hypot(k.x-(e.x*TS+8),k.y-(e.y*TS+8))<14)escapeKid(G,k);return}
+  /* 발전기 */if(!A.gen||A.gen.done){let best=null,bs=1e9;for(const g of gens){if(g.done)continue;const w=kids.filter(o=>o!==k&&o.ai&&o.ai.gen===g).length;const s=Math.hypot(g.x*TS-k.x,g.y*TS-k.y)+w*160+(g.danger||0);if(s<bs){bs=s;best=g}}A.gen=best;A.spot=best?standNear(best):null}
+  if(A.gen){const g=A.gen;const d=Math.hypot(g.x*TS+8-k.x,g.y*TS+8-k.y);if(d<19){k.moving=false;k.face=Math.atan2(g.y*TS+8-k.y,g.x*TS+8-k.x);fixTick(G,g,dt,.9,k)}else goTo(k,A.spot[0],A.spot[1],sp,dt)}}
+function nearestExit(k){let b=exits[0],bd=1e9;for(const e of exits){const d=Math.hypot(e.x*TS-k.x,e.y*TS-k.y);if(d<bd){bd=d;b=e}}return b}
+function fixTick(G,g,dt,rate,who){if(g.done)return;who.fixing=true;const need=G0.level==='easy'?8:G0.level==='hard'?13:10;g.prog=Math.min(1,g.prog+dt*rate/need);g.noise=2;
+  if(Math.random()<dt*6)H.snd('fix');
+  if(g.prog>=1){g.done=true;g.light.on=true;fixedN++;G.add(500);H.snd('done');H.float(W,g.x*TS+8,g.y*TS-6,'발전기 완료! +500','#ffd23f');
+    const C=ROUNDS[rd];if(fixedN>=C.need&&!exitOpen()){for(const e of exits){e.open=true;H.setDoor(M,e,true)}H.snd('alarm');say('출구가 열렸다! 다같이 탈출!',3);W.dark*=.85}
+    else say(`발전기 ${fixedN}/${C.need}`,1.6)}}
+function reviveTick(G,o,dt,who){o.revive+=dt/(G0.level==='easy'?2.4:3.2);if(Math.random()<dt*5)H.tone(600+o.revive*600,.05,'sine',.03);
+  if(o.revive>=1){o.down=false;o.revive=0;o.bleed=0;G.add(who===pl?300:0);if(who===pl)H.float(W,o.x,o.y-14,'살렸다! +300','#2ecc71');else if(o===pl)say(`${who.o.name}이(가) 살려 줬어요!`,2);H.snd('done')}}
+function escapeKid(G,k){if(k.out)return;k.out=true;k.gone=true;escaped++;W.ents.splice(W.ents.indexOf(k),1);if(!k.me){G.add(500);H.float(W,k.x,k.y-14,`${k.o.name} 탈출! +500`,'#2ecc71')}}
+
+function update(G,dt){W.t+=dt;H.stepFx(W,dt);H.stepScare(W,dt);if(msgT>0)msgT-=dt;if(state==='dead')return;
+  if(state==='clear'){stT+=dt;if(stT>2.6){if(rd+1>=ROUNDS.length){state='dead';G.win('다같이 탈출 성공!',`3판 모두 탈출!`);return}G.reach(rd+2);build(rd+1)}return}
+  tRound+=dt;for(const g of gens)g.noise=Math.max(0,(g.noise||0)-dt);
+  /* 플레이어 */pl.fixing=false;
+  if(!pl.down&&!pl.out){H.playerMove(W,G,pl,dt,{walk:50,run:80});
+    if(G.keys.a){let o=null;for(const k of kids)if(k!==pl&&k.down&&!k.out&&Math.hypot(k.x-pl.x,k.y-pl.y)<16)o=k;if(o)reviveTick(G,o,dt,pl);else{const g=H.nearProp(W,pl,q=>q.type==='gen'&&!q.done,20);if(g){pl.moving=false;fixTick(G,g,dt,1,pl)}}}
+    for(const e of exits)if(e.open&&Math.hypot(pl.x-(e.x*TS+8),pl.y-(e.y*TS+8))<14){escapeKid(G,pl);const left=kids.filter(k=>!k.out&&!k.down).length;state='clear';stT=0;G.add(2000);
+      const bonus=Math.max(0,3000-Math.floor(tRound)*8);G.add(bonus);G.sfx('clear');say(`탈출! 친구 ${escaped-1}명 같이 탈출 · 시간 보너스 ${bonus}`,3)}}
+  /* 쓰러진 아이 */for(const k of kids){if(k.down&&!k.out){k.bleed+=dt*(k.revive>0?.3:1);if(!kids.some(o=>o!==k&&!o.down&&!o.out&&Math.hypot(o.x-k.x,o.y-k.y)<16))k.revive=Math.max(0,k.revive-dt*.15);
+      if(k.bleed>=bleedMax()){k.out=true;W.ents.splice(W.ents.indexOf(k),1);H.snd('scare');if(k.me){state='dead';setTimeout(()=>G.over(`${ROUNDS[rd].name}에서 그림자 술래에게 끌려갔어요`),900);return}say(`${k.o.name}이(가) 끌려갔다…`,2.5)}}}
+  if(state!=='play')return;
+  if(!kids.some(k=>!k.me&&!k.out&&!k.down)&&pl.down){/* 아무도 못 살려 줌 → 조금 빨리 */}
+  for(const k of kids)if(!k.me)kidAI(G,k,dt);
+  for(const m of mons)monUpdate(G,m,dt);
+  /* 친구들 수다 */talkT-=dt;if(talkT<=0){talkT=8+Math.random()*6;const alive=kids.filter(k=>!k.me&&!k.out&&!k.down);if(alive.length){const k=alive[R(0,alive.length-1)];const lines=k.ai.gen?['이거 내가 고칠게!','무서워…','같이 가자!','저기 술래 있어!','거의 다 됐어!']:['어디로 가지?'];H.float(W,k.x,k.y-24,lines[R(0,lines.length-1)],'#fff',6)}}
+  let near=1e9;for(const m of mons)if(m.rest<=0)near=Math.min(near,Math.hypot(m.x-pl.x,m.y-pl.y)/TS);beatT-=dt;if(near<7&&beatT<=0){H.snd('beat');beatT=.32+near*.1}W.danger=near<7?1-near/7:0;
+  const fx=pl.down?pl.x:pl.x;H.camFollow(W,fx,pl.y,VW,VH,dt)}
+
+function draw(G,c){if(!W){c.fillStyle='#07060c';c.fillRect(0,0,VW,VH);return}
+  const lights=[];if(!pl.out){lights.push({x:pl.x,y:pl.y-4,r:88,cone:.55,a:pl.face,i:pl.down?.4:1},{x:pl.x,y:pl.y-4,r:30,i:.8})}
+  for(const k of kids)if(!k.me&&!k.out&&Math.abs(k.x-pl.x)<VW&&Math.abs(k.y-pl.y)<VH)lights.push({x:k.x,y:k.y-4,r:k.down?22:52,cone:k.down?0:.5,a:k.face,i:.7});
+  H.render(G,c,W,{lights,over:(c,cam)=>{/* 화면 밖 발전기·친구 표시 */const C=[VW/2,VH/2];
+    const mark=(x,y,col,txt)=>{const X=x-cam.x,Y=y-cam.y;if(X>8&&Y>8&&X<VW-8&&Y<VH-8)return;const a=Math.atan2(Y-C[1],X-C[0]);const ex=Math.max(10,Math.min(VW-10,C[0]+Math.cos(a)*400)),ey=Math.max(28,Math.min(VH-28,C[1]+Math.sin(a)*400));c.fillStyle=col;c.beginPath();c.arc(ex,ey,4,0,7);c.fill();if(txt){c.fillStyle='#000';c.font='bold 5px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(txt,ex,ey+.5)}};
+    for(const g of gens)if(!g.done)mark(g.x*TS+8,g.y*TS+8,g.prog>0?'#e67e22':'#ffd23f','⚡');
+    for(const k of kids)if(!k.me&&!k.out)mark(k.x,k.y,k.down?'#e74c3c':k.o.shirt,k.down?'!':'');
+    if(exitOpen())for(const e of exits)mark(e.x*TS+8,e.y*TS+8,'#2ecc71','→')}});
+  if(pl.down){c.fillStyle='rgba(80,0,0,.35)';c.fillRect(0,0,VW,VH);G.text('쓰러졌어요… 친구가 오는 중',VW/2,VH/2+24,{size:9,k:1,align:'center'})}
+  /* HUD: 팀 */let x=6;for(const k of kids){c.fillStyle='rgba(0,0,0,.5)';H.rr(c,x,4,26,12,3);c.fill();c.fillStyle=k.out?(k.gone?'#2ecc71':'#555'):k.down?'#e74c3c':k.o.shirt;c.beginPath();c.arc(x+6,10,3.5,0,7);c.fill();G.text(k.me?'나':k.o.name,x+11,6.5,{size:6,k:1,color:k.out&&!k.gone?'#777':'#fff'});x+=28}
+  H.bar(c,6,19,40,3,pl.stam,'#7fd1ff');
+  const C=ROUNDS[rd];G.text(`⚡ ${fixedN}/${C.need}`,VW-8,5,{size:10,k:1,align:'right',color:exitOpen()?'#2ecc71':'#ffd23f'});G.text(C.name,VW-8,18,{size:6,k:1,align:'right',color:'#bbb'});
+  if(!pl.down&&state==='play'){let s=null;for(const k of kids)if(k!==pl&&k.down&&!k.out&&Math.hypot(k.x-pl.x,k.y-pl.y)<16)s=`A 꾹: ${k.o.name} 살리기`;if(!s){const g=H.nearProp(W,pl,q=>q.type==='gen'&&!q.done,20);if(g)s=`A 꾹: 발전기 고치기 ${Math.floor(g.prog*100)}%`}
+    if(s){c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w=c.measureText(s).width+12;H.rr(c,VW/2-w/2,VH-22,w,15,4);c.fill();G.text(s,VW/2,VH-19,{size:9,k:1,align:'center',color:'#ffe9a8'})}}
+  if(msgT>0){c.globalAlpha=Math.min(1,msgT*2);c.fillStyle='rgba(0,0,0,.6)';c.font='9px Jua,sans-serif';const w=c.measureText(msgS).width+14;H.rr(c,VW/2-w/2,30,w,15,4);c.fill();G.text(msgS,VW/2,33,{size:9,k:1,align:'center'});c.globalAlpha=1}
+  if(state==='clear'){c.fillStyle=`rgba(255,255,255,${Math.min(.85,stT)})`;c.fillRect(0,0,VW,VH);G.text('다같이 탈출!',VW/2,VH/2-14,{size:18,k:1,align:'center',color:'#2a7a3a',shadow:false});G.text(`함께 나온 친구 ${escaped-1}명`,VW/2,VH/2+8,{size:10,k:1,align:'center',color:'#2a5a3a',shadow:false})}
+  H.drawScare(c,W,VW,VH)}
+
+Retro.boot({id:'hcoop',title:'NNN 다같이 탈출',en:'ESCAPE TOGETHER',w:VW,h:VH,hd:3,a:'꾹 누르기',b:'달리기',diag:true,stages:{label:'판',max:3},
+  intro:'민준·서연·지호와 한 팀! 그림자 술래를 피해 발전기를 고치고, 잡힌 친구는 살려 주면서 다같이 탈출해요.',
+  help:'<b>이동</b> 십자키 · <b>B</b> 달리기<br><b>A 꾹</b> 발전기 고치기 · 쓰러진 친구 살리기<br>발전기를 고치면 소리가 나서 술래가 와요!<br>필요한 만큼 고치면 <b>출구 2곳</b>이 열려요 · 화살표가 길을 알려 줘요<br>내가 잡히면 친구들이 살리러 와요 · 끌려가면 끝',
+  setup(G){G0=G;build(0)},
+  init(G){G0=G;build(G.start-1)},
+  update,draw});
+</script>
+</body>
+</html>
