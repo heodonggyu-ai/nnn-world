@@ -1232,6 +1232,11 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
     <div id="whoAdm" style="display:flex;flex-direction:column;gap:6px"><div class="small">불러오는 중…</div></div>
   </div>
   <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px">
+    <div class="row" style="align-items:center"><h3 style="font-size:20px" class="grow">🎟️ 출석 복권 점검</h3><button class="btn sm ghost" id="tkChkRef">점검하기</button></div>
+    <p class="small" style="margin:0">출석한 회원이 출석 복권을 받았는지 하나씩 확인하고, 빠진 회원은 한 번에 지급해요.</p>
+    <div id="tkChk" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <div class="card" data-atab="today" style="display:flex;flex-direction:column;gap:6px">
     <div class="row" style="align-items:center"><div class="grow"><h3 style="font-size:20px">회원 의견함 <span class="small num" id="vsCnt" style="color:var(--red)"></span></h3><div class="small" id="vsSub">회원이 남긴 건의·칭찬·불편 사항이에요</div></div><button class="btn sm red" id="vsOpen">열기</button></div>
   </div>
   <div class="card" data-atab="today" id="ovAdm" hidden style="display:flex;flex-direction:column;gap:8px;border:2px solid #E0A100"></div>
@@ -4820,6 +4825,7 @@ function coachMember(id){const m=CO.all.find(x=>x.id===id);if(!m)return;let mon=
   sheet(`<div class="row" style="align-items:center"><div class="cimg" id="cmF" style="width:96px;height:96px"></div><div class="grow"><h2>${esc(m.name)}</h2><div class="small num">회원번호 ${m.id} · 가입 ${esc(m.joined||'-')}</div><div class="small">총 출석 ${(m.attend||[]).length}회 · 최근 ${m.last?md(m.last):'-'} · 연속 ${m.streak||0}일</div></div></div>
     <div id="cmCal"></div><button class="btn" data-close>닫기</button>`,el=>{faceInto(el.querySelector('#cmF'),m.id);const draw=()=>{el.querySelector('#cmCal').innerHTML=cal();el.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const f=new Date(mon+'-01T00:00:00');f.setMonth(f.getMonth()+ +b.dataset.mv);mon=dstr(f).slice(0,7);draw()})};draw()})}
 $('#cPrev').onclick=()=>{CO.day=dAdd(CO.day,-1);renderCoach()};$('#cNext').onclick=()=>{if(CO.day<TODAY()){CO.day=dAdd(CO.day,1);renderCoach()}};
+{const b=document.getElementById('tkChkRef');if(b)b.onclick=()=>renderTkChk()}
 $('#cSearch').oninput=renderCoach;$('#cWorld').onclick=enterCoachWorld;$('#cChat').onclick=()=>openChat('coach');$('#cVoice').onclick=()=>openVoiceStaff();$('#cWho').onclick=async()=>{const d=await whoData();const nm=await whoNames(d.gym.concat(d.app).map(x=>x.id));sheet(`<h2>지금 누가 있나요?</h2><div style="display:flex;flex-direction:column;gap:6px">${whoHTML(d,nm,true)}</div><button class="btn ghost" data-close>닫기</button>`,el=>whoPaint(el,d,true))};$('#cSpar').onclick=openSparStaff;$('#coachHome').onclick=()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}show('v-home')};
 $('#coachOut').onclick=async()=>{try{localStorage.removeItem('nnn_coach')}catch(e){}if(FB_ON()){try{await gref('coaches/'+fuid).set(null)}catch(e){}}show('v-home')};
 
@@ -5064,6 +5070,24 @@ function padReRegister(){pinSheet('출석패드 다시 등록 (관장 PIN)',asyn
 async function padRetryQueue(){const q=padQ();if(!q.length)return;let ok=0;const left=[];
   for(const x of q){try{const m=await DB.get(x.id);if(!m){continue}fixDay(m);if(m.last===TODAY()){ok++;continue}const r=await applyAttend(m,x.mk,'pad');if(r.fail)left.push(x);else ok++}catch(e){left.push(x)}}
   padQSet(left);toast(left.length?`${ok}명 저장 · ${left.length}명은 아직 저장 안 됨`:`저장 못 했던 출석 ${ok}명을 모두 저장했어요 (복권 포함)`,4500);try{updPadCount()}catch(e){}padWarnUI()}
+/* 관장: 출석 복권 점검 — 날짜별로 출석한 회원이 '출석 복권' 기록을 받았는지 확인, 빠진 회원 보충 */
+const TKC={d:null};
+const tkGotOn=(m,d)=>funArr(m.tkLog).some(x=>x&&x.d>0&&/^출석 복권/.test(x.why||'')&&dstr(new Date(x.t))===d);
+async function renderTkChk(){const box=$('#tkChk');if(!box)return;const d=TKC.d||TODAY();box.innerHTML='<div class="small">확인하는 중…</div>';
+  const on=FT('lotto'),fon=funCfg().on!==false;const all=(await DB.all()).filter(m=>!m.demo&&!isStaff(m));
+  const att=all.filter(m=>funArr(m.attend).includes(d));const miss=att.filter(m=>!tkGotOn(m,d));
+  const days=[0,1,2,3,4,5,6].map(i=>dAdd(TODAY(),-i)).filter(x=>x>='2026-11-20');/* 복권 내역 기록은 11/19 저녁부터 */
+  box.innerHTML=`<div class="row" style="flex-wrap:wrap;gap:6px">${days.map(x=>`<button class="btn sm ${x===d?'red':'ghost'}" data-tkd="${x}">${x===TODAY()?'오늘':md(x)}</button>`).join('')}</div>
+    ${!on||!fon?`<div class="memsum" style="background:#FDE2E3;color:#8A1F24"><b>⚠️ 복권 기능이 꺼져 있어요</b> — 출석해도 복권이 안 나가요. 관장 메뉴 → 설정 탭 → 🔌 기능 켜고 끄기에서 「출석 복권」을 켜 주세요.</div>`:'<div class="small">복권 기능: 켜짐 · 출석할 때마다 1장 (하루·주·월 개수 제한 없음)</div>'}
+    <div class="memsum"><b>${md(d)} 출석 ${att.length}명</b> · 복권 받음 <b>${att.length-miss.length}명</b> · <b style="color:${miss.length?'#C62828':'#2E7D5B'}">빠짐 ${miss.length}명</b></div>
+    ${miss.map(m=>`<div class="row" style="align-items:center;gap:8px;border-bottom:1px solid var(--mat);padding:4px 0"><button class="btn sm ghost grow" style="text-align:left" data-tkm="${esc(m.id)}">❌ <b>${esc(m.name)}</b> <span class="small num">${esc(m.id)}</span> · 지금 ${+m.tk||0}장</button></div>`).join('')}
+    ${miss.length?`<button class="btn red" id="tkFill">빠진 ${miss.length}명에게 복권 1장씩 지급</button>`:(att.length?'<div class="small" style="color:#2E7D5B">✅ 출석한 회원 모두 복권을 받았어요</div>':'')}
+    <div class="small">※ 출석 기록 자체가 없는 회원(등록이 풀린 패드에서 찍은 경우)은 여기 안 나와요. 그런 회원은 회원 탭 → 이름 → 출석 처리 후 다시 점검해 주세요.</div>`;
+  box.querySelectorAll('[data-tkd]').forEach(b=>b.onclick=()=>{TKC.d=b.dataset.tkd;renderTkChk()});
+  box.querySelectorAll('[data-tkm]').forEach(b=>b.onclick=()=>admDetail(b.dataset.tkm));
+  const f=$('#tkFill');if(f)f.onclick=async()=>{f.disabled=true;f.textContent='지급하는 중…';let ok=0;
+    for(const x of miss){try{const m=await DB.get(x.id);if(!m||tkGotOn(m,d))continue;m.tk=(+m.tk||0)+1;tkLogAdd(m,1,'출석 복권 (빠진 것 보충 '+md(d)+')');if(await DB.save(m)!==false)ok++}catch(e){}}
+    toast(ok+'명에게 복권을 1장씩 넣었어요',3000);renderTkChk()}}
 let PADH_T=0,PADH_BAD=false;
 async function padHealth(force){if(!FB_ON()||$('#v-pad').hidden)return;let ok=null;try{const r=await withTO(gref('admins/'+fuid).get(),6000);if(r&&r!=='__to'&&r!=='__err')ok=!!r.val()}catch(e){}
   if(ok===false){PADH_BAD=true;try{localStorage.removeItem('nnn_paddev')}catch(e){}}else if(ok===true)PADH_BAD=false;padWarnUI()}
@@ -5104,7 +5128,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
     ...set('today',[C('adash'),C('dueBanner'),C('결제 확인')]),
     ...setF('today',[C('hrCard'),C('보낼 안내')]),
     ...grp('today','sentlog','보낸 안내 기록','문자·카톡으로 보낸 기록 찾기',[C('보낸 안내 기록')],false),
-    ...setF('today',[C('지금 누가 있나요'),C('무료 체험 신청'),C('회원 의견함')]),
+    ...setF('today',[C('지금 누가 있나요'),C('🎟️ 출석 복권 점검'),C('무료 체험 신청'),C('회원 의견함')]),
     ...set('mem',[C('memAlert')]),
     ...setF('mem',[cards.find(c=>c.querySelector('#admCnt')),C('날짜별 출석 현황'),C('락커 · 캐비넷'),C('만료 · 연장 안내')]),
     ...grp('ops','biz','매출 · 공지','매출 통계, 로그인 팝업 공지, 휴무일, 만료 알림',[C('salesBtn'),C('noticeBtn')],true),
