@@ -4275,6 +4275,11 @@ async function doAttend(){
     avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='오늘은 수강 요일이 아니에요';$('#padSub').textContent=`${m.name} 님 등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)`;
     const pm=$('#padMem');pm.innerHTML=`${esc(WEEKLY_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);padApprove('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
+    padTimer=setTimeout(resetPad,9000);return}
+  if(!padForce&&wkFreeFull(m)&&ms.state!=='expired'&&ms.state!=='none'){
+    avatarTo(cv,m.equip,{h:46,pose:'duck'});$('#padMsg').textContent='이번 주 횟수를 다 썼어요';$('#padSub').textContent=`${m.name} 님 주${m.mem.weekly}회 (요일 자유) · 이번 주 ${weekInfo(m).cnt}번 출석`;
+    const pm=$('#padMem');pm.innerHTML=`${esc(FREE_RULE(m.mem.weekly))}<br><button class="btn sm ghost" id="padForceBtn" style="margin-top:8px;color:#fff;border-color:#777">관장 승인 보강 출석</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
+    $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);padApprove('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     padTimer=setTimeout(resetPad,9000);return}}
   const makeup=padForce;padForce=false;
   const {base,bonus,item,txt,bs,fail}=await applyAttend(m,makeup,'pad');
@@ -5036,6 +5041,7 @@ async function qrAttend(tok){
   if(ms.state==='expired'){m.unpaid=Array.isArray(m.unpaid)?m.unpaid:[];if(!m.unpaid.some(u=>u.d===TODAY())){m.unpaid.push({d:TODAY(),ok:false});m.unpaid=m.unpaid.slice(-20);await DB.savePriv(m)}
     attSheet(false,'등록 기간이 끝났어요',`${md(m.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 후 출석할 수 있어요.</b>`,'<button class="btn red" id="qaPay" style="margin-top:6px">지금 재등록하기</button>',m);{const b=$('#qaPay');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openPay()}}return}
   if(m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='none'){attSheet(false,'오늘은 수강 요일이 아니에요',`등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)<br>${esc(WEEKLY_RULE(m.mem.weekly))}`,'',m);return}
+  if(wkFreeFull(m)&&ms.state!=='none'){attSheet(false,'이번 주 횟수를 다 썼어요',`주${m.mem.weekly}회 (요일 자유) · 이번 주 ${weekInfo(m).cnt}번 출석<br>${esc(FREE_RULE(m.mem.weekly))}`,'',m);return}
   const r=await applyAttend(m,false,'qr');if(r.fail){sfx('bad');attSheet(false,'출석이 저장되지 않았어요','인터넷 연결을 확인하고 출석패드 QR을 다시 찍어 주세요.<br><span class="small">계속 안 되면 로그아웃 후 다시 로그인하거나 출석패드에 회원번호를 눌러 주세요.</span>','',m);return}sfx('win');
   attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(tkOn()&&+m.tk>0?`<div class="tkn" style="margin-top:8px">🎟️ <b>출석 복권이 발급됐어요!</b> 복권함 <b class="num">${+m.tk}장</b></div><button class="btn red" id="qaFun" style="margin-top:6px">🎟️ 지금 긁으러 가기</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b){lsSet('nnn_tkn_'+m.id,TODAY());b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}}try{refreshTop()}catch(e){}}
 function wifiAttHTML(){const w=wifiCfg();if(!w)return'';return`<div class="padwifi" style="margin-top:8px"><div class="wt" style="flex:1"><small>📶 체육관 와이파이</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<span class="pw">${esc(w.p||'')}</span>`}</div>${w.t!=='nopass'&&w.p?'<button class="btn sm ghost" id="wfCopy">비번 복사</button>':''}</div>`}
@@ -5970,7 +5976,7 @@ const md=d=>{const x=new Date(d+'T00:00:00');return`${x.getMonth()+1}월 ${x.get
 const mdw=d=>{const x=new Date(d+'T00:00:00');return`${x.getMonth()+1}월 ${x.getDate()}일(${'일월화수목금토'[x.getDay()]})`};
 function parsePlan(name){name=String(name||'');const mo=+(name.match(/(\d+)\s*개월/)||[])[1]||0;const wk=+(name.match(/주\s*(\d)\s*회/)||[])[1]||0;const pt=+(name.match(/PT\s*(\d+)\s*회/i)||[])[1]||0;
   return{months:mo||(pt?0:1),weekly:wk,pt}}
-function planLabel(mem){if(!mem)return '';const a=[];if(mem.weekly)a.push(`주${mem.weekly}회`);else if(mem.end)a.push('자유이용');if(mem.pt&&mem.pt.total)a.push(`PT ${mem.pt.total}회`);return a.join(' · ')}
+function planLabel(mem){if(!mem)return '';const a=[];if(mem.weekly)a.push(`주${mem.weekly}회${mem.free?" (요일 자유)":""}`);else if(mem.end)a.push('자유이용');if(mem.pt&&mem.pt.total)a.push(`PT ${mem.pt.total}회`);return a.join(' · ')}
 function memStatus(m){
   const mem=m&&m.mem;if(!mem||!mem.end)return{state:mem&&mem.pt&&mem.pt.total?'pt':'none'};
   const t=TODAY();const left=dDiff(mem.end,t);const total=Math.max(1,dDiff(mem.end,mem.start)+1);const used=clamp(dDiff(t,mem.start)+1,0,total);
@@ -6008,7 +6014,7 @@ function memCardHTML(m,full){
     ${holdBlock(m)}${week}${ptLeft}
     <div class="mhint ${hk}">${esc(hint)}${w.quota&&st.state!=='expired'?` <span class="num">· 이번 주 ${w.cnt}/${w.quota}</span>`:''}</div>
     ${st.state==='soon'||st.state==='expired'?`<button class="btn red sm" data-pay>${st.state==='expired'?'재등록하기':'미리 재등록하기'}</button>`:''}
-    ${full&&mem.days&&mem.days.length?`<div class="small">운동 요일: ${mem.days.map(d=>DAYN[d]).join(' · ')}</div><div class="small" style="color:var(--red)">${esc(WEEKLY_RULE(mem.weekly))}</div>`:''}
+    ${full&&mem.free&&mem.weekly?`<div class="small">운동 요일: <b>자유</b> · 한 주 ${mem.weekly}번까지</div><div class="small" style="color:#1E6B45">${esc(FREE_RULE(mem.weekly))}</div>`:''}${full&&mem.days&&mem.days.length?`<div class="small">운동 요일: ${mem.days.map(d=>DAYN[d]).join(' · ')}</div><div class="small" style="color:var(--red)">${esc(WEEKLY_RULE(mem.weekly))}</div>`:''}
     ${full&&mem.end?`<div class="small">${esc(holdLine(mem))}</div>${holdReqLine(m)}${canReqHold(m)?'<button class="btn ghost sm" data-holdreq>정지(연기) 신청</button>':''}`:''}
     ${full?'<button class="btn ghost sm" data-rules>이용수칙 보기</button>':''}
     ${full&&mem.item?`<div class="small">등록 상품: ${esc(mem.item)}${mem.paidAt?' · 결제 확인 '+esc(md(mem.paidAt)):''}</div>`:''}
@@ -6036,7 +6042,7 @@ function openMemEditor(m,pre={},onDone){
   const extStart=()=>cur.end&&cur.end>=TODAY()?dAdd(cur.end,1):TODAY();
   const lastMo=(cur.segs&&cur.segs.length?cur.segs[cur.segs.length-1].months:cur.months)||base.months||1;
   const E=mode==='edit';
-  let st={item:pre.item||cur.item||'',months:pre.item?base.months:E?(cur.months||base.months||1):lastMo,weekly:pre.item?base.weekly:(cur.weekly||0),pt:pre.item?base.pt:((cur.pt&&cur.pt.total)||0),ptLeft:pre.item?base.pt:((cur.pt&&cur.pt.left)||0),start:E?(cur.start||TODAY()):mode==='ext'?extStart():TODAY(),end:E?(cur.end||''):'',days:(pre.days&&pre.days.length?pre.days.slice():(cur.days||[]))};
+  let st={item:pre.item||cur.item||'',months:pre.item?base.months:E?(cur.months||base.months||1):lastMo,weekly:pre.item?base.weekly:(cur.weekly||0),pt:pre.item?base.pt:((cur.pt&&cur.pt.total)||0),ptLeft:pre.item?base.pt:((cur.pt&&cur.pt.left)||0),start:E?(cur.start||TODAY()):mode==='ext'?extStart():TODAY(),end:E?(cur.end||''):'',days:(pre.days&&pre.days.length?pre.days.slice():(cur.days||[])),free:!!(pre.free||(!pre.item&&cur.free))};
   sheet(`<h2>등록 정보 · ${esc(m.name)}</h2>
     ${hasCur?`<div class="field"><span>이번에 할 일 <span class="small">· 지금 ${md(cur.start)} ~ ${md(cur.end)}${cur.end<TODAY()?' (만료)':''}</span></span><div class="chips" id="meMode"><button type="button" class="chip" data-md="ext">재등록 · 기존 기간 뒤에 이어서</button><button type="button" class="chip" data-md="new">재등록 · 시작일 직접 정하기</button><button type="button" class="chip" data-md="edit">지금 등록 고치기 (결제 없음)</button></div><div class="small" id="meModeH" style="margin-top:4px"></div></div>`:''}
     <div class="field"><label for="meItem">상품</label><input id="meItem" value="${esc(st.item)}"></div>
@@ -6045,7 +6051,7 @@ function openMemEditor(m,pre={},onDone){
     <div class="row" id="meAdj" style="gap:6px"><span class="small">종료일 조정</span><button type="button" class="chip" data-adj="-7">-7일</button><button type="button" class="chip" data-adj="-1">-1일</button><button type="button" class="chip" data-adj="1">+1일</button><button type="button" class="chip" data-adj="7">+7일</button><button type="button" class="chip" data-adj="m1">+1개월</button></div>
     <div id="meSum" class="memsum"></div>
     <div class="field"><span>이용 방식</span><div class="chips" id="meWk">${[0,2,3,4,5].map(n=>`<button type="button" class="chip" data-wk="${n}">${n?'주'+n+'회':'자유이용'}</button>`).join('')}</div></div>
-    <div class="field" id="meDaysF"><span>운동 요일 <span class="small" id="meDaysN"></span></span><div class="chips" id="meDays">${WDAYS.map(d=>`<button type="button" class="chip" data-d="${d}">${DAYN[d]}</button>`).join('')}</div><div class="small" style="color:var(--red)">선택한 요일에만 출석할 수 있어요. 빠진 날을 다른 요일로 옮길 수 없어요 (보강은 관장 승인).</div>${pre.days&&pre.days.length?'<div class="small">회원이 결제할 때 고른 요일이 미리 선택돼 있어요.</div>':''}</div>
+    <div class="field" id="meDaysF"><span>운동 요일 <span class="small" id="meDaysN"></span></span><div class="chips" style="margin-bottom:6px"><button type="button" class="chip" id="meFix">📅 요일 고정</button><button type="button" class="chip" id="meFree">🔓 요일 자유 (한 주 횟수만)</button></div><div class="small" id="meFreeTxt" hidden style="color:#1E6B45">요일 상관없이 <b>한 주(월~일)에 정한 횟수까지</b> 아무 날이나 나올 수 있어요. 횟수를 다 쓰면 그 주에는 출석이 막혀요 (관장 승인 보강은 가능).</div><div id="meFixBox"><div class="chips" id="meDays">${WDAYS.map(d=>`<button type="button" class="chip" data-d="${d}">${DAYN[d]}</button>`).join('')}</div><div class="small" style="color:var(--red)">선택한 요일에만 출석할 수 있어요. 빠진 날을 다른 요일로 옮길 수 없어요 (보강은 관장 승인).</div></div>${pre.days&&pre.days.length?'<div class="small">회원이 결제할 때 고른 요일이 미리 선택돼 있어요.</div>':''}</div>
     <div class="row"><div class="field grow"><label for="mePt">PT 총 횟수</label><input id="mePt" type="number" min="0" value="${st.pt}"></div><div class="field grow"><label for="mePtL">PT 남은 횟수</label><input id="mePtL" type="number" min="0" value="${st.ptLeft}"></div></div>
     <div class="field" id="meHoldF"><span>정지(연기) 규정 <span class="small" id="meHoldD"></span></span><div class="chips" id="meHold"><button type="button" class="chip" data-ha="def">기본 규정</button><button type="button" class="chip" data-ha="none">정지 없음</button><button type="button" class="chip" data-ha="custom">직접 지정</button></div>
       <div class="row" id="meHoldC" hidden><div class="field grow"><label for="meHN">횟수</label><input id="meHN" type="number" min="1" max="12" value="${cur.holdAllow&&cur.holdAllow.n?cur.holdAllow.n:1}"></div><div class="field grow"><label for="meHM">최대 일수 (합계)</label><input id="meHM" type="number" min="1" max="365" value="${cur.holdAllow&&cur.holdAllow.max?cur.holdAllow.max:14}"></div></div>
@@ -6078,9 +6084,10 @@ function openMemEditor(m,pre={},onDone){
     const draw=()=>{el.querySelectorAll('[data-mo]').forEach(b=>b.classList.toggle('on',+b.dataset.mo===st.months));
       el.querySelectorAll('[data-wk]').forEach(b=>b.classList.toggle('on',+b.dataset.wk===st.weekly));
       el.querySelectorAll('[data-d]').forEach(b=>b.classList.toggle('on',st.days.includes(+b.dataset.d)));
-      el.querySelector('#meDaysF').hidden=!st.weekly;el.querySelector('#meDaysN').textContent=st.weekly?`(${st.days.length}/${st.weekly}개 선택)`:'';if(moN&&[0,1,2,3,6,12].includes(st.months)&&document.activeElement!==moN)moN.value='';sum()};
+      el.querySelector('#meDaysF').hidden=!st.weekly;el.querySelector('#meDaysN').textContent=st.weekly?(st.free?`(요일 자유 · 한 주 ${st.weekly}번까지)`:`(${st.days.length}/${st.weekly}개 선택)`):'';el.querySelector('#meFree').classList.toggle('on',!!st.free);el.querySelector('#meFix').classList.toggle('on',!st.free);el.querySelector('#meFixBox').hidden=!!st.free;el.querySelector('#meFreeTxt').hidden=!st.free;if(moN&&[0,1,2,3,6,12].includes(st.months)&&document.activeElement!==moN)moN.value='';sum()};
     el.querySelectorAll('[data-mo]').forEach(b=>b.onclick=()=>{st.months=+b.dataset.mo;{const it=el.querySelector('#meItem');if(st.months&&(!it.value.trim()||/^\d+\s*개월/.test(it.value.trim())))it.value=it.value.trim().replace(/^\d+\s*개월/,st.months+'개월')||st.months+'개월'}recalc();draw()});
     el.querySelectorAll('[data-wk]').forEach(b=>b.onclick=()=>{st.weekly=+b.dataset.wk;st.days=st.days.slice(0,st.weekly);draw()});
+    el.querySelector('#meFree').onclick=()=>{st.free=true;draw()};el.querySelector('#meFix').onclick=()=>{st.free=false;draw()};
     el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(st.days.includes(d))st.days=st.days.filter(x=>x!==d);else{if(st.days.length>=st.weekly)st.days.shift();st.days.push(d)}st.days.sort();draw()});
     startIn.onchange=recalc;
     const pt=el.querySelector('#mePt'),ptl=el.querySelector('#mePtL');pt.oninput=()=>{if(+ptl.value>+pt.value||!ptl.dataset.touched)ptl.value=pt.value};ptl.oninput=()=>ptl.dataset.touched=1;
@@ -6142,14 +6149,14 @@ function openMemEditor(m,pre={},onDone){
     el.querySelector('#meSave').onclick=async()=>{
       if(lk.ty&&!lkCurOf(lk.ty)&&!lk.no){toast('빈 락커가 없어요 · 락커를 "안 함"으로 바꿔 주세요');return}
       if(pOn.checked&&!pm){toast('결제 방식(카드·현금·계좌이체…)을 골라 주세요');el.querySelector('#mePm').scrollIntoView({block:'center'});return}
-      if(st.weekly&&st.days.length!==st.weekly){toast(`운동 요일을 ${st.weekly}개 골라 주세요`);return}
+      if(st.weekly&&!st.free&&st.days.length!==st.weekly){toast(`운동 요일을 ${st.weekly}개 골라 주세요`);return}
       const ptT=+pt.value||0,ptL=Math.min(+ptl.value||0,ptT);
       if(!st.months&&!ptT){toast('기간이나 PT 횟수 중 하나는 있어야 해요');return}
       if(st.months&&(!startIn.value||!endIn.value||endIn.value<startIn.value)){toast('시작일과 종료일을 확인해 주세요');return}
       const hist=(m.memHist||[]).slice(-29);if(cur.end||cur.pt)hist.push(Object.assign({},cur,{until:TODAY()}));
       const ct=st.months&&cont();const itNow=el.querySelector('#meItem').value.trim();
       const segs=!st.months?null:mode==='edit'?(cur.segs||null):(ct?(cur.segs&&cur.segs.length?cur.segs:[{start:cur.start,end:cur.end,months:cur.months||0,item:cur.item||''}]):[]).concat([{start:startIn.value,end:endIn.value,months:st.months,item:itNow,at:TODAY()}]);
-      m.mem=clean({item:itNow,months:ct?(cur.months||0)+st.months:st.months,start:st.months?(ct?cur.start:startIn.value):'',end:st.months?endIn.value:'',how:mode,segs:segs||undefined,weekly:st.months?st.weekly:0,days:st.months&&st.weekly?st.days:[],pt:ptT?{total:ptT,left:ptL}:null,paidAt:pre.paidAt||cur.paidAt||'',setAt:TODAY()});
+      m.mem=clean({item:itNow,months:ct?(cur.months||0)+st.months:st.months,start:st.months?(ct?cur.start:startIn.value):'',end:st.months?endIn.value:'',how:mode,segs:segs||undefined,weekly:st.months?st.weekly:0,days:st.months&&st.weekly&&!st.free?st.days:[],free:st.months&&st.weekly&&st.free?true:undefined,pt:ptT?{total:ptT,left:ptL}:null,paidAt:pre.paidAt||cur.paidAt||'',setAt:TODAY()});
       if(ha==='none')m.mem.holdAllow={n:0,max:0};else if(ha==='custom')m.mem.holdAllow={n:clamp(+el.querySelector('#meHN').value||1,1,12),max:clamp(+el.querySelector('#meHM').value||14,1,365)};
       if(mode==='edit'&&cur.segs&&m.mem.segs&&m.mem.segs.length){const L=m.mem.segs[m.mem.segs.length-1];m.mem.segs=m.mem.segs.slice(0,-1).concat([Object.assign({},L,{end:m.mem.end})])}
       if((cur.end||cur.pt)&&cur.start&&m.mem.start===cur.start){if(cur.holds)m.mem.holds=cur.holds;if(cur.hold)m.mem.hold=cur.hold}
@@ -6480,6 +6487,8 @@ function renderAdmFilter(all){
 function admPass(m){if(!admFilter)return false;if(admFilter==='all')return true;if(admFilter==='imp')return !!impB(m);if(admFilter.startsWith('imp:'))return 'imp:'+impB(m)===admFilter;if(admFilter==='pending')return!m.approvedAt;const k=memGroup(m);if(admFilter==='valid')return k==='active'||k==='soon';return k===admFilter}
 
 /* ================= 주N회 요일 고정 ================= */
+const FREE_RULE=n=>`주${n}회 요일 자유권은 요일 상관없이 한 주(월~일)에 ${n}번까지 나올 수 있어요. 다 쓰면 다음 주 월요일부터 다시 나올 수 있어요. (관장님이 승인한 보강만 예외)`;
+const wkFreeFull=m=>{try{const M=m&&m.mem;if(!M||!M.free||!+M.weekly)return false;return weekInfo(m).cnt>=+M.weekly}catch(e){return false}};
 const WEEKLY_RULE=n=>`주${n}회권은 등록할 때 정한 요일에만 출석할 수 있어요. 못 온 날을 다른 요일로 옮겨 출석할 수 없어요. (관장님이 승인한 보강만 예외)`;
 function daysTxt(d){return(d||[]).map(x=>DAYN[x]).join('·')}
 
@@ -6670,7 +6679,7 @@ const remindCfg=()=>Object.assign({d7:true,d3:true,d2:true,d1:true,d0:true,after
 function msgVars(m,pay,extra={}){const mem=m.mem||{};const st=memStatus(m);
   return{'이름':m.name||'','회원번호':String(m.id||''),'앱주소':appBase(),'약관주소':appBase()+'?terms=1','이용수칙':rulesTxt(),
     '상품':mem.item||planLabel(mem)||'회원권','기간':mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-'),
-    '요일':mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용',
+    '요일':mem.weekly&&mem.free?`요일 자유 (한 주 ${mem.weekly}번까지)`:mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용',
     '정지규정':mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음',
     '결제':pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${pay.saleDate||String(pay.at||'').slice(0,10)}${pay._lk&&pay._lk.amt?` (+ ${lkCfg()[pay._lk.ty].name} ${won(pay._lk.amt)} 별도)`:''}`:m.legacy?'기존 등록분 (새로 결제된 것 아님)':'카운터 결제',
     '정지기간':mem.hold?`${mdw(mem.hold.start)} ~ ${mdw(mem.hold.end)} (${mem.hold.days}일)`:'-','정지시작':mem.hold?mdw(mem.hold.start):'-','다시시작':mem.hold?mdw(dAdd(mem.hold.end,1)):'-','종료일':mem.end?mdw(mem.end):'-',
@@ -7042,7 +7051,7 @@ const autoOn=()=>false; // 유료 대행사 없이 반자동(문자 앱·카톡 
 function kakaoVars(m,kind,pay){const mem=m.mem||{};const v={'#{이름}':m.name||''};
   if(kind==='welcome'){v['#{회원번호}']=String(m.id||'')}
   if(kind==='pay'){v['#{상품}']=mem.item||planLabel(mem)||'회원권';v['#{기간}']=mem.end?`${mem.start} ~ ${mem.end}`:(mem.pt&&mem.pt.total?`PT ${mem.pt.total}회`:'-');
-    v['#{요일}']=mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용 (요일 제한 없음)';
+    v['#{요일}']=mem.weekly&&mem.free?`요일 자유 (한 주 ${mem.weekly}번까지)`:mem.weekly&&mem.days&&mem.days.length?`${daysTxt(mem.days)} (주${mem.weekly}회, 요일 고정)`:'자유 이용 (요일 제한 없음)';
     v['#{정지규정}']=mem.end?(holdPolicy(mem)?holdPolicy(mem).label:'불가 (3개월 이상 등록 시 가능)'):'해당 없음';
     v['#{결제}']=pay?`${pay.amount?won(pay.amount):'-'} / ${payName(pay.method)||''} / ${pay.saleDate||String(pay.at||'').slice(0,10)}`:'카운터 결제'}
   if(kind==='hold'&&mem.hold){v['#{정지기간}']=`${mem.hold.start} ~ ${mem.hold.end} (${mem.hold.days}일)`;v['#{종료일}']=mem.end}
@@ -7433,7 +7442,7 @@ async function openMyCard(){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
   const stTxt={active:['이용 중','#2B9B66'],soon:['곧 만료','#E0A100'],expired:['만료','#D9343A'],upcoming:['시작 전','#2E5AAC'],hold:['정지 중','#66676D'],pt:['PT','#2E5AAC'],none:['등록 전','#8A8F99']}[st.state]||['','#999'];
   sheet(`<div class="mycard"><canvas id="myAv" width="160" height="176"></canvas><div class="grow"><b class="myn">${esc(m.name||'')}</b>${staff?'':periodChip(m,16)}<div class="small">Lv.${levelOf(m).lv} ${esc(TITLES[levelOf(m).lv-1]||'')}</div>${staff?'':`<button class="myno" id="myNo">회원번호 <b class="num">${esc(m.id)}</b> <span>복사</span></button>`}</div></div>
     ${staff?'':`<div class="mymem"><div class="row" style="align-items:center"><b class="grow">내 등록</b><span class="pill" style="background:${stTxt[1]};color:#fff">${stTxt[0]}</span></div>
-      ${mem.end?`<div class="mybig num">${st.state==='expired'?'만료':st.state==='upcoming'?md(mem.start)+' 시작':'D-'+Math.max(0,st.left)}</div><div class="small num">${ymd(mem.start)} ~ ${ymd(mem.end)}${mem.weekly?` · 주${mem.weekly}회 ${daysTxt(mem.days||[])}`:' · 자유이용'}</div><div class="mbar" style="margin-top:6px"><i style="width:${st.state==='expired'?100:Math.round(st.pct||0)}%"></i></div>`:`<div class="small">${mem.pt&&mem.pt.total?'':'아직 등록 정보가 없어요. 카운터에서 결제하면 여기에 나와요.'}</div>`}
+      ${mem.end?`<div class="mybig num">${st.state==='expired'?'만료':st.state==='upcoming'?md(mem.start)+' 시작':'D-'+Math.max(0,st.left)}</div><div class="small num">${ymd(mem.start)} ~ ${ymd(mem.end)}${mem.weekly?` · 주${mem.weekly}회 ${mem.free?'(요일 자유)':daysTxt(mem.days||[])}`:' · 자유이용'}</div><div class="mbar" style="margin-top:6px"><i style="width:${st.state==='expired'?100:Math.round(st.pct||0)}%"></i></div>`:`<div class="small">${mem.pt&&mem.pt.total?'':'아직 등록 정보가 없어요. 카운터에서 결제하면 여기에 나와요.'}</div>`}
       ${mem.pt&&mem.pt.total?`<div class="small" style="margin-top:4px">🥊 PT <b>${mem.pt.left}</b>/${mem.pt.total}회 남음</div>`:''}
       ${st.state==='soon'||st.state==='expired'?'<button class="btn red sm" id="myPay" style="width:100%;margin-top:8px">재등록하기</button>':''}</div>
     <div class="mystats"><div><b class="num">${monN}</b><span>이달 출석</span></div><div><b class="num">${(m.attend||[]).length}</b><span>총 출석</span></div><div><b class="num">${m.last===T||m.last===YESTERDAY()?m.streak:0}</b><span>연속</span></div><div><b class="num">${last?(last===T?'오늘':md(last)):'-'}</b><span>마지막</span></div></div>`}
