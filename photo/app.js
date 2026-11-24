@@ -71,12 +71,12 @@ document.body.insertAdjacentHTML('beforeend',`
 <main id="home"${C.tabsHome?' class="tabbed"':''}>
  <header class="top"><div class="brand">${C.logo}<span>${C.name}</span></div><div class="acts"><button class="ibtn" id="hFav" aria-label="즐겨찾기">${I('heart')}<span class="dot hidden"></span></button><button class="ibtn" id="hHelp" aria-label="사용법">${I('info')}</button></div></header>
  ${C.tabsHome?`<section class="view-home" data-v="home">
+  <h2 class="sec first">무엇을 찍나요?</h2><p class="secsub">고르면 그 장면에 맞는 구도를 바로 보여줘요</p><div class="crow" id="crow"></div>
   <div class="vfc" id="goCam" role="button" tabindex="0" aria-label="카메라 켜기"><canvas id="vfCv" width="708" height="760"></canvas>
    <span class="dchip a">${I('spark')}장면: <b id="dScene"></b></span><span class="dchip b">추천 구도: <b id="dComp"></b></span><span class="dchip c">${I('palette')}<b id="dLook"></b></span>
    <div class="vfa"><button class="vp on" data-go="auto">${I('spark')}자동 추천</button><button class="vp" data-go="look">${I('palette')}색감</button><button class="vp" data-go="analyze">${I('compass')}분석</button></div></div>
   <section class="myfav" id="myFav"><div class="mfh"><h2 class="sec">${I('heart','fill')}내 즐겨찾기</h2><span class="secsub">누르면 바로 그걸로 찍어요</span></div>
    <div class="mfl">구도</div><div class="frow" id="favComp"></div><div class="mfl">색감</div><div class="frow" id="favLook"></div></section>
-  <h2 class="sec">무엇을 찍나요?</h2><div class="crow" id="crow"></div>
   <h2 class="sec">오늘의 색감</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요</p><div class="lrow" id="lrow"></div>
  </section>
  <section class="view-looks hidden" data-v="looks"><h2 class="sec">색감 ${window.LOOKS?LOOKS.list.filter(l=>l.id!=='none').length:''}종</h2><p class="secsub">누르면 그 색감으로 카메라가 켜져요. 농도는 카메라에서 조절해요</p><div class="cchips light" id="lgG"></div><div class="lgrid" id="lgL"></div></section>
