@@ -1090,6 +1090,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
 <section class="view" id="v-pad" hidden>
   <div class="kiosk">
     <div class="row padhead" style="justify-content:space-between"><div class="row padttl"><span id="padLogo" style="width:44px;display:block"></span><div><h2 style="font-size:24px">출석패드 <button class="floortag" id="padFloorTag" type="button">층 선택</button></h2><div class="small" id="padNext" style="color:#C8C8CC"></div></div></div><div class="padgo" id="padGo"><b>들어오면 먼저 출석 찍기!</b><span>회원번호 입력 또는 QR 찍기 → <b>크레딧 +50 · 룰렛</b><i id="padGoWifi"> · <b>와이파이 비밀번호</b></i></span></div><span class="pill num" id="padCount" style="background:#2C3549;color:#fff"></span></div>
+    <div id="padWarn" hidden style="background:#E63946;color:#fff;border-radius:12px;padding:10px 14px;margin:8px 0;font-size:16px;line-height:1.4"></div>
     <div id="padInput" class="padgrid">
       <div><div class="small padhint" style="color:#9AA6BF;text-align:center;margin-bottom:8px">회원번호를 입력하세요<br><span style="font-size:12px">코치는 코치 코드 6자리 → 출근 · 퇴근</span></div>
       <div class="kdisp num" id="kdisp"></div>
@@ -1574,7 +1575,7 @@ const DB={
       if(r==='__err')throw new Error('tx');
       if(r&&r!=='__to'&&r.snapshot){const v=r.snapshot.val();if(v)out=v}
       Object.keys(out).forEach(k=>{if(k!=='nick')m[k]=out[k]});try{if(Array.isArray(m.attend))m.attend=m.attend.filter(x=>typeof x==='string')}catch(e){}
-      try{m._b=clean(out)}catch(e){}}catch(e){toast('저장이 안 됐어요. 잠시 후 다시 해 주세요')}},
+      try{m._b=clean(out)}catch(e){}return r==='__to'?null:true}catch(e){DB.lastErr=String(e&&(e.code||e.message)||e);toast('저장이 안 됐어요. 잠시 후 다시 해 주세요');return false}},
   async savePriv(m){if(isLocal(m.id)){local.members[m.id]=m;persist();return}try{await gref('private/'+m.id).set(clean(splitM(m).prv))}catch(e){toast('회원 정보 저장 실패')}},
   async all(){if(!FB_ON())return Object.values(local.members).map(mig);
     try{const pub=(await gref('members').get()).val()||{};let prv={};if(IS_ADMIN){try{prv=(await gref('private').get()).val()||{}}catch(e){}}
@@ -4211,7 +4212,7 @@ function pinSheet(title,ok){
 }
 $('#goPad').onclick=()=>padPinSheet('출석패드 모드 시작',openPad);
 $('#padExit').onclick=()=>padPinSheet('출석패드 종료',()=>{show('v-home');try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}try{screen.orientation.unlock()}catch(e){}});
-async function openPad(){padDevMark();await withTO(DB.meta(),2500);setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{padOriUI();padOriApply(true)}catch(e){}try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount()}
+async function openPad(){padDevMark();await withTO(DB.meta(),2500);setTimeout(startPadQR,50);setTimeout(()=>{const c=closedOn(TODAY());if(c)$('#padNext').textContent='오늘은 휴무일이에요 · '+(c.title||'')},80);$('#padLogo').innerHTML=logoSVG('#2F2F2F',false);$('#padNext').textContent=ttStatus().line;padBuf='';renderKeys();updPad();show('v-pad');try{padOriUI();padOriApply(true)}catch(e){}try{wifiPadIdle()}catch(e){}try{applyPadFloor();let st='';try{st=localStorage.getItem('nnn_padfloor_set')||''}catch(e){}if(!st)setTimeout(choosePadFloor,400)}catch(e){}$('#padInput').hidden=false;$('#padRes').hidden=true;updPadCount();setTimeout(()=>{padHealth();padWarnUI()},1500)}
 let PADSP_T=0;async function updPadCount(){try{if(Date.now()-PADSP_T>180000){PADSP_T=Date.now();padSparRender()}}catch(e){}const all=await DB.all();$('#padCount').textContent='오늘 출석 '+all.filter(m=>m.last===TODAY()).length+'명'}
 function renderKeys(){$('#keys').innerHTML=['1','2','3','4','5','6','7','8','9','지움','0','출석'].map(k=>`<button class="${k==='출석'?'ok':''}" data-k="${k}" style="${k.length>1?'font-size:20px':''}">${k}</button>`).join('');
   $$('#keys [data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='지움')padBuf=padBuf.slice(0,-1);else if(k==='출석')doAttend();else if(padBuf.length<6)padBuf+=k;updPad()})}
@@ -4245,7 +4246,7 @@ function wifiFill(el,full,size){const w=wifiCfg();if(!el)return;if(!w){el.hidden
 function wifiPadIdle(){const w=wifiCfg();const big=innerWidth>=700&&innerWidth>innerHeight;const tp=innerWidth>=560&&innerHeight>innerWidth;wifiFill($('#padWifiIdle'),!!w,big?(innerHeight<640?60:innerHeight<760?76:110):tp?84:100);$('#padGoWifi').hidden=true;$('#padWifi').hidden=true}
 function wifiPadDone(){return false;const w=wifiCfg();if(!w)return false;const big=innerWidth>=700&&innerWidth>innerHeight;wifiFill($('#padWifi'),true,big?(innerHeight<640?104:150):110);return true}
 async function doAttend(){
-  if(!padBuf)return;const id=padBuf;padBuf='';updPad();
+  if(!padBuf)return;window.PAD_LAST=Date.now();const id=padBuf;padBuf='';updPad();
   if(id.length===6){coachPad(id);return}
   const m=await DB.get(id);try{$('#padWifi').hidden=true;$('#padTk').hidden=true}catch(e){}
   $('#padInput').hidden=true;$('#padRes').hidden=false;$('#wheel').textContent='';$('#padBonus').textContent='';$('#padMem').textContent='';$('#padMem').style.background='transparent';
@@ -4271,7 +4272,8 @@ async function doAttend(){
     $('#padForceBtn').onclick=()=>{clearTimeout(padTimer);padApprove('보강 출석 승인',()=>{padForce=true;padBuf=id;doAttend()})};
     padTimer=setTimeout(resetPad,9000);return}}
   const makeup=padForce;padForce=false;
-  const {base,bonus,item,txt,bs}=await applyAttend(m,makeup,'pad');
+  const {base,bonus,item,txt,bs,fail}=await applyAttend(m,makeup,'pad');
+  if(fail){padSaveFail(m,id,makeup);return}
   $('#padMsg').textContent=m.name+' 님 출석 완료!';
   $('#padSub').textContent=`+${base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`;
   {const pm=padMemLine(m);const el=$('#padMem');el.textContent=pm.t;el.style.background=pm.warn?'#FDE2E3':'#F1F4F8';el.style.color=pm.warn?'#8A1F24':'#3E4654'}
@@ -5001,7 +5003,8 @@ async function applyAttend(m,makeup,via){m._via=via;
   const bs=checkBadges(m);const lvAfter=levelOf(m);if(lvAfter.lv>lvBefore)txt+=` · 레벨 업! Lv.${lvAfter.lv} ${lvAfter.title}`;
   if(via==='qr')m.qrAtt=(m.qrAtt||[]).concat([TODAY()]).slice(-60);
   m.inAt=Date.now();
-  await DB.save(m);if(ME&&ME.id===m.id)ME=m;liveCheckIn(m);
+  const saved=await DB.save(m);if(saved===false)return{base,bonus,item,txt,bs,fail:true};
+  if(ME&&ME.id===m.id)ME=m;liveCheckIn(m);
   return{base,bonus,item,txt,bs}}
 let padTokTimer=0,padPoll=0,padSeen=null;
 const newTok=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
@@ -5027,7 +5030,7 @@ async function qrAttend(tok){
   if(ms.state==='expired'){m.unpaid=Array.isArray(m.unpaid)?m.unpaid:[];if(!m.unpaid.some(u=>u.d===TODAY())){m.unpaid.push({d:TODAY(),ok:false});m.unpaid=m.unpaid.slice(-20);await DB.savePriv(m)}
     attSheet(false,'등록 기간이 끝났어요',`${md(m.mem.end)}에 등록 기간이 끝났어요.<br><b>재등록 후 출석할 수 있어요.</b>`,'<button class="btn red" id="qaPay" style="margin-top:6px">지금 재등록하기</button>',m);{const b=$('#qaPay');if(b)b.onclick=()=>{$('#sheetRoot').innerHTML='';openPay()}}return}
   if(m.mem&&m.mem.weekly&&m.mem.days&&m.mem.days.length&&!m.mem.days.includes(dow)&&ms.state!=='none'){attSheet(false,'오늘은 수강 요일이 아니에요',`등록 요일: ${daysTxt(m.mem.days)} (주${m.mem.weekly}회)<br>${esc(WEEKLY_RULE(m.mem.weekly))}`,'',m);return}
-  const r=await applyAttend(m,false,'qr');sfx('win');
+  const r=await applyAttend(m,false,'qr');if(r.fail){sfx('bad');attSheet(false,'출석이 저장되지 않았어요','인터넷 연결을 확인하고 출석패드 QR을 다시 찍어 주세요.<br><span class="small">계속 안 되면 로그아웃 후 다시 로그인하거나 출석패드에 회원번호를 눌러 주세요.</span>','',m);return}sfx('win');
   attSheet(true,m.name+' 님 출석 완료!',`+${r.base} 크레딧 · 연속 ${m.streak}일 · 총 ${m.attend.length}회`,`<div class="small" style="color:#B07A08">${esc(r.txt)}${r.bs.length?' · 배지 '+esc(r.bs.map(b=>b.name).join(', ')):''}</div>`+(tkOn()&&+m.tk>0?`<div class="tkn" style="margin-top:8px">🎟️ <b>출석 복권이 발급됐어요!</b> 복권함 <b class="num">${+m.tk}장</b></div><button class="btn red" id="qaFun" style="margin-top:6px">🎟️ 지금 긁으러 가기</button>`:'')+wifiAttHTML(),m);wifiAttBind();{const b=document.getElementById('qaFun');if(b){lsSet('nnn_tkn_'+m.id,TODAY());b.onclick=()=>{$('#sheetRoot').innerHTML='';openFun('lotto')}}}try{refreshTop()}catch(e){}}
 function wifiAttHTML(){const w=wifiCfg();if(!w)return'';return`<div class="padwifi" style="margin-top:8px"><div class="wt" style="flex:1"><small>📶 체육관 와이파이</small><b>${esc(w.s)}</b>${w.t==='nopass'?'<small>비밀번호 없음</small>':`<span class="pw">${esc(w.p||'')}</span>`}</div>${w.t!=='nopass'&&w.p?'<button class="btn sm ghost" id="wfCopy">비번 복사</button>':''}</div>`}
 function wifiAttBind(){const b=document.getElementById('wfCopy');if(b)b.onclick=()=>{const w=wifiCfg();if(w)copyText(w.p,'와이파이 비밀번호를')}}
@@ -5051,6 +5054,26 @@ $('#cuSave').onclick=async()=>{const L=$('#cuTxt').value.split('\n').map(l=>l.tr
   if(!L.length){toast('기술을 적어 주세요');return}local.meta.curri=L;if(FB_ON()){try{await gref('meta/curri').set(clean(L))}catch(e){toast('저장하지 못했어요');return}}else persist();toast('포도판 기술 목록을 저장했어요');renderCurriAdm()};
 $('#cuReset').onclick=()=>{$('#cuTxt').value=CURRI_DEF.map(c=>c.lv+' | '+c.t.join(', ')).join('\n')};
 $('#padFloorTag').onclick=e=>{e.stopPropagation();choosePadFloor()};
+/* 출석이 서버에 저장되지 않았을 때(태블릿 관장 등록이 풀림 등): 성공처럼 보이지 않게 크게 알리고, 관장 PIN으로 다시 등록하면 바로 다시 저장 */
+const PADQ_K='nnn_padfail';const padQ=()=>{try{return JSON.parse(localStorage.getItem(PADQ_K)||'[]').filter(x=>x&&x.d===TODAY())}catch(e){return[]}};const padQSet=a=>{try{localStorage.setItem(PADQ_K,JSON.stringify(a))}catch(e){}};
+function padSaveFail(m,id,makeup){clearTimeout(padTimer);const q=padQ();if(!q.some(x=>x.id===id))q.push({id,d:TODAY(),mk:!!makeup,t:Date.now()});padQSet(q);
+  $('#padMsg').textContent='⚠️ 출석이 저장되지 않았어요';$('#padSub').textContent=m.name+' 님, 관장님(코치님)께 말씀해 주세요. 복권·크레딧도 아직 안 들어갔어요.';$('#wheel').textContent='';$('#padBonus').textContent='';try{$('#padTk').hidden=true}catch(e){}
+  const pm=$('#padMem');pm.innerHTML=`이 태블릿의 <b>관장 등록이 풀렸거나</b> 인터넷이 끊긴 것 같아요.<br><button class="btn sm red" id="padReReg" style="margin-top:8px">관장 PIN 넣고 다시 저장</button>`;pm.style.background='#FDE2E3';pm.style.color='#8A1F24';
+  $('#padReReg').onclick=()=>{clearTimeout(padTimer);padReRegister()};try{sfx('bad')}catch(e){}padHealth(true);padTimer=setTimeout(resetPad,15000)}
+function padReRegister(){pinSheet('출석패드 다시 등록 (관장 PIN)',async()=>{padDevMark();await padHealth();await padRetryQueue()})}
+async function padRetryQueue(){const q=padQ();if(!q.length)return;let ok=0;const left=[];
+  for(const x of q){try{const m=await DB.get(x.id);if(!m){continue}fixDay(m);if(m.last===TODAY()){ok++;continue}const r=await applyAttend(m,x.mk,'pad');if(r.fail)left.push(x);else ok++}catch(e){left.push(x)}}
+  padQSet(left);toast(left.length?`${ok}명 저장 · ${left.length}명은 아직 저장 안 됨`:`저장 못 했던 출석 ${ok}명을 모두 저장했어요 (복권 포함)`,4500);try{updPadCount()}catch(e){}padWarnUI()}
+let PADH_T=0,PADH_BAD=false;
+async function padHealth(force){if(!FB_ON()||$('#v-pad').hidden)return;let ok=null;try{const r=await withTO(gref('admins/'+fuid).get(),6000);if(r&&r!=='__to'&&r!=='__err')ok=!!r.val()}catch(e){}
+  if(ok===false){PADH_BAD=true;try{localStorage.removeItem('nnn_paddev')}catch(e){}}else if(ok===true)PADH_BAD=false;padWarnUI()}
+function padWarnUI(){const w=$('#padWarn');if(!w)return;const n=padQ().length;w.hidden=!(PADH_BAD||n);
+  w.innerHTML=PADH_BAD?`⚠️ <b>이 태블릿은 지금 출석이 저장되지 않아요</b> (관장 등록이 풀림)${n?` · 저장 못 한 출석 <b>${n}명</b>`:''} <button class="btn sm" id="padWarnGo">관장 PIN 넣기</button>`:`⚠️ 저장 못 한 출석 <b>${n}명</b>이 있어요 <button class="btn sm" id="padWarnGo">다시 저장</button>`;
+  const b=$('#padWarnGo');if(b)b.onclick=()=>{if(PADH_BAD)padReRegister();else padRetryQueue()}}
+/* 패드가 몇 날 며칠 켜져 있어도 새 버전이 나오면 쉬는 동안 알아서 새로고침 */
+async function padTick(){if($('#v-pad').hidden)return;try{await padHealth()}catch(e){}
+  try{const idle=!$('#padInput').hidden&&!padBuf&&!$('#sheetRoot').innerHTML&&Date.now()-(window.PAD_LAST||0)>60000;if(idle&&await verCheck()){location.href=location.pathname+'?v='+Date.now()+'&pad=1'}}catch(e){}}
+setInterval(padTick,180000);
 function resetPad(){clearTimeout(padTimer);$('#padInput').hidden=false;$('#padRes').hidden=true;try{$('#padTk').hidden=true}catch(e){}try{$('#padWifi').hidden=true}catch(e){}}
 
 /* ================= 관장 메뉴 ================= */
@@ -5118,6 +5141,8 @@ async function admRefreshAll(btn){if(btn){if(btn.disabled)return;btn.disabled=tr
   finally{if(btn){btn.disabled=false;btn.textContent='🔄 새로고침'}}}
 setTimeout(()=>verHash().then(h=>{if(h&&!VERCHK.h)VERCHK.h=h}),2500);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('#v-admin').hidden&&Date.now()-(VERCHK.vis||0)>20000){VERCHK.vis=Date.now();admRefreshAll(null)}});
+/* 회원 폰: 앱을 다시 켰을 때 새 버전이 있으면 조용히 새로고침 (옛날 버전이 며칠씩 남아 있지 않게) */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!ME||$('#v-world').hidden||Date.now()-(VERCHK.mv||0)<60000)return;VERCHK.mv=Date.now();setTimeout(async()=>{try{if($('#sheetRoot').innerHTML)return;if(await verCheck())location.reload()}catch(e){}},400)});
 async function openAdmin(){{const rb=$('#admRefresh');if(rb&&!rb.dataset.b){rb.dataset.b=1;rb.onclick=()=>admRefreshAll(rb)}const vg=$('#verGo');if(vg&&!vg.dataset.b){vg.dataset.b=1;vg.onclick=()=>{location.href=location.pathname+'?v='+Date.now()}}if(!VERCHK.h)verHash().then(h=>{if(h&&!VERCHK.h)VERCHK.h=h})}
   await DB.meta();const M=local.meta;const PY=M.pay;try{$('#spCr').value=M.sparCr!=null?M.sparCr:200}catch(e){}$('#sProd').value=PY.products.map(x=>x.n+(x.p?' | '+x.p:'')).join('\n');$('#sBank').value=PY.bank;$('#sAcct').value=PY.acct;$('#sHolder').value=PY.holder;$('#sOnNote').value=PY.onnuriNote;$('#onnuriState').textContent=PY.onnuriQR?'등록됨':'아직 없음';renderPays();renderSalesToday();renderCoaches();try{renderRfAdm()}catch(e){}try{renderFeatAdm()}catch(e){}setTimeout(()=>{try{shareCheck()}catch(e){}},800);try{renderCompAdm()}catch(e){}try{renderFunAdm()}catch(e){}try{renderCurriAdm()}catch(e){}renderNoticeNow();pruneLive();renderExamAdmin();fillGuestAdmin();renderMisAdmin();lkBadge();renderWhoAdmin();fillLiveAdmin();voiceStaffBadge();renderChatAdmin();$('#spMin').value=String(sparMinSkill());$('#spAuto').checked=sparAuto();renderTrials();autoSnapshot().then(renderBackups);DB.all().then(syncRoster);
   $('#sNotice').value=M.notice;try{$('#sBlockDup').checked=M.blockDup!==false}catch(e){}try{renderPadPinSet()}catch(e){}try{const W=M.wifi||WIFI_DEF;$('#sWifiS').value=W.s||'';$('#sWifiP').value=W.p||'';$('#sWifiT').value=W.t||'WPA';$('#sWifiAfter').checked=W.after!==false}catch(e){}try{$('#sPush').value=M.pushUrl||''}catch(e){}$('#sKakao').value=M.kakao;$('#sBlog').value=M.blog||'';$('#sBring').value=M.bringDays||'';$('#tvUrl').textContent=appBase()+'?tv=1';renderBlogList();$('#sInsta').value=M.insta||'';$('#sPhone').value=M.gymPhone;$('#sTerms').value=M.terms;$('#sRules').value=rulesTxt();renderDue();renderSendLog();$('#sPin').value=FB_ON()?'':M.pin;$('#sPin').placeholder=FB_ON()?'바꿀 때만 입력':'';$('#sUrl').value=M.appUrl||DEFAULT_APP_URL;
@@ -5240,7 +5265,7 @@ async function admDetail(id,_fresh){const tk=++ADT;let m=_fresh||null,syncing=fa
     el.querySelector('#admDel').onclick=async e=>{const b=e.target;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='한 번 더 누르면 삭제돼요 (되돌릴 수 없어요)';return}if(await deleteMember(m)){close();renderAdmRows()}};
     el.querySelector('#admVcf').onclick=()=>download(`NNN_${m.id}_${m.name}.vcf`,vcard(m),'text/vcard')});
 }
-async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());stampAtt(m);m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');try{m._via='adm';funOnAttend(m)}catch(e){}delete m._via;checkBadges(m);m.inAt=Date.now();await DB.save(m);liveCheckIn(m);padBuf='';toast(m.name+' 님 출석 처리 완료');renderAdmRows()}
+async function doAttendAdmin(id){const m=await DB.get(id);if(!m||m.last===TODAY())return;fixDay(m);if(memStatus(m).state==='expired'){const u=(m.unpaid||[]).find(x=>x.d===TODAY());if(u)u.ok=true;else m.unpaid=(m.unpaid||[]).concat([{d:TODAY(),ok:true}]);await DB.savePriv(m)}m.streak=m.last===YESTERDAY()?m.streak+1:1;m.maxStreak=Math.max(m.maxStreak||0,m.streak);m.last=TODAY();m.attend.push(TODAY());stampAtt(m);m.xp+=ATT_XP;earn(m,50+Math.min(m.streak-1,5)*10,'attend');try{m._via='adm';funOnAttend(m)}catch(e){}delete m._via;checkBadges(m);m.inAt=Date.now();const sv=await DB.save(m);if(sv===false){toast('출석이 저장되지 않았어요. 관장 메뉴에 다시 들어와서 해 주세요',4500);return}liveCheckIn(m);padBuf='';toast(m.name+' 님 출석 처리 완료'+(tkOn()?' · 🎟️ 복권 +1':''));renderAdmRows()}
 function vcard(m){return`BEGIN:VCARD\nVERSION:3.0\nFN:NNN ${m.name}(${m.id})\nN:${m.name};;;;\nTEL;TYPE=CELL:${m.phone}\nNOTE:NNN복싱 회원번호 ${m.id} / 가입 ${m.joined}\nEND:VCARD\n`}
 $('#expVcf').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);if(!all.length){toast('내보낼 회원이 없어요');return}download('NNN_회원연락처_'+TODAY()+'.vcf',all.map(vcard).join(''),'text/vcard')};
 $('#expCsv').onclick=async()=>{const all=(await DB.all()).filter(m=>!m.demo);const rows=[['회원번호','이름','연락처','생년월일','성별','목적','경력','유입','참고사항','마케팅수신','가입일','총출석','최근출석','크레딧']].concat(all.map(m=>[m.id,m.name,m.phone,m.birth,m.gender,m.goal.join('/'),m.exp,m.path,m.note,m.agreeMkt?'Y':'N',m.joined,m.attend.length,m.last,m.credits]));
@@ -7742,6 +7767,7 @@ function cbEdit(id){const c=Object.assign({t:'',s:'',d:'',lv:2},id?CB.list[id]:{
   {const at=new URLSearchParams(location.search).get('att');if(at){try{sessionStorage.setItem('nnn_att',at)}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}
     if(!sid||!(await DB.get(sid))){show('v-login');toast('회원번호로 입장하면 바로 출석돼요',3500);return}}}
   if(lsGet('nnn_coach')&&!sid){openCoachMode();return}
+  if(new URLSearchParams(location.search).get('pad')==='1'&&padDevLocal()&&!sid){try{history.replaceState(null,'',location.pathname)}catch(e){}try{await withTO(openPad(),8000)}catch(e){}return}
   if(hashv==='pad'){padPinSheet('출석패드 모드 시작',openPad);show('v-home');return}
   {const qm=new URLSearchParams(location.search).get('m');if(qm&&/^\d{3,6}$/.test(qm)&&!sid&&!userMoved()){try{history.replaceState(null,'',location.pathname)}catch(e){}show('v-login');$('#lId').value=qm;setTimeout(()=>{toast(`회원번호 ${qm} · 비밀번호(휴대폰 뒤 4자리)를 넣어 주세요`,4000);try{$('#lPw').focus()}catch(e){}},300);return}}
   if(userMoved())return;
