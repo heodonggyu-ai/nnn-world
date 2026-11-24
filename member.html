@@ -1224,6 +1224,7 @@ body.alay-t #atabs button{min-width:0;padding:8px 2px;font-size:14px}
   <div id="verBar" hidden style="background:#111;color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b class="grow">✨ 앱 새 버전이 올라왔어요</b><button class="btn sm gold" id="verGo">새 버전 받기</button><span class="small" style="color:#ccc">다시 들어올 때 관장 PIN을 한 번 더 넣어요</span></div>
   <nav class="atabs" id="atabs" aria-label="관장 메뉴 섹션"><button data-at="today">오늘<i id="atb-today"></i></button><button data-at="mem">회원<i id="atb-mem"></i></button><button data-at="biz">매출·공지</button><button data-at="staff">코치<i id="atb-staff"></i></button><button data-at="lock">락커<i id="atb-lock"></i></button><button data-at="ops">운영</button><button data-at="set">설정</button></nav>
   <div class="adash" data-atab="today" id="adash"></div>
+  <div class="card" data-atab="today" id="tkReqCard" hidden style="display:flex;flex-direction:column;gap:6px;border:2px solid #F2C14E"></div>
   <button class="card salesbtn" data-atab="biz" id="noticeBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">공지 · 자동 알림</b><span class="small" style="display:block">로그인 팝업 공지 · 휴무일 · 만료 알림 켜고 끄기</span></span><b class="num" id="noticeNow"></b><span aria-hidden="true">›</span></button>
   <button class="card salesbtn" data-atab="biz" id="salesBtn"><span class="grow" style="text-align:left"><b style="font-family:var(--display);font-weight:400;font-size:22px">매출 · 통계</b><span class="small" style="display:block">일별 · 월별 · 연도별 매출, 결제 방식, 등록 개월수</span></span><b class="num" id="salesToday"></b><span aria-hidden="true">›</span></button>
   <div class="bring" data-atab="today" id="dueBanner" hidden></div>
@@ -2277,7 +2278,7 @@ let saveT=0;function saveMe(){clearTimeout(saveT);saveT=setTimeout(()=>ME&&DB.sa
 let meOff=null;
 function watchMe(){if(meOff){meOff();meOff=null}if(!ME||!FB_ON()||isLocal(ME.id))return;const id=ME.id;
   const r1=gref('members/'+id),r2=gref('private/'+id);
-  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}try{tkNotice(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}
+  const h1=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;try{attAlarmCheck(v)}catch(e){}try{tkNotice(v)}catch(e){}try{tkReqNotice(v)}catch(e){}if((v.rev||0)>(ME.rev||0)){const keep={};PRIV.forEach(k=>keep[k]=ME[k]);ME=joinM(v,keep);refreshTop();if(!$('#t-shop').hidden)renderShop()}
     else if(ME._b&&_J(clean(v))!==_J(ME._b)){try{const loc=clean(splitM(ME).pub);const mg=mergePub(ME._b,loc,v);Object.keys(mg).forEach(k=>{if(k!=='nick')ME[k]=mg[k]});ME._b=clean(v);if(_J(mg)!==_J(v))saveMe();refreshTop()}catch(e){}}};
   const h2=snap=>{const v=snap.val();if(!v||!ME||ME.id!==id)return;ME.mem=v.mem||null;ME.memHist=v.memHist||[];ME.approvedAt=v.approvedAt||'';ME.hasFace=!!v.hasFace;renderMemCard();renderFaceCard()};
   try{r1.on('value',h1);r2.on('value',h2);meOff=()=>{r1.off('value',h1);r2.off('value',h2)}}catch(e){}}
@@ -5076,6 +5077,40 @@ function padReRegister(){pinSheet('출석패드 다시 등록 (관장 PIN)',asyn
 async function padRetryQueue(){const q=padQ();if(!q.length)return;let ok=0;const left=[];
   for(const x of q){try{const m=await DB.get(x.id);if(!m){continue}fixDay(m);if(m.last===TODAY()){ok++;continue}const r=await applyAttend(m,x.mk,'pad');if(r.fail)left.push(x);else ok++}catch(e){left.push(x)}}
   padQSet(left);toast(left.length?`${ok}명 저장 · ${left.length}명은 아직 저장 안 됨`:`저장 못 했던 출석 ${ok}명을 모두 저장했어요 (복권 포함)`,4500);try{updPadCount()}catch(e){}padWarnUI()}
+/* 복권 요청: 출석했는데 복권을 못 받은 회원이 관장님께 요청 → 관장이 1장 지급/거절 */
+function tkReqHTML(m){if(isStaff(m)||m.demo)return'';const q=m.tkReq;
+  if(q&&q.st==='wait')return`<div class="small" style="margin-top:8px;color:#8A5A00">🙋 복권 요청 보냄 (${md(q.d)}) · 관장님이 확인 중이에요</div>`;
+  const res=q&&q.doneAt===TODAY()?(q.st==='ok'?'<div class="small" style="margin-top:8px;color:#2E7D5B">✅ 요청한 복권 1장이 들어왔어요</div>':`<div class="small" style="margin-top:8px;color:#8A1F24">요청이 반려됐어요${q.no?' · '+esc(q.no):''}</div>`):'';
+  return res+`<button class="btn sm ghost" id="tkReqGo" style="margin-top:8px">🙋 복권을 못 받았어요 (관장님께 요청)</button>`}
+function tkReqSheet(){if(!ME)return;const ds=[0,1,2,3].map(i=>dAdd(TODAY(),-i));let d=TODAY(),why='출석했는데 복권이 안 들어왔어요';
+  const WH=['출석했는데 복권이 안 들어왔어요','출석패드가 안 눌렸어요','기타'];
+  sheet(`<h2>🙋 복권 요청</h2><p style="margin:0">관장님이 확인하고 <b>1장</b>을 넣어 드려요.</p>
+    <div class="field"><span>언제 출석했나요?</span><div class="chips" id="trD">${ds.map(x=>`<button type="button" class="chip ${x===d?'on':''}" data-d="${x}">${x===TODAY()?'오늘':md(x)}</button>`).join('')}</div></div>
+    <div class="field"><span>무슨 일인가요?</span><div class="chips" id="trW">${WH.map(x=>`<button type="button" class="chip ${x===why?'on':''}" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>
+    <div class="field"><label for="trM">더 할 말 (선택)</label><input id="trM" maxlength="60"></div>
+    <button class="btn red" id="trGo">요청 보내기</button><button class="btn ghost" data-close>취소</button>`,(el,close)=>{
+    el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{d=b.dataset.d;el.querySelectorAll('[data-d]').forEach(x=>x.classList.toggle('on',x===b))});
+    el.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{why=b.dataset.w;el.querySelectorAll('[data-w]').forEach(x=>x.classList.toggle('on',x===b))});
+    el.querySelector('#trGo').onclick=async()=>{const bt=el.querySelector('#trGo');bt.disabled=true;const m=(await DB.get(ME.id))||ME;
+      if(m.tkReq&&m.tkReq.st==='wait'){toast('이미 보낸 요청이 있어요. 관장님 확인을 기다려 주세요');close();return}
+      m.tkReq=clean({id:'r'+Date.now().toString(36),at:Date.now(),d,why,msg:el.querySelector('#trM').value.trim()||undefined,st:'wait'});
+      if(await DB.save(m)===false){bt.disabled=false;return}ME=m;close();toast('관장님께 복권 요청을 보냈어요',3000)}})}
+function tkReqNotice(v){if(!ME||!v||!v.tkReq)return;const q=v.tkReq;if(q.st==='wait')return;const k='nnn_tkreq_'+ME.id;if(lsGet(k)===q.id)return;lsSet(k,q.id);
+  toast(q.st==='ok'?'🎟️ 요청한 복권 1장이 들어왔어요!':'복권 요청이 반려됐어요'+(q.no?' · '+q.no:''),4500);if(q.st==='ok'){try{sfx('coin')}catch(e){}}}
+async function renderTkReq(all){const box=$('#tkReqCard');if(!box)return;all=all||(await DB.all());const L=all.filter(m=>m.tkReq&&m.tkReq.st==='wait').sort((a,b)=>(a.tkReq.at||0)-(b.tkReq.at||0));
+  box.hidden=!L.length;if(!L.length){box.innerHTML='';return}
+  box.innerHTML=`<h3 style="font-size:20px">🙋 복권 요청 <span class="pill fire">${L.length}</span></h3><div class="small">회원이 출석 복권을 못 받았다고 요청했어요. 확인하고 1장 지급해 주세요.</div>
+    ${L.map(m=>{const q=m.tkReq;const att=funArr(m.attend).includes(q.d);const got=tkGotOn(m,q.d);return`<div style="border-top:1px solid var(--mat);padding:8px 0;display:flex;flex-direction:column;gap:4px">
+      <button class="btn sm ghost" style="text-align:left" data-trm="${esc(m.id)}"><b>${esc(m.name)}</b> <span class="small num">${esc(m.id)}</span> · ${md(q.d)} · 지금 ${+m.tk||0}장</button>
+      <div class="small">${esc(q.why||'')}${q.msg?' · "'+esc(q.msg)+'"':''}</div>
+      <div class="small">${att?'✅ 그날 출석 기록 있음':'⚠️ 그날 출석 기록 없음'} · ${got?'⚠️ 그날 출석 복권은 이미 받음':'그날 출석 복권 기록 없음'}</div>
+      <div class="row" style="gap:6px"><button class="btn sm red grow" data-trok="${esc(m.id)}">🎟️ 1장 지급</button><button class="btn sm ghost" data-trno="${esc(m.id)}">반려</button></div></div>`}).join('')}`;
+  box.querySelectorAll('[data-trm]').forEach(b=>b.onclick=()=>admDetail(b.dataset.trm));
+  const done=async(id,ok,no)=>{const m=await DB.get(id);if(!m||!m.tkReq||m.tkReq.st!=='wait'){renderTkReq();return}const q=m.tkReq;
+    if(ok){m.tk=(+m.tk||0)+1;tkLogAdd(m,1,'관장님 지급 (회원 요청 '+md(q.d)+')')}m.tkReq=clean(Object.assign({},q,{st:ok?'ok':'no',no:no||undefined,doneAt:TODAY()}));
+    if(await DB.save(m)!==false)toast(ok?m.name+' 님께 복권 1장 지급':m.name+' 님 요청 반려',2500);renderTkReq();try{renderTkChk()}catch(e){}};
+  box.querySelectorAll('[data-trok]').forEach(b=>b.onclick=()=>{b.disabled=true;done(b.dataset.trok,true)});
+  box.querySelectorAll('[data-trno]').forEach(b=>b.onclick=()=>{const no=prompt('반려 이유 (선택)','')||'';done(b.dataset.trno,false,no.trim().slice(0,40))})}
 /* 관장: 출석 복권 점검 — 날짜별로 출석한 회원이 '출석 복권' 기록을 받았는지 확인, 빠진 회원 보충 */
 const TKC={d:null};
 const tkGotOn=(m,d)=>funArr(m.tkLog).some(x=>x&&x.d>0&&/^출석 복권/.test(x.why||'')&&dstr(new Date(x.t))===d);
@@ -5131,7 +5166,7 @@ function adminRestructure(){if(ALAY==='old'&&!AL_DONE){AL_DONE=true;const c=docu
   const set=(tab,list)=>list.filter(Boolean).map(c=>{c.dataset.atab=tab;return c});
   const setF=(tab,list)=>list.filter(Boolean).map(c=>{c.dataset.atab=tab;return acc?fold(c,tab,tab):c});
   const order=[
-    ...set('today',[C('adash'),C('dueBanner'),C('결제 확인')]),
+    ...set('today',[C('adash'),C('tkReqCard'),C('dueBanner'),C('결제 확인')]),
     ...setF('today',[C('hrCard'),C('보낼 안내')]),
     ...grp('today','sentlog','보낸 안내 기록','문자·카톡으로 보낸 기록 찾기',[C('보낸 안내 기록')],false),
     ...setF('today',[C('지금 누가 있나요'),C('🎟️ 출석 복권 점검'),C('무료 체험 신청'),C('회원 의견함')]),
@@ -5182,7 +5217,7 @@ async function openAdmin(){{const rb=$('#admRefresh');if(rb&&!rb.dataset.b){rb.d
 }
 function setATab(k){if(k==='mem')setTimeout(renderAttAdmin,50);if(ALAY!=='old'){if(k==='biz')k='ops';if(k==='lock')k='mem'}if(!['today','mem','biz','staff','lock','ops','set'].includes(k))k='today';if(k==='lock'||(k==='mem'&&ALAY!=='old'))renderLockers();if(k==='staff'){renderStaffAdmin();chatBadge('owner')}$$('#v-admin [data-atab]').forEach(el=>{if(el.id==='dueBanner'||el.id==='hrCard')el.classList.toggle('offtab',el.dataset.atab!==k);else el.hidden=el.dataset.atab!==k});$$('#atabs [data-at]').forEach(b=>b.classList.toggle('on',b.dataset.at===k));try{localStorage.setItem('nnn_atab',k)}catch(e){}}
 $$('#atabs [data-at]').forEach(b=>b.onclick=()=>{setATab(b.dataset.at);window.scrollTo({top:0,behavior:'smooth'})});
-async function renderADash(){const box=$('#adash');if(!box)return;try{sparAutoPay()}catch(e){}try{renderOvAdm()}catch(e){}const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
+async function renderADash(){const box=$('#adash');if(!box)return;try{renderTkReq()}catch(e){}try{sparAutoPay()}catch(e){}try{renderOvAdm()}catch(e){}const all=(await DB.all()).filter(m=>!m.demo);let pays=[];try{pays=await DB.pays()}catch(e){}
   const pend=all.filter(m=>!m.approvedAt).length,payN=pays.filter(x=>x.status==='pending').length,dueN=dueItems(all).length,today=all.filter(m=>m.last===TODAY()).length,soon=all.filter(m=>memGroup(m)==='soon').length,valid=all.filter(m=>['active','soon'].includes(memGroup(m))).length;
   const mon=TODAY().slice(0,7);const sales=pays.filter(x=>x&&x.status==='done').map(normSale).filter(x=>x.date.startsWith(mon)).reduce((s,x)=>s+x.amount,0);
   const tiles=[['승인 대기',pend,'mem','pending',pend?'hot':''],['결제 확인',payN,'today','pay',payN?'hot':''],['보낼 안내',dueN,'today','due',dueN?'warn':''],['오늘 출석',today,'mem','all',''],['7일 내 만료',soon,'mem','soon',soon?'warn':''],['유효 회원',valid,'mem','valid',''],['이달 매출',manS(sales)+'원','sales','',''],['공지 팝업',noticesAll().filter(n=>nActive(n)).length,'notice','','']];
@@ -7335,7 +7370,7 @@ const FEATS=[['lotto','🎟️','출석 복권 · 쿠폰함','출석할 때마�
 const FT=k=>!((local.meta&&local.meta.feat)||{})[k+'_off'];
 function featApply(){try{const cb=$('#cbOpen');if(cb)cb.hidden=!FT('combo')}catch(e){}try{renderPins()}catch(e){}try{funBanner()}catch(e){}try{renderGrapeCard()}catch(e){}try{renderRaffle()}catch(e){}try{if(!$('#v-pad').hidden)wifiPadIdle()}catch(e){}}
 function renderFeatAdm(){const box=$('#featBox');if(!box)return;box.innerHTML=FEATS.map(([k,e,t,d])=>`<label class="check" style="margin:0"><input type="checkbox" data-ft="${k}" ${FT(k)?'checked':''}><span><b>${e} ${t}</b><br><span class="small">${d}</span></span></label>`).join('');
-  box.querySelectorAll('[data-ft]').forEach(c=>c.onchange=async()=>{const k=c.dataset.ft;local.meta.feat=Object.assign({},local.meta.feat||{});if(c.checked)delete local.meta.feat[k+'_off'];else local.meta.feat[k+'_off']=true;
+  box.querySelectorAll('[data-ft]').forEach(c=>c.onchange=async()=>{const k=c.dataset.ft;if(k==='lotto'&&!c.checked&&!confirm('출석 복권을 끄면 출석해도 복권이 안 나가요. 정말 끌까요?')){c.checked=true;return}local.meta.feat=Object.assign({},local.meta.feat||{});if(c.checked)delete local.meta.feat[k+'_off'];else local.meta.feat[k+'_off']=true;
     if(FB_ON()){try{await gref('meta/feat/'+k+'_off').set(c.checked?null:true)}catch(e){toast('저장하지 못했어요');c.checked=!c.checked;return}}else persist();toast((c.checked?'켰어요: ':'껐어요: ')+FEATS.find(f=>f[0]===k)[2]);featApply()})}
 /* ================= 출석 재미: 복권 · 빙고 · 도장판 · 연속 출석 상자 · 쿠폰 ================= */
 const FUN_DEF={on:true,ovCr:500,ovWk:2,pity:10,days:14,cr:[10,20,30,50],buyP:300,buyDay:2,store:[{id:'s_drink',name:'음료',emo:'🥤',p:1000},{id:'s_bar',name:'단백질바',emo:'🍫',p:500},{id:'s_wrap',name:'핸드랩',emo:'🩹',p:10000},{id:'s_ezwrap',name:'이지 핸드랩',emo:'🧤',p:20000},{id:'s_mouth',name:'마우스피스',emo:'🦷',p:10000},{id:'s_glove',name:'글러브',emo:'🥊',p:35000},{id:'s_glove2',name:'온스 글러브',emo:'🥊',p:45000}],
@@ -7572,7 +7607,7 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
       <div id="fnScr"></div>
       <button class="btn red" id="fnGo" ${tk>0?'':'disabled'}>${tk>0?'복권 긁기':'출석하면 복권이 생겨요'}</button>
       ${+F.pity>0?`<div class="small">다음 확정까지 꽝 <b>${Math.max(0,F.pity-(+m.lmiss||0))}</b>번 남음</div>`:''}
-      ${tkBuyHTML(m)}</div>`:''}
+      ${tkBuyHTML(m)}${tkReqHTML(m)}</div>`:''}
     ${storeHTML(m)}
     ${FT('bingo')?`<div class="funsec"><div class="row"><b class="grow" style="font-size:18px">출석 빙고 <span class="small">${bn.length}/25</span></b><span class="pill">${lines}줄</span></div>
       <div class="small">출석할 때마다 번호 하나가 찍혀요. 한 줄 완성마다 복권 +1, 판 전체 완성 복권 +3</div><div class="bingo">${grid}</div></div>`:''}
@@ -7583,6 +7618,7 @@ async function openFun(sec){if(!ME)return;try{const m=await DB.get(ME.id);if(m)M
       <div class="boxes">${BOX_STEPS.map(b=>`<div class="bx${ws.n>=b.w?' on':''}"><span>${ws.n>=b.w?'🎁':'📦'}</span><small>${b.w}주</small></div>`).join('')}</div></div>`:''}
     <button class="btn ghost" data-close>닫기</button>`,(el,close)=>{
     {const cpb=el.querySelector('#fnCp');if(cpb)cpb.onclick=()=>{close();openCoupons()}}
+    {const rq=el.querySelector('#tkReqGo');if(rq)rq.onclick=()=>{close();tkReqSheet()}}
     {const tlb=el.querySelector('#fnTkLog');if(tlb)tlb.onclick=async()=>{close();const m=(await DB.get(ME.id))||ME;tkLogSheet(m,()=>openFun('lotto'))}}
     {const bb=el.querySelector('#fnBuy');if(bb)bb.onclick=()=>tkBuy(bb)}storeBind(el);
     const go=el.querySelector('#fnGo');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='복권 꺼내는 중…';const res=await lottoDraw();if(!res){toast('복권이 없어요');go.textContent='출석하면 복권이 생겨요';return}
